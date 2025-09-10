@@ -39,7 +39,7 @@ export default function DatasetCreatePage() {
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋 생성</h2>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <div className="page-input-box">
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">이름</div>

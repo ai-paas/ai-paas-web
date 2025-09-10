@@ -441,7 +441,7 @@ input {
   display: flex;
 }
 .page-stepper-box {
-  width: 224px;
+  width: 200px;
   padding: 0 20px 0 24px;
   margin-top: 16px;
   & > div {
@@ -453,9 +453,9 @@ input {
   }
 }
 .page-content-stepper-desc {
+  flex: 1;
   position: relative;
   overflow-y: auto;
-  width: 100%;
   height: calc(100vh - 146px);
   border-left: 1px solid $color-gray-50;
 }
@@ -713,7 +713,7 @@ input {
 .page-pt-10 {
   padding-top: 10px !important;
 }
-.page-p-40 {
+.page-pb-40 {
   padding-bottom: 40px !important;
 }
 .page-mt-0 {

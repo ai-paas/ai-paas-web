@@ -1,7 +1,7 @@
-import { BreadCrumb, Button } from "innogrid-ui";
-import { useNavigate } from "react-router";
-import { EditPromptButton } from "../../../components/features/prompt/edit-prompt-button";
-import { DeletePromptButton } from "../../../components/features/prompt/delete-prompt-button";
+import { BreadCrumb, Button } from 'innogrid-ui';
+import { useNavigate } from 'react-router';
+import { EditPromptButton } from '../../../components/features/prompt/edit-prompt-button';
+import { DeletePromptButton } from '../../../components/features/prompt/delete-prompt-button';
 
 export default function PromptDetailPage() {
   const navigate = useNavigate();
@@ -9,10 +9,7 @@ export default function PromptDetailPage() {
   return (
     <main>
       <BreadCrumb
-        items={[
-          { label: "프롬프트", path: "/prompt" },
-          { label: "프롬프트 테스트" },
-        ]}
+        items={[{ label: '프롬프트', path: '/prompt' }, { label: '프롬프트 테스트' }]}
         onNavigate={navigate}
         className="breadcrumbBox"
       />
@@ -25,7 +22,7 @@ export default function PromptDetailPage() {
           </div>
         </div>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
         <div className="page-detail-list-box">
           {/* 최대 ul 3개, li 5개 사용 해주세요. */}
@@ -58,7 +55,7 @@ export default function PromptDetailPage() {
             <div className="page-detail-round-data page-h-430">
               <pre className="page-input_item-code">
                 <code>
-                  function myFunction(){" "}
+                  function myFunction(){' '}
                   {
                     // 코드 로직
                   }
@@ -69,8 +66,7 @@ export default function PromptDetailPage() {
           <div className="page-detail-round-box page-w-536">
             <div className="page-detail-round-name">변수</div>
             <div className="page-detail-round-data page-h-430">
-              변수가 들어갑니다. 변수가 들어갑니다. 변수가 들어갑니다. 변수가
-              들어갑니다.
+              변수가 들어갑니다. 변수가 들어갑니다. 변수가 들어갑니다. 변수가 들어갑니다.
             </div>
           </div>
         </div>

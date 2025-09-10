@@ -1,9 +1,9 @@
-import { BreadCrumb, Button } from "innogrid-ui";
-import { IconChkGreen, IconErrRed } from "../../../assets/img/icon";
-import styles from "../learning.module.scss";
-import { useNavigate } from "react-router";
-import { EditLearningButton } from "../../../components/features/learning/edit-learning-button";
-import { DeleteLearningButton } from "../../../components/features/learning/delete-learning-button";
+import { BreadCrumb, Button } from 'innogrid-ui';
+import { IconChkGreen, IconErrRed } from '../../../assets/img/icon';
+import styles from '../learning.module.scss';
+import { useNavigate } from 'react-router';
+import { EditLearningButton } from '../../../components/features/learning/edit-learning-button';
+import { DeleteLearningButton } from '../../../components/features/learning/delete-learning-button';
 
 export default function LearningDetailPage() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function LearningDetailPage() {
   return (
     <main>
       <BreadCrumb
-        items={[{ label: "학습", path: "/learning" }, { label: "학습 생성" }]}
+        items={[{ label: '학습', path: '/learning' }, { label: '학습 생성' }]}
         onNavigate={navigate}
         className="breadcrumbBox"
       />
@@ -21,17 +21,13 @@ export default function LearningDetailPage() {
           <div className="page-toolBox-btns">
             <EditLearningButton />
             <DeleteLearningButton />
-            <Button
-              onClick={() => alert("Button clicked!")}
-              size="medium"
-              color="primary"
-            >
+            <Button onClick={() => alert('Button clicked!')} size="medium" color="primary">
               모델 등록
             </Button>
           </div>
         </div>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
         <div className="page-detail-list-box">
           {/* 최대 ul 3개, li 6개 사용 해주세요. */}
@@ -48,10 +44,7 @@ export default function LearningDetailPage() {
                 {/* 실패시 */}
                 <div className={`${styles.conditionBox} ${styles.fail}`}>
                   <IconErrRed />
-                  <span>
-                    [CUDA out of memory] 배치 사이즈가 너무 크거나, 모델이 너무
-                    큽니다.
-                  </span>
+                  <span>[CUDA out of memory] 배치 사이즈가 너무 크거나, 모델이 너무 큽니다.</span>
                 </div>
               </div>
             </li>
@@ -73,9 +66,7 @@ export default function LearningDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">
-                설명이 들어갑니다. 설명이 들어갑니다.
-              </div>
+              <div className="page-detail_item-data">설명이 들어갑니다. 설명이 들어갑니다.</div>
             </li>
           </ul>
         </div>
@@ -123,26 +114,18 @@ export default function LearningDetailPage() {
           </div>
           <div className="page-content-detail-row2">
             <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-data page-h-400">
-                차트 그래프 들어갑니다.
-              </div>
+              <div className="page-detail-round-data page-h-400">차트 그래프 들어갑니다.</div>
             </div>
             <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-data page-h-400">
-                차트 그래프 들어갑니다.
-              </div>
+              <div className="page-detail-round-data page-h-400">차트 그래프 들어갑니다.</div>
             </div>
           </div>
           <div className="page-content-detail-row2">
             <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-data page-h-400">
-                차트 그래프 들어갑니다.
-              </div>
+              <div className="page-detail-round-data page-h-400">차트 그래프 들어갑니다.</div>
             </div>
             <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-data page-h-400">
-                차트 그래프 들어갑니다.
-              </div>
+              <div className="page-detail-round-data page-h-400">차트 그래프 들어갑니다.</div>
             </div>
           </div>
         </div>

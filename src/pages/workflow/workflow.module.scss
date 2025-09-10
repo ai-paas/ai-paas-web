@@ -255,7 +255,8 @@
     gap: 4px;
 
     div[data-size='m-medium'] {
-      width: 147px !important;
+      min-width: 142px !important;
+      max-width: 147px !important;
     }
 
     .select {
@@ -639,7 +640,6 @@
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  border-color: $color-white;
   @include transition-allEaseInOut;
   .iconDel {
     fill: $color-gray-500;
@@ -647,7 +647,6 @@
   }
 
   &:hover {
-    border: 1px solid #f6cbcb;
     background: #fae5e5;
     .iconDel {
       fill: $color-error;

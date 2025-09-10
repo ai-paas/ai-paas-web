@@ -54,33 +54,34 @@ export default function KnowledgeBaseCreatePage() {
           {step === 0 && <Step1 />}
           {step === 1 && <Step2 />}
           {step === 2 && <Step3 />}
-        </div>
-      </div>
-      <div className="page-footer">
-        <div className="mx-6 flex max-w-[800px] items-center justify-between border-t border-[#e8e8e8] py-6">
-          <Button size="large" color="secondary" onClick={() => navigate('/knowledge-base')}>
-            취소
-          </Button>
-          <div className="flex gap-1.5">
-            <Button
-              size="large"
-              color="tertiary"
-              disabled={step === 0}
-              onClick={handleClickPrevious}
-            >
-              이전
-            </Button>
-            {step === 2 ? (
-              <Button size="large" color="primary" onClick={handleClickCreate}>
-                생성
+
+          <div className="page-footer">
+            <div className="page-footer_btn-box">
+              <Button size="large" color="secondary" onClick={() => navigate('/knowledge-base')}>
+                취소
               </Button>
-            ) : (
-              <div className="btn-next">
-                <Button size="large" color="primary" onClick={handleClickNext}>
-                  다음
+              <div className="flex gap-1.5">
+                <Button
+                  size="large"
+                  color="tertiary"
+                  disabled={step === 0}
+                  onClick={handleClickPrevious}
+                >
+                  이전
                 </Button>
+                {step === 2 ? (
+                  <Button size="large" color="primary" onClick={handleClickCreate}>
+                    생성
+                  </Button>
+                ) : (
+                  <div className="btn-next">
+                    <Button size="large" color="primary" onClick={handleClickNext}>
+                      다음
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -101,7 +102,7 @@ const Step1 = () => {
   };
 
   return (
-    <div className="page-content page-p-40">
+    <div className="page-content page-pb-40">
       <div className="page-input-box">
         <div className="page-input_title">기본 설정</div>
         <div className="page-input_item-box">
@@ -170,7 +171,7 @@ const Step2 = () => {
   };
 
   return (
-    <div className="page-content page-p-40">
+    <div className="page-content page-pb-40">
       <div className="page-input-box">
         <div className="page-input_title">청크 설정</div>
         <div className="page-input_item-box">
@@ -402,7 +403,7 @@ const accordionItems4 = [
 
 const Step3 = () => {
   return (
-    <div className="page-content page-p-40">
+    <div className="page-content page-pb-40">
       <div className="page-accordion-box">
         <Accordion components={accordionItems1} defaultValue="0" />
         <Accordion components={accordionItems2} defaultValue="0" />

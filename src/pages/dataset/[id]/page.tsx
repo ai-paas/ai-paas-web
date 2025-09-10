@@ -1,26 +1,19 @@
-import { BreadCrumb, Button } from "innogrid-ui";
+import { BreadCrumb, Button } from 'innogrid-ui';
 
-import { IconDocument } from "../../../assets/img/icon";
-import { useNavigate } from "react-router";
-import { EditDatasetButton } from "../../../components/features/dataset/edit-dataset-button";
-import { DeleteDatasetButton } from "../../../components/features/dataset/delete-dataset-button";
+import { IconDocument } from '../../../assets/img/icon';
+import { useNavigate } from 'react-router';
+import { EditDatasetButton } from '../../../components/features/dataset/edit-dataset-button';
+import { DeleteDatasetButton } from '../../../components/features/dataset/delete-dataset-button';
 
 //breadcrumb
-const items = [
-  { label: "데이터 셋", path: "/dataset" },
-  { label: "데이터 셋 상세" },
-];
+const items = [{ label: '데이터 셋', path: '/dataset' }, { label: '데이터 셋 상세' }];
 
 export default function DatasetDetailPage() {
   const navigate = useNavigate();
 
   return (
     <main>
-      <BreadCrumb
-        items={items}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <BreadCrumb items={items} onNavigate={navigate} className="breadcrumbBox" />
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋 상세</h2>
         <div className="page-toolBox">
@@ -30,7 +23,7 @@ export default function DatasetDetailPage() {
           </div>
         </div>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
         <div className="page-detail-list-box">
           {/* 최대 ul 3개, li 5개 사용 해주세요. */}
@@ -75,9 +68,7 @@ export default function DatasetDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">
-                설명이 들어갑니다. 설명이 들어갑니다.
-              </div>
+              <div className="page-detail_item-data">설명이 들어갑니다. 설명이 들어갑니다.</div>
             </li>
           </ul>
         </div>

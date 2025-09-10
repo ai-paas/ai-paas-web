@@ -87,7 +87,7 @@ export default function WorkflowDetailPage() {
           </div>
         </div>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
         <div className="page-detail-list-box">
           {/* 최대 ul 3개, li 5개 사용 해주세요. */}
