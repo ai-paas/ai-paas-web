@@ -1,7 +1,7 @@
-import { Button, Input, Modal, Textarea } from "innogrid-ui";
-import { useState, useCallback } from "react";
-import styles from "@/pages/service/service.module.scss";
-import { useCreateService } from "@/hooks/service/services";
+import { Button, Input, Modal, Textarea } from 'innogrid-ui';
+import { useState, useCallback } from 'react';
+import styles from '@/pages/service/service.module.scss';
+import { useCreateService } from '@/hooks/service/services';
 
 interface ServiceFormData {
   name: string;
@@ -10,9 +10,9 @@ interface ServiceFormData {
 }
 
 const INITIAL_FORM_DATA: ServiceFormData = {
-  name: "",
-  description: "",
-  tag: "",
+  name: '',
+  description: '',
+  tag: '',
 };
 
 export const CreateServiceButton = () => {
@@ -26,9 +26,7 @@ export const CreateServiceButton = () => {
     setFormData(INITIAL_FORM_DATA);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -62,7 +60,7 @@ export const CreateServiceButton = () => {
             <span>이름</span>
             <Input
               name="name"
-              size={{ width: "100%", height: "32px" }}
+              size={{ width: '100%', height: '32px' }}
               placeholder="이름을 입력해주세요."
               value={formData.name}
               onChange={handleChange}
@@ -77,14 +75,13 @@ export const CreateServiceButton = () => {
               value={formData.description}
               onChange={handleChange}
             />
-            <div className={styles.textareaDesc}>설명 메시지</div>
           </div>
 
           <div className={styles.inputBox}>
             <span>태그</span>
             <Input
               name="tag"
-              size={{ width: "100%", height: "32px" }}
+              size={{ width: '100%', height: '32px' }}
               placeholder="태그 내용을 입력해주세요."
               value={formData.tag}
               onChange={handleChange}

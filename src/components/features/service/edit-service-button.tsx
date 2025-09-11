@@ -1,7 +1,7 @@
-import { Button, Input, Modal, Textarea } from "innogrid-ui";
-import { useCallback, useEffect, useState } from "react";
-import styles from "../../../pages/service/service.module.scss";
-import { useGetService, useUpdateService } from "@/hooks/service/services";
+import { Button, Input, Modal, Textarea } from 'innogrid-ui';
+import { useCallback, useEffect, useState } from 'react';
+import styles from '../../../pages/service/service.module.scss';
+import { useGetService, useUpdateService } from '@/hooks/service/services';
 
 interface ServiceFormData {
   name: string;
@@ -10,9 +10,9 @@ interface ServiceFormData {
 }
 
 const INITIAL_FORM_DATA: ServiceFormData = {
-  name: "",
-  description: "",
-  tag: "",
+  name: '',
+  description: '',
+  tag: '',
 };
 
 export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
@@ -31,9 +31,7 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
     setFormData(INITIAL_FORM_DATA);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -55,12 +53,7 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
 
   return (
     <>
-      <Button
-        size="medium"
-        color="secondary"
-        disabled={!serviceId}
-        onClick={openModal}
-      >
+      <Button size="medium" color="secondary" disabled={!serviceId} onClick={openModal}>
         편집
       </Button>
       <Modal
@@ -85,22 +78,17 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              size={{ width: "100%", height: "32px" }}
+              size={{ width: '100%', height: '32px' }}
             />
           </div>
           <div className={styles.inputBox}>
             <span>설명</span>
-            <Textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-            />
-            <div className={styles.textareaDesc}>설명 메시지</div>
+            <Textarea name="description" value={formData.description} onChange={handleChange} />
           </div>
           <div className={styles.inputBox}>
             <span>태그</span>
             <Input
-              size={{ width: "100%", height: "32px" }}
+              size={{ width: '100%', height: '32px' }}
               placeholder="태그 내용을 입력해주세요."
               name="tag"
               value={formData.tag}

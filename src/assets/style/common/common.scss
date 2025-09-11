@@ -432,8 +432,9 @@ input {
     & > div {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       gap: 6px;
+      width: 100%;
     }
   }
 }
@@ -483,11 +484,17 @@ input {
   .fileUpload-preview:hover {
     border-color: $color-gray-200;
     background-color: $color-gray-10;
+    & b {
+      text-decoration: underline;
+    }
   }
   .fileUpload-preview_msg {
     @include font-style;
     font-size: $page-font-root;
     color: $page-font-color-300;
+    & > b {
+      color: $page-font-color-600;
+    }
   }
 }
 
@@ -638,19 +645,17 @@ input {
 .btn-more {
   width: 28px;
   height: 28px;
-  opacity: 0.6;
-  border-color: transparent;
   @include transition-allEaseInOut;
   @include absolute-center-y;
   right: 6px;
+  fill: $color-gray-500;
   & > span {
     @include blind;
   }
 
   &:hover {
-    opacity: 1;
+    fill: $color-gray-900;
     border-radius: 4px;
-    border: 1px solid $color-gray-75;
     background: $color-gray-25;
   }
 }

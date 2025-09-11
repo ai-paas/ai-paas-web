@@ -37,7 +37,7 @@ export default function LearningCreatePage() {
         onNavigate={navigate}
       />
       <div className="page-title-box">
-        <h2 className="page-title">학습</h2>
+        <h2 className="page-title">학습 생성</h2>
       </div>
       <div className="page-content-stepper">
         <div className="page-stepper-box">
@@ -160,9 +160,9 @@ const Step2 = () => {
                 <input type="file" className="fileUpload-file" />
                 <IconFileUp />
                 <p className="fileUpload-preview_msg">
-                  파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                  파일을 여기에 드래그하거나 <b>클릭하여 업로드</b>하세요. (파일당 최대 크기 15MB)
                   <br />
-                  허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
+                  허용되는 파일 형식:zip
                 </p>
               </label>
             </div>
@@ -210,6 +210,13 @@ const Step2 = () => {
 };
 
 const Step3 = () => {
+  const [value, setValue] = useState('');
+  const [selectedValue, setSelectedValue] = useState<{ text: string; value: string }>();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
+
   return (
     <div className="page-content page-pb-40">
       <div className="page-input-box">
@@ -231,43 +238,61 @@ const Step3 = () => {
       <div className="page-input-box page-input-hr">
         <div className="page-input_title">하이퍼 파라미터 설정</div>
         <div className="page-input_item-box">
-          <div className="page-input_item-name">Time</div>
+          <div className="page-input_item-name">Epochs</div>
           <div className="page-input_item-data">
-            <div className="page-input_item-row2 page-gap-6">
-              <Select
-                className="page-input_item-data_select page-w-100per"
-                options={[]}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={{ text: '객체 감지', value: 'object_detection' }}
-                onChange={() => {}}
-              />
-              <Select
-                className="page-input_item-data_select page-w-100per"
-                options={[]}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={{ text: '객체 감지', value: 'object_detection' }}
-                onChange={() => {}}
-              />
-            </div>
+            <Input placeholder="Epochs 값을 입력해주세요." value={value} onChange={handleChange} />
+            <p className="page-input_item-input-desc">설명이 들어갑니다.</p>
           </div>
         </div>
         <div className="page-input_item-box">
-          <div className="page-input_item-name">Imagsz</div>
+          <div className="page-input_item-name">Batch</div>
           <div className="page-input_item-data">
-            <div className="page-input_item-row3">
-              <Select
-                className="page-input_item-data_select"
-                options={[]}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={{ text: '객체 감지', value: 'object_detection' }}
-                onChange={() => {}}
-              />
-              <Input placeholder="가로" value="" onChange={() => {}} />
-              <Input placeholder="세로" value="" onChange={() => {}} />
-            </div>
+            <Input placeholder="Batch 값을 입력해주세요." value={value} onChange={handleChange} />
+          </div>
+        </div>
+        <div className="page-input_item-box">
+          <div className="page-input_item-name">Save period</div>
+          <div className="page-input_item-data">
+            <Input
+              placeholder="Save period 값을 입력해주세요."
+              value={value}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+        <div className="page-input_item-box">
+          <div className="page-input_item-name">Gpus</div>
+          <div className="page-input_item-data">
+            <Select
+              className="page-input_item-data_select"
+              options={[]}
+              getOptionLabel={(option) => option.text}
+              getOptionValue={(option) => option.value}
+              value={selectedValue}
+              onChange={() => {}}
+            />
+          </div>
+        </div>
+        <div className="page-input_item-box">
+          <div className="page-input_item-name">Lr0</div>
+          <div className="page-input_item-data">
+            <Input placeholder="Lr0 값을 입력해주세요." value={value} onChange={handleChange} />
+          </div>
+        </div>
+        <div className="page-input_item-box">
+          <div className="page-input_item-name">Lrf</div>
+          <div className="page-input_item-data">
+            <Input placeholder="Lrf 값을 입력해주세요." value={value} onChange={handleChange} />
+          </div>
+        </div>
+        <div className="page-input_item-box">
+          <div className="page-input_item-name">Weight decay</div>
+          <div className="page-input_item-data">
+            <Input
+              placeholder="Weight decay 값을 입력해주세요."
+              value={value}
+              onChange={handleChange}
+            />
           </div>
         </div>
       </div>

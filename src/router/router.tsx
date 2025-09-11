@@ -36,6 +36,7 @@ import MemberManagementDetailPage from '../pages/member-management/[id]/page';
 import LoginPage from '../pages/login/page';
 import HomePage from '../pages/page';
 import CustomModelCreateHuggingfacePage from '@/pages/model/model-catalog/create/huggingface/page';
+import CustomModelCreateEtriPage from '@/pages/model/model-catalog/create/etri/page';
 
 export const router = createBrowserRouter([
   {
@@ -105,7 +106,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'custom-model/create/etri',
-            element: <CustomModelCreatePage />,
+            element: <CustomModelCreateEtriPage />,
           },
           {
             path: 'custom-model/:id',

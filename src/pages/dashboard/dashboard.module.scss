@@ -44,6 +44,7 @@
     @include font-style;
     color: $page-font-color-600;
     font-size: $page-font-root;
+    @include ellipsis(1);
   }
 }
 
@@ -59,7 +60,7 @@
     @include font-style;
 
     &::after {
-      content: "";
+      content: '';
       display: inline-block;
       width: 1px;
       height: 12px;

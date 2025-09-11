@@ -49,16 +49,16 @@ export default function DatasetCreatePage() {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">파일</div>
+            <div className="page-input_item-name">학습 파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
                 <label className="fileUpload-preview">
                   <input type="file" className="fileUpload-file" />
                   <IconFileUp />
                   <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                    파일을 여기에 드래그하거나 클릭하여 업로드하세요.
                     <br />
-                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
+                    (jpg/jpeg 50MB 이하)
                   </p>
                 </label>
               </div>
