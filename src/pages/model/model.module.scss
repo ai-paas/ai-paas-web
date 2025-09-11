@@ -1,0 +1,347 @@
+//model style
+
+//custom-model
+////레이아웃
+.flexContent {
+  display: flex;
+  margin-top: 24px;
+}
+.flexContentLeft {
+  position: relative;
+  width: 348px;
+  padding: 0 24px;
+}
+.flexContentDesc {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  min-height: calc(100vh - 230px);
+  padding: 0 24px;
+  border-left: 1px solid $color-gray-50;
+}
+.footer {
+  :global {
+    .page-footer_btn-box {
+      max-width: 100%;
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+  }
+}
+
+////왼쪽 탭메뉴
+.tabs {
+  position: relative;
+  button[role='tab'] {
+    &:nth-child(2),
+    &:nth-child(3),
+    &:nth-child(4) {
+      padding-right: 20px;
+    }
+  }
+}
+
+.chkMark {
+  position: absolute;
+  top: -14px;
+  padding: 1px 4px;
+  background-color: $color-gray-50;
+  border-radius: 10px;
+  @include font-style;
+  line-height: 1.3;
+  font-size: $page-font-10;
+  color: $color-gray-500;
+
+  &.active {
+    background-color: $color-point-blue;
+    color: $color-white;
+  }
+}
+
+.inner {
+  padding-bottom: 24px;
+  &:not(:first-child) {
+    margin-top: 16px;
+  }
+  &:not(:last-child) {
+    border-bottom: 1px solid $color-gray-25;
+  }
+}
+
+.inner2 {
+  padding-bottom: 24px;
+  .titleBox {
+    & + div {
+      margin: 16px 0 20px;
+    }
+  }
+  .chipBox {
+    margin-bottom: 0;
+  }
+}
+
+.titleBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.leftTitle,
+.descTitle {
+  @include font-style;
+  color: $page-font-color-900;
+  font-size: $page-font-14;
+  font-weight: 600;
+}
+.btnRefresh {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  @include transition-allEaseInOut;
+  .iconRefresh {
+    fill: $color-gray-500;
+    @include transition-allEaseInOut;
+  }
+
+  &:hover {
+    background: $color-gray-25;
+    .iconRefresh {
+      fill: $color-gray-900;
+    }
+  }
+}
+
+.chipBox {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 10px;
+  margin: 16px 0 20px;
+}
+.chip {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  background-color: $color-gray-50;
+  border-radius: 20px;
+  @include font-style;
+  color: $page-font-color-600;
+  font-size: $page-font-root;
+  @include transition-allEaseInOut;
+  cursor: default;
+
+  &:not(.active) {
+    &:hover {
+      background-color: $color-gray-100;
+      color: $page-font-color-900;
+    }
+  }
+
+  &.active {
+    background-color: $color-gray-600;
+    color: $color-white;
+  }
+}
+
+.btnMore {
+  button {
+    width: 100%;
+  }
+}
+
+.sliderBox {
+  width: 99%;
+}
+
+////오른쪽 컨텐츠
+.descTopBox {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid $color-gray-25;
+}
+
+.descTitle {
+  & > span {
+    display: inline-flex;
+    margin-left: 6px;
+    @include font-style;
+    color: $color-gray-200;
+    font-size: $page-font-14;
+  }
+}
+
+.descSearch {
+  margin-top: 24px;
+  & > span {
+    @include font-style;
+    color: $page-font-color-900;
+    font-size: $page-font-root;
+    font-weight: 600;
+  }
+}
+.searchInputBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.selectBtnBox {
+  position: relative;
+}
+.btnAlign {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: 4px;
+  border: 1px solid $color-gray-75;
+  background-color: $color-white;
+  @include transition-allEaseInOut;
+  @include font-style;
+  font-size: $page-font-root;
+  color: $page-font-color-600;
+  & > span {
+    margin-left: 3px;
+  }
+
+  .iconAlign {
+    opacity: 0.6;
+    margin-right: 4px;
+  }
+
+  &.active {
+    border-color: $color-gray-900;
+    color: $page-font-color-900;
+    .iconAlign {
+      opacity: 1;
+    }
+  }
+
+  &:not(:disabled, .active) {
+    &:hover {
+      border-color: $color-gray-200;
+    }
+  }
+
+  &:disabled {
+    color: $color-gray-100;
+    .iconAlign {
+      opacity: 0.2;
+    }
+  }
+}
+
+.selectOptionBox {
+  display: none;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  z-index: 1;
+  width: 112px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid $color-gray-500;
+  background-color: $color-white;
+
+  &.active {
+    display: block;
+  }
+}
+.selectOption {
+  width: 100%;
+  height: 32px;
+  padding: 6px 12px;
+  @include font-style;
+  color: $page-font-color-600;
+  font-size: $page-font-root;
+  text-align: left;
+  cursor: default;
+  &:hover {
+    border-radius: 3px;
+    color: $page-font-color-900;
+    background-color: $color-gray-25;
+  }
+}
+.descBodyBox {
+  width: 1292px;
+}
+
+.descContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.descInfoBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 14px;
+  width: 640px;
+  padding: 16px 20px 18px 20px;
+  border-radius: 8px;
+  border: 1px solid $color-gray-75;
+  background-color: $color-white;
+  @include transition-allEaseInOut;
+
+  &:not(.active) {
+    &:hover {
+      border: 1px solid $color-gray-100;
+      background-color: $color-gray-25;
+    }
+  }
+
+  &.active {
+    border: 1px solid $color-point-blue;
+    background-color: #f5f9ff;
+  }
+
+  & > p {
+    @include font-style;
+    color: $page-font-color-900;
+    font-size: $page-font-13;
+    font-weight: 600;
+  }
+
+  .descInfo {
+    display: flex;
+    align-items: center;
+
+    & > div {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 140px;
+      padding-right: 34px;
+      margin-right: 14px;
+      @include font-style;
+      font-size: $page-font-root;
+
+      & > span {
+        color: $page-font-color-300;
+        @include ellipsis(1);
+      }
+      & > div {
+        color: $page-font-color-900;
+        @include ellipsis(1);
+      }
+      &:not(:last-child) {
+        &::after {
+          content: '';
+          display: inline-flex;
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 1px;
+          height: 40px;
+          background-color: $color-gray-50;
+        }
+      }
+    }
+  }
+}
