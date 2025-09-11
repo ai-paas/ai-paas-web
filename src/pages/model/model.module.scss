@@ -1,6 +1,6 @@
 //model style
 
-//custom-model
+//custom-model 커스텀 모델 생성 - 허깅페이스 연동
 ////레이아웃
 .flexContent {
   display: flex;
@@ -11,13 +11,17 @@
   width: 348px;
   padding: 0 24px;
 }
-.flexContentDesc {
+.flexContentDesc,
+.flexContentDesc2 {
   flex: 1;
   position: relative;
   overflow-y: auto;
   min-height: calc(100vh - 230px);
   padding: 0 24px;
   border-left: 1px solid $color-gray-50;
+}
+.flexContentDesc2 {
+  border-left: 0;
 }
 .footer {
   :global {
@@ -92,19 +96,22 @@
   font-size: $page-font-14;
   font-weight: 600;
 }
-.btnRefresh {
+.btnRefresh,
+.btnDownload {
   width: 28px;
   height: 28px;
   border-radius: 4px;
   @include transition-allEaseInOut;
-  .iconRefresh {
+  .iconRefresh,
+  .iconDownload {
     fill: $color-gray-500;
     @include transition-allEaseInOut;
   }
 
   &:hover {
     background: $color-gray-25;
-    .iconRefresh {
+    .iconRefresh,
+    .iconDownload {
       fill: $color-gray-900;
     }
   }
@@ -267,6 +274,9 @@
 .descBodyBox {
   width: 1292px;
 }
+.descBodyBox2 {
+  max-width: 1640px;
+}
 
 .descContent {
   display: flex;
@@ -275,7 +285,8 @@
   gap: 12px;
   margin-bottom: 24px;
 }
-.descInfoBox {
+.descInfoBox,
+.descInfoBox2 {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -301,10 +312,12 @@
   }
 
   & > p {
+    width: 594px;
     @include font-style;
     color: $page-font-color-900;
     font-size: $page-font-13;
     font-weight: 600;
+    @include ellipsis(1);
   }
 
   .descInfo {
@@ -344,4 +357,44 @@
       }
     }
   }
+}
+.descInfoBox2 {
+  width: 814px;
+  & > p {
+    width: 770px;
+  }
+}
+
+//custom-model 커스텀 모델 상세
+.itemLink {
+  display: flex;
+  gap: 3px;
+  margin-left: 16px;
+}
+
+.modelTree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & > div {
+    display: flex;
+    align-items: center;
+
+    &:nth-child(2) {
+      padding-left: 4px;
+    }
+    &:nth-child(3) {
+      padding-left: 28px;
+    }
+    &:nth-child(4) {
+      padding-left: 52px;
+    }
+  }
+}
+.modelTreeLink {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 24px;
 }

@@ -11,3 +11,7 @@ export { default as IconNode } from './icon_node.svg';
 export { default as IconHexagon } from './icon_hexagon.svg';
 export { default as IconRefresh } from './icon_refresh.svg';
 export { default as IconAlign } from './icon_align.svg';
+export { default as IconArrowModelTree } from './icon_arrow_modelTree.svg';
+export { default as IconLogoEpertx } from './icon_logo_epertx.svg';
+export { default as IconLogoHuggingface } from './icon_logo_huggingface.svg';
+export { default as IconDownload } from './icon_download.svg';

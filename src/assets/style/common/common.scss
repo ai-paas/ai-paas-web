@@ -214,6 +214,8 @@ input {
 }
 
 .page-detail_item-data-link {
+  display: inline-flex;
+  align-items: center;
   color: $page-font-color-blue;
   &:focus,
   &:active {

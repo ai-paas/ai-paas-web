@@ -1,43 +1,66 @@
+import { useState, useMemo } from 'react';
+import type { ColDef, Sorting } from 'innogrid-ui';
 import {
   BreadCrumb,
   Button,
   Table,
-  Tabs,
-  useTablePagination,
   useTableSelection,
-  type Sorting,
+  useTablePagination,
+  Tabs,
 } from 'innogrid-ui';
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+
+import {
+  IconArrowModelTree,
+  IconLogoEpertx,
+  IconLogoHuggingface,
+  IconDownload,
+} from '../../../../assets/img/icon';
+import styles from '../../model.module.scss';
+
+//breadcrumb
+const items = [
+  { label: '모델', path: '/model/custom-model' },
+  { label: '커스텀 모델' },
+  { label: 'DeepSeek-R1' },
+];
 
 export default function CustomModelDetailPage() {
-  const navigate = useNavigate();
-
-  const columns = [
+  //table
+  const basicColumns = [
     {
       id: 'name',
       header: '이름',
       accessorFn: (row) => row.name,
-      size: 425,
+      size: 500,
+      // cell: ({ row }) => (
+      //   <a href={"/"} className="table-td-link">
+      //     {row.original.name}
+      //   </a>
+      // ),
     },
     {
-      id: 'id',
+      id: 'fileSize',
       header: '파일 크기',
-      accessorFn: (row) => row.id,
-      size: 425,
+      accessorFn: (row) => row.fileSize,
+      size: 500,
     },
     {
-      id: 'state',
+      id: 'date',
       header: '업데이트 일시',
-      accessorFn: (row) => row.state,
-      size: 425,
+      accessorFn: (row) => row.date,
+      size: 500,
     },
     {
-      id: 'desc',
+      id: 'download',
       header: '다운로드',
-      accessorFn: (row) => row.desc,
-      size: 434,
-      cell: ({ row }) => <Button color="tertiary">버튼</Button>,
+      accessorFn: (row) => row.download,
+      size: 123,
+      cell: ({ row }) => (
+        <button type="button" className={styles.btnDownload}>
+          <IconDownload className={styles.iconDownload} />
+        </button>
+      ),
+      enableSorting: false, //오름차순/내림차순 아이콘 숨기기
     },
   ];
 
@@ -45,84 +68,136 @@ export default function CustomModelDetailPage() {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
+  const columns: ColDef<any>[] = useMemo(() => [...basicColumns], []);
   const [rowData, setRowData] = useState([
     {
-      name: 'Model-00001-of-D0004. safetensors',
-      id: '워크플로우 001',
-      state: '4.43GB',
-      desc: '2025-12-31 10:12',
+      name: 'Model-0001-of-0004.safetensors',
+      fileSize: '4.43 GB',
+      date: '2025-12-31 10:12',
+      download: '',
     },
   ]);
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '모델' },
-          { label: '커스텀 모델', path: '/model/custom-model' },
-          { label: 'test' },
-        ]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <BreadCrumb items={items} onNavigate={(path: string) => {}} className="breadcrumbBox" />
       <div className="page-title-box">
         <h2 className="page-title">모델 상세</h2>
+        <div className="page-toolBox">
+          <div className="page-toolBox-btns">
+            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
+              하드웨어 최적화
+            </Button>
+            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
+              모델 경량화
+            </Button>
+            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
+              편집
+            </Button>
+            <Button onClick={() => alert('Button clicked!')} size="medium" color="negative">
+              삭제
+            </Button>
+          </div>
+        </div>
       </div>
-      <div className="page-content page-p-40">
+      <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
-        <ul style={{ marginBottom: '20px' }}>
-          <li className="space-y-2 rounded-md bg-[#F2F2F2] px-5 pt-3.5 pb-4">
-            <div className="page-detail_item-name">모델 소개</div>
-            <div className="page-detail_item-data">
-              Gemma is a family of lightweight, state-of-the-art open models from Google, built from
-              the same research and technology used to create the Gemini models. They are
-              text-to-text, decoder-only large language models, available in English, with open
-              weights for both pre-trained variants and instruction-tuned variants. Gemma models are
-              well-suited for a variety of text generation tasks, including question answering,
-              summarization, and reasoning. Their relatively small size makes it possible to deploy
-              them in environments with limited resources such as a laptop, desktop or your own
-              cloud infrastructure, democratizing access to state of the art AI models and helping
-              foster innovation for everyone.
-            </div>
-          </li>
-        </ul>
         <div className="page-detail-list-box">
+          {/* 최대 ul 3개, li 5개 사용 해주세요. */}
           <ul className="page-detail-list">
             <li>
-              <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">Meta-Llama-3-8B</div>
+              <div className="page-detail_item-name">모델 소개</div>
+              <div className="page-detail_item-data">
+                모델 소개 자세히 보기{' '}
+                <a
+                  href={'https://huggingface.co/'}
+                  target={'_blank'}
+                  className={`page-detail_item-data-link ${styles.itemLink}`}
+                >
+                  <IconLogoHuggingface />
+                  허깅페이스 바로가기
+                </a>
+                <a
+                  href={'https://epretx.etri.re.kr/'}
+                  target={'_blank'}
+                  className={`page-detail_item-data-link ${styles.itemLink}`}
+                >
+                  <IconLogoEpertx />
+                  e-PreTX 바로가기
+                </a>
+              </div>
             </li>
-            <li>
-              <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">meta-llama</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">task</div>
-              <div className="page-detail_item-data">Text Generation</div>
-            </li>
-          </ul>
-          <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">2025-12-31 10:12</div>
             </li>
             <li>
-              <div className="page-detail_item-name">모델 ID</div>
-              <div className="page-detail_item-data">meta-llama/Meta-Llama-3-8B</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">Params</div>
-              <div className="page-detail_item-data">8B</div>
-            </li>
-          </ul>
-          <ul className="page-detail-list">
-            <li>
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">2025-12-31 10:12</div>
             </li>
             <li>
-              <div className="page-detail_item-name">버전 정보</div>
-              <div className="page-detail_item-data">v1</div>
+              <div className="page-detail_item-name">생성자</div>
+              <div className="page-detail_item-data">Meta-Liama</div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">모델 ID</div>
+              <div className="page-detail_item-data">meta-liama/Meta-Liama-3-8B</div>
+            </li>
+          </ul>
+          <ul className="page-detail-list">
+            <li>
+              <div className="page-detail_item-name">모델 공급자 ID</div>
+              <div className="page-detail_item-data">texttexttexttexttext</div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">모델 타입 ID</div>
+              <div className="page-detail_item-data">texttexttexttexttext</div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">모델 포맷 ID</div>
+              <div className="page-detail_item-data">texttexttexttexttext</div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">모델 트리</div>
+              <div className="page-detail_item-data">
+                <div className={styles.modelTree}>
+                  <div>Basemodel</div>
+                  <div>
+                    <IconArrowModelTree />
+                    Basemodel
+                  </div>
+                  <div>
+                    <IconArrowModelTree />
+                    Basemodel
+                  </div>
+                  <div>
+                    <IconArrowModelTree />
+                    Basemodel
+                  </div>
+                </div>
+                <div className={styles.modelTreeLink}>
+                  <div>
+                    <a href={'/'} className="page-detail_item-data-link">
+                      모델명 링크
+                    </a>
+                  </div>
+                  <div>
+                    <a href={'/'} className="page-detail_item-data-link">
+                      모델명 링크
+                    </a>
+                  </div>
+                  <div>
+                    <a href={'/'} className="page-detail_item-data-link">
+                      모델명 링크
+                    </a>
+                  </div>
+                  <div>
+                    <a href={'/'} className="page-detail_item-data-link">
+                      모델명 링크
+                    </a>
+                  </div>
+                </div>
+              </div>
             </li>
           </ul>
         </div>
@@ -130,7 +205,7 @@ export default function CustomModelDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['파일', '샘플 코드']}
+            labels={['파일']}
             components={[
               <div className="tabs-Content">
                 <div>
@@ -147,18 +222,6 @@ export default function CustomModelDetailPage() {
                     setSorting={setSorting}
                     sorting={sorting}
                   />
-                </div>
-              </div>,
-              <div className="tabs-Content">
-                <div className="rounded-md border border-[#DEDEDE] px-6 py-5">
-                  import torch from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor,
-                  pipeline from datasets import load_dataset device = "cuda:0" if
-                  torch.cuda.is_available() else "cpu" torch_dtype = torch.float16 if
-                  torch.cuda.is_available() else torch.float32 model_id = "openai/whisper-large-v3"
-                  model = AutoModelForSpeechSeq2Seq.from_pretrained( model_id,
-                  torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True )
-                  model.to(device) processor = AutoProcessor.from_pretrained(model_id) pipe =
-                  pipeline "automatic-speech-recognition",
                 </div>
               </div>,
             ]}

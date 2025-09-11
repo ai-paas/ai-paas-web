@@ -3,15 +3,10 @@ import type { ChangeEvent } from 'innogrid-ui';
 import { BreadCrumb, Tabs, Input, Button, Slider, Pagination } from 'innogrid-ui';
 import { IconRefresh, IconAlign } from '../../../../../assets/img/icon';
 import styles from '../../../model.module.scss';
-
-//breadcrumb
-const items = [
-  { label: '모델', path: '/prompt' },
-  { label: '커스텀 모델' },
-  { label: '커스텀 모델 생성' },
-];
+import { useNavigate } from 'react-router';
 
 export default function CustomModelCreateHuggingfacePage() {
+  const navigate = useNavigate();
   //input
   const [value, setValue] = useState<string>('');
 
@@ -30,7 +25,15 @@ export default function CustomModelCreateHuggingfacePage() {
 
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={(path: string) => {}} className="breadcrumbBox" />
+      <BreadCrumb
+        items={[
+          { label: '모델' },
+          { label: '커스텀 모델', path: '/model/custom-model' },
+          { label: '커스텀 모델 생성' },
+        ]}
+        onNavigate={navigate}
+        className="breadcrumbBox"
+      />
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델 생성 - 허깅페이스 연동</h2>
       </div>
