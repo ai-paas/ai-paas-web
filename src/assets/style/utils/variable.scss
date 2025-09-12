@@ -24,7 +24,7 @@ $color-gray-800: #2e2e2e;
 $color-gray-900: #1a1a1a;
 
 //// status color
-$color-normal: #0066ff;
+$color-normal: #06f;
 $color-error: #dc4646;
 $color-important: #31ab17;
 $color-warning: #f5ab00;
@@ -53,13 +53,13 @@ $page-content-detail-border-color: $color-gray-50;
 $table-td-state-h: 24px;
 $table-td-state-font-size: 11px;
 $table-td-state-border-radius: 20px;
-$table-td-state-color-run: #f0fded; //정상,완료
+$table-td-state-color-run: #ddfad6; //정상,완료
 $table-td-state-font-color-run: $color-important;
 $table-td-state-color-temp: #ebedef; //임시저장
 $table-td-state-font-color-temp: #89919f;
-$table-td-state-color-ing: #f5f9ff; //진행
+$table-td-state-color-ing: #e5f0ff; //진행
 $table-td-state-font-color-ing: $color-normal;
-$table-td-state-color-negative: #fcf2f2; //실패
+$table-td-state-color-negative: #fae5e5; //실패
 $table-td-state-font-color-negative: $color-error;
-$table-td-state-color-warning: #fdfae3; //위험
+$table-td-state-color-warning: #fcf5ca; //위험
 $table-td-state-font-color-warning: $color-warning;

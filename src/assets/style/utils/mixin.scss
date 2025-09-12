@@ -1,4 +1,4 @@
-@use "variable" as *;
+@use 'variable' as *;
 
 // font style //
 @mixin font-style {
@@ -54,4 +54,29 @@
   border: 0;
   white-space: nowrap;
   clip: rect(0, 0, 0, 0);
+}
+
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 7px;
+  }
+
+  /* Track */
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Handle */
+  &::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    background: $color-gray-100;
+    border: 3.5px solid $color-white;
+  }
+
+  &::-webkit-scrollbar-button:end,
+  &::-webkit-scrollbar-button:start {
+    display: none;
+  }
 }

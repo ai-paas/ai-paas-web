@@ -233,6 +233,7 @@
   }
 
   &:disabled {
+    border-color: $color-gray-50;
     color: $color-gray-100;
     .iconAlign {
       opacity: 0.2;

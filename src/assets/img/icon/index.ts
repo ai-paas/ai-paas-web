@@ -15,3 +15,7 @@ export { default as IconArrowModelTree } from './icon_arrow_modelTree.svg';
 export { default as IconLogoEpertx } from './icon_logo_epertx.svg';
 export { default as IconLogoHuggingface } from './icon_logo_huggingface.svg';
 export { default as IconDownload } from './icon_download.svg';
+export { default as IconPlay } from './icon_play.svg';
+export { default as IconStop } from './icon_stop.svg';
+export { default as IconEventOn } from './icon_event_on.svg';
+export { default as IconEventOff } from './icon_event_off.svg';

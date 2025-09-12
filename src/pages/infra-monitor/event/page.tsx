@@ -1,6 +1,7 @@
-import { TimelineGraph } from '@/components/ui/timeline-graph';
-import { BreadCrumb, Button, Select, type SelectSingleValue } from 'innogrid-ui';
+import { IconEventOff, IconEventOn, IconPlay, IconStop } from '@/assets/img/icon';
+import { BreadCrumb, Select, type SelectSingleValue } from 'innogrid-ui';
 import { useState } from 'react';
+import styles from '../inframonitor.module.scss';
 
 //select option
 type OptionType = { text: string; value: string };
@@ -37,22 +38,112 @@ export default function EventPage() {
           value={selectedValue}
           onChange={onChangeSelect}
         />
-        <div className="mt-4 rounded-lg border border-[#DEDEDE] bg-[#F9F9F9]">
-          <div className="p-4">
-            <Button color="tertiary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="8"
-                height="12"
-                viewBox="0 0 8 12"
-                fill="none"
-              >
-                <path d="M2.5 11.5H0V0.5H2.5V11.5ZM8 11.5H5.5V0.5H8V11.5Z" fill="#999999" />
-              </svg>
-              <span className="ml-1.5">스트리밍 일시정지</span>
-            </Button>
+        <div className={styles.eventBox}>
+          <div className={styles.btnBox}>
+            <button type="button" className={styles.btnPlay}>
+              <IconPlay className={styles.iconPlay} />
+              스트리밍 시작
+            </button>
+            <button type="button" className={styles.btnStop}>
+              <IconStop className={styles.iconStop} />
+              스트리밍 일시정지
+            </button>
           </div>
-          <TimelineGraph></TimelineGraph>;
+          <div className={styles.palyBox}>
+            <hr className={styles.leftLine} />
+            <div className={styles.cardBoxLeftInner}>
+              <div className={styles.cardBoxLeft}>
+                <IconEventOn className={styles.iconEventOn} />
+                <div className={`${styles.card} ${styles.warning}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-warning">Warning</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxLeft}>
+                <IconEventOn className={styles.iconEventOn} />
+                <div className={`${styles.card} ${styles.warning}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-warning">Warning</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxLeft}>
+                <IconEventOff className={styles.iconEventOff} />
+                <div className={`${styles.card} ${styles.normal}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-run">Normal</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxLeft}>
+                <IconEventOn className={styles.iconEventOn} />
+                <div className={`${styles.card} ${styles.warning}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-warning">Warning</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.cardBoxRightInner}>
+              <div className={styles.cardBoxRight}>
+                <IconEventOn className={styles.iconEventOn} />
+                <div className={`${styles.card} ${styles.warning}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-warning">Warning</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxRight}>
+                <IconEventOff className={styles.iconEventOff} />
+                <div className={`${styles.card} ${styles.normal}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-run">Normal</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxRight}>
+                <IconEventOff className={styles.iconEventOff} />
+                <div className={`${styles.card} ${styles.normal}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-run">Normal</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+              <div className={styles.cardBoxRight}>
+                <IconEventOn className={styles.iconEventOn} />
+                <div className={`${styles.card} ${styles.warning}`}>
+                  <div className={styles.state}>
+                    <div className="table-td-state table-td-state-warning">Warning</div>
+                    <span>2025-07-29 10:32</span>
+                  </div>
+                  <p>Pod/testqa-1748395270316-565cd67b6d-fj2lg</p>
+                  <span>Pulling image "testqa"</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

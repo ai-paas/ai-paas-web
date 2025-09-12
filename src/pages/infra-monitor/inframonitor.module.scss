@@ -1,5 +1,6 @@
 //infraMonitor style
 
+//monitoring
 .chartRow {
   display: flex;
   gap: 48px;
@@ -61,5 +62,181 @@
     color: $page-font-color-900;
     font-size: 36px;
     font-weight: 700;
+  }
+}
+
+//event
+.eventBox {
+  margin-top: 16px;
+  padding: 16px 0 36px;
+  border-radius: 8px;
+  border: 1px solid $color-gray-75;
+  background: $color-gray-10;
+}
+
+.btnBox {
+  padding: 0 16px 16px;
+}
+.btnPlay,
+.btnStop {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: 4px;
+  border: 1px solid $color-gray-75;
+  background-color: $color-white;
+  @include transition-allEaseInOut;
+  @include font-style;
+  font-size: $page-font-root;
+  color: $page-font-color-600;
+
+  .iconPlay,
+  .iconStop {
+    opacity: 0.6;
+    margin-right: 6px;
+  }
+
+  &:not(:disabled, .active) {
+    &:hover {
+      border-color: $color-gray-100;
+      color: $page-font-color-900;
+      background-color: $color-gray-25;
+      .iconPlay,
+      .iconStop {
+        opacity: 1;
+      }
+    }
+  }
+
+  &:disabled {
+    border-color: $color-gray-50;
+    color: $color-gray-100;
+    .iconPlay,
+    .iconStop {
+      opacity: 0.2;
+    }
+  }
+}
+
+.palyBox {
+  padding: 16px 36px;
+  height: 100%;
+  max-height: 774px;
+  position: relative;
+  overflow-x: auto;
+  @include scrollbar;
+  .leftLine {
+    position: absolute;
+    top: 10px;
+    left: 41px;
+    z-index: 1;
+    height: 98%;
+    border-left: 3px solid $color-gray-75;
+  }
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 36px;
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    background-color: $color-gray-75;
+    border-radius: 50%;
+  }
+  &::after {
+    top: unset;
+    bottom: 0;
+  }
+}
+
+.cardBoxLeftInner {
+  margin-top: -40px;
+}
+.cardBoxRightInner {
+  margin-top: -487px;
+}
+.cardBoxLeft,
+.cardBoxRight {
+  position: relative;
+  margin-top: 24px;
+  .iconEventOn,
+  .iconEventOff {
+    position: absolute;
+    top: 38px;
+    left: -10px;
+    z-index: 2;
+  }
+  .iconEventOff {
+    top: 48px;
+    left: 0;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    top: 55px;
+    left: 12px;
+    z-index: 1;
+    width: 38px;
+    height: 1px;
+    border-top: 1px dotted $color-gray-75;
+  }
+}
+
+.cardBoxRight {
+  &::after {
+    width: 804px;
+  }
+  .iconEventOn {
+    top: 38px;
+  }
+  .iconEventOff {
+    top: 48px;
+  }
+  .card {
+    margin-left: 816px;
+  }
+}
+
+.card {
+  position: relative;
+  top: 0;
+  z-index: 2;
+  margin-left: 50px;
+  display: flex;
+  width: 750px;
+  padding: 16px 20px 20px 24px;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 6px;
+  border-left: 6px solid $color-gray-75;
+  background: $color-white;
+  box-shadow: 3px 4px 6px 0 rgba(0, 0, 0, 0.1);
+  &.warning {
+    border-color: #f5ab00;
+  }
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  @include font-style;
+
+  & > span {
+    color: $page-font-color-300;
+    font-size: $page-font-root;
+  }
+
+  & + p {
+    color: $page-font-color-blue;
+    font-size: $page-font-root;
+
+    & + span {
+      color: $page-font-color-600;
+      font-size: $page-font-root;
+    }
   }
 }
