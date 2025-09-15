@@ -11,11 +11,11 @@ import {
   useSearchInputState,
 } from '@innogrid/ui';
 import { IconRefresh, IconAlign } from '../../../../../assets/img/icon';
-import styles from '../../../model.module.scss';
 import { useNavigate } from 'react-router';
-import { useGetHubModels } from '@/hooks/service/models';
+import { useGetHubModels, useGetHubModelTagsByGroup } from '@/hooks/service/models';
 import { formatCount } from '@/util/count';
 import { formatRelativeTime } from '@/util/date';
+import styles from '../../../model.module.scss';
 
 export default function CustomModelCreateHuggingfacePage() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -129,344 +129,311 @@ export default function CustomModelCreateHuggingfacePage() {
 }
 
 const LeftPanel = () => {
-  const [value, setValue] = useState<string>('');
-
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  };
-
-  //slider
-  const [value2, setValue2] = useState<number[]>([0, 30]);
+  const {
+    hubModelTags: tasks,
+    remaining_count: tasksRemainingCount,
+    refetch: refetchTasks,
+  } = useGetHubModelTagsByGroup({
+    market: 'huggingface',
+    group: 'task',
+  });
+  const {
+    hubModelTags: libraries,
+    remaining_count: librariesRemainingCount,
+    refetch: refetchLibraries,
+  } = useGetHubModelTagsByGroup({
+    market: 'huggingface',
+    group: 'library',
+  });
+  const {
+    hubModelTags: languages,
+    remaining_count: languagesRemainingCount,
+    refetch: refetchLanguages,
+  } = useGetHubModelTagsByGroup({
+    market: 'huggingface',
+    group: 'language',
+  });
+  const [filter, setFilter] = useState({
+    task: '',
+    num_parameters_min: 0,
+    num_parameters_max: null,
+    library: [],
+    language: [],
+  });
+  const [parameter, setParameter] = useState<number[]>([0, 30]);
 
   return (
     <div className={styles.flexContentLeft}>
-      {/* 탭에 추가되야할 마크 */}
-      <div className={styles.chkMark}>9</div>
-      {/* 탭 활성화 될때 마크 활성화 클래스네임 active 추가 */}
-      <div className={`${styles.chkMark} ${styles.active}`} style={{ left: '40px' }}>
-        {/* 선택된 갯수가 99개 이상일때 표시법 */}
-        99+
-      </div>
-
       <Tabs
         className={styles.tabs}
-        labels={['Main', 'Tasks', 'Libraries', 'Languages']}
+        labels={[
+          'Main',
+          <div className="flex space-x-1">
+            <span>Tasks</span>
+            <Badge number={tasks?.length + tasksRemainingCount} />
+          </div>,
+          <div className="flex space-x-1">
+            <span>Libraries</span>
+            <Badge number={libraries?.length + librariesRemainingCount} />
+          </div>,
+          <div className="flex space-x-1">
+            <span>Languages</span>
+            <Badge number={languages?.length + languagesRemainingCount} />
+          </div>,
+        ]}
         components={[
-          <div>
-            <div className={styles.inner}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Tasks</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  텍스트가 들어갑니다
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Text generation
-                </button>
-                <button type="button" className={styles.chip}>
-                  Text value 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 01
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 03
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 04
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 05
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 06
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 07
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 08
-                </button>
-              </div>
-              <div className={styles.btnMore}>
-                <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
-                  더 보기
-                </Button>
-              </div>
-            </div>
-            <div className={styles.inner}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Parameters</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <div className={styles.sliderBox}>
-                <Slider
-                  showPointer
-                  showMarker={true}
-                  marker={6}
-                  value={value2}
-                  onValueChange={setValue2}
-                />
-              </div>
-            </div>
-            <div className={styles.inner}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Libraries</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  Transformers
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Pytorch
-                </button>
-                <button type="button" className={styles.chip}>
-                  Text Generation
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 01
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 03
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 04
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 05
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 06
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 07
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 08
-                </button>
-              </div>
-              <div className={styles.btnMore}>
-                <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
-                  더 보기
-                </Button>
-              </div>
-            </div>
-            <div className={styles.inner}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Languages</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  English
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Chinese
-                </button>
-                <button type="button" className={styles.chip}>
-                  Korean
-                </button>
-                <button type="button" className={styles.chip}>
-                  Spanish
-                </button>
-                <button type="button" className={styles.chip}>
-                  German
-                </button>
-                <button type="button" className={styles.chip}>
-                  Japanese
-                </button>
-                <button type="button" className={styles.chip}>
-                  Turkish
-                </button>
-                <button type="button" className={styles.chip}>
-                  Arabic
-                </button>
-              </div>
-              <div className={styles.btnMore}>
-                <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
-                  더 보기
-                </Button>
-              </div>
-            </div>
-          </div>,
-          <div>
-            <div className={styles.inner2}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Tasks</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <Input
-                size={{ width: '300px', height: '32px' }}
-                placeholder="검색어를 입력해주세요."
-              />
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  텍스트가 들어갑니다
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Text generation
-                </button>
-                <button type="button" className={styles.chip}>
-                  Text value 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 01
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 03
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 04
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 05
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 06
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 07
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 08
-                </button>
-              </div>
-            </div>
-          </div>,
-          <div>
-            <div className={styles.inner2}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Libraries</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <Input
-                size={{ width: '300px', height: '32px' }}
-                placeholder="검색어를 입력해주세요."
-                value={value}
-                onChange={onChange}
-              />
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  텍스트가 들어갑니다
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Text generation
-                </button>
-                <button type="button" className={styles.chip}>
-                  Text value 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 01
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 03
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 04
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 05
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 06
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 07
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 08
-                </button>
-              </div>
-            </div>
-          </div>,
-          <div>
-            <div className={styles.inner2}>
-              <div className={styles.titleBox}>
-                <p className={styles.leftTitle}>Languages</p>
-                <button type="button" className={styles.btnRefresh}>
-                  <IconRefresh className={styles.iconRefresh} />
-                </button>
-              </div>
-              <Input
-                size={{ width: '300px', height: '32px' }}
-                placeholder="검색어를 입력해주세요."
-                value={value}
-                onChange={onChange}
-              />
-              <div className={styles.chipBox}>
-                <button type="button" className={styles.chip}>
-                  텍스트가 들어갑니다
-                </button>
-                {/* 선택 됐을때 클래스네임 active 추가 */}
-                <button type="button" className={`${styles.chip} ${styles.active}`}>
-                  Text generation
-                </button>
-                <button type="button" className={styles.chip}>
-                  Text value 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 01
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 02
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 03
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 04
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 05
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 06
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 07
-                </button>
-                <button type="button" className={styles.chip}>
-                  Task 08
-                </button>
-              </div>
-            </div>
-          </div>,
+          <MainTab
+            tasks={tasks}
+            libraries={libraries}
+            languages={languages}
+            parameter={parameter}
+            setParameter={setParameter}
+            filter={filter}
+            setFilter={setFilter}
+          />,
+          <TaskTab
+            tasks={tasks}
+            refetchTasks={refetchTasks}
+            filter={filter}
+            setFilter={setFilter}
+          />,
+          <LibraryTab
+            libraries={libraries}
+            refetchLibraries={refetchLibraries}
+            filter={filter}
+            setFilter={setFilter}
+          />,
+          <LanguageTab
+            languages={languages}
+            refetchLanguages={refetchLanguages}
+            filter={filter}
+            setFilter={setFilter}
+          />,
         ]}
       />
     </div>
   );
+};
+
+const MainTab = ({ tasks, libraries, languages, parameter, setParameter, filter, setFilter }) => {
+  return (
+    <div>
+      <div className={styles.inner}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Tasks</p>
+          <button type="button" className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <div className={styles.chipBox}>
+          {tasks?.slice(0, 6)?.map((task) => (
+            <button
+              key={task.id}
+              type="button"
+              onClick={() => setFilter({ ...filter, task: task.id })}
+              className={`${styles.chip} ${filter.task === task.id && styles.active}`}
+            >
+              {task.label}
+            </button>
+          ))}
+        </div>
+        <div className={styles.btnMore}>
+          <Button size="medium" color="tertiary" onClick={() => {}}>
+            더 보기
+          </Button>
+        </div>
+      </div>
+      <div className={styles.inner}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Parameters</p>
+          <button type="button" className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <div className={styles.sliderBox}>
+          <Slider
+            showPointer
+            showMarker={true}
+            marker={6}
+            value={parameter}
+            onValueChange={setParameter}
+          />
+        </div>
+      </div>
+      <div className={styles.inner}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Libraries</p>
+          <button type="button" className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <div className={styles.chipBox}>
+          {libraries?.slice(0, 10)?.map((library) => (
+            <button
+              type="button"
+              onClick={() => setFilter({ ...filter, library: [...filter.library, library.id] })}
+              className={`${styles.chip} ${filter.library.find((lib) => lib === library.id) && styles.active}`}
+            >
+              {library.label}
+            </button>
+          ))}
+        </div>
+        <div className={styles.btnMore}>
+          <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
+            더 보기
+          </Button>
+        </div>
+      </div>
+      <div className={styles.inner}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Languages</p>
+          <button type="button" className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <div className={styles.chipBox}>
+          {languages?.slice(0, 12)?.map((language) => (
+            <button
+              type="button"
+              onClick={() => setFilter({ ...filter, language: [...filter.language, language.id] })}
+              className={`${styles.chip} ${filter.language.find((lang) => lang === language.id) && styles.active}`}
+            >
+              {language.label}
+            </button>
+          ))}
+        </div>
+        <div className={styles.btnMore}>
+          <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
+            더 보기
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TaskTab = ({ tasks, refetchTasks, filter, setFilter }) => {
+  const [search, setSearch] = useState('');
+
+  const filteredTasks = tasks?.filter((task) =>
+    task.label.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className={styles.inner2}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Tasks</p>
+          <button type="button" onClick={() => refetchTasks()} className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <Input
+          size={{ width: '300px', height: '32px' }}
+          placeholder="검색어를 입력해주세요."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className={styles.chipBox}>
+          {filteredTasks?.map((task) => (
+            <button
+              type="button"
+              onClick={() => setFilter({ ...filter, task: task.id })}
+              className={`${styles.chip} ${filter.task === task.id && styles.active}`}
+            >
+              {task.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LibraryTab = ({ libraries, refetchLibraries, filter, setFilter }) => {
+  const [search, setSearch] = useState('');
+
+  const filteredLibraries = libraries?.filter((library) =>
+    library.label.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className={styles.inner2}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Libraries</p>
+          <button type="button" onClick={() => refetchLibraries()} className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <Input
+          size={{ width: '300px', height: '32px' }}
+          placeholder="검색어를 입력해주세요."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className={styles.chipBox}>
+          {filteredLibraries?.map((library) => (
+            <button
+              type="button"
+              onClick={() => setFilter({ ...filter, library: [...filter.library, library.id] })}
+              className={`${styles.chip} ${filter.library.find((lib) => lib === library.id) && styles.active}`}
+            >
+              {library.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LanguageTab = ({ languages, refetchLanguages, filter, setFilter }) => {
+  const [search, setSearch] = useState('');
+
+  const filteredLanguages = languages?.filter((language) =>
+    language.label.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className={styles.inner2}>
+        <div className={styles.titleBox}>
+          <p className={styles.leftTitle}>Languages</p>
+          <button type="button" onClick={() => refetchLanguages()} className={styles.btnRefresh}>
+            <IconRefresh className={styles.iconRefresh} />
+          </button>
+        </div>
+        <Input
+          size={{ width: '300px', height: '32px' }}
+          placeholder="검색어를 입력해주세요."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className={styles.chipBox}>
+          {filteredLanguages?.map((language) => (
+            <button
+              type="button"
+              onClick={() => setFilter({ ...filter, language: [...filter.language, language.id] })}
+              className={`${styles.chip} ${filter.language.find((lang) => lang === language.id) && styles.active}`}
+            >
+              {language.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Badge = ({ number }: { number?: number }) => {
+  if (!number) return null;
+
+  if (number < 100) {
+    return <span className={styles.chkMark}>{number}</span>;
+  }
+
+  return <div className={`${styles.chkMark} ${styles.active}`}>99+</div>;
 };
 
 interface ModelItemProps {

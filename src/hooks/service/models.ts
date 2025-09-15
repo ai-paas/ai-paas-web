@@ -9,6 +9,7 @@ import type {
   GetModelProvidersParams,
   GetModelTypesParams,
   HubModel,
+  HubModelTag,
   Model,
   ModelFormat,
   ModelProvider,
@@ -160,9 +161,10 @@ export const useCreateModel = () => {
 };
 
 export const useGetHubModels = (params: GetHubModelsParams) => {
+  const searchParams = new URLSearchParams(Object.entries(params));
   const { data, isPending, isError } = useQuery({
     queryKey: ['hub-connect', params],
-    queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
 
@@ -175,5 +177,25 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
     },
     isPending,
     isError,
+  };
+};
+
+export const useGetHubModelTagsByGroup = (params: {
+  group: 'region' | 'library' | 'task' | 'framework' | 'language';
+  market: string;
+}) => {
+  const { data, isFetching, isPending, isError, refetch } = useQuery({
+    queryKey: ['hub-connect-tags', params],
+    queryFn: () =>
+      api.get<HubModelTag>(`hub-connect/tags/${params.group}`, { searchParams: params }).json(),
+  });
+
+  return {
+    hubModelTags: data?.data,
+    remaining_count: data?.remaining_count,
+    isFetching,
+    isPending,
+    isError,
+    refetch,
   };
 };

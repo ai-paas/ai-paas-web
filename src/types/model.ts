@@ -86,6 +86,15 @@ export interface HubModel {
   };
 }
 
+export interface HubModelTag {
+  data: {
+    id: string;
+    label: string;
+    type: string;
+  }[];
+  remaining_count: number;
+}
+
 export interface GetCustomModelsParams {
   page?: number;
   size?: number;
@@ -141,4 +150,11 @@ export interface GetHubModelsParams {
   search?: string;
   num_parameters_min?: string;
   num_parameters_max?: string;
+  task?: string;
+  library?: string[];
+  language?: string[];
+  license?: string[];
+  apps?: string[];
+  inference_provider?: string[];
+  other?: string[];
 }
