@@ -1,11 +1,13 @@
-import { FlowChart } from "@/components/ui/flow-chart";
-import { Handle, Position, type Edge, type Node } from "@xyflow/react";
-import { memo } from "react";
+import { FlowChart } from '@/components/ui/flow-chart';
+import { Handle, Position, type Edge, type Node } from '@xyflow/react';
+import { memo } from 'react';
 
-const StartNode = memo(({ data, isConnectable }) => {
+const StartNode = memo(({ data, isConnectable, selected }) => {
   return (
     <div>
-      <div className={`flex rounded-2xl border-[2px] border-transparent`}>
+      <div
+        className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
+      >
         <div className="group relative w-[240px] rounded-[15px] border border-transparent bg-white pb-1 shadow-xs hover:shadow-lg">
           <div className="flex items-center rounded-t-2xl px-3 pt-3 pb-2">
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-blue-500 text-white shadow-md">
@@ -30,9 +32,7 @@ const StartNode = memo(({ data, isConnectable }) => {
                 </g>
               </svg>
             </div>
-            <div className="mr-1 flex grow items-center truncate">
-              {data.label}
-            </div>
+            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
           </div>
         </div>
       </div>
@@ -41,17 +41,17 @@ const StartNode = memo(({ data, isConnectable }) => {
         position={Position.Right}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
     </div>
   );
 });
 
-const ModelNode = memo(({ data, isConnectable }) => {
+const ModelNode = memo(({ data, isConnectable, selected }) => {
   return (
     <div>
       <Handle
@@ -59,13 +59,15 @@ const ModelNode = memo(({ data, isConnectable }) => {
         position={Position.Left}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
-      <div className={`flex rounded-2xl border-[2px] border-transparent`}>
+      <div
+        className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
+      >
         <div className="group relative w-[240px] rounded-[15px] border border-transparent bg-white pb-1 shadow-xs hover:shadow-lg">
           <div className="flex items-center rounded-t-2xl px-3 pt-3 pb-2">
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-indigo-500 text-white shadow-md">
@@ -90,9 +92,7 @@ const ModelNode = memo(({ data, isConnectable }) => {
                 </g>
               </svg>
             </div>
-            <div className="mr-1 flex grow items-center truncate">
-              {data.label}
-            </div>
+            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
           </div>
         </div>
       </div>
@@ -101,17 +101,17 @@ const ModelNode = memo(({ data, isConnectable }) => {
         position={Position.Right}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
     </div>
   );
 });
 
-const KnowledgeNode = memo(({ data, isConnectable }) => {
+const KnowledgeNode = memo(({ data, isConnectable, selected }) => {
   return (
     <div>
       <Handle
@@ -119,13 +119,15 @@ const KnowledgeNode = memo(({ data, isConnectable }) => {
         position={Position.Left}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
-      <div className={`flex rounded-2xl border-[2px] border-transparent`}>
+      <div
+        className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
+      >
         <div className="group relative w-[240px] rounded-[15px] border border-transparent bg-white pb-1 shadow-xs hover:shadow-lg">
           <div className="flex items-center rounded-t-2xl px-3 pt-3 pb-2">
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-blue-500 text-white shadow-md">
@@ -150,9 +152,7 @@ const KnowledgeNode = memo(({ data, isConnectable }) => {
                 </g>
               </svg>
             </div>
-            <div className="mr-1 flex grow items-center truncate">
-              {data.label}
-            </div>
+            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
           </div>
         </div>
       </div>
@@ -161,17 +161,17 @@ const KnowledgeNode = memo(({ data, isConnectable }) => {
         position={Position.Right}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
     </div>
   );
 });
 
-const EndNode = memo(({ data, isConnectable }) => {
+const EndNode = memo(({ data, isConnectable, selected }) => {
   return (
     <div>
       <Handle
@@ -179,13 +179,15 @@ const EndNode = memo(({ data, isConnectable }) => {
         position={Position.Left}
         isConnectable={isConnectable}
         style={{
-          backgroundColor: "#296dff",
-          height: "12px",
-          width: "2px",
-          borderRadius: "1px",
+          backgroundColor: '#296dff',
+          height: '12px',
+          width: '2px',
+          borderRadius: '1px',
         }}
       />
-      <div className={`flex rounded-2xl border-[2px] border-transparent`}>
+      <div
+        className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
+      >
         <div className="group relative w-[240px] rounded-[15px] border border-transparent bg-white pb-1 shadow-xs hover:shadow-lg">
           <div className="flex items-center rounded-t-2xl px-3 pt-3 pb-2">
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-amber-500 text-white shadow-md">
@@ -210,9 +212,7 @@ const EndNode = memo(({ data, isConnectable }) => {
                 </g>
               </svg>
             </div>
-            <div className="mr-1 flex grow items-center truncate">
-              {data.label}
-            </div>
+            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
           </div>
         </div>
       </div>
@@ -225,10 +225,7 @@ interface WorkflowEditorProps {
   initialEdges: Edge[];
 }
 
-export const WorkflowEditor = ({
-  initialNodes,
-  initialEdges,
-}: WorkflowEditorProps) => {
+export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorProps) => {
   return (
     <div className="size-full">
       <FlowChart
