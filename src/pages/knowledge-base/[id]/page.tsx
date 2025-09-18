@@ -5,7 +5,7 @@ import {
   useTablePagination,
   useTableSelection,
   type Sorting,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { DeleteKnowledgeBaseButton } from '../../../components/features/knowledge-base/delete-knowledge-base-button';

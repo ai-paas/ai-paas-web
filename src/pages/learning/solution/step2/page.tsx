@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SelectSingleValue } from "innogrid-ui";
+import type { SelectSingleValue } from "@innogrid/ui";
 import {
   BreadCrumb,
   Button,
@@ -7,7 +7,7 @@ import {
   Stepper,
   RadioButton,
   Accordion,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 
 import styles from "../../learning.module.scss";
 import { IconArrCount, IconFileUp } from "../../../../assets/img/icon";

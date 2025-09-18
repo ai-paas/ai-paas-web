@@ -1,4 +1,4 @@
-import { Table, useTablePagination, type Sorting } from "innogrid-ui";
+import { Table, useTablePagination, type Sorting } from "@innogrid/ui";
 import { useState } from "react";
 
 export const ModelTab = () => {

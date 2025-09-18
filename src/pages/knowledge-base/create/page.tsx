@@ -8,7 +8,7 @@ import {
   Stepper,
   Textarea,
   type SelectSingleValue,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 import { IconArrCount, IconDocument, IconFileUp } from '../../../assets/img/icon';
 import { useState, type ChangeEvent } from 'react';

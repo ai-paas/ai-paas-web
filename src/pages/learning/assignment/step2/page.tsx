@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { SelectSingleValue } from "innogrid-ui";
-import { BreadCrumb, Button, Select, Stepper, RadioButton } from "innogrid-ui";
+import type { SelectSingleValue } from "@innogrid/ui";
+import { BreadCrumb, Button, Select, Stepper, RadioButton } from "@innogrid/ui";
 
 import { IconFileUp } from "../../../../assets/img/icon";
 

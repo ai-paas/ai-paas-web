@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ChangeEvent } from 'innogrid-ui';
-import { BreadCrumb, Button, Input, Textarea } from 'innogrid-ui';
+import type { ChangeEvent } from '@innogrid/ui';
+import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 
 export default function PromptCreatePage() {

@@ -1,5 +1,5 @@
 import { IconFileUp } from '@/assets/img/icon';
-import { BreadCrumb, Button, Input, Select, Textarea, type SelectSingleValue } from 'innogrid-ui';
+import { BreadCrumb, Button, Input, Select, Textarea, type SelectSingleValue } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 

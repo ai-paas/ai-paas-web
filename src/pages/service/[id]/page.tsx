@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router';
-import { BreadCrumb, Tabs } from 'innogrid-ui';
+import { BreadCrumb, Tabs } from '@innogrid/ui';
 import { EditServiceButton } from '@/components/features/service/edit-service-button';
 import { DeleteServiceButton } from '@/components/features/service/delete-service-button';
 import { WorkflowTab } from '@/components/features/service/workflow-tab';

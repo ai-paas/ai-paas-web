@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import type { SelectSingleValue, CheckboxCheckedState } from "innogrid-ui";
+import type { SelectSingleValue, CheckboxCheckedState } from "@innogrid/ui";
 import {
   Accordion,
   BreadCrumb,
@@ -10,7 +10,7 @@ import {
   SearchInput,
   Select,
   useSearchInputState,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 
 import styles from "../../workflow.module.scss";
 import { IconArrCount, IconDel } from "../../../../assets/img/icon";

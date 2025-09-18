@@ -1,5 +1,5 @@
 import { useDeleteService } from "@/hooks/service/services";
-import { AlertDialog, Button } from "innogrid-ui";
+import { AlertDialog, Button } from "@innogrid/ui";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 

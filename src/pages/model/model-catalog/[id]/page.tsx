@@ -6,7 +6,7 @@ import {
   useTablePagination,
   useTableSelection,
   type Sorting,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 

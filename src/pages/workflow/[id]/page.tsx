@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Sorting } from 'innogrid-ui';
-import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from 'innogrid-ui';
+import type { Sorting } from '@innogrid/ui';
+import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from '@innogrid/ui';
 
 import { IconCopy } from '../../../assets/img/icon';
 import { Link, useNavigate } from 'react-router';

@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Textarea } from 'innogrid-ui';
+import { Button, Input, Modal, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 
 export const ModelRegisterButton = () => {

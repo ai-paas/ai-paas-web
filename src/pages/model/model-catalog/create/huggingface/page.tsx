@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ChangeEvent } from 'innogrid-ui';
-import { BreadCrumb, Tabs, Input, Button, Slider, Pagination } from 'innogrid-ui';
+import type { ChangeEvent } from '@innogrid/ui';
+import { BreadCrumb, Tabs, Input, Button, Slider, Pagination } from '@innogrid/ui';
 import { IconRefresh, IconAlign } from '../../../../../assets/img/icon';
 import styles from '../../../model.module.scss';
 import { useNavigate } from 'react-router';

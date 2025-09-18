@@ -1,4 +1,4 @@
-import { Button, useTableSelection } from "innogrid-ui";
+import { Button, useTableSelection } from "@innogrid/ui";
 import { useNavigate } from "react-router";
 
 export const EditWorkflowButton = () => {

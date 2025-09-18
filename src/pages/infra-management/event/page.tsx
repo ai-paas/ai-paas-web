@@ -1,5 +1,5 @@
 import { IconEventOff, IconEventOn, IconPlay, IconStop } from '@/assets/img/icon';
-import { BreadCrumb, Select, type SelectSingleValue } from 'innogrid-ui';
+import { BreadCrumb, Select, type SelectSingleValue } from '@innogrid/ui';
 import { useState } from 'react';
 import styles from '../inframonitor.module.scss';
 

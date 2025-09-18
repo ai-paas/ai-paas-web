@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { BreadCrumb, Button } from "innogrid-ui";
+import { BreadCrumb, Button } from "@innogrid/ui";
 import { WorkflowSettingPanel } from "../../../components/features/workflow/workflow-setting-panel";
 import { WorkflowComponentPanel } from "../../../components/features/workflow/workflow-component-panel";
 import styles from "../workflow.module.scss";

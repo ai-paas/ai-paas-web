@@ -1,4 +1,4 @@
-import { Button } from "innogrid-ui";
+import { Button } from "@innogrid/ui";
 import { useNavigate } from "react-router";
 
 export const CreateDatasetButton = () => {

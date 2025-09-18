@@ -1,4 +1,4 @@
-import { BreadCrumb, Table, useTablePagination } from 'innogrid-ui';
+import { BreadCrumb, Table, useTablePagination } from '@innogrid/ui';
 
 import { IconMore, IconNode } from '../../assets/img/icon';
 import styles from './dashboard.module.scss';

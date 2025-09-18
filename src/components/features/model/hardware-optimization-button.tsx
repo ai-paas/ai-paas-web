@@ -1,4 +1,4 @@
-import { Button, Modal, Select, type SelectSingleValue } from 'innogrid-ui';
+import { Button, Modal, Select, type SelectSingleValue } from '@innogrid/ui';
 import { useState } from 'react';
 
 type OptionType = { text: string; value: string };

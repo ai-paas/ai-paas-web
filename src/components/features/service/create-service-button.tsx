@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Textarea } from 'innogrid-ui';
+import { Button, Input, Modal, Textarea } from '@innogrid/ui';
 import { useState, useCallback } from 'react';
 import styles from '@/pages/service/service.module.scss';
 import { useCreateService } from '@/hooks/service/services';

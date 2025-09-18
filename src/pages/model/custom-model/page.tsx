@@ -8,7 +8,7 @@ import {
   useTablePagination,
   useTableSelection,
   type Sorting,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 import { useState } from "react";
 import { CreateCustomModelButton } from "../../../components/features/model/create-custom-model-button";
 import { Link } from "react-router";

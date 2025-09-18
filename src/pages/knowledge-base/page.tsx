@@ -8,7 +8,7 @@ import {
   useTablePagination,
   useTableSelection,
   type Sorting,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
