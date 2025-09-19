@@ -9,8 +9,9 @@ import {
   Slider,
   Switch,
   Textarea,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { IconArrCount } from '@/assets/img/icon';
+import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
 
 export const ModelSetting = () => {
   const [value, setValue] = useState<string>('');
@@ -92,128 +93,133 @@ export const ModelSetting = () => {
             onChange={onChangeSelect}
             menuPosition="fixed"
           />
-          <div className="relative">
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="tertiary">
-              설정
-            </Button>
-          </div>
-        </div>
-      </div>
 
-      {/* 설정btn 클릭시 활성화 클래스네임 active 추가 */}
-      <div className={`${styles.setBox} ${styles.active}`}>
-        <div className={styles.setName}>매개변수</div>
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>Temperature</div>
-            <Switch checked={checked} onCheckedChange={setChecked} />
-            <div className={styles.slider}>
-              <Slider value={value2} onValueChange={setValue2} />
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount} ${styles.disabled}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>Top P</div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="medium" color="tertiary">
+                설정
+              </Button>
+            </PopoverTrigger>
+            <PopoverPortal>
+              <PopoverContent sideOffset={5}>
+                <div className={`${styles.setBox} ${styles.active}`}>
+                  <div className={styles.setName}>매개변수</div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>Temperature</div>
+                      <Switch checked={checked} onCheckedChange={setChecked} />
+                      <div className={styles.slider}>
+                        <Slider value={value2} onValueChange={setValue2} />
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount} ${styles.disabled}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>Top P</div>
 
-            <Switch checked={checked} onCheckedChange={setChecked} />
-            <div className={styles.slider}>
-              <Slider value={value2} onValueChange={setValue2} />
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>Presence penalty</div>
-            <Switch checked={checked} onCheckedChange={setChecked} />
-            <div className={styles.slider}>
-              <Slider value={value2} onValueChange={setValue2} />
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>Frequency penalty</div>
-            <Switch checked={checked} onCheckedChange={setChecked} />
-            <div className={styles.slider}>
-              <Slider value={value2} onValueChange={setValue2} />
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+                      <Switch checked={checked} onCheckedChange={setChecked} />
+                      <div className={styles.slider}>
+                        <Slider value={value2} onValueChange={setValue2} />
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>Presence penalty</div>
+                      <Switch checked={checked} onCheckedChange={setChecked} />
+                      <div className={styles.slider}>
+                        <Slider value={value2} onValueChange={setValue2} />
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>Frequency penalty</div>
+                      <Switch checked={checked} onCheckedChange={setChecked} />
+                      <div className={styles.slider}>
+                        <Slider value={value2} onValueChange={setValue2} />
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>Max tokens</div>
-            <Switch checked={checked} onCheckedChange={setChecked} />
-            <div className={styles.slider}>
-              <Slider value={value2} onValueChange={setValue2} />
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>Max tokens</div>
+                      <Switch checked={checked} onCheckedChange={setChecked} />
+                      <div className={styles.slider}>
+                        <Slider value={value2} onValueChange={setValue2} />
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </PopoverPortal>
+          </Popover>
         </div>
       </div>
 

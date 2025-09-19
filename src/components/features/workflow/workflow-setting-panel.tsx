@@ -25,8 +25,6 @@ export const WorkflowSettingPanel = () => {
     },
   });
 
-  console.log(selectedNode);
-
   if (!selectedNode) return null;
 
   return (

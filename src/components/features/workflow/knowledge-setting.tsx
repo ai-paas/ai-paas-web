@@ -1,7 +1,8 @@
-import { Accordion, Input, Select, Slider } from 'innogrid-ui';
+import { Accordion, Input, Select, Slider } from '@innogrid/ui';
 import styles from '../../../pages/workflow/workflow.module.scss';
 import { useState, type ChangeEvent } from 'react';
 import { IconArrCount, IconSet } from '@/assets/img/icon';
+import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
 
 //select option
 const options = [
@@ -84,9 +85,40 @@ export const KnowledgeBaseSetting = () => {
       <div className={styles.addItemBox}>
         <div className={styles.addItemNameBox}>
           <div className={`${styles.addItemName} page-icon-requisite`}>지식 베이스</div>
-          <button type="button" className={styles.btnSet}>
-            <IconSet className={styles.iconSet} />
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={styles.btnSet}>
+                <IconSet className={styles.iconSet} />
+              </button>
+            </PopoverTrigger>
+            <PopoverPortal>
+              <PopoverContent sideOffset={5}>
+                <div className={`${styles.setBox} ${styles.setBoxSm} ${styles.active}`}>
+                  <div className={styles.setName}>검색 설정</div>
+                  <div className={styles.setInner}>
+                    <div className={styles.setItem}>
+                      <div className={styles.setItemName}>
+                        <Slider value={value2} onValueChange={setValue2} /> K
+                      </div>
+                      {/* numCount disabled 일때 클래스네임 disabled 추가 */}
+                      <div className={`${styles.numCount}`}>
+                        {/* ${styles.disabled} */}
+                        <input type="number" placeholder="0" />
+                        <div className={styles.numCountControl}>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                          </button>
+                          <button type="button" className={styles.btnNum}>
+                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </PopoverPortal>
+          </Popover>
         </div>
         <Select
           className={styles.select}
@@ -101,31 +133,6 @@ export const KnowledgeBaseSetting = () => {
       </div>
       <div className={styles.addItemBox}>
         <Accordion className={styles.accordion} components={accordionItems} />
-      </div>
-
-      {/* 지식 베이스 btn 클릭시 활성화 클래스네임 active 추가 */}
-      <div className={`${styles.setBox} ${styles.setBoxSm} ${styles.active}`}>
-        <div className={styles.setName}>검색 설정</div>
-        <div className={styles.setInner}>
-          <div className={styles.setItem}>
-            <div className={styles.setItemName}>
-              <Slider value={value2} onValueChange={setValue2} /> K
-            </div>
-            {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-            <div className={`${styles.numCount}`}>
-              {/* ${styles.disabled} */}
-              <input type="number" placeholder="0" />
-              <div className={styles.numCountControl}>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
-                </button>
-                <button type="button" className={styles.btnNum}>
-                  <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

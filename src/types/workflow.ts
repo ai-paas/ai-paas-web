@@ -1,3 +1,5 @@
+export type WorkflowType = 'start' | 'model' | 'knowledgebase' | 'end';
+
 export interface Workflow {
   name: string;
   description: string;
