@@ -1,4 +1,4 @@
-import { AlertDialog, Button } from 'innogrid-ui';
+import { AlertDialog, Button } from '@innogrid/ui';
 import { useState } from 'react';
 
 export const DeleteWorkflowButton = () => {

@@ -1,4 +1,4 @@
-import { Button, SelectButton, SelectButtonItem } from 'innogrid-ui';
+import { Button, SelectButton, SelectButtonItem } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 
 export const CreateCustomModelButton = () => {

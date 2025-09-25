@@ -9,7 +9,7 @@ import {
   useTableSelection,
   type ColDef,
   type Sorting,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 import { useMemo, useState } from "react";
 import { CreateModelCatalogButton } from "../../../components/features/model/create-model-catalog-button";
 import { EditModelCatalogButton } from "../../../components/features/model/edit-model-catalog-button";

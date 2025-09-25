@@ -9,7 +9,7 @@ import {
   useTableSelection,
   useTablePagination,
   useSearchInputState,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { EditServiceButton } from '@/components/features/service/edit-service-button';
 import { CreateServiceButton } from '@/components/features/service/create-service-button';
 import { DeleteServiceButton } from '@/components/features/service/delete-service-button';

@@ -6,7 +6,7 @@ import {
   Table,
   useTablePagination,
   type SelectSingleValue,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { IconHexagon } from '../../../assets/img/icon';
 import styles from '../inframonitor.module.scss';
 import { GaugeChart } from '@/components/ui/gauge-chart';

@@ -25,8 +25,12 @@ import LearningPage from '../pages/learning/page';
 import LearningCreatePage from '../pages/learning/create/page';
 import LearningDetailPage from '../pages/learning/[id]/page';
 import DashboardPage from '../pages/dashboard/page';
-import MonitoringPage from '../pages/infra-monitor/monitoring/page';
-import EventPage from '../pages/infra-monitor/event/page';
+import EventPage from '../pages/infra-management/event/page';
+import ClusterManagementPage from '../pages/infra-management/cluster-management/page';
+import MonitoringDashboardPage from '../pages/infra-management/monitoring-dashboard/page';
+import ApplicationCatalogPage from '../pages/infra-management/application/catalog/page';
+import ApplicationHelmReleasePage from '../pages/infra-management/application/helm-release/page';
+import ApplicationHelmRepositoryPage from '../pages/infra-management/application/helm-repository/page';
 import MemberManagementPage from '../pages/member-management/page';
 import LearningAssignmentStep2Page from '../pages/learning/assignment/step2/page';
 import LearningAssignmentStep3Page from '../pages/learning/assignment/step3/page';
@@ -37,6 +41,7 @@ import LoginPage from '../pages/login/page';
 import HomePage from '../pages/page';
 import CustomModelCreateHuggingfacePage from '@/pages/model/model-catalog/create/huggingface/page';
 import CustomModelCreateEtriPage from '@/pages/model/model-catalog/create/etri/page';
+import MemberCreatePage from '@/pages/member-management/create/page';
 
 export const router = createBrowserRouter([
   {
@@ -183,16 +188,38 @@ export const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
-        path: 'infra-monitor',
+        path: 'infra-management',
         children: [
           {
-            path: 'monitoring',
+            path: 'cluster-management',
             index: true,
-            element: <MonitoringPage />,
+            element: <ClusterManagementPage />,
+          },
+          {
+            path: 'monitoring-dashboard',
+            element: <MonitoringDashboardPage />,
           },
           {
             path: 'event',
             element: <EventPage />,
+          },
+          {
+            path: 'application',
+            children: [
+              {
+                path: 'catalog',
+                index: true,
+                element: <ApplicationCatalogPage />,
+              },
+              {
+                path: 'helm-release',
+                element: <ApplicationHelmReleasePage />,
+              },
+              {
+                path: 'helm-repository',
+                element: <ApplicationHelmRepositoryPage />,
+              },
+            ],
           },
         ],
       },
@@ -203,6 +230,10 @@ export const router = createBrowserRouter([
       {
         path: 'member-management/:id',
         element: <MemberManagementDetailPage />,
+      },
+      {
+        path: 'member-management/create',
+        element: <MemberCreatePage />,
       },
     ],
   },

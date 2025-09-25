@@ -8,7 +8,7 @@ import {
   Select,
   Stepper,
   Textarea,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 

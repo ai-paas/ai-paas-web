@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { ColDef, Sorting } from 'innogrid-ui';
+import type { ColDef, Sorting } from '@innogrid/ui';
 import {
   BreadCrumb,
   Button,
@@ -7,7 +7,7 @@ import {
   useTableSelection,
   useTablePagination,
   Tabs,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 
 import {
   IconArrowModelTree,

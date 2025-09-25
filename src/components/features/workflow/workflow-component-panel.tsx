@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useReactFlow } from "@xyflow/react";
-import { SearchInput, useSearchInputState } from "innogrid-ui";
+import { SearchInput, useSearchInputState } from "@innogrid/ui";
 
 export const WorkflowComponentPanel = () => {
   const { searchValue, ...restProps } = useSearchInputState();

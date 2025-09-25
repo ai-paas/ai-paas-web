@@ -6,9 +6,9 @@ export interface Member {
   phone: string;
   role: string;
   is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
-  last_login: Date;
+  created_at: string;
+  updated_at: string;
+  last_login: string;
   description: string;
 }
 

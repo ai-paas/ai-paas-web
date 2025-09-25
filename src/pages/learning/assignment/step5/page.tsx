@@ -1,7 +1,7 @@
 import Lottie from "react-lottie";
 
 import LoadingWhite from "../../../../assets/lottie/loding_white.json";
-import { BreadCrumb } from "innogrid-ui";
+import { BreadCrumb } from "@innogrid/ui";
 
 import styles from "../../learning.module.scss";
 

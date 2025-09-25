@@ -3,7 +3,7 @@ import {
   LineChart,
   Select,
   type SelectSingleValue,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 import styles from "@/pages/service/service.module.scss";
 import { useState } from "react";
 

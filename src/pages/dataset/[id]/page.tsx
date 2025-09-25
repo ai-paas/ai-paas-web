@@ -1,4 +1,4 @@
-import { BreadCrumb, Button } from 'innogrid-ui';
+import { BreadCrumb, Button } from '@innogrid/ui';
 
 import { IconDocument } from '../../../assets/img/icon';
 import { useNavigate } from 'react-router';

@@ -5,7 +5,7 @@ import {
   useTablePagination,
   useTableSelection,
   type Sorting,
-} from "innogrid-ui";
+} from "@innogrid/ui";
 import { CreateWorkflowButton } from "../workflow/create-workflow-button";
 import { DeleteWorkflowButton } from "../workflow/delete-workflow-button";
 import { EditWorkflowButton } from "../workflow/edit-workflow-button";

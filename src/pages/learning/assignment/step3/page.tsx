@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { SelectSingleValue } from "innogrid-ui";
-import { BreadCrumb, Button, Select, Stepper, Input } from "innogrid-ui";
+import type { SelectSingleValue } from "@innogrid/ui";
+import { BreadCrumb, Button, Select, Stepper, Input } from "@innogrid/ui";
 
 //breadcrumb
 const items = [{ label: "학습", path: "/learning" }, { label: "학습 생성" }];

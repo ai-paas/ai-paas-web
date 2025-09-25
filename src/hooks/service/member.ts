@@ -44,10 +44,11 @@ export const useGetMembers = (params: GetMembersParams = {}) => {
   };
 };
 
-export const useGetMember = (memberId: number) => {
+export const useGetMember = (memberId?: string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: ['members', memberId],
     queryFn: () => api.get(`members/${memberId}`).json<Member>(),
+    enabled,
   });
 
   return {
@@ -80,7 +81,7 @@ export const useDeleteMember = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (memberId: number) => api.delete(`members/${memberId}`).json<string>(),
+    mutationFn: (memberId: string) => api.delete(`members/${memberId}`).json<string>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
     },

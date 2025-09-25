@@ -5,7 +5,7 @@ import {
   SelectButtonItem,
   Table,
   useTablePagination,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import { useState } from 'react';
 import styles from '../../../pages/service/service.module.scss';
 import { useNavigate } from 'react-router';

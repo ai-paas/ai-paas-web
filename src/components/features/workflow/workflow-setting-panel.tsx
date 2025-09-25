@@ -11,7 +11,7 @@ import {
   type CheckboxCheckedState,
   Slider,
   Switch,
-} from 'innogrid-ui';
+} from '@innogrid/ui';
 import styles from '../../../pages/workflow/workflow.module.scss';
 import { IconArrCount, IconDel, IconSet } from '../../../assets/img/icon';
 import { useState, type ChangeEvent } from 'react';

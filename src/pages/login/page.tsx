@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Button, Input, Password } from "innogrid-ui";
+import { Button, Input, Password } from "@innogrid/ui";
 import Logo from "../../assets/img/header/logo.svg";
 import styles from "./login.module.scss";
 import { useLogin } from "../../hooks/service/authentication";

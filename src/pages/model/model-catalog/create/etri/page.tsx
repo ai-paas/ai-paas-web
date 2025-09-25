@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ChangeEvent } from 'innogrid-ui';
-import { BreadCrumb, Input, Button, Pagination } from 'innogrid-ui';
+import type { ChangeEvent } from '@innogrid/ui';
+import { BreadCrumb, Input, Button, Pagination } from '@innogrid/ui';
 
 import { IconAlign } from '../../../../../assets/img/icon';
 import styles from '../../../model.module.scss';

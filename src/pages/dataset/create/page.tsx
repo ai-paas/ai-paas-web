@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ChangeEvent, SelectSingleValue } from 'innogrid-ui';
-import { BreadCrumb, Button, Select, Input, Textarea } from 'innogrid-ui';
+import type { ChangeEvent, SelectSingleValue } from '@innogrid/ui';
+import { BreadCrumb, Button, Select, Input, Textarea } from '@innogrid/ui';
 import { IconFileUp } from '../../../assets/img/icon';
 import { useNavigate } from 'react-router';
 
