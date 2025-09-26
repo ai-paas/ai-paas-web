@@ -15,6 +15,8 @@ import { formatDateTime } from '@/util/date';
 import { formatPhone } from '@/util/phone';
 import { CreateMemberButton } from '@/components/features/member-management/create-member-button';
 import { DeleteMemberButton } from '@/components/features/member-management/delete-member-button';
+import { EditMemberButton } from '@/components/features/member-management/edit-member-button';
+
 interface MemberRow {
   id: number | string;
   name: string;
@@ -142,6 +144,7 @@ export default function MemberManagementPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateMemberButton />
+            <EditMemberButton selectedMemberId={selectedMemberId} />
             <DeleteMemberButton selectedMemberId={selectedMemberId} />
           </div>
           <div>
@@ -162,11 +165,11 @@ export default function MemberManagementPage() {
             }
             emptyMessage={
               isError ? (
-                '서비스 목록을 불러오는 데 실패했습니다.'
+                '멤버 목록을 불러오는 데 실패했습니다.'
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div>서비스가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 서비스를 생성해 보세요.</div>
+                  <div>멤버가 없습니다.</div>
+                  <div>생성 버튼을 클릭해 멤버를 생성해 보세요.</div>
                 </div>
               )
             }
