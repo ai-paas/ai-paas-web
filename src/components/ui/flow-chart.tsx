@@ -1,12 +1,15 @@
 import {
+  addEdge,
   Background,
   ReactFlow,
   useEdgesState,
   useNodesState,
+  type Connection,
   type Edge,
   type Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useCallback } from 'react';
 
 interface FlowChartProps {
   initialNodes: Node[];
@@ -18,6 +21,13 @@ export const FlowChart = ({ nodeTypes, initialNodes, initialEdges }: FlowChartPr
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => addEdge({ ...connection, type: 'default' }, eds));
+    },
+    [setEdges]
+  );
+
   return (
     <div className="size-full">
       <ReactFlow
@@ -25,6 +35,7 @@ export const FlowChart = ({ nodeTypes, initialNodes, initialEdges }: FlowChartPr
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
         nodeTypes={nodeTypes}
         defaultViewport={{ x: 0, y: 0, zoom: 1.5 }}
         fitView

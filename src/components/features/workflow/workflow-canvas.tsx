@@ -225,7 +225,7 @@ interface WorkflowEditorProps {
   initialEdges: Edge[];
 }
 
-export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorProps) => {
+export const WorkflowCanvas = ({ initialNodes, initialEdges }: WorkflowEditorProps) => {
   return (
     <div className="size-full">
       <FlowChart
