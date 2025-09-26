@@ -9,6 +9,7 @@ import {
   type Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useCallback } from 'react';
 
 interface FlowChartProps {
   initialNodes: Node[];
