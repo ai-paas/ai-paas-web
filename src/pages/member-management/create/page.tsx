@@ -16,7 +16,6 @@ interface MemberForm {
   description: string;
 }
 
-const nameRegex = /^[가-힣]+$/; // 한글만
 // member_id: 소문자, 숫자, '-' 허용, 5~45자
 const memberIdRegex = /^[a-z0-9-]{5,45}$/;
 
@@ -65,9 +64,6 @@ export default function MemberCreatePage() {
 
       // 3) 필드별 유효성 검사
       let errorMsg = '';
-      if (name === 'name' && value && !nameRegex.test(value)) {
-        errorMsg = '이름은 한글만 입력 가능합니다.';
-      }
       if (name === 'memberId' && value && !memberIdRegex.test(value)) {
         errorMsg = "아이디는 소문자, 숫자, '-' 조합으로 5~45자여야 합니다.";
       }
@@ -103,10 +99,6 @@ export default function MemberCreatePage() {
       !formData.phone;
     if (requiredMissing) {
       alert('필수 항목을 입력해주세요.');
-      return;
-    }
-    if (!nameRegex.test(formData.name)) {
-      alert('이름은 한글만 입력 가능합니다.');
       return;
     }
     if (!memberIdRegex.test(formData.memberId)) {
@@ -154,7 +146,7 @@ export default function MemberCreatePage() {
   return (
     <main>
       <BreadCrumb
-        items={[{ label: '멤버 관리' }, { label: '멤버 생성', path: '/member-management/create' }]}
+        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 생성' }]}
         className="breadcrumbBox"
         onNavigate={navigate}
       />

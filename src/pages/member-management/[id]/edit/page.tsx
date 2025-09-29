@@ -1,6 +1,6 @@
 // src/pages/member-management/[id]/edit/page.tsx
 import { BreadCrumb, Button, Input, Textarea, RadioButton } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { formatPhone } from '@/util/phone';
 import { useGetMember, useUpdateMember } from '@/hooks/service/member';
@@ -16,7 +16,6 @@ interface MemberForm {
   description: string;
 }
 
-const nameRegex = /^[가-힣]+$/;
 const memberIdRegex = /^[a-z0-9-]{5,45}$/;
 const emailRegex = /^[a-zA-Z0-9]+@[a-zA-Z]+(\.[a-zA-Z]+)+$/;
 const passwordRegex =
@@ -78,7 +77,7 @@ export default function MemberEditPage() {
 
       // 유효성
       let errorMsg = '';
-      if (name === 'name' && value && !nameRegex.test(value)) {
+      if (name === 'name') {
         errorMsg = '이름은 한글만 입력 가능합니다.';
       }
       if (name === 'memberId' && value && !memberIdRegex.test(value)) {
@@ -112,10 +111,6 @@ export default function MemberEditPage() {
       !formData.name || !formData.memberId || !formData.email || !formData.phone;
     if (requiredMissing) {
       alert('필수 항목을 입력해주세요.');
-      return;
-    }
-    if (!nameRegex.test(formData.name)) {
-      alert('이름은 한글만 입력 가능합니다.');
       return;
     }
     if (!memberIdRegex.test(formData.memberId)) {
@@ -174,10 +169,7 @@ export default function MemberEditPage() {
   return (
     <main>
       <BreadCrumb
-        items={[
-          { label: '멤버 관리', path: '/member-management' },
-          { label: '멤버 수정', path: `/member-management/${formData.memberId}/edit` },
-        ]}
+        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 수정' }]}
         className="breadcrumbBox"
         onNavigate={navigate}
       />

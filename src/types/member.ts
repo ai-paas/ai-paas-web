@@ -33,12 +33,14 @@ export interface CreateMemberRequest {
 
 export interface UpdateMemberRequest {
   memberId: string;
-  name: string;
-  member_id: string;
-  email: string;
-  password: string;
-  phone: string;
-  role: string;
-  is_active: boolean;
-  description: string;
+  body: {
+    name: string;
+    member_id: string;
+    email: string;
+    password: string;
+    phone: string;
+    role: string;
+    is_active: boolean;
+    description: string;
+  };
 }

@@ -62,8 +62,8 @@ export const useUpdateMember = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: ({ memberId, ...data }: UpdateMemberRequest) =>
-      api.put(`members/${memberId}`, { json: data }).json<Member>(),
+    mutationFn: ({ memberId, body }: UpdateMemberRequest) =>
+      api.put(`members/${memberId}`, { json: body }).json<Member>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
     },
