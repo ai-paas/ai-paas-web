@@ -169,8 +169,11 @@ export const StartSetting = () => {
           </button>
         </div>
         {inputFields.length > 0 ? (
-          inputFields.map(() => (
-            <div className={`${styles.addItemField} ${styles.active}`}>
+          inputFields.map((field, idx) => (
+            <div
+              key={field.name ? field.name : idx}
+              className={`${styles.addItemField} ${styles.active}`}
+            >
               <div>
                 <span>{'{X}'}</span>
                 <span className={styles.addItemFieldId}>app_id</span>
