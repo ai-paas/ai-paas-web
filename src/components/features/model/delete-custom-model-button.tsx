@@ -1,7 +1,7 @@
 import { AlertDialog, Button } from '@innogrid/ui';
 import { useState } from 'react';
 
-export const DeleteCustomModelButton = ({ modelId }: { modelId: number | null }) => {
+export const DeleteCustomModelButton = ({ customModelId }: { customModelId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClickConfirm = () => {
@@ -10,7 +10,12 @@ export const DeleteCustomModelButton = ({ modelId }: { modelId: number | null })
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative" disabled={!modelId}>
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="medium"
+        color="negative"
+        disabled={!customModelId}
+      >
         삭제
       </Button>
       <AlertDialog

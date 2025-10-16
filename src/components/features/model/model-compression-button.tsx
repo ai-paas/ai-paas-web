@@ -12,7 +12,7 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
-export const ModelCompressionButton = ({ modelId }: { modelId: number | null }) => {
+export const ModelCompressionButton = ({ customModelId }: { customModelId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
@@ -22,7 +22,12 @@ export const ModelCompressionButton = ({ modelId }: { modelId: number | null }) 
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="secondary" disabled={!modelId}>
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="medium"
+        color="secondary"
+        disabled={!customModelId}
+      >
         모델 경량화
       </Button>
       <Modal

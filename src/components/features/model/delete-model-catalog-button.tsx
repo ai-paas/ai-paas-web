@@ -1,16 +1,21 @@
-import { AlertDialog, Button } from "@innogrid/ui";
-import { useState } from "react";
+import { AlertDialog, Button } from '@innogrid/ui';
+import { useState } from 'react';
 
-export const DeleteModelCatalogButton = () => {
+export const DeleteModelCatalogButton = ({ modelCatalogId }: { modelCatalogId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClickConfirm = () => {
-    console.log("삭제");
+    console.log('삭제');
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative">
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="medium"
+        color="negative"
+        disabled={!modelCatalogId}
+      >
         삭제
       </Button>
       <AlertDialog

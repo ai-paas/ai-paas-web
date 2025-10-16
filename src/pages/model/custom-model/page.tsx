@@ -117,15 +117,13 @@ export default function CustomModelPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateCustomModelButton />
-            <EditCustomModelButton modelId={selectedId} />
-            <DeleteCustomModelButton modelId={selectedId} />
-            <HardwareOptimizationButton modelId={selectedId} />
-            <ModelCompressionButton modelId={selectedId} />
+            <EditCustomModelButton customModelId={selectedId} />
+            <DeleteCustomModelButton customModelId={selectedId} />
+            <HardwareOptimizationButton customModelId={selectedId} />
+            <ModelCompressionButton customModelId={selectedId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
         <div>

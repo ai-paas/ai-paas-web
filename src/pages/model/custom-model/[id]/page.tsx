@@ -16,15 +16,13 @@ import {
   IconDownload,
 } from '../../../../assets/img/icon';
 import styles from '../../model.module.scss';
-
-//breadcrumb
-const items = [
-  { label: '모델', path: '/model/custom-model' },
-  { label: '커스텀 모델' },
-  { label: 'DeepSeek-R1' },
-];
+import { useNavigate, useParams } from 'react-router';
+import { useGetModel } from '@/hooks/service/models';
 
 export default function CustomModelDetailPage() {
+  const { id } = useParams();
+  const { service } = useGetModel(Number(id));
+  const navigate = useNavigate();
   //table
   const basicColumns = [
     {
@@ -63,7 +61,6 @@ export default function CustomModelDetailPage() {
       enableSorting: false, //오름차순/내림차순 아이콘 숨기기
     },
   ];
-
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
@@ -80,7 +77,15 @@ export default function CustomModelDetailPage() {
 
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={(path: string) => {}} className="breadcrumbBox" />
+      <BreadCrumb
+        items={[
+          { label: '모델' },
+          { label: '커스텀 모델', path: '/model/custom-model' },
+          { label: 'DeepSeek-R1' },
+        ]}
+        onNavigate={navigate}
+        className="breadcrumbBox"
+      />
       <div className="page-title-box">
         <h2 className="page-title">모델 상세</h2>
         <div className="page-toolBox">
