@@ -60,8 +60,8 @@ export interface ModelFormat {
 }
 
 export interface GetCustomModelsParams {
-  skip?: number;
-  limit?: number;
+  page?: number;
+  size?: number;
   provider_id?: number;
   type_id?: number;
   format_id?: number;

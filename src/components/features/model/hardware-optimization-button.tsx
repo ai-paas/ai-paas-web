@@ -12,7 +12,7 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
-export const HardwareOptimizationButton = () => {
+export const HardwareOptimizationButton = ({ modelId }: { modelId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
@@ -23,7 +23,7 @@ export const HardwareOptimizationButton = () => {
   return (
     <>
       <div style={{ marginLeft: '20px' }}>
-        <Button onClick={() => setIsOpen(true)} size="medium" color="secondary">
+        <Button onClick={() => setIsOpen(true)} size="medium" color="secondary" disabled={!modelId}>
           하드웨어 최적화
         </Button>
       </div>
