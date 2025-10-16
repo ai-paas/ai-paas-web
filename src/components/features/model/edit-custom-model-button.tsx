@@ -1,8 +1,8 @@
 import { Button } from '@innogrid/ui';
 
-export const EditCustomModelButton = ({ modelId }: { modelId: number | null }) => {
+export const EditCustomModelButton = ({ customModelId }: { customModelId: number | null }) => {
   return (
-    <Button size="medium" color="secondary" disabled={!modelId}>
+    <Button size="medium" color="secondary" disabled={!customModelId}>
       편집
     </Button>
   );
