@@ -4,12 +4,8 @@ import { useState } from 'react';
 type OptionType = { text: string; value: string };
 
 const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
+  { text: 'PTQ', value: 'ptq' },
+  { text: 'Pruning', value: 'pruning' },
 ];
 
 export const ModelCompressionButton = ({ customModelId }: { customModelId: number | null }) => {
