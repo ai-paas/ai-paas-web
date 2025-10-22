@@ -4,16 +4,21 @@ import { useDeleteCluster } from '@/hooks/service/clusters';
 
 interface DeleteClusterButtonProps {
   clusterId?: string | null;
+  onDeleteSuccess?: () => void;
 }
 
-export const DeleteClusterButton = ({ clusterId }: DeleteClusterButtonProps) => {
+export const DeleteClusterButton = ({ clusterId, onDeleteSuccess }: DeleteClusterButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { deleteCluster, isPending } = useDeleteCluster();
+  const { deleteCluster, isPending } = useDeleteCluster({
+    onSuccess: () => {
+      setIsOpen(false);
+      onDeleteSuccess?.();
+    },
+  });
 
   const handleClickConfirm = () => {
     if (clusterId) {
       deleteCluster(clusterId);
-      setIsOpen(false);
     }
   };
 

@@ -6,6 +6,17 @@ import type {
   CreateClusterRequest,
   GetClustersParams,
   UpdateClusterRequest,
+  KubernetesNode,
+  KubernetesNamespace,
+  KubernetesDeployment,
+  KubernetesReplicaSet,
+  KubernetesPod,
+  KubernetesService,
+  KubernetesDaemonSet,
+  GpuScheduling,
+  KubernetesServiceAccount,
+  KubernetesConfigMap,
+  KubernetesSecret,
 } from '../../types/cluster';
 
 // 클러스터 목록 조회
@@ -104,7 +115,10 @@ export const useUpdateCluster = (options?: {
 };
 
 // 클러스터 삭제
-export const useDeleteCluster = () => {
+export const useDeleteCluster = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: unknown) => void;
+}) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
@@ -112,6 +126,10 @@ export const useDeleteCluster = () => {
       api.delete(`any-cloud/system/cluster/${clusterId}`).json<string>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clusters'] });
+      options?.onSuccess?.();
+    },
+    onError: (error) => {
+      options?.onError?.(error);
     },
   });
 
@@ -120,5 +138,257 @@ export const useDeleteCluster = () => {
     isPending,
     isError,
     isSuccess,
+  };
+};
+
+// 쿠버네티스 노드 조회
+export const useGetKubernetesNodes = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-nodes', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/nodes?clusterName=${clusterName}`)
+        .json<{ data: KubernetesNode[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+  });
+
+  return {
+    nodes: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 네임스페이스 조회
+export const useGetKubernetesNamespaces = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-namespaces', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/namespaces?clusterName=${clusterName}`)
+        .json<{ data: KubernetesNamespace[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    namespaces: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 디플로이먼트 조회
+export const useGetKubernetesDeployments = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-deployments', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/deployments?clusterName=${clusterName}`)
+        .json<{ data: KubernetesDeployment[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    deployments: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 레플리카셋 조회
+export const useGetKubernetesReplicaSets = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-replicasets', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/replicasets?clusterName=${clusterName}`)
+        .json<{ data: KubernetesReplicaSet[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    replicaSets: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 파드 조회
+export const useGetKubernetesPods = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-pods', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/pods?clusterName=${clusterName}`)
+        .json<{ data: KubernetesPod[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    pods: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 서비스 조회
+export const useGetKubernetesServices = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-services', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/services?clusterName=${clusterName}`)
+        .json<{ data: KubernetesService[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    services: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 데몬셋 조회
+export const useGetKubernetesDaemonSets = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-daemonsets', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/daemonsets?clusterName=${clusterName}`)
+        .json<{ data: KubernetesDaemonSet[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    daemonSets: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// GPU 스케줄링 조회
+export const useGetGpuSchedulings = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['gpu-schedulings', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/gpu-schedulings?clusterName=${clusterName}`)
+        .json<{ data: GpuScheduling[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    gpuSchedulings: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 서비스 어카운트 조회
+export const useGetKubernetesServiceAccounts = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-service-accounts', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/service-accounts?clusterName=${clusterName}`)
+        .json<{ data: KubernetesServiceAccount[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    serviceAccounts: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 컨피그맵 조회
+export const useGetKubernetesConfigMaps = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-config-maps', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/config-maps?clusterName=${clusterName}`)
+        .json<{ data: KubernetesConfigMap[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    configMaps: data ?? [],
+    isPending,
+    isError,
+    error,
+  };
+};
+
+// 쿠버네티스 시크릿 조회
+export const useGetKubernetesSecrets = (clusterName?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['kubernetes-secrets', clusterName],
+    queryFn: () =>
+      api
+        .get(`any-cloud/kubernetes/secrets?clusterName=${clusterName}`)
+        .json<{ data: KubernetesSecret[] }>()
+        .then((response) => response.data),
+    enabled: enabled && !!clusterName,
+    retry: 1, // 재시도 횟수 제한
+    refetchOnWindowFocus: true, // 창 포커스 시 refetch
+    staleTime: 30000, // 30초 동안 데이터를 fresh로 유지
+  });
+
+  return {
+    secrets: data ?? [],
+    isPending,
+    isError,
+    error,
   };
 };

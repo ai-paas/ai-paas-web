@@ -60,13 +60,13 @@ const columns = [
   {
     id: 'type',
     header: '유형',
-    accessorFn: (row: Cluster) => 'Kubernetes',
+    accessorFn: (row: Cluster) => row.clusterType || '-',
     size: 150,
   },
   {
     id: 'provider',
     header: '프로바이더',
-    accessorFn: (row: Cluster) => 'AWS EKS', // 실제로는 API에서 제공하지 않으므로 기본값
+    accessorFn: (row: Cluster) => row.clusterProvider || '-',
     size: 150,
   },
   {
@@ -133,6 +133,11 @@ export default function ClusterManagementPage() {
     }
   }, [searchValue, initializePagination]);
 
+  // 삭제 성공 시 체크박스 선택 상태 초기화
+  const handleDeleteSuccess = () => {
+    setRowSelection({});
+  };
+
   return (
     <main>
       <BreadCrumb
@@ -147,7 +152,7 @@ export default function ClusterManagementPage() {
           <div className="page-toolBox-btns">
             <CreateClusterButton />
             <EditClusterButton clusterId={selectedId} />
-            <DeleteClusterButton clusterId={selectedId} />
+            <DeleteClusterButton clusterId={selectedId} onDeleteSuccess={handleDeleteSuccess} />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
@@ -165,8 +170,6 @@ export default function ClusterManagementPage() {
                 <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
               </div>
             }
-            as
-            any
             emptyMessage={
               isError ? (
                 '클러스터 목록을 불러오는 데 실패했습니다.'

@@ -91,6 +91,7 @@ export default function ClusterCreatePage() {
   const [serverCA, setServerCA] = useState<string>('');
   const [clientCA, setClientCA] = useState<string>('');
   const [clientKey, setClientKey] = useState<string>('');
+  const [clientToken, setClientToken] = useState<string>('');
   const [monitServerURL, setMonitServerURL] = useState<string>('');
   const [selectedProvider, setSelectedProvider] = useState<OptionType>();
   const [clusterType, setClusterType] = useState<string>('public');
@@ -102,6 +103,9 @@ export default function ClusterCreatePage() {
     description?: string;
     apiServerUrl?: string;
     apiServerIp?: string;
+    serverCA?: string;
+    clientCA?: string;
+    clientKey?: string;
     monitServerURL?: string;
   }>({});
 
@@ -160,15 +164,46 @@ export default function ClusterCreatePage() {
   };
 
   const onServerCAChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setServerCA(e.target.value);
+    const value = e.target.value;
+    setServerCA(value);
+
+    // 실시간 validation
+    if (validationErrors.serverCA && value) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        serverCA: undefined,
+      }));
+    }
   };
 
   const onClientCAChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setClientCA(e.target.value);
+    const value = e.target.value;
+    setClientCA(value);
+
+    // 실시간 validation
+    if (validationErrors.clientCA && value) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        clientCA: undefined,
+      }));
+    }
   };
 
   const onClientKeyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setClientKey(e.target.value);
+    const value = e.target.value;
+    setClientKey(value);
+
+    // 실시간 validation
+    if (validationErrors.clientKey && value) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        clientKey: undefined,
+      }));
+    }
+  };
+
+  const onClientTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientToken(e.target.value);
   };
 
   const onMonitServerURLChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,6 +216,14 @@ export default function ClusterCreatePage() {
       ...prev,
       monitServerURL: error || undefined,
     }));
+
+    // 필수 필드 validation
+    if (validationErrors.monitServerURL && value) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        monitServerURL: undefined,
+      }));
+    }
   };
 
   const onProviderChange = (option: SelectSingleValue<OptionType>) => {
@@ -235,7 +278,7 @@ export default function ClusterCreatePage() {
 
   // 클러스터 생성 핸들러
   const handleCreateCluster = () => {
-    // 필수 항목 체크
+    // 필수 항목 체크 (Token과 설명은 제외)
     if (
       !clusterName ||
       !selectedProvider ||
@@ -243,7 +286,8 @@ export default function ClusterCreatePage() {
       !apiServerUrl ||
       !serverCA ||
       !clientCA ||
-      !clientKey
+      !clientKey ||
+      !monitServerURL
     ) {
       // 필수 항목이 비어있으면 해당 필드에 에러 표시
       const newErrors: typeof validationErrors = {};
@@ -251,6 +295,10 @@ export default function ClusterCreatePage() {
       if (!selectedProvider) newErrors.clusterProvider = '클러스터 프로바이더를 선택해주세요.';
       if (!apiServerIp) newErrors.apiServerIp = 'API 서버 IP를 입력해주세요.';
       if (!apiServerUrl) newErrors.apiServerUrl = 'API 서버 URL을 입력해주세요.';
+      if (!serverCA) newErrors.serverCA = '서버 CA를 입력해주세요.';
+      if (!clientCA) newErrors.clientCA = '클라이언트 CA를 입력해주세요.';
+      if (!clientKey) newErrors.clientKey = '클라이언트 KEY를 입력해주세요.';
+      if (!monitServerURL) newErrors.monitServerURL = '모니터링 API URL을 입력해주세요.';
 
       setValidationErrors((prev) => ({ ...prev, ...newErrors }));
       return;
@@ -270,6 +318,7 @@ export default function ClusterCreatePage() {
       serverCA,
       clientCA,
       clientKey,
+      clientToken,
       monitServerURL: monitServerURL,
     });
   };
@@ -315,7 +364,6 @@ export default function ClusterCreatePage() {
                   <span className={styles.radioLabel}>프라이빗 클라우드</span>
                 </label>
               </div>
-              <p className="page-input_item-input-desc">클러스터의 배포 환경을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -343,16 +391,8 @@ export default function ClusterCreatePage() {
                   }}
                 />
               </div>
-              <p className="page-input_item-input-desc">
-                클러스터를 호스팅할 클라우드 프로바이더를 선택해주세요.
-              </p>
               {validationErrors.clusterProvider && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.clusterProvider}
-                </p>
+                <p className="page-input_item-input-error">{validationErrors.clusterProvider}</p>
               )}
             </div>
           </div>
@@ -365,38 +405,8 @@ export default function ClusterCreatePage() {
                 onChange={onClusterNameChange}
                 variant={validationErrors.clusterName ? 'err' : 'default'}
               />
-              <p className="page-input_item-input-desc">
-                클러스터를 식별할 수 있는 고유한 이름을 입력해주세요.
-              </p>
               {validationErrors.clusterName && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.clusterName}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="page-input_item-box">
-            <div className="page-input_item-name">설명</div>
-            <div className="page-input_item-data">
-              <Input
-                placeholder="클러스터에 대한 설명을 입력해주세요."
-                value={description}
-                onChange={onDescriptionChange}
-                variant={validationErrors.description ? 'err' : 'default'}
-              />
-              <p className="page-input_item-input-desc">
-                클러스터에 대한 간단한 설명을 입력해주세요. (최대 500자)
-              </p>
-              {validationErrors.description && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.description}
-                </p>
+                <p className="page-input_item-input-error">{validationErrors.clusterName}</p>
               )}
             </div>
           </div>
@@ -409,16 +419,8 @@ export default function ClusterCreatePage() {
                 onChange={onApiServerIpChange}
                 variant={validationErrors.apiServerIp ? 'err' : 'default'}
               />
-              <p className="page-input_item-input-desc">
-                쿠버네티스 API 서버의 IP 주소를 입력해주세요. (예: 192.168.1.1)
-              </p>
               {validationErrors.apiServerIp && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.apiServerIp}
-                </p>
+                <p className="page-input_item-input-error">{validationErrors.apiServerIp}</p>
               )}
             </div>
           </div>
@@ -431,16 +433,8 @@ export default function ClusterCreatePage() {
                 onChange={onApiServerUrlChange}
                 variant={validationErrors.apiServerUrl ? 'err' : 'default'}
               />
-              <p className="page-input_item-input-desc">
-                쿠버네티스 API 서버의 URL을 입력해주세요. (http:// 또는 https://로 시작)
-              </p>
               {validationErrors.apiServerUrl && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.apiServerUrl}
-                </p>
+                <p className="page-input_item-input-error">{validationErrors.apiServerUrl}</p>
               )}
             </div>
           </div>
@@ -451,10 +445,11 @@ export default function ClusterCreatePage() {
                 value={serverCA}
                 onChange={onServerCAChange}
                 placeholder="서버 CA 인증서를 입력해주세요."
+                className={validationErrors.serverCA ? 'error' : ''}
               />
-              <p className="page-input_item-input-desc">
-                쿠버네티스 서버 CA 인증서를 입력해주세요.
-              </p>
+              {validationErrors.serverCA && (
+                <p className="page-input_item-input-error">{validationErrors.serverCA}</p>
+              )}
             </div>
           </div>
           <div className="page-input_item-box">
@@ -464,41 +459,62 @@ export default function ClusterCreatePage() {
                 value={clientCA}
                 onChange={onClientCAChange}
                 placeholder="클라이언트 CA 인증서를 입력해주세요."
+                className={validationErrors.clientCA ? 'error' : ''}
               />
-              <p className="page-input_item-input-desc">클라이언트 CA 인증서를 입력해주세요.</p>
+              {validationErrors.clientCA && (
+                <p className="page-input_item-input-error">{validationErrors.clientCA}</p>
+              )}
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">클라이언트 키</div>
+            <div className="page-input_item-name page-icon-requisite">클라이언트 KEY</div>
             <div className="page-input_item-data">
               <Textarea
-                className={styles.kubernetesTextarea}
+                className={`${styles.kubernetesTextarea} ${validationErrors.clientKey ? 'error' : ''}`}
                 value={clientKey}
                 onChange={onClientKeyChange}
-                placeholder="클라이언트 키를 입력해주세요."
+                placeholder="클라이언트 KEY 를 입력해주세요."
               />
-              <p className="page-input_item-input-desc">클라이언트 키를 입력해주세요.</p>
+              {validationErrors.clientKey && (
+                <p className="page-input_item-input-error">{validationErrors.clientKey}</p>
+              )}
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">모니터링 서버 URL</div>
+            <div className="page-input_item-name">클라이언트 Token</div>
             <div className="page-input_item-data">
               <Input
-                placeholder="모니터링 서버 URL을 입력해주세요."
+                placeholder="클라이언트 Token을 입력해주세요."
+                value={clientToken}
+                onChange={onClientTokenChange}
+              />
+            </div>
+          </div>
+          <div className="page-input_item-box">
+            <div className="page-input_item-name page-icon-requisite">모니터링 API URL</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="모니터링 API URL 을 입력해주세요."
                 value={monitServerURL}
                 onChange={onMonitServerURLChange}
                 variant={validationErrors.monitServerURL ? 'err' : 'default'}
               />
-              <p className="page-input_item-input-desc">
-                클러스터 모니터링을 위한 서버 URL을 입력해주세요. (http:// 또는 https://로 시작)
-              </p>
               {validationErrors.monitServerURL && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.monitServerURL}
-                </p>
+                <p className="page-input_item-input-error">{validationErrors.monitServerURL}</p>
+              )}
+            </div>
+          </div>
+          <div className="page-input_item-box">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="클러스터에 대한 설명을 입력해주세요."
+                value={description}
+                onChange={onDescriptionChange}
+                variant={validationErrors.description ? 'err' : 'default'}
+              />
+              {validationErrors.description && (
+                <p className="page-input_item-input-error">{validationErrors.description}</p>
               )}
             </div>
           </div>

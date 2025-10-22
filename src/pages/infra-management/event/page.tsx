@@ -12,6 +12,8 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
+console.log('테스트를 위한 커밋');
+
 export default function EventPage() {
   //select
   const [selectedValue, setSelectedValue] = useState<OptionType>();

@@ -8,7 +8,7 @@ import {
   type SelectSingleValue,
   useToast,
 } from '@innogrid/ui';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useUpdateCluster, useGetCluster } from '@/hooks/service/clusters';
 import styles from '../create/page.module.scss';
 
@@ -30,6 +30,8 @@ export default function ClusterEditPage() {
   const navigate = useNavigate();
   const { open } = useToast();
   const { clusterId } = useParams<{ clusterId: string }>();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
 
   // 기존 클러스터 데이터 조회
   const { cluster } = useGetCluster(clusterId);
@@ -39,8 +41,10 @@ export default function ClusterEditPage() {
     open({
       title: '클러스터가 성공적으로 수정되었습니다.',
     });
-    navigate('/infra-management/cluster-management');
-  }, [open, navigate]);
+    // returnTo가 있으면 해당 경로로, 없으면 클러스터 목록으로 이동
+    const targetPath = returnTo || '/infra-management/cluster-management';
+    navigate(targetPath);
+  }, [open, navigate, returnTo]);
 
   const handleError = useCallback(
     (error: unknown) => {
@@ -90,6 +94,7 @@ export default function ClusterEditPage() {
   const [serverCA, setServerCA] = useState<string>('');
   const [clientCA, setClientCA] = useState<string>('');
   const [clientKey, setClientKey] = useState<string>('');
+  const [clientToken, setClientToken] = useState<string>('');
   const [monitServerURL, setMonitServerURL] = useState<string>('');
   const [selectedProvider, setSelectedProvider] = useState<OptionType>();
   const [clusterType, setClusterType] = useState<string>('public');
@@ -101,6 +106,9 @@ export default function ClusterEditPage() {
     description?: string;
     apiServerUrl?: string;
     apiServerIp?: string;
+    serverCA?: string;
+    clientCA?: string;
+    clientKey?: string;
     monitServerURL?: string;
   }>({});
 
@@ -119,6 +127,7 @@ export default function ClusterEditPage() {
       setServerCA(cluster.serverCa || '');
       setClientCA(cluster.clientCa || '');
       setClientKey(cluster.clientKey || '');
+      setClientToken(cluster.clientToken || '');
       setMonitServerURL(cluster.monitServerUrl || '');
 
       // 클러스터 타입과 프로바이더는 기본값으로 설정
@@ -176,6 +185,10 @@ export default function ClusterEditPage() {
 
   const onClientKeyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setClientKey(e.target.value);
+  };
+
+  const onClientTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientToken(e.target.value);
   };
 
   const onMonitServerURLChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,7 +263,7 @@ export default function ClusterEditPage() {
       return;
     }
 
-    // 필수 항목 체크
+    // 필수 항목 체크 (Token과 설명 제외)
     if (
       !clusterName ||
       !selectedProvider ||
@@ -258,7 +271,8 @@ export default function ClusterEditPage() {
       !apiServerUrl ||
       !serverCA ||
       !clientCA ||
-      !clientKey
+      !clientKey ||
+      !monitServerURL
     ) {
       // 필수 항목이 비어있으면 해당 필드에 에러 표시
       const newErrors: typeof validationErrors = {};
@@ -266,6 +280,10 @@ export default function ClusterEditPage() {
       if (!selectedProvider) newErrors.clusterProvider = '클러스터 프로바이더를 선택해주세요.';
       if (!apiServerIp) newErrors.apiServerIp = 'API 서버 IP를 입력해주세요.';
       if (!apiServerUrl) newErrors.apiServerUrl = 'API 서버 URL을 입력해주세요.';
+      if (!serverCA) newErrors.serverCA = '서버 CA를 입력해주세요.';
+      if (!clientCA) newErrors.clientCA = '클라이언트 CA를 입력해주세요.';
+      if (!clientKey) newErrors.clientKey = '클라이언트 KEY를 입력해주세요.';
+      if (!monitServerURL) newErrors.monitServerURL = '모니터링 API URL을 입력해주세요.';
 
       setValidationErrors((prev) => ({ ...prev, ...newErrors }));
       return;
@@ -286,6 +304,7 @@ export default function ClusterEditPage() {
       serverCA,
       clientCA,
       clientKey,
+      clientToken: clientToken || '',
       monitServerURL: monitServerURL || '',
     };
 
@@ -397,28 +416,6 @@ export default function ClusterEditPage() {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">설명</div>
-            <div className="page-input_item-data">
-              <Input
-                placeholder="클러스터에 대한 설명을 입력해주세요."
-                value={description}
-                onChange={onDescriptionChange}
-                variant={validationErrors.description ? 'err' : 'default'}
-              />
-              <p className="page-input_item-input-desc">
-                클러스터에 대한 간단한 설명을 입력해주세요. (최대 500자)
-              </p>
-              {validationErrors.description && (
-                <p
-                  className="page-input_item-input-error"
-                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
-                >
-                  {validationErrors.description}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">API 서버 IP</div>
             <div className="page-input_item-data">
               <Input
@@ -466,6 +463,7 @@ export default function ClusterEditPage() {
             <div className="page-input_item-name page-icon-requisite">서버 CA</div>
             <div className="page-input_item-data">
               <Textarea
+                className={validationErrors.serverCA ? 'error' : ''}
                 value={serverCA}
                 onChange={onServerCAChange}
                 placeholder="서버 CA 인증서를 입력해주세요."
@@ -479,6 +477,7 @@ export default function ClusterEditPage() {
             <div className="page-input_item-name page-icon-requisite">클라이언트 CA</div>
             <div className="page-input_item-data">
               <Textarea
+                className={validationErrors.clientCA ? 'error' : ''}
                 value={clientCA}
                 onChange={onClientCAChange}
                 placeholder="클라이언트 CA 인증서를 입력해주세요."
@@ -487,10 +486,10 @@ export default function ClusterEditPage() {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">클라이언트 키</div>
+            <div className="page-input_item-name page-icon-requisite">클라이언트 KEY</div>
             <div className="page-input_item-data">
               <Textarea
-                className={styles.kubernetesTextarea}
+                className={`${styles.kubernetesTextarea} ${validationErrors.clientKey ? 'error' : ''}`}
                 value={clientKey}
                 onChange={onClientKeyChange}
                 placeholder="클라이언트 키를 입력해주세요."
@@ -499,16 +498,27 @@ export default function ClusterEditPage() {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">모니터링 서버 URL</div>
+            <div className="page-input_item-name">클라이언트 Token</div>
             <div className="page-input_item-data">
               <Input
-                placeholder="모니터링 서버 URL을 입력해주세요."
+                placeholder="클라이언트 토큰을 입력해주세요."
+                value={clientToken}
+                onChange={onClientTokenChange}
+              />
+              <p className="page-input_item-input-desc">클라이언트 토큰을 입력해주세요.</p>
+            </div>
+          </div>
+          <div className="page-input_item-box">
+            <div className="page-input_item-name page-icon-requisite">모니터링 API URL</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="모니터링 API URL을 입력해주세요."
                 value={monitServerURL}
                 onChange={onMonitServerURLChange}
                 variant={validationErrors.monitServerURL ? 'err' : 'default'}
               />
               <p className="page-input_item-input-desc">
-                클러스터 모니터링을 위한 서버 URL을 입력해주세요. (http:// 또는 https://로 시작)
+                클러스터 모니터링을 위한 API URL을 입력해주세요. (http:// 또는 https://로 시작)
               </p>
               {validationErrors.monitServerURL && (
                 <p
@@ -516,6 +526,28 @@ export default function ClusterEditPage() {
                   style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
                 >
                   {validationErrors.monitServerURL}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="page-input_item-box">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="클러스터에 대한 설명을 입력해주세요."
+                value={description}
+                onChange={onDescriptionChange}
+                variant={validationErrors.description ? 'err' : 'default'}
+              />
+              <p className="page-input_item-input-desc">
+                클러스터에 대한 간단한 설명을 입력해주세요. (최대 500자)
+              </p>
+              {validationErrors.description && (
+                <p
+                  className="page-input_item-input-error"
+                  style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}
+                >
+                  {validationErrors.description}
                 </p>
               )}
             </div>
@@ -529,7 +561,11 @@ export default function ClusterEditPage() {
             <Button
               size="large"
               color="secondary"
-              onClick={() => navigate('/infra-management/cluster-management')}
+              onClick={() => {
+                // returnTo가 있으면 해당 경로로, 없으면 클러스터 목록으로 이동
+                const targetPath = returnTo || '/infra-management/cluster-management';
+                navigate(targetPath);
+              }}
             >
               취소
             </Button>
