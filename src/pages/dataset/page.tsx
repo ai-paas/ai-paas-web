@@ -7,19 +7,78 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting,
 } from '@innogrid/ui';
-import { useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { CreateDatasetButton } from '../../components/features/dataset/create-dataset-button';
 import { EditDatasetButton } from '../../components/features/dataset/edit-dataset-button';
 import { DeleteDatasetButton } from '../../components/features/dataset/delete-dataset-button';
+import { useGetDatasets } from '@/hooks/service/datasets';
+import { formatDateTime } from '@/util/date';
+import type { Dataset } from '@/types/dataset';
+
+const columns = [
+  {
+    id: 'select',
+    size: 30,
+    header: ({ table }: { table: Dataset }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: Dataset }) => <CellCheckbox row={row} />,
+    enableSorting: false,
+  },
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row: Dataset) => row.name,
+    size: 400,
+    cell: ({ row }: { row: { original: Dataset } }) => (
+      <Link to={`/dataset/${row.original.id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
+  },
+  {
+    id: 'created_by',
+    header: '생성자',
+    accessorFn: (row: Dataset) => row.created_by,
+    size: 400,
+  },
+  {
+    id: 'description',
+    header: '설명',
+    accessorFn: (row: Dataset) => row.description,
+    size: 400,
+  },
+  {
+    id: 'created_at',
+    header: '생성일시',
+    accessorFn: (row: Dataset) => formatDateTime(row.created_at),
+    size: 400,
+  },
+];
 
 export default function DatasetPage() {
   const { searchValue, ...restProps } = useSearchInputState();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const { pagination, setPagination, initializePagination } = useTablePagination();
+  const { rowSelection, setRowSelection } = useTableSelection();
+  const { datasets, page, isPending, isError } = useGetDatasets({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+  });
+
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    if (selectedRowKeys.length !== 1) return null;
+
+    return datasets[parseInt(selectedRowKeys[0])]?.id;
+  }, [rowSelection, datasets]);
+
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
 
   return (
     <main>
@@ -42,132 +101,34 @@ export default function DatasetPage() {
         </div>
         <div>
           <Table
-            useClientPagination
-            useMultiSelect
             columns={columns}
-            data={data}
-            totalCount={data.length}
+            data={datasets}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
+              </div>
+            }
+            emptyMessage={
+              isError ? (
+                '데이터셋 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>데이터셋이 없습니다.</div>
+                  <div>생성 버튼을 클릭해 데이터셋을 생성해 보세요.</div>
+                </div>
+              )
+            }
+            totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            setSorting={setSorting}
-            sorting={sorting}
           />
         </div>
       </div>
     </main>
   );
 }
-
-const columns = [
-  {
-    id: 'select',
-    size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
-  },
-  {
-    id: 'name',
-    header: '이름',
-    accessorFn: (row) => row.name,
-    size: 400,
-    cell: ({ row }) => (
-      <Link to={'/dataset/test'} className="table-td-link">
-        {row.original.name}
-      </Link>
-    ),
-  },
-  {
-    id: 'creator',
-    header: '생성자',
-    accessorFn: (row) => row.creator,
-    size: 400,
-  },
-  {
-    id: 'desc',
-    header: '설명',
-    accessorFn: (row) => row.date,
-    size: 400,
-  },
-  {
-    id: 'date',
-    header: '생성일시',
-    accessorFn: (row) => row.date,
-    size: 400,
-  },
-];
-
-const data = [
-  {
-    name: 'Sample1',
-    tag: 'Custom',
-    creator: 'CustomA',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample2',
-    tag: 'Custom',
-    creator: 'CustomB',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample3',
-    tag: 'Custom',
-    creator: 'CustomC',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample4',
-    tag: 'Custom',
-    creator: 'CustomD',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample5',
-    tag: 'Custom',
-    creator: 'CustomE',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample6',
-    tag: 'Custom',
-    creator: 'CustomF',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample7',
-    tag: 'Custom',
-    creator: 'CustomG',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample8',
-    tag: 'Custom',
-    creator: 'CustomH',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample9',
-    tag: 'Custom',
-    creator: 'CustomI',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: 'Sample10',
-    tag: 'Custom',
-    creator: 'CustomJ',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-];
