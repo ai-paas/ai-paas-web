@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BreadCrumb,
   Tabs,
@@ -29,6 +29,12 @@ export default function CustomModelCreateHuggingfacePage() {
     ...pageable,
   });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (searchValue) {
+      setPageable({ ...pageable, page: 1 });
+    }
+  }, [searchValue]);
 
   return (
     <main>

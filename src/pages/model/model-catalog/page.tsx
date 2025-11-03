@@ -7,7 +7,6 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type ColDef,
 } from '@innogrid/ui';
 import { useEffect, useMemo } from 'react';
 import { CreateModelCatalogButton } from '../../../components/features/model/create-model-catalog-button';
