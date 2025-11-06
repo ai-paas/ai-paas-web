@@ -161,7 +161,15 @@ export const useCreateModel = () => {
 };
 
 export const useGetHubModels = (params: GetHubModelsParams) => {
-  const searchParams = new URLSearchParams(Object.entries(params));
+  const searchParams = new URLSearchParams(
+    Object.entries(params).filter(
+      ([, value]) =>
+        value !== '' &&
+        value !== null &&
+        value !== undefined &&
+        (!Array.isArray(value) || value.length > 0)
+    )
+  );
   const { data, isPending, isError } = useQuery({
     queryKey: ['hub-connect', params],
     queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams }).json(),

@@ -22,11 +22,23 @@ export default function CustomModelCreateHuggingfacePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const [sort, setSort] = useState<'downloads' | 'created' | 'relevance'>('downloads');
   const [pageable, setPageable] = useState({ page: 1, limit: 10 });
+  const [filter, setFilter] = useState<{
+    num_parameters_min?: string;
+    num_parameters_max?: string;
+    task: string;
+    library: string[];
+    language: string[];
+  }>({
+    task: '',
+    library: [],
+    language: [],
+  });
   const { hubModels, page } = useGetHubModels({
     market: 'huggingface',
     sort,
     search: searchValue,
     ...pageable,
+    ...filter,
   });
   const navigate = useNavigate();
 
@@ -51,7 +63,7 @@ export default function CustomModelCreateHuggingfacePage() {
         <h2 className="page-title">커스텀 모델 생성 - 허깅페이스 연동</h2>
       </div>
       <div className={styles.flexContent}>
-        <LeftPanel />
+        <FilterPanel filter={filter} setFilter={setFilter} />
         <div className={styles.flexContentDesc}>
           <div className={styles.descTopBox}>
             <p className={styles.descTitle}>
@@ -128,7 +140,26 @@ export default function CustomModelCreateHuggingfacePage() {
   );
 }
 
-const LeftPanel = () => {
+interface FilterPanelProps {
+  filter: {
+    num_parameters_min?: string;
+    num_parameters_max?: string;
+    task: string;
+    library: string[];
+    language: string[];
+  };
+  setFilter: React.Dispatch<
+    React.SetStateAction<{
+      num_parameters_min?: string;
+      num_parameters_max?: string;
+      task: string;
+      library: string[];
+      language: string[];
+    }>
+  >;
+}
+
+const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
   const {
     hubModelTags: tasks,
     remaining_count: tasksRemainingCount,
@@ -152,13 +183,6 @@ const LeftPanel = () => {
   } = useGetHubModelTagsByGroup({
     market: 'huggingface',
     group: 'language',
-  });
-  const [filter, setFilter] = useState({
-    task: '',
-    num_parameters_min: 0,
-    num_parameters_max: null,
-    library: [],
-    language: [],
   });
   const [parameter, setParameter] = useState<number[]>([0, 30]);
 
@@ -215,7 +239,37 @@ const LeftPanel = () => {
   );
 };
 
-const MainTab = ({ tasks, libraries, languages, parameter, setParameter, filter, setFilter }) => {
+interface MainTabProps {
+  tasks: { id: string; label: string }[] | undefined;
+  libraries: { id: string; label: string }[] | undefined;
+  languages: { id: string; label: string }[] | undefined;
+  parameter: number[];
+  setParameter: React.Dispatch<React.SetStateAction<number[]>>;
+  filter: {
+    task: string;
+    num_parameters_min: number;
+    num_parameters_max: number | null;
+    library: string[];
+  };
+  setFilter: React.Dispatch<
+    React.SetStateAction<{
+      task: string;
+      num_parameters_min: number;
+      num_parameters_max: number | null;
+      library: string[];
+    }>
+  >;
+}
+
+const MainTab = ({
+  tasks,
+  libraries,
+  languages,
+  parameter,
+  setParameter,
+  filter,
+  setFilter,
+}: MainTabProps) => {
   return (
     <div>
       <div className={styles.inner}>
@@ -312,11 +366,34 @@ const MainTab = ({ tasks, libraries, languages, parameter, setParameter, filter,
   );
 };
 
-const TaskTab = ({ tasks, refetchTasks, filter, setFilter }) => {
+interface TaskTabProps {
+  tasks: { id: string; label: string }[] | undefined;
+  refetchTasks: () => void;
+  filter: {
+    task: string;
+    num_parameters_min: number;
+    num_parameters_max: number | null;
+    library: string[];
+  };
+  setFilter: React.Dispatch<
+    React.SetStateAction<{
+      task: string;
+      num_parameters_min: number;
+      num_parameters_max: number | null;
+      library: string[];
+    }>
+  >;
+}
+
+const TaskTab = ({ tasks, refetchTasks, filter, setFilter }: TaskTabProps) => {
   const [search, setSearch] = useState('');
 
   const filteredTasks = tasks?.filter((task) =>
-    task.label.toLowerCase().includes(search.toLowerCase())
+    task.label
+      .toLowerCase()
+      .replaceAll(' ', '')
+      .replaceAll('-', '')
+      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', ''))
   );
 
   return (
@@ -350,11 +427,35 @@ const TaskTab = ({ tasks, refetchTasks, filter, setFilter }) => {
   );
 };
 
-const LibraryTab = ({ libraries, refetchLibraries, filter, setFilter }) => {
+interface LibraryTabProps {
+  libraries: { id: string; label: string }[] | undefined;
+  refetchLibraries: () => void;
+  filter: {
+    task: string;
+    num_parameters_min: number;
+    num_parameters_max: number | null;
+    library: string[];
+  };
+  setFilter: React.Dispatch<
+    React.SetStateAction<{
+      task: string;
+      num_parameters_min: number;
+      num_parameters_max: number | null;
+      library: string[];
+    }>
+  >;
+}
+
+const LibraryTab = ({ libraries, refetchLibraries, filter, setFilter }: LibraryTabProps) => {
   const [search, setSearch] = useState('');
 
   const filteredLibraries = libraries?.filter((library) =>
-    library.label.toLowerCase().includes(search.toLowerCase())
+    library.label
+      .toLowerCase()
+      .replaceAll(' ', '')
+      .replaceAll('-', '')
+      .replaceAll('.', '')
+      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', '').replaceAll('.', ''))
   );
 
   return (
@@ -388,11 +489,34 @@ const LibraryTab = ({ libraries, refetchLibraries, filter, setFilter }) => {
   );
 };
 
-const LanguageTab = ({ languages, refetchLanguages, filter, setFilter }) => {
+interface LanguageTabProps {
+  languages: { id: string; label: string }[] | undefined;
+  refetchLanguages: () => void;
+  filter: {
+    task: string;
+    num_parameters_min: number;
+    num_parameters_max: number | null;
+    library: string[];
+  };
+  setFilter: React.Dispatch<
+    React.SetStateAction<{
+      task: string;
+      num_parameters_min: number;
+      num_parameters_max: number | null;
+      library: string[];
+    }>
+  >;
+}
+
+const LanguageTab = ({ languages, refetchLanguages, filter, setFilter }: LanguageTabProps) => {
   const [search, setSearch] = useState('');
 
   const filteredLanguages = languages?.filter((language) =>
-    language.label.toLowerCase().includes(search.toLowerCase())
+    language.label
+      .toLowerCase()
+      .replaceAll(' ', '')
+      .replaceAll('-', '')
+      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', ''))
   );
 
   return (
