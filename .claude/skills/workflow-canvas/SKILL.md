@@ -7,6 +7,15 @@ description: XyFlow를 사용한 워크플로우 캔버스 기능을 개발합�
 
 XyFlow (React Flow) v12.8.3을 활용한 노드 기반 워크플로우 캔버스를 구축합니다.
 
+## When to Use This Skill
+
+- 워크플로우 캔버스 페이지를 새로 만들 때
+- 커스텀 노드 타입을 추가할 때 (Start, Model, Knowledgebase, End 등)
+- 드래그 앤 드롭으로 노드를 추가하는 기능이 필요할 때
+- 노드 연결(Edge) 로직 및 검증이 필요할 때
+- 노드 선택, 설정 패널, 저장/불러오기 기능을 구현할 때
+- Undo/Redo, 자동 레이아웃 등 고급 기능을 추가할 때
+
 ## 기술 스택
 
 - **그래프 라이브러리**: XyFlow v12.8.3 (@xyflow/react)

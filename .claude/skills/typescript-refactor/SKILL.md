@@ -7,6 +7,16 @@ description: TypeScript 코드를 리팩토링하고 타입 안정성을 개선�
 
 TypeScript 5.8.3 strict mode 환경에서 타입 안정성과 코드 품질을 향상시킵니다.
 
+## When to Use This Skill
+
+- any 타입을 제거하고 구체적인 타입으로 변경할 때
+- 타입 에러를 수정할 때 (null/undefined, 타입 불일치 등)
+- 제네릭을 추가하여 재사용성을 높일 때
+- Union Type을 Discriminated Union으로 리팩토링할 때
+- Utility Types(Partial, Pick, Omit 등)를 활용할 때
+- React Props, Event Handler, Ref 타입을 정의할 때
+- API 응답 타입 정의 및 타입 가드를 추가할 때
+
 ## 프로젝트 TypeScript 설정
 
 ### tsconfig.app.json

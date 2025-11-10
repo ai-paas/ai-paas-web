@@ -1,11 +1,19 @@
 ---
 name: api-integration
-description: REST API와 통합하고 React Query 훅을 작성합니다. 새로운 API 엔드포인트를 연결하거나, 데이터 페칭 로직을 구현하거나, API 에러 처리가 필요할 때 사용하세요. Ky HTTP 클라이언트와 TanStack React Query를 활용합니다.
+description: REST API와 통합하고 React Query 훅을 작성합니다. 새로운 엔드포인트를 연결하거나(GET/POST/PUT/DELETE), 페이지네이션/무한스크롤을 구현하거나, API 응답 타입 정의 및 에러 처리가 필요할 때 사용하세요. Ky HTTP 클라이언트와 TanStack React Query v5를 활용하며, 낙관적 업데이트와 캐시 무효화 전략을 포함합니다.
 ---
 
 # API Integration Skill
 
-AI-PaaS 프로젝트의 백엔드 API와 통합하고 타입 안전한 데이터 페칭 로직을 구현합니다.
+AI-PaaS 프로젝트의 백엔드 REST API와 통합하고 타입 안전한 데이터 페칭 로직을 구현합니다.
+
+## When to Use This Skill
+
+- 새로운 API 엔드포인트를 호출하는 커스텀 훅이 필요할 때
+- GET 쿼리(단일/리스트/페이지네이션/무한스크롤)를 구현할 때
+- POST/PUT/DELETE mutation을 작성하고 캐시 무효화가 필요할 때
+- API 응답/요청 TypeScript 타입을 정의할 때
+- 401 토큰 갱신, 에러 처리, 재시도 로직을 추가할 때
 
 ## 기술 스택
 
