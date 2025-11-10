@@ -74,10 +74,7 @@ export default function MemberEditPage() {
   return (
     <main>
       <BreadCrumb
-        items={[
-          { label: '멤버 관리', path: '/member-management' },
-          { label: '멤버 수정', path: `/member-management/${formData.memberId}/edit` },
-        ]}
+        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 수정' }]}
         className="breadcrumbBox"
         onNavigate={navigate}
       />
