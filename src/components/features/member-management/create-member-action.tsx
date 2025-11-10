@@ -146,7 +146,7 @@ export const CreateMemberAction = ({ formData }: CreateMemberActionProps) => {
       {/* 에러 모달 */}
       <AlertDialog
         isOpen={isOpenError}
-        size="small"
+        size="medium"
         confirmButtonText="확인"
         onClickConfirm={() => setIsOpenError(false)}
         onClickClose={() => setIsOpenError(false)}
