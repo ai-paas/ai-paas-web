@@ -3,16 +3,18 @@ import type { Page } from '@/types/api';
 import type {
   CreateModelRequest,
   GetCustomModelsParams,
+  GetHubModelsParams,
   GetModelCatalogsParams,
   GetModelFormatsParams,
   GetModelProvidersParams,
   GetModelTypesParams,
+  HubModel,
   Model,
   ModelFormat,
   ModelProvider,
   ModelType,
 } from '@/types/model';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({
@@ -154,5 +156,24 @@ export const useCreateModel = () => {
     isPending,
     isError,
     isSuccess,
+  };
+};
+
+export const useGetHubModels = (params: GetHubModelsParams) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['hub-connect', params],
+    queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams: { ...params } }).json(),
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    hubModels: data?.data ?? [],
+    page: {
+      number: data?.pagination.page ?? 1,
+      size: data?.pagination.limit ?? 1,
+      total: data?.pagination.total ?? 1,
+    },
+    isPending,
+    isError,
   };
 };

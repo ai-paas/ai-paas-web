@@ -4,15 +4,13 @@ import { useState } from 'react';
 type OptionType = { text: string; value: string };
 
 const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
-  { text: '옵션 3', value: 'option3' },
+  { text: 'scikit-learn', value: 'scikit-learn' },
+  { text: 'TensorRT', value: 'TensorRT' },
+  { text: 'OpenVINO', value: 'openvino' },
+  { text: 'OpenXLA', value: 'openxla' },
 ];
 
-export const HardwareOptimizationButton = () => {
+export const HardwareOptimizationButton = ({ customModelId }: { customModelId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
@@ -23,7 +21,12 @@ export const HardwareOptimizationButton = () => {
   return (
     <>
       <div style={{ marginLeft: '20px' }}>
-        <Button onClick={() => setIsOpen(true)} size="medium" color="secondary">
+        <Button
+          onClick={() => setIsOpen(true)}
+          size="medium"
+          color="secondary"
+          disabled={!customModelId}
+        >
           하드웨어 최적화
         </Button>
       </div>

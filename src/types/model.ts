@@ -59,9 +59,36 @@ export interface ModelFormat {
   description: string;
 }
 
+export interface HubModel {
+  data: {
+    _id: string | null;
+    id: string;
+    modelId: string;
+    author: string;
+    createdAt: string | null;
+    lastModified: string;
+    downloads: number;
+    likes: number;
+    tags: string[];
+    pipeline_tag: string;
+    task: string;
+    library_name: string;
+    parameterDisplay: string;
+    parameterRange: string;
+    private: boolean;
+    gated: boolean;
+    sha: string | null;
+  }[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
 export interface GetCustomModelsParams {
-  skip?: number;
-  limit?: number;
+  page?: number;
+  size?: number;
   provider_id?: number;
   type_id?: number;
   format_id?: number;
@@ -104,4 +131,14 @@ export interface CreateModelRequest {
   parent_model_id?: number;
   registry_schema?: string;
   file?: string;
+}
+
+export interface GetHubModelsParams {
+  market: string;
+  sort?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  num_parameters_min?: string;
+  num_parameters_max?: string;
 }
