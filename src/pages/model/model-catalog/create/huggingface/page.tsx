@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   BreadCrumb,
   Tabs,
@@ -17,22 +17,93 @@ import { formatCount } from '@/util/count';
 import { formatRelativeTime } from '@/util/date';
 import styles from '../../../model.module.scss';
 
+// Types
+type SortType = 'downloads' | 'created' | 'relevance';
+
+interface FilterState {
+  num_parameters_min?: string;
+  num_parameters_max?: string;
+  task: string;
+  library: string[];
+  language: string[];
+}
+
+interface TagItem {
+  id: string;
+  label: string;
+}
+
+// Utility functions
+const normalizeSearchText = (text: string): string => {
+  return text.toLowerCase().replaceAll(' ', '').replaceAll('-', '').replaceAll('.', '');
+};
+
+const getSortLabel = (sort: SortType): string => {
+  const sortLabels: Record<SortType, string> = {
+    created: '최근 업데이트',
+    downloads: '다운로드 수',
+    relevance: '관련도',
+  };
+  return sortLabels[sort];
+};
+
+const toggleArrayItem = <T,>(array: T[], item: T): T[] => {
+  return array.includes(item) ? array.filter((i) => i !== item) : [...array, item];
+};
+
+// Custom Hooks
+const usePagination = (initialPage = 1, initialLimit = 10) => {
+  const [pageable, setPageable] = useState({ page: initialPage, limit: initialLimit });
+
+  const handlePageChange = useCallback((page: number) => {
+    setPageable((prev) => ({ ...prev, page }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPageable((prev) => ({ ...prev, limit }));
+  }, []);
+
+  const resetPage = useCallback(() => {
+    setPageable((prev) => ({ ...prev, page: 1 }));
+  }, []);
+
+  return {
+    pageable,
+    handlePageChange,
+    handlePageSizeChange,
+    resetPage,
+  };
+};
+
+const useSort = (initialSort: SortType = 'downloads') => {
+  const [sort, setSort] = useState<SortType>(initialSort);
+
+  const sortLabel = useMemo(() => getSortLabel(sort), [sort]);
+
+  const sortMenus = useMemo(
+    () => [
+      { label: '다운로드 수', onSelect: () => setSort('downloads') },
+      { label: '최근 업데이트', onSelect: () => setSort('created') },
+      { label: '관련도', onSelect: () => setSort('relevance') },
+    ],
+    []
+  );
+
+  return { sort, sortLabel, sortMenus };
+};
+
 export default function CustomModelCreateHuggingfacePage() {
+  const navigate = useNavigate();
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const { searchValue, ...restProps } = useSearchInputState();
-  const [sort, setSort] = useState<'downloads' | 'created' | 'relevance'>('downloads');
-  const [pageable, setPageable] = useState({ page: 1, limit: 10 });
-  const [filter, setFilter] = useState<{
-    num_parameters_min?: string;
-    num_parameters_max?: string;
-    task: string;
-    library: string[];
-    language: string[];
-  }>({
+  const { sort, sortLabel, sortMenus } = useSort();
+  const { pageable, handlePageChange, handlePageSizeChange, resetPage } = usePagination();
+  const [filter, setFilter] = useState<FilterState>({
     task: '',
     library: [],
     language: [],
   });
+
   const { hubModels, page } = useGetHubModels({
     market: 'huggingface',
     sort,
@@ -40,13 +111,27 @@ export default function CustomModelCreateHuggingfacePage() {
     ...pageable,
     ...filter,
   });
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (searchValue) {
-      setPageable({ ...pageable, page: 1 });
+      resetPage();
     }
-  }, [searchValue]);
+  }, [searchValue, resetPage]);
+
+  const handleModelSelect = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
+  }, []);
+
+  const handleCreateModel = useCallback(() => {
+    if (selectedModel) {
+      // TODO: Implement model creation logic
+      console.log('Creating model:', selectedModel);
+    }
+  }, [selectedModel]);
+
+  const handleCancel = useCallback(() => {
+    navigate('/model/custom-model');
+  }, [navigate]);
 
   return (
     <main>
@@ -79,23 +164,10 @@ export default function CustomModelCreateHuggingfacePage() {
                   {...restProps}
                 />
                 <div className={styles.selectBtnBox}>
-                  <DropdownMenu
-                    menus={[
-                      { label: '다운로드 수', onSelect: () => setSort('downloads') },
-                      { label: '최근 업데이트', onSelect: () => setSort('created') },
-                      { label: '관련도', onSelect: () => setSort('relevance') },
-                    ]}
-                  >
+                  <DropdownMenu menus={sortMenus}>
                     <button type="button" className={`${styles.btnAlign} ${styles.active}`}>
                       <IconAlign className={styles.iconAlign} />
-                      정렬:
-                      <span>
-                        {sort === 'created'
-                          ? '최근 업데이트'
-                          : sort === 'downloads'
-                            ? '다운로드 수'
-                            : '관련도'}
-                      </span>
+                      정렬: <span>{sortLabel}</span>
                     </button>
                   </DropdownMenu>
                 </div>
@@ -109,7 +181,7 @@ export default function CustomModelCreateHuggingfacePage() {
                   key={model.id}
                   model={model}
                   isActive={selectedModel === model.id}
-                  onClick={() => setSelectedModel(model.id)}
+                  onClick={() => handleModelSelect(model.id)}
                 />
               ))}
             </div>
@@ -118,20 +190,25 @@ export default function CustomModelCreateHuggingfacePage() {
               page={pageable.page}
               size={pageable.limit}
               totalCount={page.total}
-              onChangePageInput={(event) => setPageable({ ...pageable, page: +event.target.value })}
-              onChangePageSize={(event) => setPageable({ ...pageable, limit: +event.target.value })}
-              onClickNext={() => setPageable({ ...pageable, page: pageable.page + 1 })}
-              onClickPrev={() => setPageable({ ...pageable, page: pageable.page - 1 })}
+              onChangePageInput={(event) => handlePageChange(+event.target.value)}
+              onChangePageSize={(event) => handlePageSizeChange(+event.target.value)}
+              onClickNext={() => handlePageChange(pageable.page + 1)}
+              onClickPrev={() => handlePageChange(pageable.page - 1)}
             />
           </div>
         </div>
       </div>
       <div className={`page-footer ${styles.footer}`}>
         <div className="page-footer_btn-box">
-          <Button size="large" color="secondary" onClick={() => navigate('/model/custom-model')}>
+          <Button size="large" color="secondary" onClick={handleCancel}>
             취소
           </Button>
-          <Button size="large" color="primary" onClick={() => alert('Button clicked!')}>
+          <Button
+            size="large"
+            color="primary"
+            disabled={!selectedModel}
+            onClick={handleCreateModel}
+          >
             생성
           </Button>
         </div>
@@ -141,22 +218,8 @@ export default function CustomModelCreateHuggingfacePage() {
 }
 
 interface FilterPanelProps {
-  filter: {
-    num_parameters_min?: string;
-    num_parameters_max?: string;
-    task: string;
-    library: string[];
-    language: string[];
-  };
-  setFilter: React.Dispatch<
-    React.SetStateAction<{
-      num_parameters_min?: string;
-      num_parameters_max?: string;
-      task: string;
-      library: string[];
-      language: string[];
-    }>
-  >;
+  filter: FilterState;
+  setFilter: React.Dispatch<React.SetStateAction<FilterState>>;
 }
 
 const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
@@ -215,23 +278,29 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
             filter={filter}
             setFilter={setFilter}
           />,
-          <TaskTab
-            tasks={tasks}
-            refetchTasks={refetchTasks}
+          <FilterTab
+            title="Tasks"
+            items={tasks}
+            refetch={refetchTasks}
             filter={filter}
             setFilter={setFilter}
+            filterKey="task"
           />,
-          <LibraryTab
-            libraries={libraries}
-            refetchLibraries={refetchLibraries}
+          <FilterTab
+            title="Libraries"
+            items={libraries}
+            refetch={refetchLibraries}
             filter={filter}
             setFilter={setFilter}
+            filterKey="library"
           />,
-          <LanguageTab
-            languages={languages}
-            refetchLanguages={refetchLanguages}
+          <FilterTab
+            title="Languages"
+            items={languages}
+            refetch={refetchLanguages}
             filter={filter}
             setFilter={setFilter}
+            filterKey="language"
           />,
         ]}
       />
@@ -240,25 +309,13 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
 };
 
 interface MainTabProps {
-  tasks: { id: string; label: string }[] | undefined;
-  libraries: { id: string; label: string }[] | undefined;
-  languages: { id: string; label: string }[] | undefined;
+  tasks: TagItem[] | undefined;
+  libraries: TagItem[] | undefined;
+  languages: TagItem[] | undefined;
   parameter: number[];
   setParameter: React.Dispatch<React.SetStateAction<number[]>>;
-  filter: {
-    task: string;
-    num_parameters_min: number;
-    num_parameters_max: number | null;
-    library: string[];
-  };
-  setFilter: React.Dispatch<
-    React.SetStateAction<{
-      task: string;
-      num_parameters_min: number;
-      num_parameters_max: number | null;
-      library: string[];
-    }>
-  >;
+  filter: FilterState;
+  setFilter: React.Dispatch<React.SetStateAction<FilterState>>;
 }
 
 const MainTab = ({
@@ -270,38 +327,33 @@ const MainTab = ({
   filter,
   setFilter,
 }: MainTabProps) => {
+  const handleItemClick = useCallback(
+    (filterKey: 'task' | 'library' | 'language', itemId: string) => {
+      if (filterKey === 'task') {
+        setFilter({ ...filter, task: itemId });
+      } else {
+        setFilter({ ...filter, [filterKey]: toggleArrayItem(filter[filterKey], itemId) });
+      }
+    },
+    [filter, setFilter]
+  );
+
   return (
     <div>
-      <div className={styles.inner}>
-        <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Tasks</p>
-          <button type="button" className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
-          </button>
-        </div>
-        <div className={styles.chipBox}>
-          {tasks?.slice(0, 6)?.map((task) => (
-            <button
-              key={task.id}
-              type="button"
-              onClick={() => setFilter({ ...filter, task: task.id })}
-              className={`${styles.chip} ${filter.task === task.id && styles.active}`}
-            >
-              {task.label}
-            </button>
-          ))}
-        </div>
-        <div className={styles.btnMore}>
-          <Button size="medium" color="tertiary" onClick={() => {}}>
-            더 보기
-          </Button>
-        </div>
-      </div>
+      <FilterSection
+        title="Tasks"
+        items={tasks}
+        filter={filter}
+        filterKey="task"
+        initialDisplayLimit={6}
+        onItemClick={handleItemClick}
+      />
+
       <div className={styles.inner}>
         <div className={styles.titleBox}>
           <p className={styles.leftTitle}>Parameters</p>
           <button type="button" className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
+            <IconRefresh />
           </button>
         </div>
         <div className={styles.sliderBox}>
@@ -314,95 +366,140 @@ const MainTab = ({
           />
         </div>
       </div>
-      <div className={styles.inner}>
-        <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Libraries</p>
-          <button type="button" className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
+
+      <FilterSection
+        title="Libraries"
+        items={libraries}
+        filter={filter}
+        filterKey="library"
+        initialDisplayLimit={10}
+        onItemClick={handleItemClick}
+      />
+
+      <FilterSection
+        title="Languages"
+        items={languages}
+        filter={filter}
+        filterKey="language"
+        initialDisplayLimit={12}
+        onItemClick={handleItemClick}
+      />
+    </div>
+  );
+};
+
+interface FilterSectionProps {
+  title: string;
+  items: TagItem[] | undefined;
+  filter: FilterState;
+  filterKey: 'task' | 'library' | 'language';
+  initialDisplayLimit: number;
+  onItemClick: (filterKey: 'task' | 'library' | 'language', itemId: string) => void;
+}
+
+const FilterSection = ({
+  title,
+  items,
+  filter,
+  filterKey,
+  initialDisplayLimit,
+  onItemClick,
+}: FilterSectionProps) => {
+  const [displayLimit, setDisplayLimit] = useState(initialDisplayLimit);
+
+  const isItemActive = (itemId: string) => {
+    if (filterKey === 'task') {
+      return filter.task === itemId;
+    }
+    return filter[filterKey].includes(itemId);
+  };
+
+  const handleShowMore = useCallback(() => {
+    setDisplayLimit((prev) => prev + 9);
+  }, []);
+
+  const visibleItems = useMemo(() => items?.slice(0, displayLimit), [items, displayLimit]);
+  const hasMore = items && items.length > displayLimit;
+
+  return (
+    <div className={styles.inner}>
+      <div className={styles.titleBox}>
+        <p className={styles.leftTitle}>{title}</p>
+        <button type="button" className={styles.btnRefresh}>
+          <IconRefresh />
+        </button>
+      </div>
+      <div className={styles.chipBox}>
+        {visibleItems?.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onItemClick(filterKey, item.id)}
+            className={`!cursor-pointer ${styles.chip} ${isItemActive(item.id) ? styles.active : ''}`}
+          >
+            {item.label}
           </button>
-        </div>
-        <div className={styles.chipBox}>
-          {libraries?.slice(0, 10)?.map((library) => (
-            <button
-              type="button"
-              onClick={() => setFilter({ ...filter, library: [...filter.library, library.id] })}
-              className={`${styles.chip} ${filter.library.find((lib) => lib === library.id) && styles.active}`}
-            >
-              {library.label}
-            </button>
-          ))}
-        </div>
+        ))}
+      </div>
+      {hasMore && (
         <div className={styles.btnMore}>
-          <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
+          <Button size="medium" color="tertiary" onClick={handleShowMore}>
             더 보기
           </Button>
         </div>
-      </div>
-      <div className={styles.inner}>
-        <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Languages</p>
-          <button type="button" className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
-          </button>
-        </div>
-        <div className={styles.chipBox}>
-          {languages?.slice(0, 12)?.map((language) => (
-            <button
-              type="button"
-              onClick={() => setFilter({ ...filter, language: [...filter.language, language.id] })}
-              className={`${styles.chip} ${filter.language.find((lang) => lang === language.id) && styles.active}`}
-            >
-              {language.label}
-            </button>
-          ))}
-        </div>
-        <div className={styles.btnMore}>
-          <Button size="medium" color="tertiary" onClick={() => alert('Button clicked!')}>
-            더 보기
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
 
-interface TaskTabProps {
-  tasks: { id: string; label: string }[] | undefined;
-  refetchTasks: () => void;
-  filter: {
-    task: string;
-    num_parameters_min: number;
-    num_parameters_max: number | null;
-    library: string[];
-  };
-  setFilter: React.Dispatch<
-    React.SetStateAction<{
-      task: string;
-      num_parameters_min: number;
-      num_parameters_max: number | null;
-      library: string[];
-    }>
-  >;
+interface FilterTabProps {
+  title: string;
+  items: TagItem[] | undefined;
+  refetch: () => void;
+  filter: FilterState;
+  setFilter: React.Dispatch<React.SetStateAction<FilterState>>;
+  filterKey: 'task' | 'library' | 'language';
 }
 
-const TaskTab = ({ tasks, refetchTasks, filter, setFilter }: TaskTabProps) => {
+const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: FilterTabProps) => {
   const [search, setSearch] = useState('');
 
-  const filteredTasks = tasks?.filter((task) =>
-    task.label
-      .toLowerCase()
-      .replaceAll(' ', '')
-      .replaceAll('-', '')
-      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', ''))
+  const filteredItems = useMemo(
+    () =>
+      items?.filter((item) =>
+        normalizeSearchText(item.label).includes(normalizeSearchText(search))
+      ),
+    [items, search]
+  );
+
+  const handleItemClick = useCallback(
+    (itemId: string) => {
+      if (filterKey === 'task') {
+        setFilter({ ...filter, task: itemId });
+      } else {
+        setFilter({ ...filter, [filterKey]: toggleArrayItem(filter[filterKey], itemId) });
+      }
+    },
+    [filter, filterKey, setFilter]
+  );
+
+  const isItemActive = useCallback(
+    (itemId: string) => {
+      if (filterKey === 'task') {
+        return filter.task === itemId;
+      }
+      return filter[filterKey].includes(itemId);
+    },
+    [filter, filterKey]
   );
 
   return (
     <div>
       <div className={styles.inner2}>
         <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Tasks</p>
-          <button type="button" onClick={() => refetchTasks()} className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
+          <p className={styles.leftTitle}>{title}</p>
+          <button type="button" onClick={refetch} className={styles.btnRefresh}>
+            <IconRefresh />
           </button>
         </div>
         <Input
@@ -412,136 +509,14 @@ const TaskTab = ({ tasks, refetchTasks, filter, setFilter }: TaskTabProps) => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className={styles.chipBox}>
-          {filteredTasks?.map((task) => (
+          {filteredItems?.map((item) => (
             <button
+              key={item.id}
               type="button"
-              onClick={() => setFilter({ ...filter, task: task.id })}
-              className={`${styles.chip} ${filter.task === task.id && styles.active}`}
+              onClick={() => handleItemClick(item.id)}
+              className={`${styles.chip} ${isItemActive(item.id) ? styles.active : ''}`}
             >
-              {task.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-interface LibraryTabProps {
-  libraries: { id: string; label: string }[] | undefined;
-  refetchLibraries: () => void;
-  filter: {
-    task: string;
-    num_parameters_min: number;
-    num_parameters_max: number | null;
-    library: string[];
-  };
-  setFilter: React.Dispatch<
-    React.SetStateAction<{
-      task: string;
-      num_parameters_min: number;
-      num_parameters_max: number | null;
-      library: string[];
-    }>
-  >;
-}
-
-const LibraryTab = ({ libraries, refetchLibraries, filter, setFilter }: LibraryTabProps) => {
-  const [search, setSearch] = useState('');
-
-  const filteredLibraries = libraries?.filter((library) =>
-    library.label
-      .toLowerCase()
-      .replaceAll(' ', '')
-      .replaceAll('-', '')
-      .replaceAll('.', '')
-      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', '').replaceAll('.', ''))
-  );
-
-  return (
-    <div>
-      <div className={styles.inner2}>
-        <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Libraries</p>
-          <button type="button" onClick={() => refetchLibraries()} className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
-          </button>
-        </div>
-        <Input
-          size={{ width: '300px', height: '32px' }}
-          placeholder="검색어를 입력해주세요."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className={styles.chipBox}>
-          {filteredLibraries?.map((library) => (
-            <button
-              type="button"
-              onClick={() => setFilter({ ...filter, library: [...filter.library, library.id] })}
-              className={`${styles.chip} ${filter.library.find((lib) => lib === library.id) && styles.active}`}
-            >
-              {library.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-interface LanguageTabProps {
-  languages: { id: string; label: string }[] | undefined;
-  refetchLanguages: () => void;
-  filter: {
-    task: string;
-    num_parameters_min: number;
-    num_parameters_max: number | null;
-    library: string[];
-  };
-  setFilter: React.Dispatch<
-    React.SetStateAction<{
-      task: string;
-      num_parameters_min: number;
-      num_parameters_max: number | null;
-      library: string[];
-    }>
-  >;
-}
-
-const LanguageTab = ({ languages, refetchLanguages, filter, setFilter }: LanguageTabProps) => {
-  const [search, setSearch] = useState('');
-
-  const filteredLanguages = languages?.filter((language) =>
-    language.label
-      .toLowerCase()
-      .replaceAll(' ', '')
-      .replaceAll('-', '')
-      .includes(search.toLowerCase().replaceAll(' ', '').replaceAll('-', ''))
-  );
-
-  return (
-    <div>
-      <div className={styles.inner2}>
-        <div className={styles.titleBox}>
-          <p className={styles.leftTitle}>Languages</p>
-          <button type="button" onClick={() => refetchLanguages()} className={styles.btnRefresh}>
-            <IconRefresh className={styles.iconRefresh} />
-          </button>
-        </div>
-        <Input
-          size={{ width: '300px', height: '32px' }}
-          placeholder="검색어를 입력해주세요."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className={styles.chipBox}>
-          {filteredLanguages?.map((language) => (
-            <button
-              type="button"
-              onClick={() => setFilter({ ...filter, language: [...filter.language, language.id] })}
-              className={`${styles.chip} ${filter.language.find((lang) => lang === language.id) && styles.active}`}
-            >
-              {language.label}
+              {item.label}
             </button>
           ))}
         </div>
@@ -583,7 +558,7 @@ const ModelItem = ({ model, isActive, onClick }: ModelItemProps) => {
       <div className={styles.descInfo}>
         <div>
           <span>Tasks</span>
-          <div>{model.task}Text generation</div>
+          <div>{model.task}</div>
         </div>
         <div>
           <span>Parameters</span>
