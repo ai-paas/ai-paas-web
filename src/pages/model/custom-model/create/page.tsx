@@ -1,34 +1,50 @@
 import { IconFileUp } from '@/assets/img/icon';
-import { BreadCrumb, Button, Input, Select, Textarea, type SelectSingleValue } from '@innogrid/ui';
-import { useState } from 'react';
+import {
+  useCreateModel,
+  useGetModelFormats,
+  useGetModelProviders,
+  useGetModelTypes,
+} from '@/hooks/service/models';
+import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
+import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-type OptionType = { text: string; value: string };
-
-const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-];
-
 export default function CustomModelCreatePage() {
+  const { modelProviders } = useGetModelProviders();
+  const { modelTypes } = useGetModelTypes();
+  const { modelFormats } = useGetModelFormats();
   const navigate = useNavigate();
-  const [value, setValue] = useState<string>('');
+  const { createModel, isPending, isSuccess } = useCreateModel();
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+  const [modelName, setModelName] = useState<string>('');
+  const [modelId, setModelId] = useState<string>('');
+  const [selectedProvider, setSelectedProvider] = useState<ModelProvider | null>(null);
+  const [selectedType, setSelectedType] = useState<ModelType | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<ModelFormat | null>(null);
+  const [description, setDescription] = useState<string>('');
+  const [sampleCode, setSampleCode] = useState<string>('');
+
+  const handleSubmit = () => {
+    if (!modelName || !description || !selectedProvider || !selectedType || !selectedFormat) {
+      alert('필수 항목을 모두 입력해주세요.');
+      return;
+    }
+
+    createModel({
+      name: modelName,
+      description,
+      provider_id: selectedProvider.id,
+      type_id: selectedType.id,
+      format_id: selectedFormat.id,
+    });
   };
 
-  const [text, setText] = useState<string>('');
-  const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-  };
-
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
-
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
-  };
+  useEffect(() => {
+    if (isSuccess) {
+      navigate('/model/custom-model');
+    }
+  }, [isSuccess, navigate]);
 
   return (
     <main>
@@ -49,14 +65,22 @@ export default function CustomModelCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델명</div>
             <div className="page-input_item-data">
-              <Input placeholder="모델명을 입력해주세요." value={value} onChange={onChange} />
+              <Input
+                placeholder="모델명을 입력해주세요."
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+              />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델 ID</div>
             <div className="page-input_item-data">
-              <Input placeholder="모델 ID를 입력해주세요." value={value} onChange={onChange} />
+              <Input
+                placeholder="모델 ID를 입력해주세요."
+                value={modelId}
+                onChange={(e) => setModelId(e.target.value)}
+              />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
           </div>
@@ -65,11 +89,11 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelProviders}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedProvider}
+                onChange={(option: ModelProvider | null) => setSelectedProvider(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -79,11 +103,11 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelTypes}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedType}
+                onChange={(option: ModelType | null) => setSelectedType(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -93,11 +117,11 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelFormats}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedFormat}
+                onChange={(option: ModelFormat | null) => setSelectedFormat(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -121,15 +145,19 @@ export default function CustomModelCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델 소개</div>
             <div className="page-input_item-data">
-              <Textarea value={text} onChange={onTextChange} placeholder="설명을 입력해주세요." />
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="설명을 입력해주세요."
+              />
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name">샘플 코드</div>
             <div className="page-input_item-data">
               <Textarea
-                value={text}
-                onChange={onTextChange}
+                value={sampleCode}
+                onChange={(e) => setSampleCode(e.target.value)}
                 placeholder="샘플 코드를 입력해주세요."
               />
             </div>
@@ -143,8 +171,8 @@ export default function CustomModelCreatePage() {
             <Button size="large" color="secondary" onClick={() => navigate('/model/custom-model')}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={() => alert('Button clicked!')}>
-              생성
+            <Button size="large" color="primary" onClick={handleSubmit} disabled={isPending}>
+              {isPending ? '생성 중...' : '생성'}
             </Button>
           </div>
         </div>

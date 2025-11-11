@@ -33,7 +33,7 @@ const columns = [
     accessorFn: (row: Model) => row.name,
     size: 225,
     cell: ({ row }: { row: { original: Model } }) => (
-      <Link to={'/model/custom-model/test'} className="table-td-link">
+      <Link to={`/model/custom-model/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
