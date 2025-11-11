@@ -2,8 +2,7 @@ import { BreadCrumb, Button, Input, Textarea, RadioButton } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { formatPhone } from '@/util/phone';
-import { useCreateMember } from '@/hooks/service/member';
-import type { CreateMemberRequest } from '@/types/member';
+import { CreateMemberAction } from '@/components/features/member-management/create-member-action';
 
 interface MemberForm {
   name: string;
@@ -16,7 +15,9 @@ interface MemberForm {
   description: string;
 }
 
-const nameRegex = /^[가-힣]+$/; // 한글만
+// name 한글만 허용
+// const nameRegex = /^[가-힣]{2,20}$/;
+
 // member_id: 소문자, 숫자, '-' 허용, 5~45자
 const memberIdRegex = /^[a-z0-9-]{5,45}$/;
 
@@ -27,7 +28,6 @@ const passwordRegex =
 
 export default function MemberCreatePage() {
   const navigate = useNavigate();
-  const { createMember } = useCreateMember();
 
   const [formData, setFormData] = useState<MemberForm>({
     name: '',
@@ -65,9 +65,6 @@ export default function MemberCreatePage() {
 
       // 3) 필드별 유효성 검사
       let errorMsg = '';
-      if (name === 'name' && value && !nameRegex.test(value)) {
-        errorMsg = '이름은 한글만 입력 가능합니다.';
-      }
       if (name === 'memberId' && value && !memberIdRegex.test(value)) {
         errorMsg = "아이디는 소문자, 숫자, '-' 조합으로 5~45자여야 합니다.";
       }
@@ -93,68 +90,10 @@ export default function MemberCreatePage() {
     });
   };
 
-  const handleSubmit = () => {
-    // 필수값/형식 최종 체크 (사용자가 blur/change 안 했어도 한 번 더)
-    const requiredMissing =
-      !formData.name ||
-      !formData.memberId ||
-      !formData.email ||
-      !formData.password ||
-      !formData.phone;
-    if (requiredMissing) {
-      alert('필수 항목을 입력해주세요.');
-      return;
-    }
-    if (!nameRegex.test(formData.name)) {
-      alert('이름은 한글만 입력 가능합니다.');
-      return;
-    }
-    if (!memberIdRegex.test(formData.memberId)) {
-      alert('아이디는 영어와 숫자만 입력 가능합니다.');
-      return;
-    }
-    if (!emailRegex.test(formData.email)) {
-      alert('이메일 형식이 올바르지 않습니다.');
-      return;
-    }
-    if (!passwordRegex.test(formData.password)) {
-      alert('비밀번호는 8~16자 영문 대소문자, 숫자, 특수문자를 포함해야 합니다.');
-      return;
-    }
-    if (formData.password !== formData.passwordConfirm) {
-      alert('비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
-    // 프론트 -> 서버 DTO 매핑 (snake_case)
-    const payload = {
-      name: formData.name,
-      member_id: formData.memberId,
-      email: formData.email,
-      phone: formData.phone, // formData.phone은 raw 숫자만 저장 중
-      role: formData.role,
-      is_active: true, // 기본 활성화 (요구 사항에 맞게 조정)
-      description: formData.description,
-      password: formData.password,
-      password_confirm: formData.passwordConfirm,
-    } satisfies CreateMemberRequest;
-
-    createMember(payload, {
-      onSuccess: () => {
-        alert('회원 생성 완료!');
-        navigate('/member-management');
-      },
-      onError: (err: unknown) => {
-        console.error(err);
-        alert('회원 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      },
-    });
-  };
-
   return (
     <main>
       <BreadCrumb
-        items={[{ label: '멤버 관리' }, { label: '멤버 생성', path: '/member-management/create' }]}
+        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 생성' }]}
         className="breadcrumbBox"
         onNavigate={navigate}
       />
@@ -280,9 +219,10 @@ export default function MemberCreatePage() {
             <Button size="large" color="secondary" onClick={() => navigate('/member-management')}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={handleSubmit}>
+            {/* <Button size="large" color="primary" onClick={handleSubmit}>
               생성
-            </Button>
+            </Button> */}
+            <CreateMemberAction formData={formData} />
           </div>
         </div>
       </div>

@@ -54,7 +54,7 @@ export const DeleteMemberButton = ({ selectedMemberId }: DeleteMemberButtonProps
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => !isPending && setIsOpenConfirm(false)}
-        size="small"
+        size="medium"
       >
         <span>
           {selectedMemberId
@@ -69,7 +69,7 @@ export const DeleteMemberButton = ({ selectedMemberId }: DeleteMemberButtonProps
         confirmButtonText="닫기"
         onClickConfirm={() => setIsOpenResult(false)}
         onClickClose={() => setIsOpenResult(false)}
-        size="small"
+        size="medium"
       >
         <span>{resultMessage}</span>
       </AlertDialog>

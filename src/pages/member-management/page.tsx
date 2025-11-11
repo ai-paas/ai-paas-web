@@ -16,6 +16,8 @@ import { formatPhone } from '@/util/phone';
 import { CreateMemberButton } from '@/components/features/member-management/create-member-button';
 import { DeleteMemberButton } from '@/components/features/member-management/delete-member-button';
 import { EditMemberButton } from '@/components/features/member-management/edit-member-button';
+import { ActivateMemberButton } from '@/components/features/member-management/activate-member-button';
+import { DeactivateMemberButton } from '@/components/features/member-management/deactivate-member-button';
 
 interface MemberRow {
   id: number | string;
@@ -109,19 +111,34 @@ export default function MemberManagementPage() {
     search: searchValue,
   });
 
-  const selectedMemberId = useMemo(() => {
+  // 정확히 한 줄만 선택됐을 때 인덱스 계산
+  const selectedIndex = useMemo(() => {
     if (!members?.length) return null;
-
     const keys = Object.keys(rowSelection);
     if (keys.length !== 1) return null;
-
     const idx = Number(keys[0]);
-    if (!Number.isFinite(idx) || idx < 0 || idx >= members.length) return null;
-
-    return members[idx].member_id; // 문자열 그대로 반환
+    return Number.isFinite(idx) && idx >= 0 && idx < members.length ? idx : null;
   }, [rowSelection, members]);
 
-  console.log('selectedMemberId: ', selectedMemberId);
+  // 선택된 멤버 및 멤버 아이디
+  const selectedMember = useMemo(() => {
+    if (selectedIndex === null || !members?.length) return null;
+    return members[selectedIndex] as MemberRow;
+  }, [selectedIndex, members]);
+
+  const selectedMemberId = useMemo(() => selectedMember?.member_id ?? null, [selectedMember]);
+
+  // const selectedMemberId = useMemo(() => {
+  //   if (!members?.length) return null;
+
+  //   const keys = Object.keys(rowSelection);
+  //   if (keys.length !== 1) return null;
+
+  //   const idx = Number(keys[0]);
+  //   if (!Number.isFinite(idx) || idx < 0 || idx >= members.length) return null;
+
+  //   return members[idx].member_id; // 문자열 그대로 반환
+  // }, [rowSelection, members]);
 
   // 검색어가 변경되면 페이지네이션 초기화
   useEffect(() => {
@@ -146,6 +163,16 @@ export default function MemberManagementPage() {
             <CreateMemberButton />
             <EditMemberButton selectedMemberId={selectedMemberId} />
             <DeleteMemberButton selectedMemberId={selectedMemberId} />
+
+            {/* 상태 기반 토글: 정확히 한 줄 선택됐을 때만, 현재 상태에 따라 버튼 활성화 */}
+            <ActivateMemberButton
+              selectedMemberId={selectedMemberId}
+              selectedIsActive={selectedMember?.is_active ?? null}
+            />
+            <DeactivateMemberButton
+              selectedMemberId={selectedMemberId}
+              selectedIsActive={selectedMember?.is_active ?? null}
+            />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
