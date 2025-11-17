@@ -39,8 +39,8 @@ import LearningSolutionStep2Page from '../pages/learning/solution/step2/page';
 import MemberManagementDetailPage from '../pages/member-management/[id]/page';
 import LoginPage from '../pages/login/page';
 import HomePage from '../pages/page';
-import CustomModelCreateHuggingfacePage from '@/pages/model/model-catalog/create/huggingface/page';
-import CustomModelCreateEtriPage from '@/pages/model/model-catalog/create/etri/page';
+import CustomModelCreateHuggingfacePage from '@/pages/model/custom-model/create/huggingface/page';
+import CustomModelCreateEtriPage from '@/pages/model/custom-model/create/etri/page';
 import MemberCreatePage from '@/pages/member-management/create/page';
 import MemberEditPage from '@/pages/member-management/[id]/eidt/page';
 
