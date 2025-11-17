@@ -1,18 +1,20 @@
 import { IconFileUp } from '@/assets/img/icon';
-import { BreadCrumb, Button, Input, Select, Textarea, type SelectSingleValue } from '@innogrid/ui';
+import { useGetModelFormats, useGetModelProviders, useGetModelTypes } from '@/hooks/service/models';
+import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
+import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-type OptionType = { text: string; value: string };
-
-const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-];
-
 export default function ModelCatalogCreatePage() {
+  const { modelProviders } = useGetModelProviders();
+  const { modelTypes } = useGetModelTypes();
+  const { modelFormats } = useGetModelFormats();
   const navigate = useNavigate();
+
+  const [selectedProvider, setSelectedProvider] = useState<ModelProvider | null>(null);
+  const [selectedType, setSelectedType] = useState<ModelType | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<ModelFormat | null>(null);
+
   const [value, setValue] = useState<string>('');
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,12 +24,6 @@ export default function ModelCatalogCreatePage() {
   const [text, setText] = useState<string>('');
   const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
-  };
-
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
-
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
   };
 
   return (
@@ -65,11 +61,11 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelProviders}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedProvider}
+                onChange={(option: ModelProvider | null) => setSelectedProvider(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -79,11 +75,11 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelTypes}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedType}
+                onChange={(option: ModelType | null) => setSelectedType(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -93,11 +89,11 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelFormats}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={selectedFormat}
+                onChange={(option: ModelFormat | null) => setSelectedFormat(option)}
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
