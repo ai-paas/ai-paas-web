@@ -369,7 +369,10 @@ const MainTab = ({
   const handleItemClick = useCallback(
     (filterKey: 'task' | 'library' | 'language', itemId: string) => {
       if (filterKey === 'task') {
-        setFilter({ ...filter, task: itemId });
+        setFilter({
+          ...filter,
+          task: filter.task === itemId ? '' : itemId,
+        });
       } else {
         setFilter({ ...filter, [filterKey]: toggleArrayItem(filter[filterKey], itemId) });
       }
