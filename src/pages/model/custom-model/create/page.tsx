@@ -5,10 +5,10 @@ import {
   useGetModelProviders,
   useGetModelTypes,
 } from '@/hooks/service/models';
-import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
+import type { HubModel, ModelFormat, ModelProvider, ModelType } from '@/types/model';
 import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 interface CustomModel {
   name: string | null;
@@ -34,12 +34,14 @@ const INITIAL_CUSTOM_MODEL = {
 };
 
 export default function CustomModelCreatePage() {
+  const location = useLocation();
+  const selectedModel = location.state?.selectedModel as HubModel;
   const { modelProviders } = useGetModelProviders();
   const { modelTypes } = useGetModelTypes();
   const { modelFormats } = useGetModelFormats();
   const [customModel, setCustomModel] = useState<CustomModel>(INITIAL_CUSTOM_MODEL);
   const navigate = useNavigate();
-  const { createModel, isPending, isSuccess } = useCreateModel();
+  const { createModel, isPending } = useCreateModel();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setCustomModel({
@@ -89,13 +91,18 @@ export default function CustomModelCreatePage() {
     if (customModel.file) formData.append('file', customModel.file);
 
     await createModel(formData);
+    navigate('/model/custom-model');
   };
 
   useEffect(() => {
-    if (isSuccess) {
-      navigate('/model/custom-model');
-    }
-  }, [isSuccess, navigate]);
+    if (!selectedModel) return;
+    console.log(selectedModel);
+    setCustomModel((prev) => ({
+      ...prev,
+      repo_id: selectedModel.id,
+      provider_id: 1,
+    }));
+  }, [location]);
 
   return (
     <main>
@@ -131,6 +138,7 @@ export default function CustomModelCreatePage() {
               <Input
                 name="repo_id"
                 placeholder="모델 ID를 입력해주세요."
+                disabled={!!selectedModel}
                 value={customModel.repo_id ?? ''}
                 onChange={handleChange}
               />
@@ -142,6 +150,7 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
+                isDisabled={!!selectedModel}
                 options={modelProviders}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}
@@ -198,15 +207,27 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label className="fileUpload-preview">
-                  <input type="file" className="fileUpload-file" onChange={handleFileChange} />
+                <label
+                  className={`fileUpload-preview ${selectedModel ? '!cursor-not-allowed' : ''}`}
+                >
+                  <input
+                    disabled={!!selectedModel}
+                    type="file"
+                    className="fileUpload-file"
+                    onChange={handleFileChange}
+                  />
                   <IconFileUp />
-                  {customModel.file?.name ?? (
-                    <p className="fileUpload-preview_msg">
-                      파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                      <br />
-                      허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
-                    </p>
+                  {selectedModel ? (
+                    <p>{selectedModel.id}</p>
+                  ) : (
+                    (customModel.file?.name ?? (
+                      <p className="fileUpload-preview_msg">
+                        파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                        <br />
+                        허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx,
+                        csv,md,htm
+                      </p>
+                    ))
                   )}
                 </label>
               </div>

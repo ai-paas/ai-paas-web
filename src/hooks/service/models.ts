@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import type { Page } from '@/types/api';
+import type { Page, Pagintaion } from '@/types/api';
 import type {
   CustomModel,
   GetCustomModelsParams,
@@ -173,7 +173,7 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
   );
   const { data, isPending, isError } = useQuery({
     queryKey: ['hub-connect', params],
-    queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams }).json(),
+    queryFn: () => api.get<Pagintaion<HubModel>>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
 

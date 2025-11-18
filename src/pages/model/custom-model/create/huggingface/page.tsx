@@ -16,6 +16,7 @@ import { useGetHubModels, useGetHubModelTagsByGroup } from '@/hooks/service/mode
 import { formatCount } from '@/util/count';
 import { formatRelativeTime } from '@/util/date';
 import styles from '../../../model.module.scss';
+import type { HubModel } from '@/types/model';
 
 // Types
 type SortType = 'downloads' | 'created' | 'relevance';
@@ -118,7 +119,7 @@ const useSort = (initialSort: SortType = 'downloads') => {
 
 export default function CustomModelCreateHuggingfacePage() {
   const navigate = useNavigate();
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<HubModel | null>(null);
   const { searchValue, ...restProps } = useSearchInputState();
   const { sort, sortLabel, sortMenus } = useSort();
   const { pageable, handlePageChange, handlePageSizeChange, resetPage } = usePagination();
@@ -144,14 +145,13 @@ export default function CustomModelCreateHuggingfacePage() {
     }
   }, [searchValue, resetPage]);
 
-  const handleModelSelect = useCallback((modelId: string) => {
-    setSelectedModel(modelId);
+  const handleModelSelect = useCallback((model: HubModel) => {
+    setSelectedModel(model);
   }, []);
 
   const handleCreateModel = useCallback(() => {
     if (selectedModel) {
-      // TODO: Implement model creation logic
-      console.log('Creating model:', selectedModel);
+      navigate('/model/custom-model/create', { state: { selectedModel } });
     }
   }, [selectedModel]);
 
@@ -206,8 +206,8 @@ export default function CustomModelCreateHuggingfacePage() {
                 <ModelItem
                   key={model.id}
                   model={model}
-                  isActive={selectedModel === model.id}
-                  onClick={() => handleModelSelect(model.id)}
+                  isActive={selectedModel?.id === model.id}
+                  onClick={() => handleModelSelect(model)}
                 />
               ))}
             </div>

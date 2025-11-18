@@ -145,30 +145,23 @@ export interface ModelFormat {
 }
 
 export interface HubModel {
-  data: {
-    _id: string | null;
-    id: string;
-    modelId: string;
-    author: string;
-    createdAt: string | null;
-    lastModified: string;
-    downloads: number;
-    likes: number;
-    tags: string[];
-    pipeline_tag: string;
-    task: string;
-    library_name: string;
-    parameterDisplay: string;
-    parameterRange: string;
-    private: boolean;
-    gated: boolean;
-    sha: string | null;
-  }[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+  _id: string | null;
+  id: string;
+  modelId: string;
+  author: string;
+  createdAt: string | null;
+  lastModified: string;
+  downloads: number;
+  likes: number;
+  tags: string[];
+  pipeline_tag: string;
+  task: string;
+  library_name: string;
+  parameterDisplay: string;
+  parameterRange: string;
+  private: boolean;
+  gated: boolean;
+  sha: string | null;
 }
 
 export interface HubModelTag {
