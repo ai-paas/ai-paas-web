@@ -22,7 +22,7 @@ interface CustomModel {
   parameter?: string;
   sample_code?: string;
   model_registry_schema?: string;
-  file?: string;
+  file?: File;
 }
 
 const INITIAL_CUSTOM_MODEL = {
@@ -48,6 +48,24 @@ export default function CustomModelCreatePage() {
     });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedExtensions = ['safetensors', 'onnx'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        alert('허용되지 않는 파일 형식입니다.');
+        return;
+      }
+
+      setCustomModel((prev) => ({
+        ...prev,
+        file,
+      }));
+    }
+  };
+
   const handleSubmit = async () => {
     if (
       !customModel.name ||
@@ -68,6 +86,7 @@ export default function CustomModelCreatePage() {
     formData.append('format_id', String(customModel.format_id));
     formData.append('description', customModel.description ?? '');
     formData.append('sample_code', customModel.sample_code ?? '');
+    if (customModel.file) formData.append('file', customModel.file);
 
     await createModel(formData);
   };
@@ -180,13 +199,15 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
                 <label className="fileUpload-preview">
-                  <input type="file" className="fileUpload-file" />
+                  <input type="file" className="fileUpload-file" onChange={handleFileChange} />
                   <IconFileUp />
-                  <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                    <br />
-                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
-                  </p>
+                  {customModel.file?.name ?? (
+                    <p className="fileUpload-preview_msg">
+                      파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                      <br />
+                      허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
+                    </p>
+                  )}
                 </label>
               </div>
             </div>

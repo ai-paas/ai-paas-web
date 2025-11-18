@@ -14,23 +14,24 @@ import { EditModelCatalogButton } from '../../../components/features/model/edit-
 import { DeleteModelCatalogButton } from '../../../components/features/model/delete-model-catalog-button';
 import { Link } from 'react-router';
 import { useGetModelCatalogs } from '@/hooks/service/models';
-import type { Model } from '@/types/model';
+import type { ModelCatalog } from '@/types/model';
 import { useAuth } from '@/hooks/useAuth';
+import { formatDateTime } from '@/util/date';
 
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: Model }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }: { row: Model }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: ModelCatalog }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: ModelCatalog }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: ModelCatalog) => row.name,
     size: 325,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: ModelCatalog } }) => (
       <Link to={`/model/model-catalog/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
@@ -39,38 +40,38 @@ const columns = [
   {
     id: 'repo_id',
     header: '모델 ID',
-    accessorFn: (row) => row.repo_id,
+    accessorFn: (row: ModelCatalog) => row.repo_id,
     size: 325,
   },
   {
-    id: 'desc',
+    id: 'description',
     header: '모델 소개',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: ModelCatalog) => row.description,
     size: 434,
     enableSorting: false,
   },
   {
     id: 'task',
     header: '테스크',
-    accessorFn: (row) => row.modelId,
+    accessorFn: (row: ModelCatalog) => row.task,
     size: 325,
   },
   {
     id: 'parameter',
     header: '파라미터',
-    accessorFn: (row) => row.modelId,
+    accessorFn: (row: ModelCatalog) => row.parameter,
     size: 325,
   },
   {
-    id: 'creator',
+    id: 'created_by',
     header: '생성자',
-    accessorFn: (row) => row.creator,
+    accessorFn: (row: ModelCatalog) => row.created_by,
     size: 325,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: ModelCatalog) => formatDateTime(row.created_at.toString()),
     size: 325,
   },
 ];

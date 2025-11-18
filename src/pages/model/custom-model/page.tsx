@@ -16,7 +16,7 @@ import { HardwareOptimizationButton } from '../../../components/features/model/h
 import { ModelCompressionButton } from '../../../components/features/model/model-compression-button';
 import { useGetCustomModels } from '@/hooks/service/models';
 import { useEffect, useMemo } from 'react';
-import type { Model } from '@/types/model';
+import type { CustomModel } from '@/types/model';
 import { formatDateTime } from '@/util/date';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,62 +24,62 @@ const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: Model }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }: { row: { original: Model } }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: CustomModel }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: { original: CustomModel } }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: Model) => row.name,
+    accessorFn: (row: CustomModel) => row.name,
     size: 225,
-    cell: ({ row }: { row: { original: Model } }) => (
+    cell: ({ row }: { row: { original: CustomModel } }) => (
       <Link to={`/model/custom-model/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
   },
   {
-    id: 'id',
+    id: 'repo_id',
     header: '모델 ID',
-    accessorFn: (row: Model) => row.parent_model_id,
+    accessorFn: (row: CustomModel) => row.repo_id,
     size: 225,
   },
   {
     id: 'created_by',
     header: '생성자',
-    accessorFn: (row: Model) => row.created_by,
+    accessorFn: (row: CustomModel) => row.created_by,
     size: 200,
   },
   {
     id: 'description',
     header: '모델 소개',
-    accessorFn: (row: Model) => row.description,
+    accessorFn: (row: CustomModel) => row.description,
     size: 234,
     enableSorting: false,
   },
   {
     id: 'provider_info',
     header: '모델 공급자',
-    accessorFn: (row: Model) => row.provider_info.name,
+    accessorFn: (row: CustomModel) => row.provider_info.name,
     size: 200,
   },
   {
     id: 'type_info',
     header: '모델 타입',
-    accessorFn: (row: Model) => row.type_info.name,
+    accessorFn: (row: CustomModel) => row.type_info.name,
     size: 200,
   },
   {
     id: 'format_info',
     header: '모델 포맷',
-    accessorFn: (row: Model) => row.format_info.name,
+    accessorFn: (row: CustomModel) => row.format_info.name,
     size: 200,
   },
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row: Model) => formatDateTime(row.created_at.toString()),
+    accessorFn: (row: CustomModel) => formatDateTime(row.created_at.toString()),
     size: 200,
   },
 ];

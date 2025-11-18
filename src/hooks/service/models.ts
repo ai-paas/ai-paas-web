@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import type { Page } from '@/types/api';
 import type {
+  CustomModel,
   GetCustomModelsParams,
   GetHubModelsParams,
   GetModelCatalogsParams,
@@ -10,6 +11,7 @@ import type {
   HubModel,
   HubModelTag,
   Model,
+  ModelCatalog,
   ModelFormat,
   ModelProvider,
   ModelType,
@@ -18,9 +20,9 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['models', params],
+    queryKey: ['custom-models', params],
     queryFn: () =>
-      api.get<Page<Model>>('models/custom-models', { searchParams: { ...params } }).json(),
+      api.get<Page<CustomModel>>('models/custom-models', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -37,9 +39,9 @@ export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
 
 export const useGetModelCatalogs = (params: GetModelCatalogsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['models', params],
+    queryKey: ['model-catalogs', params],
     queryFn: () =>
-      api.get<Page<Model>>('models/model-catalog', { searchParams: { ...params } }).json(),
+      api.get<Page<ModelCatalog>>('models/model-catalog', { searchParams: { ...params } }).json(),
   });
 
   return {

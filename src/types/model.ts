@@ -2,6 +2,7 @@ export interface Model {
   id: number;
   name: string;
   description: string;
+  repo_id: string;
   provider_info: {
     id: number;
     name: string;
@@ -38,6 +39,90 @@ export interface Model {
     member_id: string;
     role: string;
     name: string;
+  };
+}
+
+export interface CustomModel {
+  id: number;
+  name: string;
+  repo_id: string;
+  description: string | null;
+  parameter: string | null;
+  sample_code: string | null;
+  task: string | null;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+  created_by: string;
+  updated_by: string;
+  deleted_by: string;
+  parent_model_id: number | null;
+  provider_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  format_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  type_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  registry: {
+    id: number;
+    uri: string;
+    artifact_path: string;
+    reference_model_id: number;
+    created_at: string;
+    created_by: string;
+    updated_at: string;
+    updated_by: string;
+  };
+}
+
+export interface ModelCatalog {
+  id: number;
+  name: string;
+  repo_id: string;
+  description: string;
+  parameter: string | null;
+  sample_code: string | null;
+  task: string | null;
+  parent_model_id: number | null;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+  created_by: string;
+  updated_by: string;
+  deleted_by: string;
+  provider_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  format_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  type_info: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  registry: {
+    id: number;
+    uri: string;
+    artifact_path: string;
+    reference_model_id: number;
+    created_at: string;
+    created_by: string;
+    updated_at: string;
+    updated_by: string;
   };
 }
 
