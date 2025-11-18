@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import type { Page } from '@/types/api';
 import type {
-  CreateModelRequest,
   GetCustomModelsParams,
   GetHubModelsParams,
   GetModelCatalogsParams,
@@ -145,15 +144,15 @@ export const useDeleteModel = () => {
 export const useCreateModel = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: CreateModelRequest) => api.post('models', { json: data }).json<Model>(),
+  const { mutateAsync, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (data: FormData) => api.post('models', { body: data }).json<Model>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] });
     },
   });
 
   return {
-    createModel: mutate,
+    createModel: mutateAsync,
     isPending,
     isError,
     isSuccess,

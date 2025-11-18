@@ -131,17 +131,6 @@ export interface GetModelFormatsParams {
   format_name?: string;
 }
 
-export interface CreateModelRequest {
-  name: string;
-  description: string;
-  provider_id: number;
-  type_id: number;
-  format_id: number;
-  parent_model_id?: number;
-  registry_schema?: string;
-  file?: string;
-}
-
 export interface GetHubModelsParams {
   market: string;
   sort?: string;

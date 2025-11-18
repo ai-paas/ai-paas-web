@@ -15,6 +15,7 @@ import { DeleteModelCatalogButton } from '../../../components/features/model/del
 import { Link } from 'react-router';
 import { useGetModelCatalogs } from '@/hooks/service/models';
 import type { Model } from '@/types/model';
+import { useAuth } from '@/hooks/useAuth';
 
 const columns = [
   {
@@ -30,15 +31,15 @@ const columns = [
     accessorFn: (row) => row.name,
     size: 325,
     cell: ({ row }) => (
-      <Link to={`/model/model-catalog/${row.original.name}`} className="table-td-link">
+      <Link to={`/model/model-catalog/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
   },
   {
-    id: 'modelId',
+    id: 'repo_id',
     header: '모델 ID',
-    accessorFn: (row) => row.modelId,
+    accessorFn: (row) => row.repo_id,
     size: 325,
   },
   {
@@ -75,6 +76,7 @@ const columns = [
 ];
 
 export default function ModelCatalogPage() {
+  const { isAdmin } = useAuth();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
@@ -110,9 +112,13 @@ export default function ModelCatalogPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateModelCatalogButton />
-            <EditModelCatalogButton modelCatalogId={selectedId} />
-            <DeleteModelCatalogButton modelCatalogId={selectedId} />
+            {isAdmin && (
+              <>
+                <CreateModelCatalogButton />
+                <EditModelCatalogButton modelCatalogId={selectedId} />
+                <DeleteModelCatalogButton modelCatalogId={selectedId} />
+              </>
+            )}
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
