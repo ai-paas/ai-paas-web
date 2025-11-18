@@ -21,8 +21,8 @@ import styles from '../../../model.module.scss';
 type SortType = 'downloads' | 'created' | 'relevance';
 
 interface FilterState {
-  num_parameters_min?: string;
-  num_parameters_max?: string;
+  num_parameters_min: string | null;
+  num_parameters_max: string | null;
   task: string;
   library: string[];
   language: string[];
@@ -32,6 +32,30 @@ interface TagItem {
   id: string;
   label: string;
 }
+
+const PARAMETER_MAP: Record<number, string> = {
+  20: '6B',
+  40: '12B',
+  60: '32B',
+  80: '128B',
+};
+const getParameterRangeValue = (
+  min: number,
+  max: number
+): [string | null, string | null] | undefined => {
+  let minValue: string | null = PARAMETER_MAP[min];
+  let maxValue: string | null = PARAMETER_MAP[max];
+
+  if (min === 100) minValue = '500B';
+  if (max === 0) maxValue = '1B';
+
+  return [minValue, maxValue];
+};
+const getParameterString = (value: number): string => {
+  if (value === 0) return '<1B';
+  if (value === 100) return '>500B';
+  return PARAMETER_MAP[value] ?? null;
+};
 
 // Utility functions
 const normalizeSearchText = (text: string): string => {
@@ -100,6 +124,8 @@ export default function CustomModelCreateHuggingfacePage() {
   const { pageable, handlePageChange, handlePageSizeChange, resetPage } = usePagination();
   const [filter, setFilter] = useState<FilterState>({
     task: '',
+    num_parameters_min: null,
+    num_parameters_max: null,
     library: [],
     language: [],
   });
@@ -247,7 +273,20 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
     market: 'huggingface',
     group: 'language',
   });
-  const [parameter, setParameter] = useState<number[]>([0, 30]);
+  const [parameter, setParameter] = useState<number[]>([0, 100]);
+
+  useEffect(() => {
+    const [min, max] = parameter;
+    const [num_parameters_min, num_parameters_max] = getParameterRangeValue(min, max) ?? [
+      null,
+      null,
+    ];
+    setFilter((prev) => ({
+      ...prev,
+      num_parameters_min,
+      num_parameters_max,
+    }));
+  }, [parameter]);
 
   return (
     <div className={styles.flexContentLeft}>
@@ -359,8 +398,11 @@ const MainTab = ({
         <div className={styles.sliderBox}>
           <Slider
             showPointer
-            showMarker={true}
+            showMarker
+            step={20}
+            minStepsBetweenThumbs={0}
             marker={6}
+            valueFormatter={(value) => getParameterString(value)}
             value={parameter}
             onValueChange={setParameter}
           />

@@ -137,8 +137,8 @@ export interface GetHubModelsParams {
   page?: number;
   limit?: number;
   search?: string;
-  num_parameters_min?: string;
-  num_parameters_max?: string;
+  num_parameters_min?: string | null;
+  num_parameters_max?: string | null;
   task?: string;
   library?: string[];
   language?: string[];
