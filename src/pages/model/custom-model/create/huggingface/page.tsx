@@ -520,7 +520,10 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
   const handleItemClick = useCallback(
     (itemId: string) => {
       if (filterKey === 'task') {
-        setFilter({ ...filter, task: itemId });
+        setFilter({
+          ...filter,
+          task: filter.task === itemId ? '' : itemId,
+        });
       } else {
         setFilter({ ...filter, [filterKey]: toggleArrayItem(filter[filterKey], itemId) });
       }
@@ -559,7 +562,7 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
               key={item.id}
               type="button"
               onClick={() => handleItemClick(item.id)}
-              className={`${styles.chip} ${isItemActive(item.id) ? styles.active : ''}`}
+              className={`${styles.chip} !cursor-pointer ${isItemActive(item.id) ? styles.active : ''}`}
             >
               {item.label}
             </button>

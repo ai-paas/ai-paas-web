@@ -30,7 +30,7 @@ const columns = [
     id: 'name',
     header: '이름',
     accessorFn: (row: ModelCatalog) => row.name,
-    size: 325,
+    size: 265,
     cell: ({ row }: { row: { original: ModelCatalog } }) => (
       <Link to={`/model/model-catalog/${row.original.id}`} className="table-td-link">
         {row.original.name}
@@ -41,38 +41,38 @@ const columns = [
     id: 'repo_id',
     header: '모델 ID',
     accessorFn: (row: ModelCatalog) => row.repo_id,
-    size: 325,
+    size: 255,
   },
   {
     id: 'description',
     header: '모델 소개',
     accessorFn: (row: ModelCatalog) => row.description,
-    size: 434,
+    size: 334,
     enableSorting: false,
   },
   {
     id: 'task',
     header: '테스크',
     accessorFn: (row: ModelCatalog) => row.task,
-    size: 325,
+    size: 225,
   },
   {
     id: 'parameter',
     header: '파라미터',
     accessorFn: (row: ModelCatalog) => row.parameter,
-    size: 325,
+    size: 225,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: ModelCatalog) => row.created_by,
-    size: 325,
+    size: 225,
   },
   {
     id: 'created_at',
     header: '생성일시',
     accessorFn: (row: ModelCatalog) => formatDateTime(row.created_at.toString()),
-    size: 325,
+    size: 225,
   },
 ];
 

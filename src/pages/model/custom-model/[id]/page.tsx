@@ -114,10 +114,10 @@ export default function CustomModelDetailPage() {
             <li>
               <div className="page-detail_item-name">모델 소개</div>
               <div className="page-detail_item-data">
-                {model?.description || '-'}
+                {model?.name || '-'}
                 {model?.provider_info.name === 'huggingface' && (
                   <a
-                    href={`https://huggingface.co/${model?.name}`}
+                    href={`https://huggingface.co/${model?.repo_id}`}
                     target={'_blank'}
                     className={`page-detail_item-data-link ${styles.itemLink}`}
                   >
@@ -155,7 +155,7 @@ export default function CustomModelDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
-              <div className="page-detail_item-data">{model?.name}</div>
+              <div className="page-detail_item-data">{model?.repo_id}</div>
             </li>
           </ul>
           <ul className="page-detail-list">
