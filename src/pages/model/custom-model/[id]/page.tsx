@@ -19,6 +19,7 @@ import styles from '../../model.module.scss';
 import { useNavigate, useParams } from 'react-router';
 import { useGetModel } from '@/hooks/service/models';
 import { formatDateTime } from '@/util/date';
+import { DeleteCustomModelButton } from '@/components/features/model/delete-custom-model-button';
 
 interface ModelFile {
   name: string;
@@ -101,9 +102,7 @@ export default function CustomModelDetailPage() {
             <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
               편집
             </Button>
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="negative">
-              삭제
-            </Button>
+            <DeleteCustomModelButton customModelId={model?.id} />
           </div>
         </div>
       </div>

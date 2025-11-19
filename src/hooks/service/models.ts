@@ -131,7 +131,8 @@ export const useDeleteModel = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (modelId: number) => api.delete(`models/${modelId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
     },
   });
 
@@ -149,7 +150,8 @@ export const useCreateModel = () => {
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: FormData) => api.post('models', { body: data }).json<Model>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
     },
   });
 
