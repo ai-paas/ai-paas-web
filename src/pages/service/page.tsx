@@ -15,60 +15,51 @@ import { CreateServiceButton } from '@/components/features/service/create-servic
 import { DeleteServiceButton } from '@/components/features/service/delete-service-button';
 import { useGetServices } from '@/hooks/service/services';
 import { formatDateTime } from '@/util/date';
-
-interface ServiceRow {
-  id: number;
-  name: string;
-  description: string;
-  tag: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Service } from '@/types/service';
 
 // 테이블 컬럼 설정
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: ServiceRow }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }: { row: { original: ServiceRow } }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: Service }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: { original: Service } }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: ServiceRow) => row.name,
+    accessorFn: (row: Service) => row.name,
     size: 325,
-    cell: ({ row }: { row: { original: ServiceRow } }) => (
-      <Link to={`/service/${row.original.id}`} className="table-td-link">
+    cell: ({ row }: { row: { original: Service } }) => (
+      <Link to={`/service/${row.original.surro_service_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
   },
   {
-    id: 'tag',
+    id: 'tags',
     header: '태그',
-    accessorFn: (row: ServiceRow) => row.tag,
+    accessorFn: (row: Service) => row.tags?.join(', '),
     size: 325,
   },
   {
     id: 'created_by',
     header: '생성자',
-    accessorFn: (row: ServiceRow) => row.created_by,
+    accessorFn: (row: Service) => row.created_by,
     size: 325,
   },
   {
     id: 'description',
     header: '설명',
-    accessorFn: (row: ServiceRow) => row.description,
+    accessorFn: (row: Service) => row.description,
     size: 434,
     enableSorting: false,
   },
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row: ServiceRow) => formatDateTime(row.created_at),
+    accessorFn: (row: Service) => formatDateTime(row.created_at),
     size: 325,
   },
 ];
@@ -88,9 +79,9 @@ export default function ServicePage() {
     const selectedRowKeys = Object.keys(rowSelection);
 
     // 단일 선택만 허용
-    if (selectedRowKeys.length !== 1) return null;
+    if (selectedRowKeys.length !== 1) return;
 
-    return services[parseInt(selectedRowKeys[0])]?.id;
+    return services[parseInt(selectedRowKeys[0])]?.surro_service_id;
   }, [rowSelection, services]);
 
   // 검색어가 변경되면 페이지네이션 초기화

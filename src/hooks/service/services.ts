@@ -1,20 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
-import type { Page } from "../../types/api";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '../../lib/api';
+import type { Page } from '../../types/api';
 import type {
   CreateServiceRequest,
   GetServicesParams,
   Service,
+  ServiceDetail,
   UpdateServiceRequest,
-} from "../../types/service";
+} from '../../types/service';
 
 export const useGetServices = (params: GetServicesParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ["services", params],
-    queryFn: () =>
-      api
-        .get<Page<Service>>("services", { searchParams: { ...params } })
-        .json(),
+    queryKey: ['services', params],
+    queryFn: () => api.get<Page<Service>>('services', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -34,9 +32,9 @@ export const useCreateService = () => {
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: CreateServiceRequest) =>
-      api.post("services", { json: data }).json<Service>(),
+      api.post('services', { json: data }).json<Service>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
 
@@ -48,10 +46,10 @@ export const useCreateService = () => {
   };
 };
 
-export const useGetService = (serviceId?: number, enabled: boolean = true) => {
+export const useGetService = (surro_service_id?: string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ["services", serviceId],
-    queryFn: () => api.get(`services/${serviceId}`).json<Service>(),
+    queryKey: ['services', surro_service_id],
+    queryFn: () => api.get(`services/${surro_service_id}`).json<ServiceDetail>(),
     enabled,
   });
 
@@ -66,10 +64,10 @@ export const useUpdateService = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: ({ serviceId, ...data }: UpdateServiceRequest) =>
-      api.put(`services/${serviceId}`, { json: data }).json<Service>(),
+    mutationFn: ({ surro_service_id, ...data }: UpdateServiceRequest) =>
+      api.put(`services/${surro_service_id}`, { json: data }).json<Service>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
 
@@ -85,10 +83,10 @@ export const useDeleteService = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (serviceId: number) =>
-      api.delete(`services/${serviceId}`).json<string>(),
+    mutationFn: (surro_service_id: string) =>
+      api.delete(`services/${surro_service_id}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
 
