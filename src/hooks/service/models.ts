@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
-import type { Page } from '@/types/api';
+import type { Page, Pagintaion } from '@/types/api';
 import type {
-  CreateModelRequest,
+  CustomModel,
   GetCustomModelsParams,
   GetHubModelsParams,
   GetModelCatalogsParams,
@@ -9,7 +9,9 @@ import type {
   GetModelProvidersParams,
   GetModelTypesParams,
   HubModel,
+  HubModelTag,
   Model,
+  ModelCatalog,
   ModelFormat,
   ModelProvider,
   ModelType,
@@ -18,9 +20,9 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['models', params],
+    queryKey: ['custom-models', params],
     queryFn: () =>
-      api.get<Page<Model>>('models/custom-models', { searchParams: { ...params } }).json(),
+      api.get<Page<CustomModel>>('models/custom-models', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -37,9 +39,9 @@ export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
 
 export const useGetModelCatalogs = (params: GetModelCatalogsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['models', params],
+    queryKey: ['model-catalogs', params],
     queryFn: () =>
-      api.get<Page<Model>>('models/model-catalog', { searchParams: { ...params } }).json(),
+      api.get<Page<ModelCatalog>>('models/model-catalog', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -129,7 +131,8 @@ export const useDeleteModel = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (modelId: number) => api.delete(`models/${modelId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
     },
   });
 
@@ -144,15 +147,16 @@ export const useDeleteModel = () => {
 export const useCreateModel = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: CreateModelRequest) => api.post('models', { json: data }).json<Model>(),
+  const { mutateAsync, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (data: FormData) => api.post('models', { body: data }).json<Model>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['models'] });
+      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
+      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
     },
   });
 
   return {
-    createModel: mutate,
+    createModel: mutateAsync,
     isPending,
     isError,
     isSuccess,
@@ -160,9 +164,18 @@ export const useCreateModel = () => {
 };
 
 export const useGetHubModels = (params: GetHubModelsParams) => {
+  const searchParams = new URLSearchParams(
+    Object.entries(params).filter(
+      ([, value]) =>
+        value !== '' &&
+        value !== null &&
+        value !== undefined &&
+        (!Array.isArray(value) || value.length > 0)
+    )
+  );
   const { data, isPending, isError } = useQuery({
     queryKey: ['hub-connect', params],
-    queryFn: () => api.get<HubModel>('hub-connect/models', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<Pagintaion<HubModel>>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
 
@@ -175,5 +188,25 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
     },
     isPending,
     isError,
+  };
+};
+
+export const useGetHubModelTagsByGroup = (params: {
+  group: 'region' | 'library' | 'task' | 'framework' | 'language';
+  market: string;
+}) => {
+  const { data, isFetching, isPending, isError, refetch } = useQuery({
+    queryKey: ['hub-connect-tags', params],
+    queryFn: () =>
+      api.get<HubModelTag>(`hub-connect/tags/${params.group}`, { searchParams: params }).json(),
+  });
+
+  return {
+    hubModelTags: data?.data,
+    remaining_count: data?.remaining_count,
+    isFetching,
+    isPending,
+    isError,
+    refetch,
   };
 };

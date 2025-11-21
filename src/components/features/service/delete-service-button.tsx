@@ -1,9 +1,9 @@
-import { useDeleteService } from "@/hooks/service/services";
-import { AlertDialog, Button } from "@innogrid/ui";
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useDeleteService } from '@/hooks/service/services';
+import { AlertDialog, Button } from '@innogrid/ui';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export const DeleteServiceButton = ({ serviceId }: { serviceId?: number }) => {
+export const DeleteServiceButton = ({ serviceId }: { serviceId?: string }) => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const { deleteService } = useDeleteService();
   const navigate = useNavigate();
@@ -16,17 +16,12 @@ export const DeleteServiceButton = ({ serviceId }: { serviceId?: number }) => {
   const handleClickConfirm = () => {
     if (!serviceId) return;
     deleteService(serviceId);
-    navigate("/service");
+    navigate('/service');
   };
 
   return (
     <>
-      <Button
-        size="medium"
-        color="negative"
-        disabled={!serviceId}
-        onClick={openAlert}
-      >
+      <Button size="medium" color="negative" disabled={!serviceId} onClick={openAlert}>
         삭제
       </Button>
       <AlertDialog
