@@ -8,13 +8,17 @@ import type {
   GetModelFormatsParams,
   GetModelProvidersParams,
   GetModelTypesParams,
+  GetOptimizersParams,
   HubModel,
   HubModelTag,
   Model,
   ModelCatalog,
   ModelFormat,
+  ModelForOptimizer,
   ModelProvider,
   ModelType,
+  OptimizeRequest,
+  Optimizers,
 } from '@/types/model';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -208,5 +212,61 @@ export const useGetHubModelTagsByGroup = (params: {
     isPending,
     isError,
     refetch,
+  };
+};
+
+export const useGetModelForOptimizer = (model_id?: number) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['modelForOptimizer', model_id],
+    queryFn: () => api.get(`checked/model/${model_id}`).json<{ data: ModelForOptimizer }>(),
+    enabled: !!model_id,
+  });
+
+  return {
+    modelForOptimizer: data?.data,
+    isPending,
+    isError,
+  };
+};
+
+export const useGetOptimizers = (params: GetOptimizersParams) => {
+  const searchParams = new URLSearchParams(
+    Object.entries(params).filter(
+      ([, value]) =>
+        value !== '' &&
+        value !== null &&
+        value !== undefined &&
+        (!Array.isArray(value) || value.length > 0)
+    )
+  );
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['optimizers', params],
+    queryFn: () => api.get<Optimizers>('checked/optimizer', { searchParams }).json(),
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    optimizers: data?.data.items ?? [],
+    page: {
+      number: data?.data.current_page ?? 1,
+      size: data?.data.page_size ?? 1,
+      total: data?.data.total_count ?? 1,
+    },
+    isPending,
+    isError,
+  };
+};
+
+export const useOptimize = () => {
+  const { mutateAsync, isPending, isError, isSuccess } = useMutation({
+    mutationFn: ({ optimizer_id, ...body }: OptimizeRequest) =>
+      api.post(`optimize/optimize/${optimizer_id}`, { json: body }).json<Model>(),
+  });
+
+  return {
+    optimize: mutateAsync,
+    isPending,
+    isError,
+    isSuccess,
   };
 };

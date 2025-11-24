@@ -98,7 +98,7 @@ export default function CustomModelPage() {
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
 
-    if (selectedRowKeys.length !== 1) return null;
+    if (selectedRowKeys.length !== 1) return;
 
     return customModels[parseInt(selectedRowKeys[0])]?.id;
   }, [rowSelection, customModels]);

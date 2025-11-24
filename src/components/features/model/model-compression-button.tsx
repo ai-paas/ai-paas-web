@@ -8,7 +8,7 @@ const options = [
   { text: 'Pruning', value: 'pruning' },
 ];
 
-export const ModelCompressionButton = ({ customModelId }: { customModelId: number | null }) => {
+export const ModelCompressionButton = ({ customModelId }: { customModelId?: number }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 

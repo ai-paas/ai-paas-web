@@ -173,6 +173,39 @@ export interface HubModelTag {
   remaining_count: number;
 }
 
+export interface ModelForOptimizer {
+  id: number;
+  model_name: string;
+  model_task: string;
+  run_id: string;
+  path: string;
+}
+
+export interface Optimizers {
+  data: {
+    items: {
+      id: number;
+      optimizer_name: string;
+      accelerator: string;
+      argument: Record<string, string>;
+    }[];
+    current_page: number;
+    page_size: number;
+    total_count: number;
+    total_page: number;
+    next_page?: number;
+    prev_page?: number;
+  };
+}
+
+export interface OptimizeRequest {
+  optimizer_id: number;
+  saved_model_run_id: string;
+  saved_model_path: string;
+  model_name: string;
+  args?: Record<string, string>;
+}
+
 export interface GetCustomModelsParams {
   page?: number;
   size?: number;
@@ -224,4 +257,11 @@ export interface GetHubModelsParams {
   apps?: string[];
   inference_provider?: string[];
   other?: string[];
+}
+
+export interface GetOptimizersParams {
+  page?: number;
+  size?: number;
+  name?: string;
+  model_id?: number;
 }
