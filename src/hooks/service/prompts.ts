@@ -75,7 +75,7 @@ export const useDeletePrompt = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (surro_prompt_id: string) =>
+    mutationFn: (surro_prompt_id: number) =>
       api.delete(`prompts/${surro_prompt_id}`).json<string>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prompts'] });

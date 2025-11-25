@@ -48,7 +48,7 @@ export default function PromptPage() {
           <div className="page-toolBox-btns">
             <CreatePromptButton />
             <EditPromptButton />
-            <DeletePromptButton />
+            <DeletePromptButton promptId={selectedId} />
           </div>
           <div>
             <div>
