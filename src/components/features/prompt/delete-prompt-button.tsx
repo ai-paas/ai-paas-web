@@ -1,23 +1,26 @@
-import { AlertDialog, Button } from "@innogrid/ui";
-import { useState } from "react";
+import { useDeletePrompt } from '@/hooks/service/prompts';
+import { AlertDialog, Button } from '@innogrid/ui';
+import { useState } from 'react';
 
-export const DeletePromptButton = () => {
+export const DeletePromptButton = ({ promptId }: { promptId?: number }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { deletePrompt } = useDeletePrompt();
 
-  const handleClickConfirm = () => {
-    console.log("삭제");
+  const handleConfirm = () => {
+    if (!promptId) return;
+    deletePrompt(promptId);
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative">
+      <Button onClick={() => setIsOpen(true)} size="medium" color="negative" disabled={!promptId}>
         삭제
       </Button>
       <AlertDialog
         isOpen={isOpen}
         confirmButtonText="확인"
         cancelButtonText="취소"
-        onClickConfirm={handleClickConfirm}
+        onClickConfirm={handleConfirm}
         onClickClose={() => setIsOpen(false)}
         size="small"
       >

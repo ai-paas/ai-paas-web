@@ -12,7 +12,7 @@ import { formatDateTime } from '@/util/date';
 
 export default function ServiceDetailPage() {
   const { id } = useParams();
-  const { service } = useGetService(Number(id));
+  const { service } = useGetService(id);
   const navigate = useNavigate();
 
   return (
@@ -26,8 +26,8 @@ export default function ServiceDetailPage() {
         <h2 className="page-title">서비스 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditServiceButton serviceId={Number(id)} />
-            <DeleteServiceButton serviceId={Number(id)} />
+            <EditServiceButton serviceId={id} />
+            <DeleteServiceButton serviceId={id} />
           </div>
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function ServiceDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">태그</div>
-              <div className="page-detail_item-data">{service?.tag}</div>
+              <div className="page-detail_item-data">{service?.tags?.join(', ')}</div>
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>

@@ -14,67 +14,70 @@ import { EditModelCatalogButton } from '../../../components/features/model/edit-
 import { DeleteModelCatalogButton } from '../../../components/features/model/delete-model-catalog-button';
 import { Link } from 'react-router';
 import { useGetModelCatalogs } from '@/hooks/service/models';
-import type { Model } from '@/types/model';
+import type { ModelCatalog } from '@/types/model';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDateTime } from '@/util/date';
 
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: Model }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }: { row: Model }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: ModelCatalog }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: ModelCatalog }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
-    size: 325,
-    cell: ({ row }) => (
-      <Link to={`/model/model-catalog/${row.original.name}`} className="table-td-link">
+    accessorFn: (row: ModelCatalog) => row.name,
+    size: 265,
+    cell: ({ row }: { row: { original: ModelCatalog } }) => (
+      <Link to={`/model/model-catalog/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
   },
   {
-    id: 'modelId',
+    id: 'repo_id',
     header: '모델 ID',
-    accessorFn: (row) => row.modelId,
-    size: 325,
+    accessorFn: (row: ModelCatalog) => row.repo_id,
+    size: 255,
   },
   {
-    id: 'desc',
+    id: 'description',
     header: '모델 소개',
-    accessorFn: (row) => row.desc,
-    size: 434,
+    accessorFn: (row: ModelCatalog) => row.description,
+    size: 334,
     enableSorting: false,
   },
   {
     id: 'task',
     header: '테스크',
-    accessorFn: (row) => row.modelId,
-    size: 325,
+    accessorFn: (row: ModelCatalog) => row.task,
+    size: 225,
   },
   {
     id: 'parameter',
     header: '파라미터',
-    accessorFn: (row) => row.modelId,
-    size: 325,
+    accessorFn: (row: ModelCatalog) => row.parameter,
+    size: 225,
   },
   {
-    id: 'creator',
+    id: 'created_by',
     header: '생성자',
-    accessorFn: (row) => row.creator,
-    size: 325,
+    accessorFn: (row: ModelCatalog) => row.created_by,
+    size: 225,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.date,
-    size: 325,
+    accessorFn: (row: ModelCatalog) => formatDateTime(row.created_at.toString()),
+    size: 225,
   },
 ];
 
 export default function ModelCatalogPage() {
+  const { isAdmin } = useAuth();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
@@ -110,9 +113,13 @@ export default function ModelCatalogPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateModelCatalogButton />
-            <EditModelCatalogButton modelCatalogId={selectedId} />
-            <DeleteModelCatalogButton modelCatalogId={selectedId} />
+            {isAdmin && (
+              <>
+                <CreateModelCatalogButton />
+                <EditModelCatalogButton modelCatalogId={selectedId} />
+                <DeleteModelCatalogButton modelCatalogId={selectedId} />
+              </>
+            )}
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />

@@ -5,10 +5,7 @@ let refreshPromise: Promise<string> | null = null;
 
 export const api = ky.create({
   prefixUrl: `${import.meta.env.VITE_SERVER_URL}/api/v1`,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: false,
   hooks: {
     beforeRequest: [
       (request) => {
