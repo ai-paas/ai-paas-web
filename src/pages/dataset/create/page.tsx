@@ -1,41 +1,49 @@
 import { useState } from 'react';
-import type { ChangeEvent, SelectSingleValue } from '@innogrid/ui';
-import { BreadCrumb, Button, Select, Input, Textarea } from '@innogrid/ui';
-import { IconFileUp } from '../../../assets/img/icon';
+import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
+import { IconDocument, IconFileUp } from '../../../assets/img/icon';
 import { useNavigate } from 'react-router';
+import { useCreateDataset } from '@/hooks/service/datasets';
 
-const items = [{ label: '데이터 셋', path: '/dataset' }, { label: '데이터 셋 생성' }];
-
-type OptionType = { text: string; value: string };
-
-const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-];
+interface Dataset {
+  name: string;
+  description: string;
+  file?: File;
+}
 
 export default function DatasetCreatePage() {
+  const [dataset, setDataset] = useState<Dataset>({
+    name: '',
+    description: '',
+  });
+  const { createDataset, isPending } = useCreateDataset();
   const navigate = useNavigate();
-  const [value, setValue] = useState<string>('');
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setDataset((prev) => ({ ...prev, file: filesArray[0] }));
+    }
   };
 
-  const [text, setText] = useState<string>('');
-  const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-  };
+  const handleSubmit = async () => {
+    if (!dataset.name || !dataset.description || !dataset.file) return;
 
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
+    const formData = new FormData();
+    formData.append('name', dataset.name);
+    formData.append('description', dataset.description);
+    formData.append('file', dataset.file);
 
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    await createDataset(formData);
+    navigate('/dataset');
   };
 
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={navigate} className="breadcrumbBox" />
+      <BreadCrumb
+        items={[{ label: '데이터 셋', path: '/dataset' }, { label: '데이터 셋 생성' }]}
+        onNavigate={navigate}
+        className="breadcrumbBox"
+      />
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋 생성</h2>
       </div>
@@ -44,16 +52,20 @@ export default function DatasetCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">이름</div>
             <div className="page-input_item-data">
-              <Input placeholder="이름을 입력해주세요." value={value} onChange={onChange} />
+              <Input
+                placeholder="이름을 입력해주세요."
+                value={dataset.name}
+                onChange={(e) => setDataset({ ...dataset, name: e.target.value })}
+              />
               <p className="page-input_item-input-desc">이름 입력에 대한 설명글이 들어갑니다.</p>
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">학습 파일</div>
+            <div className="page-input_item-name page-icon-requisite">학습 파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
                 <label className="fileUpload-preview">
-                  <input type="file" className="fileUpload-file" />
+                  <input type="file" className="fileUpload-file" onChange={handleFileChange} />
                   <IconFileUp />
                   <p className="fileUpload-preview_msg">
                     파일을 여기에 드래그하거나 클릭하여 업로드하세요.
@@ -61,13 +73,23 @@ export default function DatasetCreatePage() {
                     (jpg/jpeg 50MB 이하)
                   </p>
                 </label>
+                {dataset.file && (
+                  <div className="flex items-center gap-2">
+                    <IconDocument className="page-icon-document" />
+                    <span>{dataset.file.name}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-name page-icon-requisite">설명</div>
             <div className="page-input_item-data">
-              <Textarea value={text} onChange={onTextChange} placeholder="설명을 입력해주세요." />
+              <Textarea
+                value={dataset.description}
+                onChange={(e) => setDataset({ ...dataset, description: e.target.value })}
+                placeholder="설명을 입력해주세요."
+              />
             </div>
           </div>
         </div>
@@ -79,7 +101,7 @@ export default function DatasetCreatePage() {
             <Button size="large" color="secondary" onClick={() => navigate('/dataset')}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={() => alert('Button clicked!')}>
+            <Button size="large" color="primary" disabled={isPending} onClick={handleSubmit}>
               생성
             </Button>
           </div>
