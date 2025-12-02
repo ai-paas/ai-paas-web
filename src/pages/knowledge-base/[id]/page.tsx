@@ -7,9 +7,11 @@ import {
   type Sorting,
 } from '@innogrid/ui';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { DeleteKnowledgeBaseButton } from '../../../components/features/knowledge-base/delete-knowledge-base-button';
 import { EditKnowledgeBaseButton } from '../../../components/features/knowledge-base/edit-knowledge-base-button';
+import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
+import { formatDateTime } from '@/util/date';
 
 const columns = [
   {
@@ -61,6 +63,8 @@ const columns = [
 ];
 
 export default function KnowledgeBaseDetailPage() {
+  const { id } = useParams();
+  const { knowledgeBase } = useGetKnowledgeBase(Number(id));
   const navigate = useNavigate();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
@@ -81,7 +85,10 @@ export default function KnowledgeBaseDetailPage() {
   return (
     <main>
       <BreadCrumb
-        items={[{ label: '지식 베이스', path: '/knowledge-base' }, { label: 'ML 모델 테스트' }]}
+        items={[
+          { label: '지식 베이스', path: '/knowledge-base' },
+          { label: knowledgeBase?.name ?? '' },
+        ]}
         onNavigate={navigate}
         className="breadcrumbBox"
       />
@@ -100,25 +107,29 @@ export default function KnowledgeBaseDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">Meta-Llama-3-8B</div>
+              <div className="page-detail_item-data">{knowledgeBase?.name}</div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(knowledgeBase?.created_at)}
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(knowledgeBase?.updated_at)}
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">설명설명설명설명설명설명</div>
+              <div className="page-detail_item-data">{knowledgeBase?.description}</div>
             </li>
           </ul>
         </div>

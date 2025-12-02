@@ -50,7 +50,7 @@ export default function KnowledgeBasePage() {
           <div className="page-toolBox-btns">
             <CreateKnowledgeBaseButton />
             <EditKnowledgeBaseButton />
-            <DeleteKnowledgeBaseButton />
+            <DeleteKnowledgeBaseButton knowledgeBaseId={selectedId} />
           </div>
           <div>
             <div>
@@ -90,7 +90,7 @@ const columns = [
     accessorFn: (row) => row.name,
     size: 225,
     cell: ({ row }) => (
-      <Link to={'/knowledge-base/test'} className="table-td-link">
+      <Link to={`/knowledge-base/${row.original.surro_knowledge_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -102,9 +102,9 @@ const columns = [
     size: 225,
   },
   {
-    id: 'creator',
+    id: 'created_by',
     header: '생성자',
-    accessorFn: (row) => row.creator,
+    accessorFn: (row) => row.created_by,
     size: 225,
   },
   {
@@ -121,15 +121,15 @@ const columns = [
     size: 271,
   },
   {
-    id: 'desc',
+    id: 'description',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row) => row.description,
     size: 271,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row) => row.created_at,
     size: 225,
   },
 ];

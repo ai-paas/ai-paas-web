@@ -1,16 +1,24 @@
-import { AlertDialog, Button } from "@innogrid/ui";
-import { useState } from "react";
+import { useDeleteKnowledgeBase } from '@/hooks/service/knowledgebase';
+import { AlertDialog, Button } from '@innogrid/ui';
+import { useState } from 'react';
 
-export const DeleteKnowledgeBaseButton = () => {
+export const DeleteKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId?: number }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { deleteKnowledgeBase } = useDeleteKnowledgeBase();
 
   const handleClickConfirm = () => {
-    console.log("삭제");
+    if (!knowledgeBaseId) return;
+    deleteKnowledgeBase(knowledgeBaseId);
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative">
+      <Button
+        disabled={!knowledgeBaseId}
+        size="medium"
+        color="negative"
+        onClick={() => setIsOpen(true)}
+      >
         삭제
       </Button>
       <AlertDialog
@@ -21,7 +29,7 @@ export const DeleteKnowledgeBaseButton = () => {
         onClickClose={() => setIsOpen(false)}
         size="small"
       >
-        <span>지식 베이스을 삭제하시겠습니까?</span>
+        <span>지식 베이스를 삭제하시겠습니까?</span>
       </AlertDialog>
     </>
   );

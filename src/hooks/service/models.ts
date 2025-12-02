@@ -23,10 +23,14 @@ import type {
 } from '@/types/model';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetModels = (params: GetModelsParams = {}) => {
+export const useGetModels = (
+  params: GetModelsParams = {},
+  { enabled = true }: { enabled?: boolean }
+) => {
   const { data, isPending, isError } = useQuery({
     queryKey: ['models', params],
     queryFn: () => api.get<Page<Model>>('models', { searchParams: { ...params } }).json(),
+    enabled,
   });
 
   return {

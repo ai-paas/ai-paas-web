@@ -18,7 +18,7 @@ import {
   useGetLanguages,
   useGetSearchMethods,
 } from '@/hooks/service/knowledgebase';
-import { useGetModels } from '@/hooks/service/models';
+import { useGetModels, useGetModelTypes } from '@/hooks/service/models';
 
 interface FormData {
   name: string;
@@ -75,7 +75,7 @@ export default function KnowledgeBaseCreatePage() {
     if (step !== 0) setStep((prev) => prev - 1);
   };
 
-  const handleClickCreate = () => {
+  const handleClickCreate = async () => {
     if (!formData.chunk_type) return;
 
     const form = new FormData();
@@ -93,7 +93,7 @@ export default function KnowledgeBaseCreatePage() {
       form.append('file', file);
     });
 
-    createKnowledgeBase(form, {
+    await createKnowledgeBase(form, {
       onSuccess: () => {
         navigate('/knowledge-base');
       },
@@ -248,7 +248,11 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
   const { chunkTypes } = useGetChunkTypes();
   const { languages, isFetched } = useGetLanguages();
   const { searchMethods } = useGetSearchMethods();
-  const { models } = useGetModels();
+  const { modelTypes } = useGetModelTypes({ type_name: 'Embedding' });
+  const { models } = useGetModels(
+    { model_type_id: modelTypes[0]?.id },
+    { enabled: !!modelTypes.length }
+  );
 
   useEffect(() => {
     if (isFetched) {

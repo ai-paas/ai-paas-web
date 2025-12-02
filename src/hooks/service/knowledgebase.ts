@@ -58,7 +58,7 @@ export const useGetSearchMethods = () => {
 export const useCreateKnowledgeBase = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, mutateAsync, isPending, isError, isSuccess } = useMutation({
+  const { mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: FormData) =>
       api.post('knowledge-bases', { body: data }).json<KnowledgeBase>(),
     onSuccess: () => {
@@ -67,8 +67,7 @@ export const useCreateKnowledgeBase = () => {
   });
 
   return {
-    createKnowledgeBase: mutate,
-    createKnowledgeBaseAsync: mutateAsync,
+    createKnowledgeBase: mutateAsync,
     isPending,
     isError,
     isSuccess,
@@ -134,7 +133,7 @@ export const useUpdateKnowledgeBase = () => {
 export const useDeleteKnowledgeBase = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, mutateAsync, isPending, isError, isSuccess } = useMutation({
+  const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (surro_knowledge_id: number) =>
       api.delete(`knowledge-bases/${surro_knowledge_id}`).json<string>(),
     onSuccess: () => {
@@ -144,7 +143,6 @@ export const useDeleteKnowledgeBase = () => {
 
   return {
     deleteKnowledgeBase: mutate,
-    deleteKnowledgeBaseAsync: mutateAsync,
     isPending,
     isError,
     isSuccess,
