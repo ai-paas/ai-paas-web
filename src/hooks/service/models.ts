@@ -7,6 +7,7 @@ import type {
   GetModelCatalogsParams,
   GetModelFormatsParams,
   GetModelProvidersParams,
+  GetModelsParams,
   GetModelTypesParams,
   GetOptimizersParams,
   HubModel,
@@ -21,6 +22,24 @@ import type {
   Optimizers,
 } from '@/types/model';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+export const useGetModels = (params: GetModelsParams = {}) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['models', params],
+    queryFn: () => api.get<Page<Model>>('models', { searchParams: { ...params } }).json(),
+  });
+
+  return {
+    models: data?.data ?? [],
+    page: {
+      number: data?.page ?? 1,
+      size: data?.size ?? 1,
+      total: data?.total ?? 1,
+    },
+    isPending,
+    isError,
+  };
+};
 
 export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({

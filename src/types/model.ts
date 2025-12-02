@@ -206,6 +206,16 @@ export interface OptimizeRequest {
   args?: Record<string, string>;
 }
 
+export interface GetModelsParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  model_type_id?: number;
+  model_provider_id?: number;
+  model_format_id?: number;
+  filter_type?: string;
+}
+
 export interface GetCustomModelsParams {
   page?: number;
   size?: number;
