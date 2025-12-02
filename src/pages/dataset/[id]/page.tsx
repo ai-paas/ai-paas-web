@@ -13,10 +13,7 @@ export default function DatasetDetailPage() {
   return (
     <main>
       <BreadCrumb
-        items={[
-          { label: '데이터 셋', path: '/dataset' },
-          { label: dataset?.name || '데이터 셋 상세' },
-        ]}
+        items={[{ label: '데이터 셋', path: '/dataset' }, { label: dataset?.name ?? '' }]}
         onNavigate={navigate}
         className="breadcrumbBox"
       />

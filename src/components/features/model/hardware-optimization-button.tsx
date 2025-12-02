@@ -1,28 +1,44 @@
-import { Button, Modal, Select, type SelectSingleValue } from '@innogrid/ui';
+import { useGetModelForOptimizer, useGetOptimizers, useOptimize } from '@/hooks/service/models';
+import type { OptimizeRequest } from '@/types/model';
+import { Button, Modal, Select } from '@innogrid/ui';
 import { useState } from 'react';
 
-type OptionType = { text: string; value: string };
+const INITIAL_HARDWARE_OPTIMIZATION = {
+  optimizer_id: 0,
+  saved_model_run_id: '',
+  saved_model_path: '',
+  model_name: '',
+  args: {},
+};
 
-const options = [
-  { text: 'scikit-learn', value: 'scikit-learn' },
-  { text: 'TensorRT', value: 'TensorRT' },
-  { text: 'OpenVINO', value: 'openvino' },
-  { text: 'OpenXLA', value: 'openxla' },
-];
+export const HardwareOptimizationButton = ({ customModelId }: { customModelId?: number }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { modelForOptimizer } = useGetModelForOptimizer(customModelId);
+  const { optimizers } = useGetOptimizers({ model_id: customModelId });
+  const [hardwareOptimization, setHardwareOptimization] = useState<OptimizeRequest>(
+    INITIAL_HARDWARE_OPTIMIZATION
+  );
+  const { optimize, isPending } = useOptimize();
 
-export const HardwareOptimizationButton = ({ customModelId }: { customModelId: number | null }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
+  const handleOptimize = async () => {
+    console.log(hardwareOptimization);
+    if (
+      !hardwareOptimization.optimizer_id ||
+      !hardwareOptimization.model_name ||
+      !hardwareOptimization.saved_model_run_id ||
+      !hardwareOptimization.saved_model_path
+    )
+      return;
 
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    await optimize(hardwareOptimization);
+    setIsModalOpen(false);
   };
 
   return (
     <>
       <div style={{ marginLeft: '20px' }}>
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsModalOpen(true)}
           size="medium"
           color="secondary"
           disabled={!customModelId}
@@ -32,14 +48,15 @@ export const HardwareOptimizationButton = ({ customModelId }: { customModelId: n
       </div>
       <Modal
         allowOutsideInteraction
-        isOpen={isOpen}
+        isOpen={isModalOpen}
         title="하드웨어 최적화"
         size="small"
-        onRequestClose={() => setIsOpen(false)}
-        action={() => alert('확인!')}
+        onRequestClose={() => setIsModalOpen(false)}
+        action={handleOptimize}
+        isButtonLoading={isPending}
         buttonTitle="확인"
         subButton={
-          <Button size="large" color="secondary" onClick={() => setIsOpen(false)}>
+          <Button size="large" color="secondary" onClick={() => setIsModalOpen(false)}>
             취소
           </Button>
         }
@@ -50,11 +67,19 @@ export const HardwareOptimizationButton = ({ customModelId }: { customModelId: n
             <Select
               size="m-full"
               menuPosition="fixed"
-              options={options}
-              getOptionLabel={(option) => option.text}
-              getOptionValue={(option) => option.value}
-              value={selectedValue}
-              onChange={onChangeSelect}
+              options={optimizers}
+              getOptionLabel={(option) => option.optimizer_name}
+              getOptionValue={(option) => option.id.toString()}
+              value={optimizers.find((option) => option.id === hardwareOptimization.optimizer_id)}
+              onChange={(option) => {
+                setHardwareOptimization({
+                  optimizer_id: option?.id || 0,
+                  saved_model_run_id: modelForOptimizer?.run_id ?? '',
+                  saved_model_path: modelForOptimizer?.path ?? '',
+                  model_name: modelForOptimizer?.model_name ?? '',
+                  args: option?.argument,
+                });
+              }}
               styles={{ menuPortal: (base) => ({ ...base, top: 'unset', left: 'unset' }) }}
             />
           </div>
