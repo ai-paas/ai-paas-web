@@ -5,7 +5,7 @@ export interface Page<T> {
   size: number;
 }
 
-export interface Pagintaion<T> {
+export interface Pagination<T> {
   data: T[];
   pagination: {
     total: number;

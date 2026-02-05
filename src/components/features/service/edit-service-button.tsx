@@ -63,11 +63,11 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
       <Modal
         allowOutsideInteraction
         isOpen={isModalOpen}
-        title="서비스 편집"
         size="small"
+        title="서비스 편집"
+        buttonTitle="확인"
         onRequestClose={closeModal}
         action={handleSubmit}
-        buttonTitle="확인"
         subButton={
           <Button size="large" color="secondary" onClick={closeModal}>
             취소

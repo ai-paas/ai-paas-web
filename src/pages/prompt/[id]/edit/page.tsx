@@ -1,7 +1,7 @@
-import { useState, type ChangeEvent } from 'react';
+import { useGetPrompt, useUpdatePrompt } from '@/hooks/service/prompts';
 import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
-import { useNavigate } from 'react-router';
-import { useCreatePrompt } from '@/hooks/service/prompts';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 
 interface PromptBody {
   prompt: {
@@ -12,12 +12,15 @@ interface PromptBody {
   prompt_variable: string[];
 }
 
-export default function PromptCreatePage() {
-  const { createPrompt, isPending } = useCreatePrompt();
+export default function PromptEditPage() {
+  const { id } = useParams();
+  const promptId = Number(id);
+  // const { prompt } = useGetPrompt(promptId);
+  const { updatePrompt, isPending } = useUpdatePrompt();
   const [prompt, setPrompt] = useState<PromptBody>({} as PromptBody);
   const navigate = useNavigate();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setPrompt({
       ...prompt,
       prompt: {
@@ -34,7 +37,8 @@ export default function PromptCreatePage() {
       return;
     }
 
-    await createPrompt({
+    await updatePrompt({
+      surro_prompt_id: promptId,
       prompt: {
         name: prompt.prompt.name,
         description: prompt.prompt.description,
@@ -83,15 +87,18 @@ export default function PromptCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">프롬프트 입력</div>
             <div className="page-input_item-data">
+              <input
+                value={prompt.prompt?.content ?? ''}
+                onChange={handleChange}
+                placeholder="프롬프트를 입력해주세요."
+                name="content"
+              />
               <pre className="page-input_item-code">
                 <code>
-                  <textarea
-                    value={prompt.prompt?.content ?? 'function myFunction(){ }'}
-                    onChange={handleChange}
-                    placeholder="프롬프트를 입력해주세요."
-                    name="content"
-                    className="size-full"
-                  />
+                  function myFunction(){' '}
+                  {
+                    // 코드 로직
+                  }
                 </code>
               </pre>
             </div>

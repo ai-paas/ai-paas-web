@@ -13,7 +13,7 @@ export const DeletePromptButton = ({ promptId }: { promptId?: number }) => {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative" disabled={!promptId}>
+      <Button disabled={!promptId} onClick={() => setIsOpen(true)} size="medium" color="negative">
         삭제
       </Button>
       <AlertDialog

@@ -9,22 +9,22 @@ import {
 import { useState } from 'react';
 import styles from '../../../pages/service/service.module.scss';
 import { useNavigate } from 'react-router';
+import { useCreateWorkflow } from '@/hooks/service/workflows';
 
 export const CreateWorkflowButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { pagination, setPagination } = useTablePagination();
   const navigate = useNavigate();
+  const { createWorkflow } = useCreateWorkflow();
+
+  const handleAction = () => {
+    alert('템플릿 생성 로직 추가 필요');
+  };
 
   return (
     <>
       <SelectButton title="생성" color="focus">
-        <SelectButtonItem
-          onClick={() => {
-            navigate('/workflow/create');
-          }}
-        >
-          직접 생성
-        </SelectButtonItem>
+        <SelectButtonItem onClick={() => navigate('/workflow/create')}>직접 생성</SelectButtonItem>
         <SelectButtonItem onClick={() => setIsOpen(true)}>템플릿에서 시작</SelectButtonItem>
       </SelectButton>
       <Modal
@@ -33,7 +33,7 @@ export const CreateWorkflowButton = () => {
         title="템플릿에서 시작하기"
         size="medium"
         onRequestClose={() => setIsOpen(false)}
-        action={() => alert('확인!')}
+        action={handleAction}
         buttonTitle="확인"
         subButton={
           <Button size="large" color="secondary" onClick={() => setIsOpen(false)}>

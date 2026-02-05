@@ -29,8 +29,8 @@ export interface Model {
     created_by: string;
     updated_by: string;
   };
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
   deleted_at: Date | null;
   created_by: string;
   updated_by: string;

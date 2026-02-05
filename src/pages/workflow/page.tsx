@@ -87,8 +87,8 @@ export default function WorkflowPage() {
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { workflows, page, isPending, isError } = useGetWorkflows({
-    skip: pagination.pageIndex + 1,
-    limit: pagination.pageSize,
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
     search: searchValue,
   });
 

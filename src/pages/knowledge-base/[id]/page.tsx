@@ -96,8 +96,8 @@ export default function KnowledgeBaseDetailPage() {
         <h2 className="page-title">지식 베이스 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditKnowledgeBaseButton />
-            <DeleteKnowledgeBaseButton />
+            <EditKnowledgeBaseButton knowledgeBaseId={Number(id)} />
+            <DeleteKnowledgeBaseButton knowledgeBaseId={Number(id)} />
           </div>
         </div>
       </div>

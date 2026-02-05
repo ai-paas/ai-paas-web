@@ -1,3 +1,5 @@
+import { useGetModel } from '@/hooks/service/models';
+import { formatDateTime } from '@/util/date';
 import {
   BreadCrumb,
   Button,
@@ -8,38 +10,40 @@ import {
   type Sorting,
 } from '@innogrid/ui';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+
+const columns = [
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row) => row.name,
+    size: 425,
+  },
+  {
+    id: 'id',
+    header: '파일 크기',
+    accessorFn: (row) => row.id,
+    size: 425,
+  },
+  {
+    id: 'state',
+    header: '업데이트 일시',
+    accessorFn: (row) => row.state,
+    size: 425,
+  },
+  {
+    id: 'desc',
+    header: '다운로드',
+    accessorFn: (row) => row.desc,
+    size: 434,
+    cell: ({ row }) => <Button color="tertiary">버튼</Button>,
+  },
+];
 
 export default function ModelCatalogDetailPage() {
+  const { id } = useParams();
+  const { model } = useGetModel(Number(id));
   const navigate = useNavigate();
-
-  const columns = [
-    {
-      id: 'name',
-      header: '이름',
-      accessorFn: (row) => row.name,
-      size: 425,
-    },
-    {
-      id: 'id',
-      header: '파일 크기',
-      accessorFn: (row) => row.id,
-      size: 425,
-    },
-    {
-      id: 'state',
-      header: '업데이트 일시',
-      accessorFn: (row) => row.state,
-      size: 425,
-    },
-    {
-      id: 'desc',
-      header: '다운로드',
-      accessorFn: (row) => row.desc,
-      size: 434,
-      cell: ({ row }) => <Button color="tertiary">버튼</Button>,
-    },
-  ];
 
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
@@ -60,7 +64,7 @@ export default function ModelCatalogDetailPage() {
         items={[
           { label: '모델' },
           { label: '모델 카탈로그', path: '/model/model-catalog' },
-          { label: 'test' },
+          { label: model?.name ?? '' },
         ]}
         className="breadcrumbBox"
         onNavigate={navigate}
@@ -73,52 +77,42 @@ export default function ModelCatalogDetailPage() {
         <ul style={{ marginBottom: '20px' }}>
           <li className="space-y-2 rounded-md bg-[#F2F2F2] px-5 pt-3.5 pb-4">
             <div className="page-detail_item-name">모델 소개</div>
-            <div className="page-detail_item-data">
-              Gemma is a family of lightweight, state-of-the-art open models from Google, built from
-              the same research and technology used to create the Gemini models. They are
-              text-to-text, decoder-only large language models, available in English, with open
-              weights for both pre-trained variants and instruction-tuned variants. Gemma models are
-              well-suited for a variety of text generation tasks, including question answering,
-              summarization, and reasoning. Their relatively small size makes it possible to deploy
-              them in environments with limited resources such as a laptop, desktop or your own
-              cloud infrastructure, democratizing access to state of the art AI models and helping
-              foster innovation for everyone.
-            </div>
+            <div className="page-detail_item-data">{model?.description ?? ''}</div>
           </li>
         </ul>
         <div className="page-detail-list-box">
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">Meta-Llama-3-8B</div>
+              <div className="page-detail_item-data">{model?.name ?? '-'}</div>
             </li>
             <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">meta-llama</div>
+              <div className="page-detail_item-data">{model?.created_by ?? '-'}</div>
             </li>
             <li>
               <div className="page-detail_item-name">task</div>
-              <div className="page-detail_item-data">Text Generation</div>
+              <div className="page-detail_item-data">{model?.task ?? '-'}</div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
+              <div className="page-detail_item-data">{formatDateTime(model?.created_at)}</div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
-              <div className="page-detail_item-data">meta-llama/Meta-Llama-3-8B</div>
+              <div className="page-detail_item-data">{model?.registry.uri ?? '-'}</div>
             </li>
             <li>
               <div className="page-detail_item-name">Params</div>
-              <div className="page-detail_item-data">8B</div>
+              <div className="page-detail_item-data">{model?.parameter ?? '-'}</div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
+              <div className="page-detail_item-data">{formatDateTime(model?.updated_at)}</div>
             </li>
             <li>
               <div className="page-detail_item-name">버전 정보</div>

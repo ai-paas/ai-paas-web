@@ -8,12 +8,13 @@ import {
   useTablePagination,
   useTableSelection,
 } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
 import { EditKnowledgeBaseButton } from '../../components/features/knowledge-base/edit-knowledge-base-button';
 import { DeleteKnowledgeBaseButton } from '../../components/features/knowledge-base/delete-knowledge-base-button';
 import { useGetKnowledgeBases } from '@/hooks/service/knowledgebase';
+import { formatDateTime } from '@/util/date';
 
 export default function KnowledgeBasePage() {
   const { searchValue, ...restProps } = useSearchInputState();
@@ -49,7 +50,7 @@ export default function KnowledgeBasePage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateKnowledgeBaseButton />
-            <EditKnowledgeBaseButton />
+            <EditKnowledgeBaseButton knowledgeBaseId={selectedId} />
             <DeleteKnowledgeBaseButton knowledgeBaseId={selectedId} />
           </div>
           <div>
@@ -60,10 +61,26 @@ export default function KnowledgeBasePage() {
         </div>
         <div>
           <Table
-            useClientPagination
-            useMultiSelect
             columns={columns}
             data={knowledgeBases}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
+              </div>
+            }
+            emptyMessage={
+              isError ? (
+                '지식 베이스 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>지식 베이스가 없습니다.</div>
+                  <div>생성 버튼을 클릭해 지식 베이스를 생성해 보세요.</div>
+                </div>
+              )
+            }
             totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
@@ -129,7 +146,7 @@ const columns = [
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.created_at,
+    accessorFn: (row) => formatDateTime(row.created_at),
     size: 225,
   },
 ];

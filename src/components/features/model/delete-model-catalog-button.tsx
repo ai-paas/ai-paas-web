@@ -1,11 +1,14 @@
+import { useDeleteModel } from '@/hooks/service/models';
 import { AlertDialog, Button } from '@innogrid/ui';
 import { useState } from 'react';
 
 export const DeleteModelCatalogButton = ({ modelCatalogId }: { modelCatalogId: number | null }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { deleteModel } = useDeleteModel();
 
   const handleClickConfirm = () => {
-    console.log('삭제');
+    if (!modelCatalogId) return;
+    deleteModel(modelCatalogId);
   };
 
   return (
