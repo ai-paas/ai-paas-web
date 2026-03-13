@@ -32,7 +32,6 @@ export interface CreateMemberRequest {
 }
 
 export interface UpdateMemberRequest {
-  memberId: string;
   name: string;
   member_id: string;
   email: string;
@@ -41,4 +40,5 @@ export interface UpdateMemberRequest {
   role: string;
   is_active: boolean;
   description: string;
+  // password_confirm: string;
 }

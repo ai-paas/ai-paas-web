@@ -7,6 +7,7 @@ import type {
   UpdateMemberRequest,
 } from '@/types/member';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+type UpdateMemberPayload = Partial<Omit<UpdateMemberRequest, 'member_id'>> & { member_id: string };
 
 export const useCreateMember = () => {
   const queryClient = useQueryClient();
@@ -62,10 +63,14 @@ export const useUpdateMember = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: ({ memberId, ...data }: UpdateMemberRequest) =>
-      api.put(`members/${memberId}`, { json: data }).json<Member>(),
-    onSuccess: () => {
+    mutationFn: ({ member_id, ...data }: UpdateMemberPayload) =>
+      // 필요 시 api.patch 로 변경
+      api.put(`members/${member_id}`, { json: data }).json<Member>(),
+    onSuccess: (_res, vars) => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
+      if (vars?.member_id) {
+        queryClient.invalidateQueries({ queryKey: ['members', vars.member_id] });
+      }
     },
   });
 

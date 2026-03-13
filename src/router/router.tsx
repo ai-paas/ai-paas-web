@@ -1,62 +1,49 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
-
-const DefaultLayout = lazy(() => import('../pages/layout'));
-const ServicePage = lazy(() => import('../pages/service/page'));
-const ServiceDetailPage = lazy(() => import('../pages/service/[id]/page'));
-const WorkflowPage = lazy(() => import('../pages/workflow/page'));
-const WorkflowCreatePage = lazy(() => import('../pages/workflow/create/page'));
-const WorkflowDetailPage = lazy(() => import('../pages/workflow/[id]/page'));
-const WorkflowEditPage = lazy(() => import('../pages/workflow/[id]/edit/page'));
-const ModelCatalogPage = lazy(() => import('../pages/model/model-catalog/page'));
-const ModelCatalogCreatePage = lazy(() => import('../pages/model/model-catalog/create/page'));
-const ModelCatalogDetailPage = lazy(() => import('../pages/model/model-catalog/[id]/page'));
-const CustomModelPage = lazy(() => import('../pages/model/custom-model/page'));
-const CustomModelCreatePage = lazy(() => import('../pages/model/custom-model/create/page'));
-const CustomModelDetailPage = lazy(() => import('../pages/model/custom-model/[id]/page'));
-const DatasetPage = lazy(() => import('../pages/dataset/page'));
-const DatasetCreatePage = lazy(() => import('../pages/dataset/create/page'));
-const DatasetDetailPage = lazy(() => import('../pages/dataset/[id]/page'));
-const KnowledgeBasePage = lazy(() => import('../pages/knowledge-base/page'));
-const KnowledgeBaseCreatePage = lazy(() => import('../pages/knowledge-base/create/page'));
-const KnowledgeBaseDetailPage = lazy(() => import('../pages/knowledge-base/[id]/page'));
-const PromptPage = lazy(() => import('../pages/prompt/page'));
-const PromptCreatePage = lazy(() => import('../pages/prompt/create/page'));
-const PromptDetailPage = lazy(() => import('../pages/prompt/[id]/page'));
-const LearningPage = lazy(() => import('../pages/learning/page'));
-const LearningCreatePage = lazy(() => import('../pages/learning/create/page'));
-const LearningDetailPage = lazy(() => import('../pages/learning/[id]/page'));
-const DashboardPage = lazy(() => import('../pages/dashboard/page'));
-const EventPage = lazy(() => import('../pages/infra-management/event/page'));
-const ClusterManagementPage = lazy(
-  () => import('../pages/infra-management/cluster-management/page')
-);
-const MonitoringDashboardPage = lazy(
-  () => import('../pages/infra-management/monitoring-dashboard/page')
-);
-const ApplicationCatalogPage = lazy(
-  () => import('../pages/infra-management/application/catalog/page')
-);
-const ApplicationHelmReleasePage = lazy(
-  () => import('../pages/infra-management/application/helm-release/page')
-);
-const ApplicationHelmRepositoryPage = lazy(
-  () => import('../pages/infra-management/application/helm-repository/page')
-);
-const MemberManagementPage = lazy(() => import('../pages/member-management/page'));
-const LearningAssignmentStep2Page = lazy(() => import('../pages/learning/assignment/step2/page'));
-const LearningAssignmentStep3Page = lazy(() => import('../pages/learning/assignment/step3/page'));
-const LearningAssignmentStep5Page = lazy(() => import('../pages/learning/assignment/step5/page'));
-const LearningSolutionStep2Page = lazy(() => import('../pages/learning/solution/step2/page'));
-const MemberManagementDetailPage = lazy(() => import('../pages/member-management/[id]/page'));
-const LoginPage = lazy(() => import('../pages/login/page'));
-const HomePage = lazy(() => import('../pages/page'));
-const CustomModelCreateHuggingfacePage = lazy(
-  () => import('@/pages/model/custom-model/create/huggingface/page')
-);
-const CustomModelCreateEtriPage = lazy(() => import('@/pages/model/custom-model/create/etri/page'));
-const MemberCreatePage = lazy(() => import('@/pages/member-management/create/page'));
-const MemberEditPage = lazy(() => import('@/pages/member-management/[id]/eidt/page'));
+import DefaultLayout from '../pages/layout';
+import ServicePage from '../pages/service/page';
+import ServiceDetailPage from '../pages/service/[id]/page';
+import WorkflowPage from '../pages/workflow/page';
+import WorkflowCreatePage from '../pages/workflow/create/page';
+import WorkflowDetailPage from '../pages/workflow/[id]/page';
+import WorkflowEditPage from '../pages/workflow/[id]/edit/page';
+import ModelCatalogPage from '../pages/model/model-catalog/page';
+import ModelCatalogCreatePage from '../pages/model/model-catalog/create/page';
+import ModelCatalogDetailPage from '../pages/model/model-catalog/[id]/page';
+import CustomModelPage from '../pages/model/custom-model/page';
+import CustomModelCreatePage from '../pages/model/custom-model/create/page';
+import CustomModelDetailPage from '../pages/model/custom-model/[id]/page';
+import DatasetPage from '../pages/dataset/page';
+import DatasetCreatePage from '../pages/dataset/create/page';
+import DatasetDetailPage from '../pages/dataset/[id]/page';
+import KnowledgeBasePage from '../pages/knowledge-base/page';
+import KnowledgeBaseCreatePage from '../pages/knowledge-base/create/page';
+import KnowledgeBaseDetailPage from '../pages/knowledge-base/[id]/page';
+import PromptPage from '../pages/prompt/page';
+import PromptCreatePage from '../pages/prompt/create/page';
+import PromptDetailPage from '../pages/prompt/[id]/page';
+import LearningPage from '../pages/learning/page';
+import LearningCreatePage from '../pages/learning/create/page';
+import LearningDetailPage from '../pages/learning/[id]/page';
+import DashboardPage from '../pages/dashboard/page';
+import EventPage from '../pages/infra-management/event/page';
+import ClusterManagementPage from '../pages/infra-management/cluster-management/page';
+import MonitoringDashboardPage from '../pages/infra-management/monitoring-dashboard/page';
+import ApplicationCatalogPage from '../pages/infra-management/application/catalog/page';
+import ApplicationHelmReleasePage from '../pages/infra-management/application/helm-release/page';
+import ApplicationHelmRepositoryPage from '../pages/infra-management/application/helm-repository/page';
+import MemberManagementPage from '../pages/member-management/page';
+import LearningAssignmentStep2Page from '../pages/learning/assignment/step2/page';
+import LearningAssignmentStep3Page from '../pages/learning/assignment/step3/page';
+import LearningAssignmentStep5Page from '../pages/learning/assignment/step5/page';
+import LearningSolutionStep2Page from '../pages/learning/solution/step2/page';
+import MemberManagementDetailPage from '../pages/member-management/[id]/page';
+import LoginPage from '../pages/login/page';
+import HomePage from '../pages/page';
+import CustomModelCreateHuggingfacePage from '@/pages/model/model-catalog/create/huggingface/page';
+import CustomModelCreateEtriPage from '@/pages/model/model-catalog/create/etri/page';
+import MemberCreatePage from '@/pages/member-management/create/page';
+import MemberEditPage from '@/pages/member-management/[id]/edit/page';
 
 export const router = createBrowserRouter([
   {
