@@ -1,0 +1,83 @@
+name: Build and Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/checkout@v4
+      - name: Install & Build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+
+  dockerize:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+      - name: Docker build and Push
+        run: |
+          docker build --build-arg VITE_SERVER_URL="http://101.79.72.59:8106" -t ai-paas-web:latest .
+          docker save ai-paas-web:latest > ai-paas-web.tar
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: ai-paas-web.tar
+
+  deploy:
+    needs: dockerize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+      - name: Transfer and Load Image
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          port: ${{ secrets.PORT }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          source: "ai-paas-web.tar"
+          target: "/home/ubuntu"
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          port: ${{ secrets.PORT }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd /home/ubuntu
+
+            docker load < /home/ubuntu/ai-paas-web.tar
+            docker stop ai-paas-web || true
+            docker rm ai-paas-web || true
+
+            docker run -d \
+              --name ai-paas-web \
+              -p 80:80 \
+              --restart always \
+              ai-paas-web:latest
+
+            docker image prune -f
