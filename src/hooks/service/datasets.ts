@@ -1,11 +1,6 @@
 import { api } from '@/lib/api';
 import type { Page } from '@/types/api';
-import type {
-  CreateDatasetRequest,
-  Dataset,
-  GetDatasetsParams,
-  UpdateDatasetRequest,
-} from '@/types/dataset';
+import type { Dataset, GetDatasetsParams, UpdateDatasetRequest } from '@/types/dataset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetDatasets = (params: GetDatasetsParams = {}) => {
@@ -29,16 +24,15 @@ export const useGetDatasets = (params: GetDatasetsParams = {}) => {
 export const useCreateDataset = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: CreateDatasetRequest) =>
-      api.post('datasets', { json: data }).json<Dataset>(),
+  const { mutateAsync, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (data: FormData) => api.post('datasets', { body: data }).json<Dataset>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['datasets'] });
     },
   });
 
   return {
-    createDataset: mutate,
+    createDataset: mutateAsync,
     isPending,
     isError,
     isSuccess,

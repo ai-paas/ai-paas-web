@@ -1,33 +1,75 @@
 import { IconFileUp } from '@/assets/img/icon';
-import { BreadCrumb, Button, Input, Select, Textarea, type SelectSingleValue } from '@innogrid/ui';
+import {
+  useCreateModel,
+  useGetModelFormats,
+  useGetModelProviders,
+  useGetModelTypes,
+} from '@/hooks/service/models';
+import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
+import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-type OptionType = { text: string; value: string };
+interface ModelCatalog {
+  name: string | null;
+  repo_id: string | null;
+  provider_id: number | null;
+  type_id: number | null;
+  format_id: number | null;
+  description?: string;
+  parent_model_id?: number;
+  task?: string;
+  parameter?: string;
+  sample_code?: string;
+  model_registry_schema?: string;
+  file?: string;
+}
 
-const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-];
+const INITIAL_MODEL_CATALOG: ModelCatalog = {
+  name: null,
+  repo_id: null,
+  provider_id: null,
+  type_id: null,
+  format_id: null,
+};
 
 export default function ModelCatalogCreatePage() {
+  const { modelProviders } = useGetModelProviders();
+  const { modelTypes } = useGetModelTypes();
+  const { modelFormats } = useGetModelFormats();
+  const [modelCatalog, setModelCatalog] = useState<ModelCatalog>(INITIAL_MODEL_CATALOG);
+  const { createModel, isPending } = useCreateModel();
   const navigate = useNavigate();
-  const [value, setValue] = useState<string>('');
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setModelCatalog({
+      ...modelCatalog,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const [text, setText] = useState<string>('');
-  const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-  };
+  const handleSubmit = async () => {
+    console.log('modelCatalog:', modelCatalog);
+    if (
+      !modelCatalog.name ||
+      !modelCatalog.repo_id ||
+      !modelCatalog.provider_id ||
+      !modelCatalog.type_id ||
+      !modelCatalog.format_id
+    ) {
+      alert('필수 항목을 모두 입력해주세요.');
+      return;
+    }
 
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
+    const formData = new FormData();
+    formData.append('name', modelCatalog.name);
+    formData.append('repo_id', modelCatalog.repo_id);
+    formData.append('provider_id', String(modelCatalog.provider_id));
+    formData.append('type_id', String(modelCatalog.type_id));
+    formData.append('format_id', String(modelCatalog.format_id));
 
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    await createModel(formData);
+    navigate('/model/model-catalog');
   };
 
   return (
@@ -49,14 +91,24 @@ export default function ModelCatalogCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델명</div>
             <div className="page-input_item-data">
-              <Input placeholder="모델명을 입력해주세요." value={value} onChange={onChange} />
+              <Input
+                name="name"
+                placeholder="모델명을 입력해주세요."
+                value={modelCatalog.name ?? ''}
+                onChange={handleChange}
+              />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델 ID</div>
             <div className="page-input_item-data">
-              <Input placeholder="모델 ID를 입력해주세요." value={value} onChange={onChange} />
+              <Input
+                name="repo_id"
+                placeholder="모델 ID를 입력해주세요."
+                value={modelCatalog.repo_id ?? ''}
+                onChange={handleChange}
+              />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
           </div>
@@ -65,11 +117,16 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelProviders}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={modelProviders.find((provider) => provider.id === modelCatalog.provider_id)}
+                onChange={(option: ModelProvider | null) =>
+                  setModelCatalog((prev) => ({
+                    ...prev,
+                    provider_id: option?.id ?? null,
+                  }))
+                }
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -79,11 +136,16 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelTypes}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={modelTypes.find((type) => type.id === modelCatalog.type_id)}
+                onChange={(option: ModelType | null) =>
+                  setModelCatalog((prev) => ({
+                    ...prev,
+                    type_id: option?.id ?? null,
+                  }))
+                }
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
@@ -93,17 +155,22 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 className="page-input_item-data_select"
-                options={options}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedValue}
-                onChange={onChangeSelect}
+                options={modelFormats}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => String(option.id)}
+                value={modelFormats.find((format) => format.id === modelCatalog.format_id)}
+                onChange={(option: ModelFormat | null) =>
+                  setModelCatalog((prev) => ({
+                    ...prev,
+                    format_id: option?.id ?? null,
+                  }))
+                }
               />
               <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">파일</div>
+            <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
                 <label className="fileUpload-preview">
@@ -121,15 +188,21 @@ export default function ModelCatalogCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name">모델 소개</div>
             <div className="page-input_item-data">
-              <Textarea value={text} onChange={onTextChange} placeholder="설명을 입력해주세요." />
+              <Textarea
+                name="description"
+                value={modelCatalog.description ?? ''}
+                onChange={handleChange}
+                placeholder="설명을 입력해주세요."
+              />
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name">샘플 코드</div>
             <div className="page-input_item-data">
               <Textarea
-                value={text}
-                onChange={onTextChange}
+                name="sample_code"
+                value={modelCatalog.sample_code ?? ''}
+                onChange={handleChange}
                 placeholder="샘플 코드를 입력해주세요."
               />
             </div>
@@ -143,8 +216,8 @@ export default function ModelCatalogCreatePage() {
             <Button size="large" color="secondary" onClick={() => navigate('/model/model-catalog')}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={() => alert('Button clicked!')}>
-              생성
+            <Button size="large" color="primary" onClick={handleSubmit} disabled={isPending}>
+              {isPending ? '생성 중...' : '생성'}
             </Button>
           </div>
         </div>

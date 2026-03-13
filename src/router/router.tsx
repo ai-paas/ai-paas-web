@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 import DefaultLayout from '../pages/layout';
 import ServicePage from '../pages/service/page';
@@ -47,39 +48,75 @@ import MemberEditPage from '@/pages/member-management/[id]/edit/page';
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <LoginPage />,
+    element: (
+      <Suspense fallback={<></>}>
+        <LoginPage />
+      </Suspense>
+    ),
   },
   {
     path: '/',
-    element: <DefaultLayout />,
+    element: (
+      <Suspense fallback={<></>}>
+        <DefaultLayout />
+      </Suspense>
+    ),
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <HomePage />
+          </Suspense>
+        ),
       },
       {
         path: 'service',
-        element: <ServicePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <ServicePage />
+          </Suspense>
+        ),
       },
       {
         path: 'service/:id',
-        element: <ServiceDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <ServiceDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'workflow',
-        element: <WorkflowPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <WorkflowPage />
+          </Suspense>
+        ),
       },
       {
         path: 'workflow/create',
-        element: <WorkflowCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <WorkflowCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'workflow/:id',
-        element: <WorkflowDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <WorkflowDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'workflow/:id/edit',
-        element: <WorkflowEditPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <WorkflowEditPage />
+          </Suspense>
+        ),
       },
       {
         path: 'model',
@@ -87,106 +124,206 @@ export const router = createBrowserRouter([
           {
             path: 'model-catalog',
             index: true,
-            element: <ModelCatalogPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <ModelCatalogPage />
+              </Suspense>
+            ),
           },
           {
             path: 'model-catalog/create',
-            element: <ModelCatalogCreatePage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <ModelCatalogCreatePage />
+              </Suspense>
+            ),
           },
           {
             path: 'model-catalog/:id',
             index: true,
-            element: <ModelCatalogDetailPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <ModelCatalogDetailPage />
+              </Suspense>
+            ),
           },
           {
             path: 'custom-model',
-            element: <CustomModelPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <CustomModelPage />
+              </Suspense>
+            ),
           },
           {
             path: 'custom-model/create',
-            element: <CustomModelCreatePage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <CustomModelCreatePage />
+              </Suspense>
+            ),
           },
           {
             path: 'custom-model/create/huggingface',
-            element: <CustomModelCreateHuggingfacePage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <CustomModelCreateHuggingfacePage />
+              </Suspense>
+            ),
           },
           {
             path: 'custom-model/create/etri',
-            element: <CustomModelCreateEtriPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <CustomModelCreateEtriPage />
+              </Suspense>
+            ),
           },
           {
             path: 'custom-model/:id',
-            element: <CustomModelDetailPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <CustomModelDetailPage />
+              </Suspense>
+            ),
           },
         ],
       },
       {
         path: 'dataset',
-        element: <DatasetPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <DatasetPage />
+          </Suspense>
+        ),
       },
       {
         path: 'dataset/create',
-        element: <DatasetCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <DatasetCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'dataset/:id',
-        element: <DatasetDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <DatasetDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'knowledge-base',
-        element: <KnowledgeBasePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <KnowledgeBasePage />
+          </Suspense>
+        ),
       },
       {
         path: 'knowledge-base/create',
-        element: <KnowledgeBaseCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <KnowledgeBaseCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'knowledge-base/:id',
-        element: <KnowledgeBaseDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <KnowledgeBaseDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'prompt',
-        element: <PromptPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <PromptPage />
+          </Suspense>
+        ),
       },
       {
         path: 'prompt/create',
-        element: <PromptCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <PromptCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'prompt/:id',
-        element: <PromptDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <PromptDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'learning',
-        element: <LearningPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningPage />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/create',
-        element: <LearningCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/:id',
-        element: <LearningDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/assignment/step2',
-        element: <LearningAssignmentStep2Page />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningAssignmentStep2Page />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/assignment/step3',
-        element: <LearningAssignmentStep3Page />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningAssignmentStep3Page />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/assignment/step5',
-        element: <LearningAssignmentStep5Page />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningAssignmentStep5Page />
+          </Suspense>
+        ),
       },
       {
         path: 'learning/solution/step2',
-        element: <LearningSolutionStep2Page />,
+        element: (
+          <Suspense fallback={<></>}>
+            <LearningSolutionStep2Page />
+          </Suspense>
+        ),
       },
       {
         path: 'dashboard',
-        element: <DashboardPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <DashboardPage />
+          </Suspense>
+        ),
       },
       {
         path: 'infra-management',
@@ -198,11 +335,19 @@ export const router = createBrowserRouter([
           },
           {
             path: 'monitoring-dashboard',
-            element: <MonitoringDashboardPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <MonitoringDashboardPage />
+              </Suspense>
+            ),
           },
           {
             path: 'event',
-            element: <EventPage />,
+            element: (
+              <Suspense fallback={<></>}>
+                <EventPage />
+              </Suspense>
+            ),
           },
           {
             path: 'application',
@@ -210,15 +355,27 @@ export const router = createBrowserRouter([
               {
                 path: 'catalog',
                 index: true,
-                element: <ApplicationCatalogPage />,
+                element: (
+                  <Suspense fallback={<></>}>
+                    <ApplicationCatalogPage />
+                  </Suspense>
+                ),
               },
               {
                 path: 'helm-release',
-                element: <ApplicationHelmReleasePage />,
+                element: (
+                  <Suspense fallback={<></>}>
+                    <ApplicationHelmReleasePage />
+                  </Suspense>
+                ),
               },
               {
                 path: 'helm-repository',
-                element: <ApplicationHelmRepositoryPage />,
+                element: (
+                  <Suspense fallback={<></>}>
+                    <ApplicationHelmRepositoryPage />
+                  </Suspense>
+                ),
               },
             ],
           },
@@ -226,19 +383,35 @@ export const router = createBrowserRouter([
       },
       {
         path: 'member-management',
-        element: <MemberManagementPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <MemberManagementPage />
+          </Suspense>
+        ),
       },
       {
         path: 'member-management/:id',
-        element: <MemberManagementDetailPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <MemberManagementDetailPage />
+          </Suspense>
+        ),
       },
       {
         path: 'member-management/create',
-        element: <MemberCreatePage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <MemberCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: 'member-management/:id/edit',
-        element: <MemberEditPage />,
+        element: (
+          <Suspense fallback={<></>}>
+            <MemberEditPage />
+          </Suspense>
+        ),
       },
     ],
   },

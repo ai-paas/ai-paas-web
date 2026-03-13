@@ -69,7 +69,7 @@ export default function DatasetPage() {
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
 
-    if (selectedRowKeys.length !== 1) return null;
+    if (selectedRowKeys.length !== 1) return;
 
     return datasets[parseInt(selectedRowKeys[0])]?.id;
   }, [rowSelection, datasets]);
@@ -91,7 +91,7 @@ export default function DatasetPage() {
           <div className="page-toolBox-btns">
             <CreateDatasetButton />
             <EditDatasetButton />
-            <DeleteDatasetButton />
+            <DeleteDatasetButton datasetId={selectedId} />
           </div>
           <div>
             <div>

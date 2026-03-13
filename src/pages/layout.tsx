@@ -1,18 +1,13 @@
 import { Navigate, Outlet } from 'react-router';
 import { Header } from '../components/layout/header';
-import {
-  Sidebar,
-  SidebarInset,
-  SidebarPin,
-  SidebarProvider,
-} from '../components/layout/sidebar';
+import { Sidebar, SidebarInset, SidebarPin, SidebarProvider } from '../components/layout/sidebar';
 import { Menu } from '@/components/layout/menu';
-import { LOCAL_STORAGE } from '../constant/local-storage';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function DefaultLayout() {
-  const accessToken = localStorage.getItem(LOCAL_STORAGE.ACCESS_TOKEN);
+  const { isAuthenticated, accessToken } = useAuth();
 
-  if (!accessToken) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
@@ -21,7 +16,7 @@ export default function DefaultLayout() {
       <Header />
       <SidebarProvider defaultWidth={232}>
         <Sidebar>
-          <Menu  />
+          <Menu />
           <SidebarPin />
         </Sidebar>
         <SidebarInset>

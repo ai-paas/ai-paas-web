@@ -7,19 +7,38 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting,
 } from '@innogrid/ui';
-import { useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
 import { EditKnowledgeBaseButton } from '../../components/features/knowledge-base/edit-knowledge-base-button';
 import { DeleteKnowledgeBaseButton } from '../../components/features/knowledge-base/delete-knowledge-base-button';
+import { useGetKnowledgeBases } from '@/hooks/service/knowledgebase';
+import { formatDateTime } from '@/util/date';
 
 export default function KnowledgeBasePage() {
   const { searchValue, ...restProps } = useSearchInputState();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const { pagination, setPagination, initializePagination } = useTablePagination();
+  const { rowSelection, setRowSelection } = useTableSelection();
+  const { knowledgeBases, page, isPending, isError } = useGetKnowledgeBases({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+  });
+
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    if (selectedRowKeys.length !== 1) return;
+
+    return knowledgeBases[parseInt(selectedRowKeys[0])]?.surro_knowledge_id;
+  }, [rowSelection, knowledgeBases]);
+
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
 
   return (
     <main>
@@ -31,8 +50,8 @@ export default function KnowledgeBasePage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateKnowledgeBaseButton />
-            <EditKnowledgeBaseButton />
-            <DeleteKnowledgeBaseButton />
+            <EditKnowledgeBaseButton knowledgeBaseId={selectedId} />
+            <DeleteKnowledgeBaseButton knowledgeBaseId={selectedId} />
           </div>
           <div>
             <div>
@@ -42,17 +61,31 @@ export default function KnowledgeBasePage() {
         </div>
         <div>
           <Table
-            useClientPagination
-            useMultiSelect
             columns={columns}
-            data={data}
-            totalCount={data.length}
+            data={knowledgeBases}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
+              </div>
+            }
+            emptyMessage={
+              isError ? (
+                '지식 베이스 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>지식 베이스가 없습니다.</div>
+                  <div>생성 버튼을 클릭해 지식 베이스를 생성해 보세요.</div>
+                </div>
+              )
+            }
+            totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            setSorting={setSorting}
-            sorting={sorting}
           />
         </div>
       </div>
@@ -66,7 +99,7 @@ const columns = [
     size: 30,
     header: ({ table }) => <HeaderCheckbox table={table} />,
     cell: ({ row }) => <CellCheckbox row={row} />,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    enableSorting: false,
   },
   {
     id: 'name',
@@ -74,7 +107,7 @@ const columns = [
     accessorFn: (row) => row.name,
     size: 225,
     cell: ({ row }) => (
-      <Link to={'/knowledge-base/test'} className="table-td-link">
+      <Link to={`/knowledge-base/${row.original.surro_knowledge_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -86,9 +119,9 @@ const columns = [
     size: 225,
   },
   {
-    id: 'creator',
+    id: 'created_by',
     header: '생성자',
-    accessorFn: (row) => row.creator,
+    accessorFn: (row) => row.created_by,
     size: 225,
   },
   {
@@ -105,45 +138,15 @@ const columns = [
     size: 271,
   },
   {
-    id: 'desc',
+    id: 'description',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row) => row.description,
     size: 271,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row) => formatDateTime(row.created_at),
     size: 225,
-  },
-];
-
-const data = [
-  {
-    name: '테스트 문서 001',
-    tag: 'ML',
-    creator: '홍길동',
-    service: '32.5B',
-    status: '32.5B',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 문서 001',
-    tag: 'ML',
-    creator: '홍길동',
-    service: '32.5B',
-    status: '32.5B',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 문서 001',
-    tag: 'ML',
-    creator: '홍길동',
-    service: '32.5B',
-    status: '32.5B',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    date: '2025-12-31 10:12',
   },
 ];

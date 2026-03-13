@@ -1,6 +1,30 @@
-Dockerfile
-.dockerignore
-node_modules
-npm-debug.log
+# Dependency folders
+node_modules/
+jspm_packages/
+.pnpm-store/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git
+.git/
+.gitignore
+
+# Source code
+src/
+public/
+tests/
+*.config.js
+*.json
+!package.json
+!dist/
+
+# Documentation
 README.md
-.git
+LICENSE
+
+# OS files
+.DS_Store
+Thumbs.db

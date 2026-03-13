@@ -5,6 +5,7 @@ import { WorkflowComponentPanel } from '../../../components/features/workflow/wo
 import styles from '../workflow.module.scss';
 import { WorkflowCanvas } from '@/components/features/workflow/workflow-canvas';
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
+import { useCreateWorkflow, useCreateWorkflowViaTemplate } from '@/hooks/service/workflows';
 
 const initialNodes = [
   {
@@ -42,6 +43,7 @@ const initialEdges = [
 
 export default function WorkflowCreatePage() {
   const navigate = useNavigate();
+  const { createWorkflow } = useCreateWorkflowViaTemplate();
 
   return (
     <main>

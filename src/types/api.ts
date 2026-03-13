@@ -4,3 +4,12 @@ export interface Page<T> {
   page: number;
   size: number;
 }
+
+export interface Pagination<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}

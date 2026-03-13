@@ -1,16 +1,20 @@
-import { AlertDialog, Button } from "@innogrid/ui";
-import { useState } from "react";
+import { useDeleteDataset } from '@/hooks/service/datasets';
+import { AlertDialog, Button } from '@innogrid/ui';
+import { useState } from 'react';
 
-export const DeleteDatasetButton = () => {
+export const DeleteDatasetButton = ({ datasetId }: { datasetId?: number }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { deleteDataset } = useDeleteDataset();
 
   const handleClickConfirm = () => {
-    console.log("삭제");
+    if (!datasetId) return;
+
+    deleteDataset(datasetId);
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="medium" color="negative">
+      <Button disabled={!datasetId} size="medium" color="negative" onClick={() => setIsOpen(true)}>
         삭제
       </Button>
       <AlertDialog

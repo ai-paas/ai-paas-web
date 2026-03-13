@@ -6,16 +6,16 @@ import { useGetService, useUpdateService } from '@/hooks/service/services';
 interface ServiceFormData {
   name: string;
   description: string;
-  tag: string;
+  tags: string;
 }
 
 const INITIAL_FORM_DATA: ServiceFormData = {
   name: '',
   description: '',
-  tag: '',
+  tags: '',
 };
 
-export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
+export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { service } = useGetService(serviceId, isModalOpen && !!serviceId);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
@@ -37,7 +37,11 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
 
   const handleSubmit = () => {
     if (!serviceId) return;
-    updateService({ serviceId, ...formData });
+    updateService({
+      surro_service_id: serviceId,
+      ...formData,
+      tags: formData.tags.split(',').map((tag) => tag.trim()),
+    });
     closeModal();
   };
 
@@ -46,7 +50,7 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
       setFormData({
         name: service.name,
         description: service.description,
-        tag: service.tag,
+        tags: service.tags?.join(', ') ?? '',
       });
     }
   }, [service, isModalOpen]);
@@ -59,11 +63,11 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
       <Modal
         allowOutsideInteraction
         isOpen={isModalOpen}
-        title="서비스 편집"
         size="small"
+        title="서비스 편집"
+        buttonTitle="확인"
         onRequestClose={closeModal}
         action={handleSubmit}
-        buttonTitle="확인"
         subButton={
           <Button size="large" color="secondary" onClick={closeModal}>
             취소
@@ -90,8 +94,8 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: number }) => {
             <Input
               size={{ width: '100%', height: '32px' }}
               placeholder="태그 내용을 입력해주세요."
-              name="tag"
-              value={formData.tag}
+              name="tags"
+              value={formData.tags}
               onChange={handleChange}
             />
           </div>

@@ -1,15 +1,20 @@
 import { BreadCrumb, Button } from '@innogrid/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { EditPromptButton } from '../../../components/features/prompt/edit-prompt-button';
 import { DeletePromptButton } from '../../../components/features/prompt/delete-prompt-button';
+import { useGetPrompt } from '@/hooks/service/prompts';
+import { formatDateTime } from '@/util/date';
 
 export default function PromptDetailPage() {
+  const { id } = useParams();
+  const promptId = Number(id);
+  const { prompt } = useGetPrompt(promptId);
   const navigate = useNavigate();
 
   return (
     <main>
       <BreadCrumb
-        items={[{ label: '프롬프트', path: '/prompt' }, { label: '프롬프트 테스트' }]}
+        items={[{ label: '프롬프트', path: '/prompt' }, { label: prompt?.name || '' }]}
         onNavigate={navigate}
         className="breadcrumbBox"
       />
@@ -18,7 +23,7 @@ export default function PromptDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditPromptButton />
-            <DeletePromptButton />
+            <DeletePromptButton promptId={promptId} />
           </div>
         </div>
       </div>
@@ -29,21 +34,23 @@ export default function PromptDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">설명</div>
               <div className="page-detail_item-data">
-                설명이 들어갑니다. 설명이 들어갑니다. 설명이 들어갑니다.
+                {formatDateTime(prompt?.created_at.toString()) ?? 'N/A'}
               </div>
             </li>
             <li>
+              <div className="page-detail_item-name">최근 업데이트</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(prompt?.updated_at.toString()) ?? 'N/A'}
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">설명</div>
+              <div className="page-detail_item-data">{prompt?.description ?? 'N/A'}</div>
+            </li>
+            <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">홍길동</div>
+              <div className="page-detail_item-data">{prompt?.created_by ?? 'N/A'}</div>
             </li>
           </ul>
         </div>
@@ -54,19 +61,16 @@ export default function PromptDetailPage() {
             <div className="page-detail-round-name">프롬프트</div>
             <div className="page-detail-round-data page-h-430">
               <pre className="page-input_item-code">
-                <code>
-                  function myFunction(){' '}
-                  {
-                    // 코드 로직
-                  }
-                </code>
+                <code>{prompt?.content}</code>
               </pre>
             </div>
           </div>
           <div className="page-detail-round-box page-w-536">
             <div className="page-detail-round-name">변수</div>
             <div className="page-detail-round-data page-h-430">
-              변수가 들어갑니다. 변수가 들어갑니다. 변수가 들어갑니다. 변수가 들어갑니다.
+              {prompt?.prompt_variable?.map((variable) => (
+                <div key={variable.id}>{variable.name}</div>
+              ))}
             </div>
           </div>
         </div>

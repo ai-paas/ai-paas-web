@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@innogrid/ui": "^0.0.27",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-popover": "^1.1.15",
@@ -17,7 +21,6 @@
     "@tanstack/react-query": "^5.84.2",
     "@xyflow/react": "^12.8.3",
     "clsx": "^2.1.1",
-    "@innogrid/ui": "^0.0.27",
     "ky": "^1.8.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -31,6 +34,9 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@tanstack/eslint-plugin-query": "^5.83.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.10",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
@@ -39,13 +45,16 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "jsdom": "^28.0.0",
+    "msw": "^2.12.8",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "sass": "^1.90.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
-    "vite-plugin-svgr": "^4.3.0"
+    "vite-plugin-svgr": "^4.3.0",
+    "vitest": "^4.0.8"
   },
   "packageManager": "pnpm@10.15.0"
 }
