@@ -6,6 +6,7 @@ import styles from '../workflow.module.scss';
 import { WorkflowCanvas } from '@/components/features/workflow/workflow-canvas';
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import { useCreateWorkflow, useCreateWorkflowViaTemplate } from '@/hooks/service/workflows';
+import { WorkflowCreateButton } from './workflow-create-button';
 
 const initialNodes = [
   {
@@ -62,16 +63,8 @@ export default function WorkflowCreatePage() {
 }
 
 const WorkflowEditor = () => {
-  const { getNodes, getEdges } = useReactFlow();
-
   const handleChecklist = () => {
     alert('체크리스트 버튼이 클릭되었습니다.');
-  };
-
-  const handleCreate = () => {
-    const nodes = getNodes();
-    const edges = getEdges();
-    console.log('Creating workflow with nodes:', nodes, 'and edges:', edges);
   };
 
   return (
@@ -85,9 +78,7 @@ const WorkflowEditor = () => {
           <Button onClick={handleChecklist} size="medium" color="tertiary">
             체크리스트
           </Button>
-          <Button onClick={handleCreate} size="medium" color="primary">
-            생성
-          </Button>
+          <WorkflowCreateButton />
         </div>
 
         <WorkflowSettingPanel />
