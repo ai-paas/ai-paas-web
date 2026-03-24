@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { queryKeys, type WorkflowListParams } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
   ComponentDeployStatusBody,
@@ -12,15 +13,9 @@ import type {
 } from '@/types/workflow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetWorkflows = (params: {
-  page?: number;
-  size?: number;
-  search?: string;
-  creator_id?: number;
-  status?: 'DRAFT' | 'ACTIVE' | 'ERROR';
-}) => {
+export const useGetWorkflows = (params: WorkflowListParams) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', params],
+    queryKey: queryKeys.workflows.list(params),
     queryFn: () => api.get<Page<Workflow>>('workflows', { searchParams: { ...params } }).json(),
   });
 
@@ -38,7 +33,7 @@ export const useGetWorkflows = (params: {
 
 export const useGetWorkflowComponentTypes = () => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', 'component-types'],
+    queryKey: queryKeys.workflows.componentTypes(),
     queryFn: () => api.get<Page<WorkflowComponentType>>('workflows/component-types').json(),
   });
 
@@ -56,7 +51,7 @@ export const useGetWorkflowComponentTypes = () => {
 
 export const useGetTemplates = () => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', 'templates'],
+    queryKey: queryKeys.workflows.templates(),
     queryFn: () => api.get<Page<WorkflowTemplate>>('workflows/templates').json(),
   });
 
@@ -79,7 +74,7 @@ export const useCreateWorkflow = () => {
     mutationFn: (data: CreateWorkflowRequest) =>
       api.post('workflows', { json: data }).json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -98,7 +93,7 @@ export const useCreateWorkflowViaTemplate = () => {
     mutationFn: (data: CreateWorkflowRequest) =>
       api.post('workflows', { json: data }).json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -112,7 +107,7 @@ export const useCreateWorkflowViaTemplate = () => {
 
 export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', workflowId],
+    queryKey: queryKeys.workflows.detail(workflowId),
     queryFn: () => api.get(`workflow/${workflowId}`).json<Workflow>(),
     enabled,
   });
@@ -126,7 +121,7 @@ export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => 
 
 export const useGetWorkflowTemplate = (templateId?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', templateId],
+    queryKey: queryKeys.workflows.detail(templateId),
     queryFn: () => api.get(`workflow/templates/${templateId}`).json<WorkflowTemplate>(),
   });
 
@@ -144,7 +139,7 @@ export const useUpdateWorkflow = () => {
     mutationFn: ({ workflowId, ...data }: UpdateWorkflowRequest) =>
       api.put(`workflows/${workflowId}`, { json: data }).json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -163,7 +158,7 @@ export const useUpdateWorkflowTemplate = () => {
     mutationFn: ({ templateId, ...data }: UpdateWorkflowTemplateRequest) =>
       api.put(`workflows/templates/${templateId}`, { json: data }).json<WorkflowTemplate>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -181,7 +176,7 @@ export const useDeleteWorkflow = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (workflowId: number) => api.delete(`workflows/${workflowId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -200,7 +195,7 @@ export const useDeleteWorkflowTemplate = () => {
     mutationFn: (templateId: string) =>
       api.delete(`workflows/templates/${templateId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -214,7 +209,7 @@ export const useDeleteWorkflowTemplate = () => {
 
 export const useGetWorkflowStatus = (surroWorkflowId?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', 'status', surroWorkflowId],
+    queryKey: queryKeys.workflows.status(surroWorkflowId),
     queryFn: () => api.get(`workflows/${surroWorkflowId}/status`).json<string>(),
   });
 
@@ -227,7 +222,7 @@ export const useGetWorkflowStatus = (surroWorkflowId?: string) => {
 
 export const useGetWorkflowModels = (surroWorkflowId?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['workflows', 'models', surroWorkflowId],
+    queryKey: queryKeys.workflows.models(surroWorkflowId),
     queryFn: () => api.get<Page<WorkflowModel>>(`workflows/${surroWorkflowId}/models`).json(),
   });
 
@@ -254,7 +249,7 @@ export const useFinalizeWorkflowDeletion = () => {
         })
         .json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -273,7 +268,7 @@ export const useExecuteWorkflow = () => {
     mutationFn: (params: { surro_workflow_id: string }) =>
       api.post(`workflows/${params.surro_workflow_id}/execute`).json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 
@@ -301,7 +296,7 @@ export const useUpdateComponentDeployStatus = () => {
         )
         .json<Workflow>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
   });
 

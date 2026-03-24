@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
   AddFileRequest,
@@ -17,7 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetChunkTypes = () => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['chunk-types'],
+    queryKey: queryKeys.knowledgeBaseMeta.chunkTypes,
     queryFn: () => api.get('knowledge-bases/chunk-types').json<Page<ChunkType>>(),
   });
 
@@ -30,7 +31,7 @@ export const useGetChunkTypes = () => {
 
 export const useGetLanguages = () => {
   const { data, isPending, isError, isFetched } = useQuery({
-    queryKey: ['languages'],
+    queryKey: queryKeys.knowledgeBaseMeta.languages,
     queryFn: () => api.get('knowledge-bases/languages').json<Page<Language>>(),
   });
 
@@ -44,7 +45,7 @@ export const useGetLanguages = () => {
 
 export const useGetSearchMethods = () => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['search-methods'],
+    queryKey: queryKeys.knowledgeBaseMeta.searchMethods,
     queryFn: () => api.get('knowledge-bases/search-methods').json<Page<SearchMethod>>(),
   });
 
@@ -62,7 +63,7 @@ export const useCreateKnowledgeBase = () => {
     mutationFn: (data: FormData) =>
       api.post('knowledge-bases', { body: data }).json<KnowledgeBase>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['knowledge-bases'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
     },
   });
 
@@ -76,7 +77,7 @@ export const useCreateKnowledgeBase = () => {
 
 export const useGetKnowledgeBases = (params: GetKnowledgeBasesParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['knowledge-bases', params],
+    queryKey: queryKeys.knowledgeBases.list(params),
     queryFn: () =>
       api.get('knowledge-bases', { searchParams: { ...params } }).json<Page<KnowledgeBase>>(),
   });
@@ -95,7 +96,7 @@ export const useGetKnowledgeBases = (params: GetKnowledgeBasesParams = {}) => {
 
 export const useGetKnowledgeBase = (surro_knowledge_id: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['knowledge-bases', surro_knowledge_id],
+    queryKey: queryKeys.knowledgeBases.detail(surro_knowledge_id),
     queryFn: () => api.get(`knowledge-bases/${surro_knowledge_id}`).json<KnowledgeBase>(),
     enabled: !!surro_knowledge_id,
   });
@@ -114,9 +115,9 @@ export const useUpdateKnowledgeBase = () => {
     mutationFn: ({ surro_knowledge_id, ...data }: UpdateKnowledgeBaseRequest) =>
       api.put(`knowledge-bases/${surro_knowledge_id}`, { json: data }).json<KnowledgeBase>(),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['knowledge-bases'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
       queryClient.invalidateQueries({
-        queryKey: ['knowledge-bases', variables.surro_knowledge_id],
+        queryKey: queryKeys.knowledgeBases.detail(variables.surro_knowledge_id),
       });
     },
   });
@@ -137,7 +138,7 @@ export const useDeleteKnowledgeBase = () => {
     mutationFn: (surro_knowledge_id: number) =>
       api.delete(`knowledge-bases/${surro_knowledge_id}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['knowledge-bases'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
     },
   });
 
@@ -162,9 +163,11 @@ export const useAddFileToKnowledgeBase = (surro_knowledge_id: number) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['knowledge-bases', surro_knowledge_id, 'files'],
+        queryKey: queryKeys.knowledgeBases.files(surro_knowledge_id),
       });
-      queryClient.invalidateQueries({ queryKey: ['knowledge-bases', surro_knowledge_id] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.knowledgeBases.detail(surro_knowledge_id),
+      });
     },
   });
 
@@ -185,9 +188,11 @@ export const useDeleteFileFromKnowledgeBase = (surro_knowledge_id: number) => {
       api.delete(`knowledge-bases/${surro_knowledge_id}/files/${file_id}`).json<string>(),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['knowledge-bases', surro_knowledge_id, 'files'],
+        queryKey: queryKeys.knowledgeBases.files(surro_knowledge_id),
       });
-      queryClient.invalidateQueries({ queryKey: ['knowledge-bases', surro_knowledge_id] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.knowledgeBases.detail(surro_knowledge_id),
+      });
     },
   });
 
@@ -223,7 +228,7 @@ export const useGetSearchRecords = (
   params: GetSearchRecordsParams = {}
 ) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['knowledge-bases', surro_knowledge_id, 'search-records', params],
+    queryKey: queryKeys.knowledgeBases.searchRecords(surro_knowledge_id, params),
     queryFn: () =>
       api
         .get(`knowledge-bases/${surro_knowledge_id}/search-records`, {
