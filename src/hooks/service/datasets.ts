@@ -1,11 +1,12 @@
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type { Dataset, GetDatasetsParams, UpdateDatasetRequest } from '@/types/dataset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetDatasets = (params: GetDatasetsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['datasets', params],
+    queryKey: queryKeys.datasets.list(params),
     queryFn: () => api.get<Page<Dataset>>('datasets', { searchParams: { ...params } }).json(),
   });
 
@@ -27,7 +28,7 @@ export const useCreateDataset = () => {
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: FormData) => api.post('datasets', { body: data }).json<Dataset>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },
   });
 
@@ -41,7 +42,7 @@ export const useCreateDataset = () => {
 
 export const useGetDataset = (dataset_id: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['datasets', dataset_id],
+    queryKey: queryKeys.datasets.detail(dataset_id),
     queryFn: () => api.get<Dataset>(`datasets/${dataset_id}`).json(),
   });
 
@@ -59,7 +60,7 @@ export const useUpdateDataset = () => {
     mutationFn: ({ datasetId, ...data }: UpdateDatasetRequest) =>
       api.put(`dataset/${datasetId}`, { json: data }).json<Dataset>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },
   });
 
@@ -77,7 +78,7 @@ export const useDeleteDataset = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (datasetId: number) => api.delete(`datasets/${datasetId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },
   });
 

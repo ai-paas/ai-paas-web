@@ -10,6 +10,8 @@ import WorkflowEditPage from '../pages/workflow/[id]/edit/page';
 import ModelCatalogPage from '../pages/model/model-catalog/page';
 import ModelCatalogCreatePage from '../pages/model/model-catalog/create/page';
 import ModelCatalogDetailPage from '../pages/model/model-catalog/[id]/page';
+import CustomModelCreateHuggingfacePage from '@/pages/model/custom-model/create/huggingface/page';
+import CustomModelCreateEtriPage from '@/pages/model/custom-model/create/etri/page';
 import CustomModelPage from '../pages/model/custom-model/page';
 import CustomModelCreatePage from '../pages/model/custom-model/create/page';
 import CustomModelDetailPage from '../pages/model/custom-model/[id]/page';
@@ -40,8 +42,6 @@ import LearningSolutionStep2Page from '../pages/learning/solution/step2/page';
 import MemberManagementDetailPage from '../pages/member-management/[id]/page';
 import LoginPage from '../pages/login/page';
 import HomePage from '../pages/page';
-import CustomModelCreateHuggingfacePage from '@/pages/model/model-catalog/create/huggingface/page';
-import CustomModelCreateEtriPage from '@/pages/model/model-catalog/create/etri/page';
 import MemberCreatePage from '@/pages/member-management/create/page';
 import MemberEditPage from '@/pages/member-management/[id]/edit/page';
 

@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
   CreateMemberRequest,
@@ -7,6 +8,7 @@ import type {
   UpdateMemberRequest,
 } from '@/types/member';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 type UpdateMemberPayload = Partial<Omit<UpdateMemberRequest, 'member_id'>> & { member_id: string };
 
 export const useCreateMember = () => {
@@ -15,7 +17,7 @@ export const useCreateMember = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: CreateMemberRequest) => api.post('members', { json: data }).json<Member>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
     },
   });
 
@@ -29,7 +31,7 @@ export const useCreateMember = () => {
 
 export const useGetMembers = (params: GetMembersParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['members', params],
+    queryKey: queryKeys.members.list(params),
     queryFn: () => api.get<Page<Member>>('members', { searchParams: { ...params } }).json(),
   });
 
@@ -47,7 +49,7 @@ export const useGetMembers = (params: GetMembersParams = {}) => {
 
 export const useGetMember = (memberId?: string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['members', memberId],
+    queryKey: queryKeys.members.detail(memberId),
     queryFn: () => api.get(`members/${memberId}`).json<Member>(),
     enabled,
   });
@@ -67,9 +69,9 @@ export const useUpdateMember = () => {
       // 필요 시 api.patch 로 변경
       api.put(`members/${member_id}`, { json: data }).json<Member>(),
     onSuccess: (_res, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
       if (vars?.member_id) {
-        queryClient.invalidateQueries({ queryKey: ['members', vars.member_id] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.members.detail(vars.member_id) });
       }
     },
   });
@@ -88,7 +90,7 @@ export const useDeleteMember = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (memberId: string) => api.delete(`members/${memberId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
     },
   });
 

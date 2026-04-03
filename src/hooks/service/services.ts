@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 import { api } from '../../lib/api';
 import type { Page } from '../../types/api';
 import type {
@@ -11,7 +12,7 @@ import type {
 
 export const useGetServices = (params: GetServicesParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['services', params],
+    queryKey: queryKeys.services.list(params),
     queryFn: () => api.get<Page<Service>>('services', { searchParams: { ...params } }).json(),
   });
 
@@ -34,7 +35,7 @@ export const useCreateService = () => {
     mutationFn: (data: CreateServiceRequest) =>
       api.post('services', { json: data }).json<Service>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all });
     },
   });
 
@@ -48,7 +49,7 @@ export const useCreateService = () => {
 
 export const useGetService = (surro_service_id?: string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['services', surro_service_id],
+    queryKey: queryKeys.services.detail(surro_service_id),
     queryFn: () => api.get(`services/${surro_service_id}`).json<ServiceDetail>(),
     enabled,
   });
@@ -67,7 +68,7 @@ export const useUpdateService = () => {
     mutationFn: ({ surro_service_id, ...data }: UpdateServiceRequest) =>
       api.put(`services/${surro_service_id}`, { json: data }).json<Service>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all });
     },
   });
 
@@ -86,7 +87,7 @@ export const useDeleteService = () => {
     mutationFn: (surro_service_id: string) =>
       api.delete(`services/${surro_service_id}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all });
     },
   });
 

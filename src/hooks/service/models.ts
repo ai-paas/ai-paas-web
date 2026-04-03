@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { queryKeys, type HubModelTagParams } from '@/lib/query-keys';
 import type { Page, Pagination } from '@/types/api';
 import type {
   CustomModel,
@@ -28,7 +29,7 @@ export const useGetModels = (
   { enabled = true }: { enabled?: boolean }
 ) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['models', params],
+    queryKey: queryKeys.models.list(params),
     queryFn: () => api.get<Page<Model>>('models', { searchParams: { ...params } }).json(),
     enabled,
   });
@@ -47,7 +48,7 @@ export const useGetModels = (
 
 export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['custom-models', params],
+    queryKey: queryKeys.customModels.list(params),
     queryFn: () =>
       api.get<Page<CustomModel>>('models/custom-models', { searchParams: { ...params } }).json(),
   });
@@ -66,7 +67,7 @@ export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
 
 export const useGetModelCatalogs = (params: GetModelCatalogsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['model-catalogs', params],
+    queryKey: queryKeys.modelCatalogs.list(params),
     queryFn: () =>
       api.get<Page<ModelCatalog>>('models/model-catalog', { searchParams: { ...params } }).json(),
   });
@@ -85,7 +86,7 @@ export const useGetModelCatalogs = (params: GetModelCatalogsParams = {}) => {
 
 export const useGetModelProviders = (params: GetModelProvidersParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['providers', params],
+    queryKey: queryKeys.modelProviders.list(params),
     queryFn: () =>
       api.get<Page<ModelProvider>>('models/providers', { searchParams: { ...params } }).json(),
   });
@@ -104,7 +105,7 @@ export const useGetModelProviders = (params: GetModelProvidersParams = {}) => {
 
 export const useGetModelTypes = (params: GetModelTypesParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['model-types', params],
+    queryKey: queryKeys.modelTypes.list(params),
     queryFn: () => api.get<Page<ModelType>>('models/types', { searchParams: { ...params } }).json(),
   });
 
@@ -122,7 +123,7 @@ export const useGetModelTypes = (params: GetModelTypesParams = {}) => {
 
 export const useGetModelFormats = (params: GetModelFormatsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['model-formats', params],
+    queryKey: queryKeys.modelFormats.list(params),
     queryFn: () =>
       api.get<Page<ModelFormat>>('models/formats', { searchParams: { ...params } }).json(),
   });
@@ -141,7 +142,7 @@ export const useGetModelFormats = (params: GetModelFormatsParams = {}) => {
 
 export const useGetModel = (model_id: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['model', model_id],
+    queryKey: queryKeys.models.detail(model_id),
     queryFn: () => api.get(`models/${model_id}`).json<Model>(),
   });
 
@@ -158,8 +159,8 @@ export const useDeleteModel = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (modelId: number) => api.delete(`models/${modelId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
-      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.modelCatalogs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customModels.all });
     },
   });
 
@@ -177,8 +178,8 @@ export const useCreateModel = () => {
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: FormData) => api.post('models', { body: data }).json<Model>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['model-catalogs'] });
-      queryClient.invalidateQueries({ queryKey: ['custom-models'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.modelCatalogs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customModels.all });
     },
   });
 
@@ -201,7 +202,7 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
     )
   );
   const { data, isPending, isError } = useQuery({
-    queryKey: ['hub-connect', params],
+    queryKey: queryKeys.hubModels.list(params),
     queryFn: () => api.get<Pagination<HubModel>>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
@@ -218,12 +219,9 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
   };
 };
 
-export const useGetHubModelTagsByGroup = (params: {
-  group: 'region' | 'library' | 'task' | 'framework' | 'language';
-  market: string;
-}) => {
+export const useGetHubModelTagsByGroup = (params: HubModelTagParams) => {
   const { data, isFetching, isPending, isError, refetch } = useQuery({
-    queryKey: ['hub-connect-tags', params],
+    queryKey: queryKeys.hubModelTags.list(params),
     queryFn: () =>
       api.get<HubModelTag>(`hub-connect/tags/${params.group}`, { searchParams: params }).json(),
   });
@@ -240,7 +238,7 @@ export const useGetHubModelTagsByGroup = (params: {
 
 export const useGetModelForOptimizer = (model_id?: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['modelForOptimizer', model_id],
+    queryKey: queryKeys.modelForOptimizer.detail(model_id),
     queryFn: () => api.get(`checked/model/${model_id}`).json<{ data: ModelForOptimizer }>(),
     enabled: !!model_id,
   });
@@ -263,7 +261,7 @@ export const useGetOptimizers = (params: GetOptimizersParams) => {
     )
   );
   const { data, isPending, isError } = useQuery({
-    queryKey: ['optimizers', params],
+    queryKey: queryKeys.optimizers.list(params),
     queryFn: () => api.get<Optimizers>('checked/optimizer', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
