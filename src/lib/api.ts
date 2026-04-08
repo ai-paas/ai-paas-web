@@ -74,7 +74,7 @@ const getOrCreateRefreshPromise = () => {
 };
 
 export const api = ky.create({
-  prefixUrl: `${import.meta.env.VITE_SERVER_URL}/api/v1`,
+  prefixUrl: '/api/v1',
   timeout: false,
   hooks: {
     beforeRequest: [
