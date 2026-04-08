@@ -26,6 +26,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
+            set -e
             cd /home/ubuntu/app-build
             echo "${{ secrets.NPMRC }}" > .npmrc
             pnpm install --frozen-lockfile
@@ -44,6 +45,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
+            set -e
             cd /home/ubuntu/app-build
             docker build --no-cache -t ai-paas-web:latest .
             docker save ai-paas-web:latest > ai-paas-web.tar
@@ -60,6 +62,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
+            set -e
             docker load < /home/ubuntu/app-build/ai-paas-web.tar
 
             docker stop ai-paas-web || true
