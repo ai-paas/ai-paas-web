@@ -1,11 +1,5 @@
 import { useNavigate } from 'react-router';
-import {
-  clearAuthTokens,
-  getAccessToken,
-  getRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from '@/lib/api';
+import { clearAccessToken, getAccessToken, setAccessToken } from '@/lib/api';
 
 const parseJwt = (token: string) => {
   try {
@@ -25,33 +19,21 @@ const parseJwt = (token: string) => {
 
 export const useAuth = () => {
   const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
   const navigate = useNavigate();
 
-  const isAuthenticated = !!refreshToken;
+  const isAuthenticated = localStorage.getItem('is_authenticated') === 'true';
   const isAdmin = accessToken ? parseJwt(accessToken)?.role === 'admin' : false;
 
   const logout = () => {
-    clearAuthTokens();
+    clearAccessToken();
     navigate('/login');
-  };
-
-  const setTokens = (accessToken: string, refreshToken: string) => {
-    setAccessToken(accessToken);
-    setRefreshToken(refreshToken);
-  };
-
-  const clearTokens = () => {
-    clearAuthTokens();
   };
 
   return {
     accessToken,
-    refreshToken,
     isAuthenticated,
     isAdmin,
+    setAccessToken,
     logout,
-    setTokens,
-    clearTokens,
   };
 };
