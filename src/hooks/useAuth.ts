@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { LOCAL_STORAGE } from '@/constant/local-storage';
+import { clearAccessToken, getAccessToken, setAccessToken } from '@/lib/api';
 
 const parseJwt = (token: string) => {
   try {
@@ -18,36 +18,22 @@ const parseJwt = (token: string) => {
 };
 
 export const useAuth = () => {
-  const accessToken = localStorage.getItem(LOCAL_STORAGE.ACCESS_TOKEN);
-  const refreshToken = localStorage.getItem(LOCAL_STORAGE.REFRESH_TOKEN);
+  const accessToken = getAccessToken();
   const navigate = useNavigate();
 
-  const isAuthenticated = !!accessToken;
+  const isAuthenticated = localStorage.getItem('is_authenticated') === 'true';
   const isAdmin = accessToken ? parseJwt(accessToken)?.role === 'admin' : false;
 
   const logout = () => {
-    localStorage.removeItem(LOCAL_STORAGE.ACCESS_TOKEN);
-    localStorage.removeItem(LOCAL_STORAGE.REFRESH_TOKEN);
+    clearAccessToken();
     navigate('/login');
-  };
-
-  const setTokens = (accessToken: string, refreshToken: string) => {
-    localStorage.setItem(LOCAL_STORAGE.ACCESS_TOKEN, accessToken);
-    localStorage.setItem(LOCAL_STORAGE.REFRESH_TOKEN, refreshToken);
-  };
-
-  const clearTokens = () => {
-    localStorage.removeItem(LOCAL_STORAGE.ACCESS_TOKEN);
-    localStorage.removeItem(LOCAL_STORAGE.REFRESH_TOKEN);
   };
 
   return {
     accessToken,
-    refreshToken,
     isAuthenticated,
     isAdmin,
+    setAccessToken,
     logout,
-    setTokens,
-    clearTokens,
   };
 };

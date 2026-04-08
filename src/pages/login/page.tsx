@@ -7,7 +7,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
-  const { isAuthenticated, setTokens } = useAuth();
+  const { isAuthenticated, setAccessToken } = useAuth();
   const [memberId, setMemberId] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -22,7 +22,7 @@ export default function LoginPage() {
       { member_id: memberId, password: password },
       {
         onSuccess: (data) => {
-          setTokens(data.access_token, data.refresh_token);
+          setAccessToken(data.access_token);
 
           navigate('/service');
         },
@@ -96,7 +96,7 @@ export default function LoginPage() {
           </Button>
         </div>
       </form>
-      <p className={styles.copyright}>© 2025 Innogrid. All rights reserved copyright.</p>
+      <p className={styles.copyright}>© 2026 Innogrid. All rights reserved copyright.</p>
     </main>
   );
 }

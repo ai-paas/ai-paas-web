@@ -1,24 +1,14 @@
 # Production stage with Nginx
 FROM nginx:alpine
 
-# Create nginx configuration
-RUN cat > /etc/nginx/conf.d/default.conf <<EOF
-server {
-    listen 80;
-    server_name localhost;
-    root /var/www/html;
-    index index.html index.htm;
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-}
-EOF
+# 1. 템플릿 파일을 Nginx 템플릿 폴더로 복사
+COPY default.conf.template /etc/nginx/templates/default.conf.template
 
-# Copy built app from build stage
+# 2. 빌드된 앱 파일 복사
 COPY dist /var/www/html/
 
-# Expose port
+# 포트 설정
 EXPOSE 80
 
-# Start nginx
+# Nginx 실행
 CMD ["nginx", "-g", "daemon off;"]
