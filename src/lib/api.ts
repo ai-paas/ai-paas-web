@@ -19,12 +19,10 @@ export const getAccessToken = () => accessTokenMemory;
 
 export const setAccessToken = (token: string) => {
   accessTokenMemory = token;
-  localStorage.setItem('is_authenticated', 'true');
 };
 
 export const clearAccessToken = () => {
   accessTokenMemory = null;
-  localStorage.removeItem('is_authenticated');
 };
 
 const queueRequest = (request: Request) =>
@@ -63,7 +61,7 @@ const markAsRetried = (request: Request) => {
   return retriedRequest;
 };
 
-const getOrCreateRefreshPromise = () => {
+export const getOrCreateRefreshPromise = () => {
   if (!refreshPromise) {
     refreshPromise = refreshAccessToken().finally(() => {
       refreshPromise = null;
@@ -111,7 +109,7 @@ export const api = ky.create({
   },
 });
 
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   try {
     const response = await fetch('/api/v1/auth/refresh/', {
       method: 'POST',
@@ -136,7 +134,6 @@ const refreshAccessToken = async () => {
     return data.access_token;
   } catch (error) {
     clearAccessToken();
-    window.location.href = '/login';
     throw error;
   }
 };
