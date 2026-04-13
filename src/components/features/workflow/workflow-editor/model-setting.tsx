@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react';
-import styles from '../../../pages/workflow/workflow.module.scss';
+import styles from '@/pages/workflow/workflow.module.scss';
 import {
   Accordion,
   Button,
@@ -12,8 +12,12 @@ import {
 } from '@innogrid/ui';
 import { IconArrCount } from '@/assets/img/icon';
 import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
+import { useWorkflowStore } from '@/store/useWorkflowStore';
 
 export const ModelSetting = () => {
+  const selectedNode = useWorkflowStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
+  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+
   const [value, setValue] = useState<string>('');
   //switch
   const [checked, setChecked] = useState<boolean>(false);
@@ -52,7 +56,13 @@ export const ModelSetting = () => {
   return (
     <div className={styles.addInner}>
       <div className={styles.addTopBox}>
-        <input type="text" placeholder="이름을 입력해주세요." className={styles.addTitleInput} />
+        <input
+          type="text"
+          placeholder="이름을 입력해주세요."
+          value={selectedNode?.data.name}
+          onChange={(e) => updateNodeData(selectedNode?.id, { name: e.target.value })}
+          className={styles.addTitleInput}
+        />
       </div>
       <div className={styles.addItemBox}>
         <div className={styles.addItemNameBox}>

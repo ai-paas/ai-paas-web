@@ -1,32 +1,36 @@
 import { useNavigate } from 'react-router';
-import { BreadCrumb, Button } from '@innogrid/ui';
-import { WorkflowSettingPanel } from '../../../components/features/workflow/workflow-setting-panel';
-import { WorkflowComponentPanel } from '../../../components/features/workflow/workflow-component-panel';
+import { BreadCrumb } from '@innogrid/ui';
+import { WorkflowEditor } from '@/components/features/workflow/workflow-editor';
 import styles from '../workflow.module.scss';
-import { WorkflowCanvas } from '@/components/features/workflow/workflow-canvas';
-import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
-import { useCreateWorkflow, useCreateWorkflowViaTemplate } from '@/hooks/service/workflows';
-import { WorkflowCreateButton } from './workflow-create-button';
 
 const initialNodes = [
-  {
-    id: 'n1',
-    position: { x: 0, y: 100 },
-    data: { label: '시작' },
-    type: 'start',
-  },
-  {
-    id: 'n2',
-    position: { x: 400, y: 100 },
-    data: { label: '모델' },
-    type: 'model',
-  },
-  {
-    id: 'n3',
-    position: { x: 800, y: 100 },
-    data: { label: '답변' },
-    type: 'end',
-  },
+  // ...Array.from({ length: 20 }, (_, rowIndex) => {
+  //   const rowChar = String.fromCharCode(97 + rowIndex);
+  //   return Array.from({ length: 10 }, (_, colIndex) => {
+  //     const id = `${rowChar}${colIndex + 1}`;
+  //     let type = 'end';
+  //     let label = '답변';
+  //     if (colIndex % 4 === 0) {
+  //       type = 'START';
+  //       label = '시작';
+  //     } else if (colIndex % 4 === 1) {
+  //       type = 'MODEL';
+  //       label = '모델';
+  //     } else if (colIndex % 4 === 2) {
+  //       type = 'KNOWLEDGE_BASE';
+  //       label = '지식베이스';
+  //     } else if (colIndex % 4 === 3) {
+  //       type = 'END';
+  //       label = '끝';
+  //     }
+  //     return {
+  //       id: id,
+  //       position: { x: colIndex * 150, y: 100 + rowIndex * 50 },
+  //       data: { label: label },
+  //       type: type,
+  //     };
+  //   });
+  // }).flat(),
 ];
 
 const initialEdges = [
@@ -44,7 +48,10 @@ const initialEdges = [
 
 export default function WorkflowCreatePage() {
   const navigate = useNavigate();
-  const { createWorkflow } = useCreateWorkflowViaTemplate();
+
+  const handleChecklist = () => {
+    alert('체크리스트 버튼이 클릭되었습니다.');
+  };
 
   return (
     <main>
@@ -54,35 +61,8 @@ export default function WorkflowCreatePage() {
         className="breadcrumbBox"
       />
       <div className={styles.container}>
-        <ReactFlowProvider>
-          <WorkflowEditor />
-        </ReactFlowProvider>
+        <WorkflowEditor initialNodes={[]} initialEdges={[]} />
       </div>
     </main>
   );
 }
-
-const WorkflowEditor = () => {
-  const handleChecklist = () => {
-    alert('체크리스트 버튼이 클릭되었습니다.');
-  };
-
-  return (
-    <>
-      <WorkflowComponentPanel />
-
-      <div className={styles.contentBox}>
-        <WorkflowCanvas initialNodes={initialNodes} initialEdges={initialEdges} />
-
-        <div className="absolute top-5 right-5 flex gap-1.5">
-          <Button onClick={handleChecklist} size="medium" color="tertiary">
-            체크리스트
-          </Button>
-          <WorkflowCreateButton />
-        </div>
-
-        <WorkflowSettingPanel />
-      </div>
-    </>
-  );
-};

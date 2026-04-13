@@ -1,6 +1,6 @@
 import { Background, ReactFlow, type Edge, type Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import {
   AnswerIcon,
   HomeIcon,
@@ -8,6 +8,7 @@ import {
   LlmIcon,
 } from '@/components/features/workflow/icons/workflow-icons';
 import { Handle, Position } from '@xyflow/react';
+import { useWorkflowStore } from '@/store/useWorkflowStore';
 
 const HANDLE_STYLE = {
   backgroundColor: '#296dff',
@@ -27,7 +28,7 @@ const StartNode = memo(({ data, isConnectable, selected }) => {
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-blue-500 text-white shadow-md">
               <HomeIcon />
             </div>
-            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
+            <div className="mr-1 flex grow items-center truncate">{data.name}</div>
           </div>
         </div>
       </div>
@@ -58,7 +59,7 @@ const ModelNode = memo(({ data, isConnectable, selected }) => {
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-indigo-500 text-white shadow-md">
               <LlmIcon />
             </div>
-            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
+            <div className="mr-1 flex grow items-center truncate">{data.name}</div>
           </div>
         </div>
       </div>
@@ -89,7 +90,7 @@ const KnowledgebaseNode = memo(({ data, isConnectable, selected }) => {
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-emerald-500 text-white shadow-md">
               <KnowledgeRetrievalIcon />
             </div>
-            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
+            <div className="mr-1 flex grow items-center truncate">{data.name}</div>
           </div>
         </div>
       </div>
@@ -120,7 +121,7 @@ const EndNode = memo(({ data, isConnectable, selected }) => {
             <div className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-white/2 bg-amber-500 text-white shadow-md">
               <AnswerIcon />
             </div>
-            <div className="mr-1 flex grow items-center truncate">{data.label}</div>
+            <div className="mr-1 flex grow items-center truncate">{data.name}</div>
           </div>
         </div>
       </div>
@@ -129,10 +130,10 @@ const EndNode = memo(({ data, isConnectable, selected }) => {
 });
 
 const nodeTypes = {
-  start: StartNode,
-  model: ModelNode,
-  knowledgebase: KnowledgebaseNode,
-  end: EndNode,
+  START: StartNode,
+  MODEL: ModelNode,
+  KNOWLEDGE_BASE: KnowledgebaseNode,
+  END: EndNode,
 };
 
 const DEFAULT_VIEWPORT = { x: 0, y: 0, zoom: 1.5 };
@@ -143,14 +144,24 @@ interface FlowChartProps {
 }
 
 export const FlowChart = ({ initialNodes, initialEdges }: FlowChartProps) => {
+  const { nodes, edges, setInitialData, onNodesChange, onEdgesChange, onConnect, selectNode } =
+    useWorkflowStore();
+
+  useEffect(() => {
+    setInitialData(initialNodes, initialEdges);
+  }, []);
+
   return (
     <div className="size-full">
       <ReactFlow
-        defaultNodes={initialNodes}
-        defaultEdges={initialEdges}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={(_, node) => selectNode(node.id)}
         nodeTypes={nodeTypes}
         defaultViewport={DEFAULT_VIEWPORT}
-        selectNodesOnDrag={false}
         fitView
         onlyRenderVisibleElements
       >

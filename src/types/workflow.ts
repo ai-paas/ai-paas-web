@@ -1,5 +1,5 @@
 type WorkflowTemplateStatus = 'DRAFT' | 'ACTIVE' | 'ERROR';
-type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE';
+export type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE';
 
 export interface Workflow {
   id: number;
@@ -16,9 +16,16 @@ export interface Workflow {
   template_id: string;
 }
 
-export interface WorkflowComponentType {}
-
 export interface WorkflowTemplate {}
+
+export interface GetWorkflowComponentTypes {
+  data: {
+    type: WorkflowComponentType;
+    component_id: WorkflowComponentType;
+    name: string;
+    description: string;
+  }[];
+}
 
 export interface CreateWorkflowRequest {
   name: string;

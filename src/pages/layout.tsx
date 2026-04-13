@@ -5,7 +5,11 @@ import { Menu } from '@/components/layout/menu';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DefaultLayout() {
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, accessToken, isLoading } = useAuth();
+
+  if (isLoading) {
+    return;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
