@@ -4,10 +4,10 @@ import type { Page } from '@/types/api';
 import type {
   ComponentDeployStatusBody,
   CreateWorkflowRequest,
+  GetWorkflowComponentTypes,
   UpdateWorkflowRequest,
   UpdateWorkflowTemplateRequest,
   Workflow,
-  WorkflowComponentType,
   WorkflowModel,
   WorkflowTemplate,
 } from '@/types/workflow';
@@ -34,16 +34,11 @@ export const useGetWorkflows = (params: WorkflowListParams) => {
 export const useGetWorkflowComponentTypes = () => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.componentTypes(),
-    queryFn: () => api.get<Page<WorkflowComponentType>>('workflows/component-types').json(),
+    queryFn: () => api.get<GetWorkflowComponentTypes>('workflows/component-types').json(),
   });
 
   return {
     workflowComponentTypes: data?.data ?? [],
-    page: {
-      number: data?.page ?? 1,
-      total: data?.total ?? 1,
-      size: data?.size ?? 1,
-    },
     isPending,
     isError,
   };

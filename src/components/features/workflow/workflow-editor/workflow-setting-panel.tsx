@@ -4,11 +4,11 @@ import { StartSetting } from './start-setting';
 import { ModelSetting } from './model-setting';
 import { KnowledgeBaseSetting } from './knowledge-setting';
 import { EndSetting } from './end-setting';
-import styles from '../../../pages/workflow/workflow.module.scss';
+import styles from '@/pages/workflow/workflow.module.scss';
 
 export const WorkflowSettingPanel = () => {
   const { setNodes, getNodes } = useReactFlow();
-  const [selectedNode, setSelectedNode] = useState<Node | undefined>();
+  const [selectedNode, setSelectedNode] = useState<Node>();
 
   const clearSelection = () => {
     const updatedNodes = getNodes().map((node) => ({
@@ -33,10 +33,10 @@ export const WorkflowSettingPanel = () => {
         <span>닫기</span>
       </button>
 
-      {selectedNode.type === 'start' && <StartSetting />}
-      {selectedNode.type === 'model' && <ModelSetting />}
-      {selectedNode.type === 'knowledgebase' && <KnowledgeBaseSetting />}
-      {selectedNode.type === 'end' && <EndSetting />}
+      {selectedNode.type === 'START' && <StartSetting />}
+      {selectedNode.type === 'MODEL' && <ModelSetting />}
+      {selectedNode.type === 'KNOWLEDGE_BASE' && <KnowledgeBaseSetting />}
+      {selectedNode.type === 'END' && <EndSetting />}
     </div>
   );
 };

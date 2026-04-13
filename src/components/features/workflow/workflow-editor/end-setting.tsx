@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react';
-import styles from '../../../pages/workflow/workflow.module.scss';
+import styles from '@/pages/workflow/workflow.module.scss';
 import { Input, Select } from '@innogrid/ui';
 import { IconDel } from '@/assets/img/icon';
 

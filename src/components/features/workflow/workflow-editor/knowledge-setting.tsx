@@ -1,5 +1,5 @@
 import { Accordion, Input, Select, Slider } from '@innogrid/ui';
-import styles from '../../../pages/workflow/workflow.module.scss';
+import styles from '@/pages/workflow/workflow.module.scss';
 import { useState, type ChangeEvent } from 'react';
 import { IconArrCount, IconSet } from '@/assets/img/icon';
 import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';

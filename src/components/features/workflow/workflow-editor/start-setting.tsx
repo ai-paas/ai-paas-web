@@ -9,12 +9,9 @@ import {
   type CheckboxCheckedState,
 } from '@innogrid/ui';
 import { useState, type ChangeEvent } from 'react';
-import styles from '../../../pages/workflow/workflow.module.scss';
+import styles from '@/pages/workflow/workflow.module.scss';
 import { IconArrCount, IconDel } from '@/assets/img/icon';
-
-interface InputField {
-  name: string;
-}
+import { useWorkflowStore } from '@/store/useWorkflowStore';
 
 const FIELD_TYPE_OPTIONS = [
   { text: '짧은 텍스트', value: 'string' },
@@ -22,7 +19,9 @@ const FIELD_TYPE_OPTIONS = [
 ];
 
 export const StartSetting = () => {
-  const [inputFields, setInputFields] = useState<InputField[]>([]);
+  const selectedNode = useWorkflowStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
+  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+
   const [value, setValue] = useState<string>('');
   const [value2, setValue2] = useState<number[]>([30]);
   const [selectedValue, setSelectedValue] = useState();
@@ -152,10 +151,18 @@ export const StartSetting = () => {
     },
   ];
 
+  if (!selectedNode) return null;
+
   return (
     <div className={styles.addInner}>
       <div className={styles.addTopBox}>
-        <input type="text" placeholder="이름을 입력해주세요." className={styles.addTitleInput} />
+        <input
+          type="text"
+          placeholder="이름을 입력해주세요."
+          value={selectedNode.data.name}
+          onChange={(e) => updateNodeData(selectedNode.id, { name: e.target.value })}
+          className={styles.addTitleInput}
+        />
       </div>
       <div className={styles.addItemBox}>
         <div className={styles.addItemNameBox}>
@@ -163,33 +170,51 @@ export const StartSetting = () => {
           <button
             type="button"
             className={styles.btnPlus}
-            onClick={() => setInputFields([...inputFields, { name: 'sd' }])}
+            onClick={() => {
+              updateNodeData(selectedNode.id, {
+                inputFields: [
+                  ...(selectedNode.data.inputFields || []),
+                  {
+                    type: 'text',
+                    variable: '',
+                    label: 'app_id',
+                    max_length: 0,
+                    file_type: '',
+                    file_upload: '',
+                    file_max_number: 0,
+                  },
+                ],
+              });
+            }}
           >
             <span>생성</span>
           </button>
         </div>
-        {inputFields.length > 0 ? (
-          inputFields.map((field, idx) => (
-            <div
-              key={field.name ? field.name : idx}
-              className={`${styles.addItemField} ${styles.active}`}
-            >
-              <div>
-                <span>{'{X}'}</span>
-                <span className={styles.addItemFieldId}>app_id</span>
-              </div>
-              <span className={styles.addItemFieldText}>String</span>
-              <button type="button" className={styles.btnIconDel}>
-                <IconDel className={styles.iconDel} />
-              </button>
-            </div>
-          ))
-        ) : (
+
+        {JSON.stringify(selectedNode.data)}
+
+        {selectedNode.data.inputFields && selectedNode.data.inputFields.length === 0 && (
           <div className={styles.emptyBox}>
             <span>생성된 입력필드가 없습니다.</span>
           </div>
         )}
+        {selectedNode.data.inputFields?.map((field, idx) => (
+          <div
+            key={field.name ? field.name : idx}
+            className={`${styles.addItemField} ${styles.active}`}
+          >
+            <div>
+              <span>{'{X}'}</span>
+              <span className={styles.addItemFieldId}>app_id</span>
+            </div>
+            <span className={styles.addItemFieldText}>String</span>
+            <button type="button" className={styles.btnIconDel}>
+              <IconDel className={styles.iconDel} />
+            </button>
+          </div>
+        ))}
       </div>
+
       <div className={`${styles.addItemBox} ${styles.addItemHr}`}>
         <div className={styles.addItemNameBox}>
           <div className={styles.addItemName}>입력필드 설정</div>
@@ -203,7 +228,7 @@ export const StartSetting = () => {
           </div>
         </div>
       </div>
-      {inputFields.length > 0 ? (
+      {selectedNode.data.inputFields?.length > 0 ? (
         <>
           <div className={styles.addItemBox}>
             <div className={styles.addItemNameBox}>
