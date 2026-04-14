@@ -90,16 +90,14 @@ export default function DatasetPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateDatasetButton />
-            <EditDatasetButton />
+            <EditDatasetButton datasetId={selectedId} />
             <DeleteDatasetButton datasetId={selectedId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div>
+        <div className="h-[481px]">
           <Table
             columns={columns}
             data={datasets}

@@ -1,7 +1,12 @@
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
-import type { Dataset, GetDatasetsParams, UpdateDatasetRequest } from '@/types/dataset';
+import {
+  type ValidateDatasetResponse,
+  type Dataset,
+  type GetDatasetsParams,
+  type UpdateDatasetRequest,
+} from '@/types/dataset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetDatasets = (params: GetDatasetsParams = {}) => {
@@ -19,6 +24,17 @@ export const useGetDatasets = (params: GetDatasetsParams = {}) => {
     },
     isPending,
     isError,
+  };
+};
+
+export const useValidateDataset = () => {
+  const { mutateAsync } = useMutation({
+    mutationFn: (data: FormData) =>
+      api.post('datasets/validate', { body: data }).json<ValidateDatasetResponse>(),
+  });
+
+  return {
+    validateDataset: mutateAsync,
   };
 };
 
