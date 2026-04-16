@@ -21,6 +21,7 @@ import DatasetDetailPage from '../pages/dataset/[id]/page';
 import KnowledgeBasePage from '../pages/knowledge-base/page';
 import KnowledgeBaseCreatePage from '../pages/knowledge-base/create/page';
 import KnowledgeBaseDetailPage from '../pages/knowledge-base/[id]/page';
+import KnowledgeBaseEditPage from '../pages/knowledge-base/[id]/edit/page';
 import PromptPage from '../pages/prompt/page';
 import PromptCreatePage from '../pages/prompt/create/page';
 import PromptDetailPage from '../pages/prompt/[id]/page';
@@ -234,6 +235,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<></>}>
             <KnowledgeBaseDetailPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'knowledge-base/:id/edit',
+        element: (
+          <Suspense fallback={<></>}>
+            <KnowledgeBaseEditPage />
           </Suspense>
         ),
       },

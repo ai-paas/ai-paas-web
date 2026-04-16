@@ -8,7 +8,9 @@ export const DeleteKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId
 
   const handleClickConfirm = () => {
     if (!knowledgeBaseId) return;
-    deleteKnowledgeBase(knowledgeBaseId);
+    deleteKnowledgeBase(knowledgeBaseId, {
+      onSuccess: () => setIsOpen(false),
+    });
   };
 
   return (
