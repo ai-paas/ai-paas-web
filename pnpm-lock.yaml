@@ -12,8 +12,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.72.1(react@18.3.1))
       '@innogrid/ui':
-        specifier: ^0.0.27
-        version: 0.0.27(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)
+        specifier: ^0.0.36
+        version: 0.0.36(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -558,18 +558,13 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@innogrid/ui@0.0.27':
-    resolution: {integrity: sha1-K9+Lp4h76eBFSPWkOLET3/F3E88=, tarball: https://rnd-app.innogrid.com/api/v4/projects/987/packages/npm/@innogrid/ui/-/@innogrid/ui-0.0.27.tgz}
+  '@innogrid/ui@0.0.36':
+    resolution: {integrity: sha1-5VIyHkcJdAUI+n0CCHoFMddxf9w=, tarball: https://rnd-app.innogrid.com/api/v4/projects/987/packages/npm/@innogrid/ui/-/@innogrid/ui-0.0.36.tgz}
     peerDependencies:
       '@types/react': ^18.0 || ^19.0
       '@types/react-dom': ^18.0 || ^19.0
       react: ^18.0 || ^19.0
       react-dom: ^18.0 || ^19.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
 
   '@inquirer/ansi@1.0.2':
     resolution: {integrity: sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==}
@@ -3788,8 +3783,10 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@innogrid/ui@0.0.27(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)':
+  '@innogrid/ui@0.0.36(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)':
     dependencies:
+      '@types/react': 18.3.23
+      '@types/react-dom': 18.3.7(@types/react@18.3.23)
       framer-motion: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       i18next: 24.2.3(typescript@5.8.3)
       i18next-browser-languagedetector: 8.2.0
@@ -3801,9 +3798,6 @@ snapshots:
       react-lottie: 1.2.10(react@18.3.1)
       react-select: 5.10.2(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       reset-css: 5.0.2
-    optionalDependencies:
-      '@types/react': 18.3.23
-      '@types/react-dom': 18.3.7(@types/react@18.3.23)
     transitivePeerDependencies:
       - '@emotion/is-prop-valid'
       - react-native
