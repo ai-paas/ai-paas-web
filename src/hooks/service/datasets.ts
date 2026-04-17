@@ -56,10 +56,11 @@ export const useCreateDataset = () => {
   };
 };
 
-export const useGetDataset = (dataset_id: number) => {
+export const useGetDataset = (dataset_id?: number) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.datasets.detail(dataset_id),
     queryFn: () => api.get<Dataset>(`datasets/${dataset_id}`).json(),
+    enabled: !!dataset_id,
   });
 
   return {

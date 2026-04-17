@@ -14,7 +14,7 @@ type Schema = z.infer<typeof schema>;
 
 export const EditDatasetButton = ({ datasetId }: { datasetId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { dataset } = useGetDataset(datasetId as number);
+  const { dataset } = useGetDataset(datasetId);
   const { updateDataset, isPending } = useUpdateDataset();
   const toast = useToast();
 
