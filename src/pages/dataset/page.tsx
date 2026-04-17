@@ -1,5 +1,6 @@
 import {
   BreadCrumb,
+  Button,
   CellCheckbox,
   HeaderCheckbox,
   SearchInput,
@@ -10,7 +11,6 @@ import {
 } from '@innogrid/ui';
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
-import { CreateDatasetButton } from '../../components/features/dataset/create-dataset-button';
 import { EditDatasetButton } from '../../components/features/dataset/edit-dataset-button';
 import { DeleteDatasetButton } from '../../components/features/dataset/delete-dataset-button';
 import { useGetDatasets } from '@/hooks/service/datasets';
@@ -89,7 +89,9 @@ export default function DatasetPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateDatasetButton />
+            <Button size="medium" color="primary" asChild>
+              <Link to="/dataset/create">생성</Link>
+            </Button>
             <EditDatasetButton datasetId={selectedId} />
             <DeleteDatasetButton datasetId={selectedId} />
           </div>

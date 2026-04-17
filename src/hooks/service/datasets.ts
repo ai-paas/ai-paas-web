@@ -1,11 +1,11 @@
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
-import {
-  type ValidateDatasetResponse,
-  type Dataset,
-  type GetDatasetsParams,
-  type UpdateDatasetRequest,
+import type {
+  ValidateDatasetResponse,
+  Dataset,
+  GetDatasetsParams,
+  UpdateDatasetRequest,
 } from '@/types/dataset';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -74,7 +74,7 @@ export const useUpdateDataset = () => {
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: ({ datasetId, ...data }: UpdateDatasetRequest) =>
-      api.put(`dataset/${datasetId}`, { json: data }).json<Dataset>(),
+      api.put(`datasets/${datasetId}`, { json: data }).json<Dataset>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },

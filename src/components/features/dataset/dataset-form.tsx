@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { IconDocument, IconFileUp } from '@/assets/img/icon';
-import { Button, Input, Textarea } from '@innogrid/ui';
+import { Button, Input, Textarea, useToast } from '@innogrid/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useValidateDataset, useCreateDataset } from '@/hooks/service/datasets';
 import * as z from 'zod';
@@ -24,17 +24,19 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>;
 
 export const DatasetForm = () => {
+  const navigate = useNavigate();
   const { validateDataset } = useValidateDataset();
   const { createDataset, isPending } = useCreateDataset();
-  const navigate = useNavigate();
+  const toast = useToast();
   const {
     register,
     handleSubmit,
     setValue,
+    resetField,
     watch,
     setError,
     clearErrors,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<Schema>({ resolver: zodResolver(schema) });
 
   const selectedFile = watch('file');
@@ -51,7 +53,7 @@ export const DatasetForm = () => {
       if (!response.is_valid) {
         setError('file', { type: 'manual', message: '유효하지 않은 데이터셋 구조입니다.' });
         e.target.value = '';
-        setValue('file', undefined as any);
+        resetField('file');
         return;
       }
 
@@ -69,8 +71,21 @@ export const DatasetForm = () => {
     formData.append('description', data.description || '');
     formData.append('file', data.file);
 
-    await createDataset(formData);
-    navigate('/dataset');
+    try {
+      await createDataset(formData);
+      toast.open({
+        status: 'positive',
+        title: '데이터셋 생성 성공',
+        children: '데이터셋이 성공적으로 생성되었습니다.',
+      });
+      navigate('/dataset');
+    } catch {
+      toast.open({
+        status: 'negative',
+        title: '데이터셋 생성 실패',
+        children: '데이터셋 생성 중 오류가 발생했습니다.',
+      });
+    }
   };
 
   return (
@@ -126,7 +141,7 @@ export const DatasetForm = () => {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">설명</div>
+            <div className="page-input_item-name">설명</div>
             <div className="page-input_item-data">
               <Textarea
                 placeholder="설명을 입력해주세요."
@@ -144,7 +159,13 @@ export const DatasetForm = () => {
             <Button size="large" color="secondary" onClick={() => navigate('/dataset')}>
               취소
             </Button>
-            <Button type="submit" size="large" color="primary" disabled={isSubmitting || isPending}>
+            <Button
+              type="submit"
+              size="large"
+              color="primary"
+              disabled={isPending}
+              isLoading={isPending}
+            >
               생성
             </Button>
           </div>

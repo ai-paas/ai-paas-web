@@ -1,19 +1,35 @@
-import { Button, Modal } from '@innogrid/ui';
-import { useCallback, useState } from 'react';
+import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
+import { useCallback, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useGetDataset, useUpdateDataset } from '@/hooks/service/datasets';
 
-interface DatasetFormData {
-  name: string;
-  description: string;
-}
+const schema = z.object({
+  name: z.string().min(1, '이름은 필수입니다.'),
+  description: z.string().optional(),
+});
 
-const INITIAL_FORM_DATA: DatasetFormData = {
-  name: '',
-  description: '',
-};
+type Schema = z.infer<typeof schema>;
 
 export const EditDatasetButton = ({ datasetId }: { datasetId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const { dataset } = useGetDataset(datasetId as number);
+  const { updateDataset, isPending } = useUpdateDataset();
+  const toast = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<Schema>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', description: '' },
+  });
+
+  const descriptionValue = watch('description') ?? '';
 
   const openModal = useCallback(() => {
     if (!datasetId) return;
@@ -22,13 +38,45 @@ export const EditDatasetButton = ({ datasetId }: { datasetId?: number }) => {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setFormData(INITIAL_FORM_DATA);
-  }, []);
+    reset({ name: '', description: '' });
+  }, [reset]);
 
-  const handleSubmit = () => {
+  const onSubmit = (data: Schema) => {
     if (!datasetId) return;
-    closeModal();
+    updateDataset(
+      {
+        datasetId,
+        name: data.name,
+        description: data.description,
+      },
+      {
+        onSuccess: () => {
+          toast.open({
+            status: 'positive',
+            title: '데이터셋 편집 성공',
+            children: '데이터셋이 성공적으로 편집되었습니다.',
+          });
+          closeModal();
+        },
+        onError: () => {
+          toast.open({
+            status: 'negative',
+            title: '데이터셋 편집 실패',
+            children: '데이터셋 편집 중 오류가 발생했습니다.',
+          });
+        },
+      }
+    );
   };
+
+  useEffect(() => {
+    if (dataset && isModalOpen) {
+      reset({
+        name: dataset.name,
+        description: dataset.description ?? '',
+      });
+    }
+  }, [dataset, isModalOpen, reset]);
 
   return (
     <>
@@ -38,18 +86,42 @@ export const EditDatasetButton = ({ datasetId }: { datasetId?: number }) => {
       <Modal
         allowOutsideInteraction
         isOpen={isModalOpen}
+        isButtonLoading={isPending}
+        buttonDisabled={isPending}
         size="small"
         title="데이터셋 편집"
         buttonTitle="확인"
         onRequestClose={closeModal}
-        action={handleSubmit}
+        action={handleSubmit(onSubmit)}
         subButton={
           <Button size="large" color="secondary" onClick={closeModal}>
             취소
           </Button>
         }
       >
-        <div>hello</div>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name page-icon-requisite">이름</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="이름을 입력해주세요."
+                errMessage={errors.name?.message}
+                {...register('name')}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Textarea
+                placeholder="설명을 입력해주세요."
+                errMessage={errors.description?.message}
+                {...register('description')}
+                value={descriptionValue}
+              />
+            </div>
+          </div>
+        </div>
       </Modal>
     </>
   );
