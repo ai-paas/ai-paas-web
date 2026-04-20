@@ -73,11 +73,12 @@ export default function MemberEditPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 수정' }]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 수정' }]}
+          onNavigate={navigate}
+        />
+      </div>
 
       <div className="page-title-box">
         <h2 className="page-title">멤버 수정</h2>

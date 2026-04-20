@@ -11,11 +11,12 @@ export default function MemberManagementDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '사용자 상세' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '멤버 관리', path: '/member-management' }, { label: '사용자 상세' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">사용자 상세</h2>
         <div className="page-toolBox">

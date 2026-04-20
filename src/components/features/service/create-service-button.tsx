@@ -1,6 +1,5 @@
 import { Button, Input, Modal, Textarea } from '@innogrid/ui';
 import { useState, useCallback } from 'react';
-import styles from '@/pages/service/service.module.scss';
 import { useCreateService } from '@/hooks/service/services';
 
 interface ServiceState {
@@ -58,37 +57,24 @@ export const CreateServiceButton = () => {
           </Button>
         }
       >
-        <div className={styles.modalBox}>
-          <div className={styles.inputBox}>
-            <span>이름</span>
-            <Input
-              name="name"
-              size={{ width: '100%', height: '32px' }}
-              placeholder="이름을 입력해주세요."
-              value={service.name}
-              onChange={handleChange}
-            />
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name page-icon-requisite">이름</div>
+            <div className="page-input_item-data">
+              <Input placeholder="이름을 입력해주세요." />
+            </div>
           </div>
-
-          <div className={styles.inputBox}>
-            <span>설명</span>
-            <Textarea
-              name="description"
-              placeholder="설명을 입력해주세요."
-              value={service.description}
-              onChange={handleChange}
-            />
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Textarea value="" placeholder="설명을 입력해주세요." />
+            </div>
           </div>
-
-          <div className={styles.inputBox}>
-            <span>태그</span>
-            <Input
-              name="tags"
-              size={{ width: '100%', height: '32px' }}
-              placeholder="태그 내용을 입력해주세요."
-              value={service.tags}
-              onChange={handleChange}
-            />
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">태그</div>
+            <div className="page-input_item-data">
+              <Input placeholder="태그 내용을 입력해주세요." />
+            </div>
           </div>
         </div>
       </Modal>

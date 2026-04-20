@@ -60,15 +60,16 @@ export default function ModelCatalogDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '모델' },
-          { label: '모델 카탈로그', path: '/model/model-catalog' },
-          { label: model?.name ?? '' },
-        ]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[
+            { label: '모델' },
+            { label: '모델 카탈로그', path: '/model/model-catalog' },
+            { label: model?.name ?? '' },
+          ]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">모델 상세</h2>
       </div>

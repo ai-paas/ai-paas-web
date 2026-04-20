@@ -111,7 +111,9 @@ export default function CustomModelPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '모델' }, { label: '커스텀 모델' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '모델' }, { label: '커스텀 모델' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델</h2>
       </div>

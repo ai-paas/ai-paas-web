@@ -7,11 +7,12 @@ export default function DatasetCreatePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '데이터 셋', path: '/dataset' }, { label: '데이터 셋 생성' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '데이터 셋', path: '/dataset' }, { label: '데이터 셋 생성' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <DatasetForm />
     </main>
   );

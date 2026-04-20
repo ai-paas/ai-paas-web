@@ -24,7 +24,9 @@ export default function LearningPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '학습' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '학습' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">학습</h2>
       </div>

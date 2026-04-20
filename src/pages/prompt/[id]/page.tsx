@@ -13,11 +13,12 @@ export default function PromptDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '프롬프트', path: '/prompt' }, { label: prompt?.name || '' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '프롬프트', path: '/prompt' }, { label: prompt?.name || '' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">프롬프트 테스트</h2>
         <div className="page-toolBox">

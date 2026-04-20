@@ -67,10 +67,9 @@ export default function MonitoringPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 모니터' }, { label: '모니터링' }]}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 모니터' }, { label: '모니터링' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">모니터링</h2>
       </div>

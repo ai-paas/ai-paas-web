@@ -12,11 +12,12 @@ export default function DatasetDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '데이터 셋', path: '/dataset' }, { label: dataset?.name ?? '' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '데이터 셋', path: '/dataset' }, { label: dataset?.name ?? '' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋 상세</h2>
         <div className="page-toolBox">

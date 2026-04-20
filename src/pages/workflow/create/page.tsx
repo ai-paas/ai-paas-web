@@ -55,11 +55,12 @@ export default function WorkflowCreatePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 생성' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 생성' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className={styles.container}>
         <WorkflowEditor initialNodes={[]} initialEdges={[]} />
       </div>

@@ -161,15 +161,16 @@ export default function CustomModelCreateHuggingfacePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '모델' },
-          { label: '커스텀 모델', path: '/model/custom-model' },
-          { label: '커스텀 모델 생성' },
-        ]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[
+            { label: '모델' },
+            { label: '커스텀 모델', path: '/model/custom-model' },
+            { label: '커스텀 모델 생성' },
+          ]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델 생성 - 허깅페이스 연동</h2>
       </div>

@@ -9,7 +9,9 @@ const items = [{ label: '대시보드', path: '/dashboard' }];
 export default function DashboardPage() {
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={(path: string) => {}} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={items} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">대시보드</h2>
       </div>

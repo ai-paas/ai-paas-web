@@ -4,8 +4,8 @@ export type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE'
 export interface Workflow {
   id: number;
   surro_workflow_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
   created_by: string;
   name: string;
   description: string;

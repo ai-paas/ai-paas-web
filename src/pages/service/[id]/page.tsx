@@ -17,11 +17,12 @@ export default function ServiceDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '서비스', path: '/service' }, { label: '서비스 상세' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '서비스', path: '/service' }, { label: '서비스 상세' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">서비스 상세</h2>
         <div className="page-toolBox">

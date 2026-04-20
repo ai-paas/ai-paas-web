@@ -54,19 +54,19 @@ const columns = [
     id: 'task',
     header: '테스크',
     accessorFn: (row: ModelCatalog) => row.task,
-    size: 225,
+    size: 200,
   },
   {
     id: 'parameter',
     header: '파라미터',
     accessorFn: (row: ModelCatalog) => row.parameter,
-    size: 225,
+    size: 200,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: ModelCatalog) => row.created_by,
-    size: 225,
+    size: 200,
   },
   {
     id: 'created_at',
@@ -103,10 +103,9 @@ export default function ModelCatalogPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '모델' }, { label: '모델 카탈로그' }]}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '모델' }, { label: '모델 카탈로그' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">모델 카탈로그</h2>
       </div>
