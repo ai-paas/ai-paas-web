@@ -38,6 +38,14 @@ export interface GetDatasetsParams {
   search?: string;
 }
 
+export interface ValidateDatasetResponse {
+  is_valid: boolean;
+  message: string;
+  details: {
+    additionalProp1: object;
+  };
+}
+
 export interface CreateDatasetRequest {
   name: string;
   description: string;

@@ -41,13 +41,13 @@ const columns = [
     id: 'tags',
     header: '태그',
     accessorFn: (row: Service) => row.tags?.join(', '),
-    size: 325,
+    size: 280,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: Service) => row.created_by,
-    size: 325,
+    size: 280,
   },
   {
     id: 'description',
@@ -93,7 +93,9 @@ export default function ServicePage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '서비스' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '서비스' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">서비스</h2>
       </div>

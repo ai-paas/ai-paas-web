@@ -31,11 +31,12 @@ export default function LearningCreatePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '학습', path: '/learning' }, { label: '학습 생성' }]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '학습', path: '/learning' }, { label: '학습 생성' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>
       </div>

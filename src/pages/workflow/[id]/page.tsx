@@ -73,11 +73,12 @@ export default function WorkflowDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 상세' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 상세' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">워크플로우 상세</h2>
         <div className="page-toolBox">

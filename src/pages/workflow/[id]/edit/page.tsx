@@ -178,11 +178,9 @@ export default function WorkflowEditPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={items}
-        onNavigate={(path: string) => {}}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+      </div>
       <div className={styles.container}>
         <div className={styles.leftSearchBox}>
           <div className={styles.titleBox}>

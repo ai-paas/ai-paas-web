@@ -51,11 +51,12 @@ export default function PromptEditPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '프롬프트', path: '/prompt' }, { label: '프롬프트 생성' }]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '프롬프트', path: '/prompt' }, { label: '프롬프트 생성' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">프롬프트 생성</h2>
       </div>

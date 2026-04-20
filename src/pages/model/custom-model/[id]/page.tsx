@@ -80,15 +80,16 @@ export default function CustomModelDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '모델' },
-          { label: '커스텀 모델', path: '/model/custom-model' },
-          { label: model?.name ?? '' },
-        ]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[
+            { label: '모델' },
+            { label: '커스텀 모델', path: '/model/custom-model' },
+            { label: model?.name ?? '' },
+          ]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">모델 상세</h2>
         <div className="page-toolBox">

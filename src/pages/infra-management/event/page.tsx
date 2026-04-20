@@ -22,10 +22,9 @@ export default function EventPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 모니터' }, { label: '이벤트' }]}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 모니터' }, { label: '이벤트' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">이벤트</h2>
       </div>

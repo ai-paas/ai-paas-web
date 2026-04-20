@@ -21,11 +21,9 @@ const options = {
 export default function LearningAssignmentStep5Page() {
   return (
     <main>
-      <BreadCrumb
-        items={items}
-        onNavigate={(path: string) => {}}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>
       </div>

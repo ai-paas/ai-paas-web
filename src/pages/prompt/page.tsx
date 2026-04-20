@@ -39,7 +39,9 @@ export default function PromptPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '프롬프트' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '프롬프트' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">프롬프트</h2>
       </div>

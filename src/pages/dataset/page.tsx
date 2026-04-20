@@ -1,5 +1,6 @@
 import {
   BreadCrumb,
+  Button,
   CellCheckbox,
   HeaderCheckbox,
   SearchInput,
@@ -9,8 +10,7 @@ import {
   useTableSelection,
 } from '@innogrid/ui';
 import { useEffect, useMemo } from 'react';
-import { Link } from 'react-router';
-import { CreateDatasetButton } from '../../components/features/dataset/create-dataset-button';
+import { Link, useNavigate } from 'react-router';
 import { EditDatasetButton } from '../../components/features/dataset/edit-dataset-button';
 import { DeleteDatasetButton } from '../../components/features/dataset/delete-dataset-button';
 import { useGetDatasets } from '@/hooks/service/datasets';
@@ -57,6 +57,7 @@ const columns = [
 ];
 
 export default function DatasetPage() {
+  const navigate = useNavigate();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
@@ -82,24 +83,26 @@ export default function DatasetPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '데이터 셋' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '데이터 셋' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋</h2>
       </div>
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateDatasetButton />
-            <EditDatasetButton />
+            <Button size="medium" color="primary" onClick={() => navigate('/dataset/create')}>
+              생성
+            </Button>
+            <EditDatasetButton datasetId={selectedId} />
             <DeleteDatasetButton datasetId={selectedId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div>
+        <div className="h-[481px]">
           <Table
             columns={columns}
             data={datasets}

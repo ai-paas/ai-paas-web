@@ -153,7 +153,9 @@ export default function MemberManagementPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '멤버 관리' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '멤버 관리' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">멤버 관리</h2>
       </div>

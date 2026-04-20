@@ -106,15 +106,16 @@ export default function CustomModelCreatePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '모델' },
-          { label: '커스텀 모델', path: '/model/custom-model' },
-          { label: '커스텀 모델 생성' },
-        ]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[
+            { label: '모델' },
+            { label: '커스텀 모델', path: '/model/custom-model' },
+            { label: '커스텀 모델 생성' },
+          ]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델 생성</h2>
       </div>

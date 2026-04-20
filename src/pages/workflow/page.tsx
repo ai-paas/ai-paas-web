@@ -14,21 +14,23 @@ import { DeleteWorkflowButton } from '../../components/features/workflow/delete-
 import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
+import { formatDateTime } from '@/util/date';
+import type { Workflow } from '@/types/workflow';
 
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: Workflow }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: { original: Workflow } }) => <CellCheckbox row={row} />,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
-    size: 225,
-    cell: ({ row }) => (
+    accessorFn: (row: Workflow) => row.name,
+    size: 220,
+    cell: ({ row }: { row: { original: Workflow } }) => (
       <Link to={'/workflow/detail'} className="table-td-link">
         {row.original.name}
       </Link>
@@ -37,47 +39,47 @@ const columns = [
   {
     id: 'id',
     header: '워크플로우 ID',
-    accessorFn: (row) => row.tag,
-    size: 225,
+    accessorFn: (row: Workflow) => row.surro_workflow_id,
+    size: 280,
   },
   {
     id: 'creator',
     header: '생성자',
-    accessorFn: (row) => row.creator,
-    size: 225,
+    accessorFn: (row: Workflow) => row.created_by,
+    size: 150,
   },
   {
     id: 'service',
     header: '서비스',
-    accessorFn: (row) => row.desc,
-    size: 234,
+    accessorFn: (row: Workflow) => row.service_id,
+    size: 250,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'category',
     header: '카테고리',
-    accessorFn: (row) => row.date,
-    size: 225,
+    accessorFn: (row: Workflow) => row.category,
+    size: 150,
   },
   {
     id: 'state',
     header: '상태',
-    accessorFn: (row) => row.state,
-    size: 225,
-    cell: ({ row }) => (
-      <span className="table-td-state table-td-state-run">{row.original.state}</span>
+    accessorFn: (row: Workflow) => row.status,
+    size: 100,
+    cell: ({ row }: { row: { original: Workflow } }) => (
+      <span className="table-td-state table-td-state-run">{row.original.status}</span>
     ),
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row) => row.date,
-    size: 225,
+    accessorFn: (row: Workflow) => row.description,
+    size: 300,
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: Workflow) => formatDateTime(row.created_at),
     size: 225,
   },
 ];
@@ -100,7 +102,9 @@ export default function WorkflowPage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '워크플로우' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '워크플로우' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">워크플로우</h2>
       </div>

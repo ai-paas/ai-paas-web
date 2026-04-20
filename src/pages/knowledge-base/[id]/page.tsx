@@ -84,14 +84,15 @@ export default function KnowledgeBaseDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[
-          { label: '지식 베이스', path: '/knowledge-base' },
-          { label: knowledgeBase?.name ?? '' },
-        ]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[
+            { label: '지식 베이스', path: '/knowledge-base' },
+            { label: knowledgeBase?.name ?? '' },
+          ]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">지식 베이스 상세</h2>
         <div className="page-toolBox">

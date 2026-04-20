@@ -1,15 +1,32 @@
 import { useDeleteDataset } from '@/hooks/service/datasets';
-import { AlertDialog, Button } from '@innogrid/ui';
+import { AlertDialog, Button, useToast } from '@innogrid/ui';
 import { useState } from 'react';
 
 export const DeleteDatasetButton = ({ datasetId }: { datasetId?: number }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { deleteDataset } = useDeleteDataset();
+  const toast = useToast();
 
   const handleClickConfirm = () => {
     if (!datasetId) return;
 
-    deleteDataset(datasetId);
+    deleteDataset(datasetId, {
+      onSuccess: () => {
+        toast.open({
+          status: 'positive',
+          title: '데이터셋 삭제 성공',
+          children: '데이터셋이 성공적으로 삭제되었습니다.',
+        });
+        setIsOpen(false);
+      },
+      onError: () => {
+        toast.open({
+          status: 'negative',
+          title: '데이터셋 삭제 실패',
+          children: '데이터셋 삭제 중 오류가 발생했습니다.',
+        });
+      },
+    });
   };
 
   return (

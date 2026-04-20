@@ -42,7 +42,9 @@ export default function KnowledgeBasePage() {
 
   return (
     <main>
-      <BreadCrumb items={[{ label: '지식 베이스' }]} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '지식 베이스' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">지식 베이스</h2>
       </div>
@@ -116,7 +118,7 @@ const columns = [
     id: 'id',
     header: '유형',
     accessorFn: (row) => row.tag,
-    size: 225,
+    size: 200,
   },
   {
     id: 'created_by',
@@ -125,9 +127,9 @@ const columns = [
     size: 225,
   },
   {
-    id: 'service',
+    id: 'chunk_size',
     header: '용량',
-    accessorFn: (row) => row.service,
+    accessorFn: (row) => row.chunk_size,
     size: 271,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },

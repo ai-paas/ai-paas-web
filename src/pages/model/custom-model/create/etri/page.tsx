@@ -28,7 +28,9 @@ export default function CustomModelCreateEtriPage() {
 
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={(path: string) => {}} className="breadcrumbBox" />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델 생성 - ETRI 연동</h2>
       </div>

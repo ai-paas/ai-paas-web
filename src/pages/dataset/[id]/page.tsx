@@ -12,17 +12,18 @@ export default function DatasetDetailPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '데이터 셋', path: '/dataset' }, { label: dataset?.name ?? '' }]}
-        onNavigate={navigate}
-        className="breadcrumbBox"
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '데이터 셋', path: '/dataset' }, { label: dataset?.name ?? '' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">데이터 셋 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditDatasetButton />
-            <DeleteDatasetButton />
+            <EditDatasetButton datasetId={Number(id)} />
+            <DeleteDatasetButton datasetId={Number(id)} />
           </div>
         </div>
       </div>
@@ -51,8 +52,9 @@ export default function DatasetDetailPage() {
             <li>
               <div className="page-detail_item-name">버전 정보</div>
               <div className="page-detail_item-data">
-                {`${dataset?.version}${dataset?.subversion ? `.${dataset?.subversion}` : ''}` ||
-                  'N/A'}
+                {dataset?.version
+                  ? `${dataset.version}${dataset.subversion ? `.${dataset.subversion}` : ''}`
+                  : 'N/A'}
               </div>
             </li>
             <li>

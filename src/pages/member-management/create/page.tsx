@@ -92,11 +92,12 @@ export default function MemberCreatePage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 생성' }]}
-        className="breadcrumbBox"
-        onNavigate={navigate}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '멤버 관리', path: '/member-management' }, { label: '멤버 생성' }]}
+          onNavigate={navigate}
+        />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">멤버 생성</h2>
       </div>
