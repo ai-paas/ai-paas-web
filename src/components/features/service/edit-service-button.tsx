@@ -1,25 +1,36 @@
-import { Button, Input, Modal, Textarea } from '@innogrid/ui';
+import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
 import { useCallback, useEffect, useState } from 'react';
-import styles from '../../../pages/service/service.module.scss';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { useGetService, useUpdateService } from '@/hooks/service/services';
 
-interface ServiceFormData {
-  name: string;
-  description: string;
-  tags: string;
-}
+const schema = z.object({
+  name: z.string().min(1, '이름은 필수입니다.'),
+  description: z.string().optional(),
+  tags: z.string().optional(),
+});
 
-const INITIAL_FORM_DATA: ServiceFormData = {
-  name: '',
-  description: '',
-  tags: '',
-};
+type Schema = z.infer<typeof schema>;
 
 export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { service } = useGetService(serviceId, isModalOpen && !!serviceId);
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  const { updateService } = useUpdateService();
+  const { updateService, isPending } = useUpdateService();
+  const toast = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<Schema>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', description: '', tags: '' },
+  });
+
+  const descriptionValue = watch('description') ?? '';
 
   const openModal = useCallback(() => {
     if (!serviceId) return;
@@ -28,32 +39,47 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setFormData(INITIAL_FORM_DATA);
-  }, []);
+    reset({ name: '', description: '', tags: '' });
+  }, [reset]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = () => {
+  const onSubmit = (data: Schema) => {
     if (!serviceId) return;
-    updateService({
-      surro_service_id: serviceId,
-      ...formData,
-      tags: formData.tags.split(',').map((tag) => tag.trim()),
-    });
-    closeModal();
+    updateService(
+      {
+        surro_service_id: serviceId,
+        name: data.name,
+        description: data.description ?? '',
+        tags: data.tags ? data.tags.split(',').map((tag) => tag.trim()) : [],
+      },
+      {
+        onSuccess: () => {
+          toast.open({
+            status: 'positive',
+            title: '서비스 편집 성공',
+            children: '서비스가 성공적으로 편집되었습니다.',
+          });
+          closeModal();
+        },
+        onError: () => {
+          toast.open({
+            status: 'negative',
+            title: '서비스 편집 실패',
+            children: '서비스 편집 중 오류가 발생했습니다.',
+          });
+        },
+      }
+    );
   };
 
   useEffect(() => {
-    if (service) {
-      setFormData({
+    if (service && isModalOpen) {
+      reset({
         name: service.name,
-        description: service.description,
+        description: service.description ?? '',
         tags: service.tags?.join(', ') ?? '',
       });
     }
-  }, [service, isModalOpen]);
+  }, [service, isModalOpen, reset]);
 
   return (
     <>
@@ -63,41 +89,50 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
       <Modal
         allowOutsideInteraction
         isOpen={isModalOpen}
+        isButtonLoading={isPending}
+        buttonDisabled={isPending}
         size="small"
         title="서비스 편집"
         buttonTitle="확인"
         onRequestClose={closeModal}
-        action={handleSubmit}
+        action={handleSubmit(onSubmit)}
         subButton={
           <Button size="large" color="secondary" onClick={closeModal}>
             취소
           </Button>
         }
       >
-        <div className={styles.modalBox}>
-          <div className={styles.inputBox}>
-            <span>이름</span>
-            <Input
-              placeholder="이름을 입력해주세요."
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              size={{ width: '100%', height: '32px' }}
-            />
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name page-icon-requisite">이름</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="이름을 입력해주세요."
+                errMessage={errors.name?.message}
+                {...register('name')}
+              />
+            </div>
           </div>
-          <div className={styles.inputBox}>
-            <span>설명</span>
-            <Textarea name="description" value={formData.description} onChange={handleChange} />
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Textarea
+                placeholder="설명을 입력해주세요."
+                errMessage={errors.description?.message}
+                {...register('description')}
+                value={descriptionValue}
+              />
+            </div>
           </div>
-          <div className={styles.inputBox}>
-            <span>태그</span>
-            <Input
-              size={{ width: '100%', height: '32px' }}
-              placeholder="태그 내용을 입력해주세요."
-              name="tags"
-              value={formData.tags}
-              onChange={handleChange}
-            />
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">태그</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="태그 내용을 입력해주세요."
+                errMessage={errors.tags?.message}
+                {...register('tags')}
+              />
+            </div>
           </div>
         </div>
       </Modal>
