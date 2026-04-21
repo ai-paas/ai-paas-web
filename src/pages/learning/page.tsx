@@ -10,11 +10,11 @@ import {
   useTableSelection,
   type Sorting,
 } from '@innogrid/ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
-import { ModelRegisterButton } from '@/components/features/knowledge-base/model-register-button';
+import { ModelRegisterButton } from '@/components/features/learning/model-register-button';
 import { useGetLearnings } from '@/hooks/service/learning';
 import { formatDateTime } from '@/util/date';
 import type { Learning } from '@/types/learning';
@@ -29,6 +29,14 @@ export default function LearningPage() {
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
   });
+
+  const selectedExperimentId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    if (selectedRowKeys.length !== 1) return;
+
+    return learnings[parseInt(selectedRowKeys[0])]?.id;
+  }, [rowSelection, learnings]);
 
   useEffect(() => {
     if (searchValue) {
@@ -52,7 +60,7 @@ export default function LearningPage() {
             </Button>
             <EditLearningButton />
             <DeleteLearningButton />
-            <ModelRegisterButton />
+            <ModelRegisterButton experimentId={selectedExperimentId} />
           </div>
           <div>
             <div>
