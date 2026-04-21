@@ -1,5 +1,6 @@
 import {
   BreadCrumb,
+  Button,
   CellCheckbox,
   HeaderCheckbox,
   SearchInput,
@@ -10,17 +11,22 @@ import {
   type Sorting,
 } from '@innogrid/ui';
 import { useState } from 'react';
-import { Link } from 'react-router';
-import { CreateLearningButton } from '../../components/features/learning/create-learning-button';
+import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
 import { ModelRegisterButton } from '@/components/features/knowledge-base/model-register-button';
+import { useGetLearnings } from '@/hooks/service/learning';
+import { formatDateTime } from '@/util/date';
+import type { Learning } from '@/types/learning';
 
 export default function LearningPage() {
+  const navigate = useNavigate();
   const { searchValue, ...restProps } = useSearchInputState();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const { learnings, isPending, isError } = useGetLearnings({ skip: 0, limit: 1000 });
 
   return (
     <main>
@@ -33,7 +39,9 @@ export default function LearningPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateLearningButton />
+            <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
+              생성
+            </Button>
             <EditLearningButton />
             <DeleteLearningButton />
             <ModelRegisterButton />
@@ -49,8 +57,11 @@ export default function LearningPage() {
             useClientPagination
             useMultiSelect
             columns={columns}
-            data={data}
-            totalCount={data.length}
+            data={learnings}
+            totalCount={learnings.length}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptyMessage={isError ? '학습 목록을 불러오는 데 실패했습니다.' : '학습이 없습니다.'}
             pagination={pagination}
             setPagination={setPagination}
             rowSelection={rowSelection}
@@ -68,17 +79,17 @@ const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    header: ({ table }: { table: Learning }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: Learning }) => <CellCheckbox row={row} />,
+    enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: Learning) => row.name,
     size: 225,
-    cell: ({ row }) => (
-      <Link to={'/learning/test'} className="table-td-link">
+    cell: ({ row }: { row: { original: Learning } }) => (
+      <Link to={`/learning/${row.original.id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -86,136 +97,50 @@ const columns = [
   {
     id: 'id',
     header: 'ID',
-    accessorFn: (row) => row.id,
+    accessorFn: (row: Learning) => row.id,
     size: 170,
   },
   {
-    id: 'creator',
-    header: '생성자',
-    accessorFn: (row) => row.creator,
-    size: 170,
-  },
-  {
-    id: 'type',
-    header: '모델 타입',
-    accessorFn: (row) => row.type,
+    id: 'reference_model',
+    header: '참조 모델',
+    accessorFn: (row: Learning) => row.reference_model?.name,
     size: 200,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    enableSorting: false,
   },
   {
-    id: 'register',
+    id: 'registration_status',
     header: '모델 등록',
-    accessorFn: (row) => row.register,
+    accessorFn: (row: Learning) => row.registration_status,
     size: 170,
-    cell: ({ row }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
+    cell: ({ row }: { row: { original: Learning } }) => (
+      <span className="table-td-state table-td-state-run">{row.original.registration_status}</span>
     ),
   },
   {
     id: 'status',
     header: '상태',
-    accessorFn: (row) => row.status,
+    accessorFn: (row: Learning) => row.status,
     size: 170,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: Learning } }) => (
       <span className="table-td-state table-td-state-run">{row.original.status}</span>
     ),
   },
   {
-    id: 'desc',
+    id: 'description',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: Learning) => row.description,
     size: 225,
   },
   {
-    id: 'elapsed',
+    id: 'elapsed_time',
     header: '경과 시간',
-    accessorFn: (row) => row.elapsed,
+    accessorFn: (row: Learning) => row.elapsed_time,
     size: 200,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: Learning) => formatDateTime(row.created_at),
     size: 225,
-  },
-];
-
-const data = [
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
   },
 ];
