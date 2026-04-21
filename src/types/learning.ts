@@ -1,6 +1,6 @@
 export interface GetLearningParams {
-  skip?: number;
-  limit?: number;
+  page?: number;
+  size?: number;
 }
 
 export interface LearningRefSummary {
@@ -12,13 +12,11 @@ export interface Learning {
   id: number;
   name: string;
   description?: string;
-  reference_model_id: number;
-  dataset_id: number;
   status: string;
   registration_status: string;
-  registered_model_id: number;
+  registered_model_id: number | null;
   elapsed_time: number;
-  end_time: string;
+  end_time: string | null;
   reference_model: LearningRefSummary;
   dataset: LearningRefSummary;
   created_at: string;

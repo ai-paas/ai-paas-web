@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
+import type { Page } from '@/types/api';
 import type {
   GetLearningParams,
   Learning,
@@ -18,11 +19,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export const useGetLearnings = (params: GetLearningParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.learning.list(params),
-    queryFn: () => api.get<Learning[]>('learning', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<Page<Learning>>('learning', { searchParams: { ...params } }).json(),
   });
 
   return {
-    learnings: data ?? [],
+    learnings: data?.data ?? [],
+    page: {
+      number: data?.page ?? 1,
+      size: data?.size ?? 1,
+      total: data?.total ?? 1,
+    },
     isPending,
     isError,
   };

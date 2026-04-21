@@ -10,7 +10,7 @@ import {
   useTableSelection,
   type Sorting,
 } from '@innogrid/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
@@ -23,10 +23,18 @@ export default function LearningPage() {
   const navigate = useNavigate();
   const { searchValue, ...restProps } = useSearchInputState();
   const { setRowSelection, rowSelection } = useTableSelection();
-  const { pagination, setPagination } = useTablePagination();
+  const { pagination, setPagination, initializePagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const { learnings, page, isPending, isError } = useGetLearnings({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+  });
 
-  const { learnings, isPending, isError } = useGetLearnings({ skip: 0, limit: 1000 });
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
 
   return (
     <main>
@@ -52,13 +60,12 @@ export default function LearningPage() {
             </div>
           </div>
         </div>
-        <div>
+        <div className="h-[481px]">
           <Table
-            useClientPagination
             useMultiSelect
             columns={columns}
             data={learnings}
-            totalCount={learnings.length}
+            totalCount={page.total}
             isLoading={isPending}
             globalFilter={searchValue}
             emptyMessage={isError ? '학습 목록을 불러오는 데 실패했습니다.' : '학습이 없습니다.'}
