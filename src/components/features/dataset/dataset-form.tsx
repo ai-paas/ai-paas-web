@@ -35,7 +35,6 @@ export const DatasetForm = () => {
     register,
     handleSubmit,
     setValue,
-    resetField,
     watch,
     setError,
     clearErrors,
@@ -55,13 +54,13 @@ export const DatasetForm = () => {
       file.type === 'application/x-zip-compressed';
     if (!isZip) {
       setError('file', { type: 'manual', message: 'zip 파일만 업로드 가능합니다.' });
-      resetField('file');
+      setValue('file', undefined as unknown as File, { shouldValidate: false });
       resetFileInput();
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
       setError('file', { type: 'manual', message: '파일 크기는 50MB 이하여야 합니다.' });
-      resetField('file');
+      setValue('file', undefined as unknown as File, { shouldValidate: false });
       resetFileInput();
       return;
     }
@@ -73,7 +72,7 @@ export const DatasetForm = () => {
 
       if (!response.is_valid) {
         setError('file', { type: 'manual', message: '유효하지 않은 데이터셋 구조입니다.' });
-        resetField('file');
+        setValue('file', undefined as unknown as File, { shouldValidate: false });
         resetFileInput();
         return;
       }
@@ -82,7 +81,7 @@ export const DatasetForm = () => {
       setValue('file', file, { shouldValidate: true });
     } catch {
       setError('file', { type: 'manual', message: '파일 검증 중 서버 오류가 발생했습니다.' });
-      resetField('file');
+      setValue('file', undefined as unknown as File, { shouldValidate: false });
       resetFileInput();
     }
   };
@@ -202,7 +201,7 @@ export const DatasetForm = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        resetField('file');
+                        setValue('file', undefined as unknown as File, { shouldValidate: false });
                         clearErrors('file');
                         resetFileInput();
                       }}
