@@ -10,6 +10,14 @@ export function formatDateTime(dateString?: string): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+export function formatElapsed(seconds?: number): string {
+  if (seconds === undefined || seconds === null || seconds < 0) return '-';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return [h, m, s].map((v) => v.toString().padStart(2, '0')).join(':');
+}
+
 export function formatRelativeTime(dateString?: string): string {
   if (!dateString) return '';
 

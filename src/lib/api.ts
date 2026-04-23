@@ -86,6 +86,31 @@ export const api = ky.create({
         }
       },
     ],
+    beforeError: [
+      async (error) => {
+        try {
+          const body = (await error.response.clone().json()) as { detail?: unknown };
+          if (typeof body.detail === 'string') {
+            const jsonStart = body.detail.indexOf('{');
+            let message = body.detail;
+            if (jsonStart !== -1) {
+              try {
+                const parsed = JSON.parse(body.detail.slice(jsonStart)) as {
+                  detail?: unknown;
+                };
+                if (typeof parsed.detail === 'string') message = parsed.detail;
+              } catch {
+                // fall through to raw detail
+              }
+            }
+            error.message = message;
+          }
+        } catch {
+          // keep original error
+        }
+        return error;
+      },
+    ],
     afterResponse: [
       async (request, _options, response) => {
         if (response.status !== 401 || shouldSkipRefresh(request)) {

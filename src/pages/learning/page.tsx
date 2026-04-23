@@ -1,5 +1,6 @@
 import {
   BreadCrumb,
+  Button,
   CellCheckbox,
   HeaderCheckbox,
   SearchInput,
@@ -7,20 +8,132 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting,
 } from '@innogrid/ui';
-import { useState } from 'react';
-import { Link } from 'react-router';
-import { CreateLearningButton } from '../../components/features/learning/create-learning-button';
+import { useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
-import { ModelRegisterButton } from '@/components/features/knowledge-base/model-register-button';
+import { ModelRegisterButton } from '@/components/features/learning/model-register-button';
+import { useGetLearnings } from '@/hooks/service/learning';
+import { formatDateTime, formatElapsed } from '@/util/date';
+import type { Learning } from '@/types/learning';
+
+function getLearningStatusDisplay(status?: string): { label: string; className: string } {
+  if (!status) return { label: '-', className: 'table-td-state-temp' };
+  if (/fail|error/i.test(status)) return { label: '실패', className: 'table-td-state-negative' };
+  if (/complete|success|finish|done/i.test(status))
+    return { label: '완료', className: 'table-td-state-run' };
+  return { label: '학습중', className: 'table-td-state-ing' };
+}
+
+function getRegistrationStatusDisplay(status?: string): { label: string; className: string } {
+  switch (status) {
+    case 'PIPELINE_SUBMITTED':
+      return { label: '등록 요청됨', className: 'table-td-state-ing' };
+    case 'FAILED':
+      return { label: '실패', className: 'table-td-state-negative' };
+    case 'NOT_REQUESTED':
+      return { label: '미요청', className: 'table-td-state-temp' };
+    default:
+      return { label: status ?? '-', className: 'table-td-state-temp' };
+  }
+}
+
+const columns = [
+  {
+    id: 'select',
+    size: 30,
+    header: ({ table }: { table: Learning }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: Learning }) => <CellCheckbox row={row} />,
+    enableSorting: false,
+  },
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row: Learning) => row.name,
+    size: 225,
+    cell: ({ row }: { row: { original: Learning } }) => (
+      <Link to={`/learning/${row.original.id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
+  },
+  {
+    id: 'id',
+    header: 'ID',
+    accessorFn: (row: Learning) => row.id,
+    size: 170,
+  },
+  {
+    id: 'reference_model',
+    header: '참조 모델',
+    accessorFn: (row: Learning) => row.reference_model?.name,
+    size: 200,
+  },
+  {
+    id: 'registration_status',
+    header: '모델 등록',
+    accessorFn: (row: Learning) => row.registration_status,
+    size: 170,
+    cell: ({ row }: { row: { original: Learning } }) => {
+      const { label, className } = getRegistrationStatusDisplay(row.original.registration_status);
+      return <span className={`table-td-state ${className}`}>{label}</span>;
+    },
+  },
+  {
+    id: 'status',
+    header: '상태',
+    accessorFn: (row: Learning) => row.status,
+    size: 170,
+    cell: ({ row }: { row: { original: Learning } }) => {
+      const { label, className } = getLearningStatusDisplay(row.original.status);
+      return <span className={`table-td-state ${className}`}>{label}</span>;
+    },
+  },
+  {
+    id: 'description',
+    header: '설명',
+    accessorFn: (row: Learning) => row.description,
+    size: 225,
+  },
+  {
+    id: 'elapsed_time',
+    header: '경과 시간',
+    accessorFn: (row: Learning) => formatElapsed(row.elapsed_time),
+    size: 200,
+  },
+  {
+    id: 'created_at',
+    header: '생성일시',
+    accessorFn: (row: Learning) => formatDateTime(row.created_at),
+    size: 225,
+  },
+];
 
 export default function LearningPage() {
+  const navigate = useNavigate();
   const { searchValue, ...restProps } = useSearchInputState();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const { pagination, setPagination, initializePagination } = useTablePagination();
+  const { rowSelection, setRowSelection } = useTableSelection();
+  const { learnings, page, isPending, isError } = useGetLearnings({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+  });
+
+  const selectedExperimentId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    if (selectedRowKeys.length !== 1) return;
+
+    return learnings[parseInt(selectedRowKeys[0])]?.id;
+  }, [rowSelection, learnings]);
+
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
 
   return (
     <main>
@@ -33,189 +146,47 @@ export default function LearningPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <CreateLearningButton />
-            <EditLearningButton />
-            <DeleteLearningButton />
-            <ModelRegisterButton />
+            <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
+              생성
+            </Button>
+            <EditLearningButton experimentId={selectedExperimentId} />
+            <DeleteLearningButton experimentId={selectedExperimentId} />
+            <ModelRegisterButton experimentId={selectedExperimentId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div>
+        <div className="h-[481px]">
           <Table
-            useClientPagination
-            useMultiSelect
             columns={columns}
-            data={data}
-            totalCount={data.length}
+            data={learnings}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
+              </div>
+            }
+            emptyMessage={
+              isError ? (
+                '학습 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>학습이 없습니다.</div>
+                  <div>생성 버튼을 클릭해 학습을 생성해 보세요.</div>
+                </div>
+              )
+            }
+            totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            setSorting={setSorting}
-            sorting={sorting}
           />
         </div>
       </div>
     </main>
   );
 }
-
-const columns = [
-  {
-    id: 'select',
-    size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
-  },
-  {
-    id: 'name',
-    header: '이름',
-    accessorFn: (row) => row.name,
-    size: 225,
-    cell: ({ row }) => (
-      <Link to={'/learning/test'} className="table-td-link">
-        {row.original.name}
-      </Link>
-    ),
-  },
-  {
-    id: 'id',
-    header: 'ID',
-    accessorFn: (row) => row.id,
-    size: 170,
-  },
-  {
-    id: 'creator',
-    header: '생성자',
-    accessorFn: (row) => row.creator,
-    size: 170,
-  },
-  {
-    id: 'type',
-    header: '모델 타입',
-    accessorFn: (row) => row.type,
-    size: 200,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
-  },
-  {
-    id: 'register',
-    header: '모델 등록',
-    accessorFn: (row) => row.register,
-    size: 170,
-    cell: ({ row }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
-  },
-  {
-    id: 'status',
-    header: '상태',
-    accessorFn: (row) => row.status,
-    size: 170,
-    cell: ({ row }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
-  },
-  {
-    id: 'desc',
-    header: '설명',
-    accessorFn: (row) => row.desc,
-    size: 225,
-  },
-  {
-    id: 'elapsed',
-    header: '경과 시간',
-    accessorFn: (row) => row.elapsed,
-    size: 200,
-  },
-  {
-    id: 'date',
-    header: '생성일시',
-    accessorFn: (row) => row.date,
-    size: 225,
-  },
-];
-
-const data = [
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-  {
-    name: '테스트 학습 001',
-    id: 'ID Sample',
-    creator: '사용자 001',
-    type: 'Custom',
-    register: '완료',
-    status: '완료',
-    desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-    elapsed: '02:45:00',
-    date: '2025-12-31 10:12',
-  },
-];
