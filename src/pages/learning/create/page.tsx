@@ -415,6 +415,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Epochs</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Epochs 값을 입력해주세요."
               errMessage={errors.epochs?.message}
               {...register('epochs')}
@@ -425,6 +426,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Batch</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Batch 값을 입력해주세요."
               errMessage={errors.batch_size?.message}
               {...register('batch_size')}
@@ -435,6 +437,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Save period</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Save period 값을 입력해주세요."
               errMessage={errors.save_period?.message}
               {...register('save_period')}
@@ -465,6 +468,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Lr0</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.01"
               placeholder="Lr0 값을 입력해주세요."
               errMessage={errors.lr0?.message}
               {...register('lr0')}
@@ -475,6 +480,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Lrf</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.01"
               placeholder="Lrf 값을 입력해주세요."
               errMessage={errors.lrf?.message}
               {...register('lrf')}
@@ -485,6 +492,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Weight decay</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.0001"
               placeholder="Weight decay 값을 입력해주세요."
               errMessage={errors.weight_decay?.message}
               {...register('weight_decay')}
