@@ -1,9 +1,128 @@
-import { Button } from '@innogrid/ui';
+import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
+import { useCallback, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useGetKnowledgeBase, useUpdateKnowledgeBase } from '@/hooks/service/knowledgebase';
+
+const schema = z.object({
+  name: z.string().min(1, '이름은 필수입니다.'),
+  description: z.string().optional(),
+});
+
+type Schema = z.infer<typeof schema>;
 
 export const EditKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId?: number }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { knowledgeBase } = useGetKnowledgeBase(knowledgeBaseId);
+  const { updateKnowledgeBase, isPending } = useUpdateKnowledgeBase();
+  const toast = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<Schema>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', description: '' },
+  });
+
+  const descriptionValue = watch('description') ?? '';
+
+  const openModal = useCallback(() => {
+    if (!knowledgeBaseId) return;
+    setIsModalOpen(true);
+  }, [knowledgeBaseId]);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    reset({ name: '', description: '' });
+  }, [reset]);
+
+  const onSubmit = (data: Schema) => {
+    if (!knowledgeBaseId) return;
+    updateKnowledgeBase(
+      {
+        surro_knowledge_id: knowledgeBaseId,
+        name: data.name,
+        description: data.description,
+      },
+      {
+        onSuccess: () => {
+          toast.open({
+            status: 'positive',
+            title: '지식베이스 편집 성공',
+            children: '지식베이스가 성공적으로 편집되었습니다.',
+          });
+          closeModal();
+        },
+        onError: () => {
+          toast.open({
+            status: 'negative',
+            title: '지식베이스 편집 실패',
+            children: '지식베이스 편집 중 오류가 발생했습니다.',
+          });
+        },
+      }
+    );
+  };
+
+  useEffect(() => {
+    if (knowledgeBase && isModalOpen) {
+      reset({
+        name: knowledgeBase.name,
+        description: knowledgeBase.description ?? '',
+      });
+    }
+  }, [knowledgeBase, isModalOpen, reset]);
+
   return (
-    <Button size="medium" color="secondary" disabled={!knowledgeBaseId}>
-      편집
-    </Button>
+    <>
+      <Button size="medium" color="secondary" disabled={!knowledgeBaseId} onClick={openModal}>
+        편집
+      </Button>
+      <Modal
+        allowOutsideInteraction
+        isOpen={isModalOpen}
+        isButtonLoading={isPending}
+        buttonDisabled={isPending}
+        size="small"
+        title="지식베이스 편집"
+        buttonTitle="확인"
+        onRequestClose={closeModal}
+        action={handleSubmit(onSubmit)}
+        subButton={
+          <Button size="large" color="secondary" onClick={closeModal}>
+            취소
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name page-icon-requisite">이름</div>
+            <div className="page-input_item-data">
+              <Input
+                placeholder="이름을 입력해주세요."
+                errMessage={errors.name?.message}
+                {...register('name')}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <div className="page-input_item-name">설명</div>
+            <div className="page-input_item-data">
+              <Textarea
+                placeholder="설명을 입력해주세요."
+                errMessage={errors.description?.message}
+                {...register('description')}
+                value={descriptionValue}
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
