@@ -1,9 +1,10 @@
-import { BreadCrumb, Button } from '@innogrid/ui';
+import { BreadCrumb } from '@innogrid/ui';
 import { IconChkGreen, IconErrRed } from '../../../assets/img/icon';
 import styles from '../learning.module.scss';
 import { useNavigate, useParams } from 'react-router';
 import { EditLearningButton } from '../../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../../components/features/learning/delete-learning-button';
+import { ModelRegisterButton } from '../../../components/features/learning/model-register-button';
 import { useGetLearning } from '@/hooks/service/learning';
 import { formatDateTime, formatElapsed } from '@/util/date';
 import {
@@ -49,11 +50,9 @@ export default function LearningDetailPage() {
         <h2 className="page-title">학습 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditLearningButton />
-            <DeleteLearningButton />
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="primary">
-              모델 등록
-            </Button>
+            <EditLearningButton experimentId={Number(id)} />
+            <DeleteLearningButton experimentId={Number(id)} />
+            <ModelRegisterButton experimentId={Number(id)} />
           </div>
         </div>
       </div>

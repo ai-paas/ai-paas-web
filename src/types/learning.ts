@@ -1,6 +1,7 @@
 export interface GetLearningParams {
   page?: number;
   size?: number;
+  search?: string;
 }
 
 export interface LearningRefSummary {

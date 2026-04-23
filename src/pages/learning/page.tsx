@@ -8,9 +8,8 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting,
 } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
@@ -18,76 +17,6 @@ import { ModelRegisterButton } from '@/components/features/learning/model-regist
 import { useGetLearnings } from '@/hooks/service/learning';
 import { formatDateTime, formatElapsed } from '@/util/date';
 import type { Learning } from '@/types/learning';
-
-export default function LearningPage() {
-  const navigate = useNavigate();
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
-  const { learnings, page, isPending, isError } = useGetLearnings({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-  });
-
-  const selectedExperimentId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return learnings[parseInt(selectedRowKeys[0])]?.id;
-  }, [rowSelection, learnings]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
-
-  return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '학습' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">학습</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
-              생성
-            </Button>
-            <EditLearningButton experimentId={selectedExperimentId} />
-            <DeleteLearningButton experimentId={selectedExperimentId} />
-            <ModelRegisterButton experimentId={selectedExperimentId} />
-          </div>
-          <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
-          </div>
-        </div>
-        <div className="h-[481px]">
-          <Table
-            columns={columns}
-            data={learnings}
-            totalCount={page.total}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptyMessage={isError ? '학습 목록을 불러오는 데 실패했습니다.' : '학습이 없습니다.'}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            setSorting={setSorting}
-            sorting={sorting}
-          />
-        </div>
-      </div>
-    </main>
-  );
-}
 
 function getLearningStatusDisplay(status?: string): { label: string; className: string } {
   if (!status) return { label: '-', className: 'table-td-state-temp' };
@@ -98,9 +27,16 @@ function getLearningStatusDisplay(status?: string): { label: string; className: 
 }
 
 function getRegistrationStatusDisplay(status?: string): { label: string; className: string } {
-  if (status === 'PIPELINE_SUBMITTED')
-    return { label: '완료', className: 'table-td-state-run' };
-  return { label: '비완료', className: 'table-td-state-temp' };
+  switch (status) {
+    case 'PIPELINE_SUBMITTED':
+      return { label: '등록 요청됨', className: 'table-td-state-ing' };
+    case 'FAILED':
+      return { label: '실패', className: 'table-td-state-negative' };
+    case 'NOT_REQUESTED':
+      return { label: '미요청', className: 'table-td-state-temp' };
+    default:
+      return { label: status ?? '-', className: 'table-td-state-temp' };
+  }
 }
 
 const columns = [
@@ -133,7 +69,6 @@ const columns = [
     header: '참조 모델',
     accessorFn: (row: Learning) => row.reference_model?.name,
     size: 200,
-    enableSorting: false,
   },
   {
     id: 'registration_status',
@@ -174,3 +109,84 @@ const columns = [
     size: 225,
   },
 ];
+
+export default function LearningPage() {
+  const navigate = useNavigate();
+  const { searchValue, ...restProps } = useSearchInputState();
+  const { pagination, setPagination, initializePagination } = useTablePagination();
+  const { rowSelection, setRowSelection } = useTableSelection();
+  const { learnings, page, isPending, isError } = useGetLearnings({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+  });
+
+  const selectedExperimentId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    if (selectedRowKeys.length !== 1) return;
+
+    return learnings[parseInt(selectedRowKeys[0])]?.id;
+  }, [rowSelection, learnings]);
+
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
+
+  return (
+    <main>
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '학습' }]} />
+      </div>
+      <div className="page-title-box">
+        <h2 className="page-title">학습</h2>
+      </div>
+      <div className="page-content">
+        <div className="page-toolBox">
+          <div className="page-toolBox-btns">
+            <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
+              생성
+            </Button>
+            <EditLearningButton experimentId={selectedExperimentId} />
+            <DeleteLearningButton experimentId={selectedExperimentId} />
+            <ModelRegisterButton experimentId={selectedExperimentId} />
+          </div>
+          <div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
+          </div>
+        </div>
+        <div className="h-[481px]">
+          <Table
+            columns={columns}
+            data={learnings}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
+              </div>
+            }
+            emptyMessage={
+              isError ? (
+                '학습 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>학습이 없습니다.</div>
+                  <div>생성 버튼을 클릭해 학습을 생성해 보세요.</div>
+                </div>
+              )
+            }
+            totalCount={page.total}
+            pagination={pagination}
+            setPagination={setPagination}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+          />
+        </div>
+      </div>
+    </main>
+  );
+}
