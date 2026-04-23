@@ -16,7 +16,7 @@ import { EditLearningButton } from '../../components/features/learning/edit-lear
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
 import { ModelRegisterButton } from '@/components/features/learning/model-register-button';
 import { useGetLearnings } from '@/hooks/service/learning';
-import { formatDateTime } from '@/util/date';
+import { formatDateTime, formatElapsed } from '@/util/date';
 import type { Learning } from '@/types/learning';
 
 export default function LearningPage() {
@@ -58,8 +58,8 @@ export default function LearningPage() {
             <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
               생성
             </Button>
-            <EditLearningButton />
-            <DeleteLearningButton />
+            <EditLearningButton experimentId={selectedExperimentId} />
+            <DeleteLearningButton experimentId={selectedExperimentId} />
             <ModelRegisterButton experimentId={selectedExperimentId} />
           </div>
           <div>
@@ -70,7 +70,6 @@ export default function LearningPage() {
         </div>
         <div className="h-[481px]">
           <Table
-            useMultiSelect
             columns={columns}
             data={learnings}
             totalCount={page.total}
@@ -88,6 +87,20 @@ export default function LearningPage() {
       </div>
     </main>
   );
+}
+
+function getLearningStatusDisplay(status?: string): { label: string; className: string } {
+  if (!status) return { label: '-', className: 'table-td-state-temp' };
+  if (/fail|error/i.test(status)) return { label: '실패', className: 'table-td-state-negative' };
+  if (/complete|success|finish|done/i.test(status))
+    return { label: '완료', className: 'table-td-state-run' };
+  return { label: '학습중', className: 'table-td-state-ing' };
+}
+
+function getRegistrationStatusDisplay(status?: string): { label: string; className: string } {
+  if (status === 'PIPELINE_SUBMITTED')
+    return { label: '완료', className: 'table-td-state-run' };
+  return { label: '비완료', className: 'table-td-state-temp' };
 }
 
 const columns = [
@@ -127,18 +140,20 @@ const columns = [
     header: '모델 등록',
     accessorFn: (row: Learning) => row.registration_status,
     size: 170,
-    cell: ({ row }: { row: { original: Learning } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.registration_status}</span>
-    ),
+    cell: ({ row }: { row: { original: Learning } }) => {
+      const { label, className } = getRegistrationStatusDisplay(row.original.registration_status);
+      return <span className={`table-td-state ${className}`}>{label}</span>;
+    },
   },
   {
     id: 'status',
     header: '상태',
     accessorFn: (row: Learning) => row.status,
     size: 170,
-    cell: ({ row }: { row: { original: Learning } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
+    cell: ({ row }: { row: { original: Learning } }) => {
+      const { label, className } = getLearningStatusDisplay(row.original.status);
+      return <span className={`table-td-state ${className}`}>{label}</span>;
+    },
   },
   {
     id: 'description',
@@ -149,7 +164,7 @@ const columns = [
   {
     id: 'elapsed_time',
     header: '경과 시간',
-    accessorFn: (row: Learning) => row.elapsed_time,
+    accessorFn: (row: Learning) => formatElapsed(row.elapsed_time),
     size: 200,
   },
   {
