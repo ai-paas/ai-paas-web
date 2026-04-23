@@ -14,7 +14,7 @@ type Schema = z.infer<typeof schema>;
 
 export const EditKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { knowledgeBase } = useGetKnowledgeBase(knowledgeBaseId ?? 0);
+  const { knowledgeBase } = useGetKnowledgeBase(knowledgeBaseId);
   const { updateKnowledgeBase, isPending } = useUpdateKnowledgeBase();
   const toast = useToast();
 
