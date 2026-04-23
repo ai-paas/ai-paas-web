@@ -55,11 +55,13 @@ export const DatasetForm = () => {
       file.type === 'application/x-zip-compressed';
     if (!isZip) {
       setError('file', { type: 'manual', message: 'zip 파일만 업로드 가능합니다.' });
+      resetField('file');
       resetFileInput();
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
       setError('file', { type: 'manual', message: '파일 크기는 50MB 이하여야 합니다.' });
+      resetField('file');
       resetFileInput();
       return;
     }
@@ -80,6 +82,7 @@ export const DatasetForm = () => {
       setValue('file', file, { shouldValidate: true });
     } catch {
       setError('file', { type: 'manual', message: '파일 검증 중 서버 오류가 발생했습니다.' });
+      resetField('file');
       resetFileInput();
     }
   };
@@ -199,11 +202,9 @@ export const DatasetForm = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setValue('file', undefined as unknown as File, {
-                          shouldValidate: false,
-                        });
+                        resetField('file');
                         clearErrors('file');
-                        if (fileInputRef.current) fileInputRef.current.value = '';
+                        resetFileInput();
                       }}
                       className="flex size-7 items-center justify-center fill-gray-600 hover:fill-[#dc4646]"
                     >
