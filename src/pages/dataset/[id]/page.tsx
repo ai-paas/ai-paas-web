@@ -23,7 +23,7 @@ export default function DatasetDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditDatasetButton datasetId={Number(id)} />
-            <DeleteDatasetButton datasetId={Number(id)} />
+            <DeleteDatasetButton datasetId={Number(id)} redirect="/dataset" />
           </div>
         </div>
       </div>
