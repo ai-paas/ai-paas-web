@@ -108,7 +108,7 @@ export default function LearningDetailPage() {
         <div className="page-content-detail-col2">
           <div className="page-content-detail-row2">
             <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-name">Accutacy</div>
+              <div className="page-detail-round-name">Accuracy</div>
               <div className="page-detail-round-data page-h-75">
                 <em>{formatMetric(learning?.accuracy, '%')}</em>
               </div>
@@ -163,9 +163,7 @@ export default function LearningDetailPage() {
                         dataKey="epoch"
                         label={{ value: 'Epoch', position: 'insideBottom', offset: -5 }}
                       />
-                      <YAxis
-                        label={{ value: 'Loss', angle: -90, position: 'insideLeft' }}
-                      />
+                      <YAxis label={{ value: 'Loss', angle: -90, position: 'insideLeft' }} />
                       <Tooltip />
                       <Line
                         type="monotone"
