@@ -30,6 +30,8 @@ function getRegistrationStatusDisplay(status?: string): { label: string; classNa
   switch (status) {
     case 'PIPELINE_SUBMITTED':
       return { label: '등록 요청됨', className: 'table-td-state-ing' };
+    case 'SUCCESS':
+      return { label: '등록 완료', className: 'table-td-state-run' };
     case 'FAILED':
       return { label: '실패', className: 'table-td-state-negative' };
     case 'NOT_REQUESTED':

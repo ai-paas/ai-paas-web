@@ -1,5 +1,5 @@
-import { IconDocument, IconFileUp } from '@/assets/img/icon';
-import { useGetDatasets, useValidateDataset } from '@/hooks/service/datasets';
+import { IconDel, IconFileUp } from '@/assets/img/icon';
+import { useCreateDataset, useGetDatasets, useValidateDataset } from '@/hooks/service/datasets';
 import { useSubmitTraining } from '@/hooks/service/learning';
 import { useGetModels } from '@/hooks/service/models';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,12 +9,13 @@ import {
   Button,
   Input,
   RadioButton,
+  RadioGroupButton,
   Select,
   Stepper,
   Textarea,
   useToast,
 } from '@innogrid/ui';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   Controller,
   FormProvider,
@@ -29,7 +30,8 @@ import * as z from 'zod';
 const schema = z.object({
   train_name: z.string().min(1, '이름은 필수입니다.'),
   description: z.string().optional(),
-  dataset_id: z.number({ error: '데이터 셋을 선택해주세요.' }),
+  source_type: z.enum(['upload', 'select']),
+  dataset_id: z.number({ error: '데이터 셋을 선택해주세요.' }).optional(),
   model_id: z.number({ error: '모델을 선택해주세요.' }),
   epochs: z.string().min(1, 'Epochs는 필수입니다.'),
   batch_size: z.string().min(1, 'Batch는 필수입니다.'),
@@ -44,7 +46,7 @@ type FormValues = z.infer<typeof schema>;
 
 const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
   0: ['train_name', 'description'],
-  1: ['dataset_id'],
+  1: [],
   2: ['model_id', 'epochs', 'batch_size', 'save_period', 'gpus', 'lr0', 'lrf', 'weight_decay'],
   3: [],
 };
@@ -60,13 +62,18 @@ export default function LearningCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [step, setStep] = useState<number>(0);
-  const { submitTraining, isPending } = useSubmitTraining();
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isFileValidated, setIsFileValidated] = useState(false);
+  const { submitTraining, isPending: isSubmittingTraining } = useSubmitTraining();
+  const { createDataset, isPending: isCreatingDataset } = useCreateDataset();
+  const isPending = isSubmittingTraining || isCreatingDataset;
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       train_name: '',
       description: '',
+      source_type: 'select',
       epochs: '100',
       batch_size: '16',
       save_period: '-1',
@@ -79,6 +86,37 @@ export default function LearningCreatePage() {
   });
 
   const handleClickNext = async () => {
+    if (step === 1) {
+      const sourceType = methods.getValues('source_type');
+      if (sourceType === 'upload') {
+        if (!uploadedFile) {
+          toast.open({
+            status: 'negative',
+            title: '파일이 없습니다.',
+            children: '먼저 파일을 업로드해주세요.',
+          });
+          return;
+        }
+        if (!isFileValidated) {
+          toast.open({
+            status: 'negative',
+            title: '유효성 검증이 필요합니다.',
+            children: '유효성 검증을 완료해주세요.',
+          });
+          return;
+        }
+        setStep((prev) => prev + 1);
+        return;
+      }
+      const datasetId = methods.getValues('dataset_id');
+      if (typeof datasetId !== 'number') {
+        methods.setError('dataset_id', { type: 'manual', message: '데이터 셋을 선택해주세요.' });
+        return;
+      }
+      setStep((prev) => prev + 1);
+      return;
+    }
+
     const fields = STEP_FIELDS[step];
     const valid = fields.length === 0 ? true : await methods.trigger(fields);
     if (valid && step < 3) setStep((prev) => prev + 1);
@@ -90,9 +128,37 @@ export default function LearningCreatePage() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
+      let datasetId = data.dataset_id;
+
+      if (data.source_type === 'upload') {
+        if (!uploadedFile) {
+          toast.open({
+            status: 'negative',
+            title: '파일이 없습니다.',
+            children: '먼저 파일을 업로드해주세요.',
+          });
+          return;
+        }
+        const formData = new FormData();
+        formData.append('name', data.train_name);
+        formData.append('description', data.description ?? '');
+        formData.append('file', uploadedFile);
+        const dataset = await createDataset(formData);
+        datasetId = dataset.id;
+      }
+
+      if (typeof datasetId !== 'number') {
+        toast.open({
+          status: 'negative',
+          title: '데이터셋이 없습니다.',
+          children: '데이터셋을 선택하거나 업로드해주세요.',
+        });
+        return;
+      }
+
       await submitTraining({
         model_id: data.model_id,
-        dataset_id: data.dataset_id,
+        dataset_id: datasetId,
         train_name: data.train_name,
         description: data.description ?? '',
         gpus: data.gpus,
@@ -144,9 +210,16 @@ export default function LearningCreatePage() {
           </div>
           <div className="page-content-stepper-desc">
             {step === 0 && <Step1 />}
-            {step === 1 && <Step2 />}
+            {step === 1 && (
+              <Step2
+                uploadedFile={uploadedFile}
+                setUploadedFile={setUploadedFile}
+                isFileValidated={isFileValidated}
+                setIsFileValidated={setIsFileValidated}
+              />
+            )}
             {step === 2 && <Step3 />}
-            {step === 3 && <Step4 />}
+            {step === 3 && <Step4 uploadedFile={uploadedFile} />}
 
             <div className="page-footer">
               <div className="page-footer_btn-box">
@@ -224,14 +297,26 @@ const Step1 = () => {
   );
 };
 
-const Step2 = () => {
+type Step2Props = {
+  uploadedFile: File | null;
+  setUploadedFile: Dispatch<SetStateAction<File | null>>;
+  isFileValidated: boolean;
+  setIsFileValidated: Dispatch<SetStateAction<boolean>>;
+};
+
+const Step2 = ({
+  uploadedFile,
+  setUploadedFile,
+  isFileValidated,
+  setIsFileValidated,
+}: Step2Props) => {
   const { control } = useFormContext<FormValues>();
   const toast = useToast();
   const { datasets, isPending } = useGetDatasets({ size: 100 });
   const { validateDataset } = useValidateDataset();
-  const [sourceType, setSourceType] = useState<'upload' | 'select'>('select');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const sourceType = useWatch({ control, name: 'source_type' });
   const [isValidating, setIsValidating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const datasetOptions = useMemo(
     () => datasets.map((d) => ({ text: d.name, value: d.id })),
@@ -252,6 +337,7 @@ const Step2 = () => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
       const response = await validateDataset(formData);
+      setIsFileValidated(response.is_valid);
       toast.open({
         status: response.is_valid ? 'positive' : 'negative',
         title: response.is_valid ? '유효성 검증 성공' : '유효성 검증 실패',
@@ -260,6 +346,7 @@ const Step2 = () => {
           (response.is_valid ? '유효한 파일입니다.' : '유효하지 않은 파일입니다.'),
       });
     } catch (error) {
+      setIsFileValidated(false);
       toast.open({
         status: 'negative',
         title: '유효성 검증 실패',
@@ -289,19 +376,21 @@ const Step2 = () => {
           <div className="page-input_item-name page-icon-requisite">데이터 셋</div>
           <div className="page-input_item-data">
             <div className="page-input_item-col2">
-              <RadioButton
-                id="source-upload"
-                label="파일 업로드"
-                value="upload"
-                checked={sourceType === 'upload'}
-                onCheckedChange={() => setSourceType('upload')}
-              />
-              <RadioButton
-                id="source-select"
-                label="데이터 셋 설정"
-                value="select"
-                checked={sourceType === 'select'}
-                onCheckedChange={() => setSourceType('select')}
+              <Controller
+                control={control}
+                name="source_type"
+                render={({ field }) => (
+                  <RadioGroupButton
+                    id="source-type"
+                    options={[
+                      { label: '파일 업로드', value: 'upload' },
+                      { label: '데이터 셋 설정', value: 'select' },
+                    ]}
+                    orientation="vertical"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </div>
@@ -313,10 +402,14 @@ const Step2 = () => {
               <div className="page-input_item-data_fileUpload">
                 <label className="fileUpload-preview">
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept=".zip"
                     className="fileUpload-file"
-                    onChange={(e) => setUploadedFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      setUploadedFile(e.target.files?.[0] ?? null);
+                      setIsFileValidated(false);
+                    }}
                   />
                   <IconFileUp />
                   <p className="fileUpload-preview_msg">
@@ -326,9 +419,26 @@ const Step2 = () => {
                   </p>
                 </label>
                 {uploadedFile && (
-                  <div className="flex items-center gap-2">
-                    <IconDocument className="page-icon-document" />
-                    <span>{uploadedFile.name}</span>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5 text-[13px]">
+                      <span className="shrink cursor-default text-ellipsis whitespace-nowrap text-[#525252]">
+                        {uploadedFile.name}
+                      </span>
+                      <span className="shrink-0 cursor-default leading-5 whitespace-nowrap text-[#999]">
+                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadedFile(null);
+                        setIsFileValidated(false);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="flex size-7 items-center justify-center fill-gray-600 hover:fill-[#dc4646]"
+                    >
+                      <IconDel />
+                    </button>
                   </div>
                 )}
               </div>
@@ -336,10 +446,10 @@ const Step2 = () => {
                 <Button
                   color="secondary"
                   onClick={handleValidate}
-                  disabled={!uploadedFile || isValidating}
+                  disabled={!uploadedFile || isValidating || isFileValidated}
                   isLoading={isValidating}
                 >
-                  유효성 검증
+                  {isFileValidated ? '검증 완료' : '유효성 검증'}
                 </Button>
               </div>
             </div>
@@ -415,6 +525,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Epochs</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Epochs 값을 입력해주세요."
               errMessage={errors.epochs?.message}
               {...register('epochs')}
@@ -425,6 +536,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Batch</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Batch 값을 입력해주세요."
               errMessage={errors.batch_size?.message}
               {...register('batch_size')}
@@ -435,6 +547,7 @@ const Step3 = () => {
           <div className="page-input_item-name">Save period</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
               placeholder="Save period 값을 입력해주세요."
               errMessage={errors.save_period?.message}
               {...register('save_period')}
@@ -465,6 +578,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Lr0</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.01"
               placeholder="Lr0 값을 입력해주세요."
               errMessage={errors.lr0?.message}
               {...register('lr0')}
@@ -475,6 +590,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Lrf</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.01"
               placeholder="Lrf 값을 입력해주세요."
               errMessage={errors.lrf?.message}
               {...register('lrf')}
@@ -485,6 +602,8 @@ const Step3 = () => {
           <div className="page-input_item-name">Weight decay</div>
           <div className="page-input_item-data">
             <Input
+              type="number"
+              step="0.0001"
               placeholder="Weight decay 값을 입력해주세요."
               errMessage={errors.weight_decay?.message}
               {...register('weight_decay')}
@@ -496,13 +615,20 @@ const Step3 = () => {
   );
 };
 
-const Step4 = () => {
+type Step4Props = {
+  uploadedFile: File | null;
+};
+
+const Step4 = ({ uploadedFile }: Step4Props) => {
   const { control } = useFormContext<FormValues>();
   const values = useWatch({ control });
   const { datasets } = useGetDatasets({ size: 100 });
   const { models } = useGetModels({ size: 100 }, {});
 
-  const datasetName = datasets.find((d) => d.id === values.dataset_id)?.name ?? '-';
+  const datasetDisplay =
+    values.source_type === 'upload'
+      ? (uploadedFile?.name ?? '-')
+      : (datasets.find((d) => d.id === values.dataset_id)?.name ?? '-');
   const modelName = models.find((m) => m.id === values.model_id)?.name ?? '-';
 
   const accordionItems1 = [
@@ -533,8 +659,10 @@ const Step4 = () => {
             <div className="page-accordion_item-data">객체 감지</div>
           </div>
           <div className="page-accordion_item-box">
-            <div className="page-accordion_item-name">데이터 셋</div>
-            <div className="page-accordion_item-data">{datasetName}</div>
+            <div className="page-accordion_item-name">
+              {values.source_type === 'upload' ? '업로드 파일' : '데이터 셋'}
+            </div>
+            <div className="page-accordion_item-data">{datasetDisplay}</div>
           </div>
         </div>
       ),
