@@ -26,10 +26,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
+            export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
             cd /home/ubuntu/app-build
             echo "${{ secrets.NPMRC }}" > .npmrc
-            pnpm install --frozen-lockfile
-            pnpm run build
+            PNPM_PATH=$(which pnpm || echo "/usr/local/bin/pnpm")
+            $PNPM_PATH install --frozen-lockfile
+            $PNPM_PATH run build
             rm .npmrc
 
   dockerize:
