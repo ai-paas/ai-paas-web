@@ -92,8 +92,8 @@ export const ModelSetting = () => {
         <div className={styles.row2}>
           <Select
             options={[]}
-            getOptionLabel={(option) => option?.text ?? ''}
-            getOptionValue={(option) => option?.value ?? ''}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
@@ -234,8 +234,8 @@ export const ModelSetting = () => {
         </div>
         <Select
           options={[]}
-          getOptionLabel={(option) => option?.text ?? ''}
-          getOptionValue={(option) => option?.value ?? ''}
+          getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+          getOptionValue={(option: SelectOption) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"
@@ -247,8 +247,8 @@ export const ModelSetting = () => {
         </div>
         <Select
           options={[]}
-          getOptionLabel={(option) => option?.text ?? ''}
-          getOptionValue={(option) => option?.value ?? ''}
+          getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+          getOptionValue={(option: SelectOption) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"

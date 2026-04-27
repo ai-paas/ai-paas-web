@@ -85,8 +85,8 @@ export default function MonitoringPage() {
         <Select
           classNames={{ container: () => 'page-input_item-data_select' }}
           options={options}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedValue}
           onChange={onChangeSelect}
         />

@@ -124,16 +124,16 @@ export const MonitoringTab = () => {
       <div className={styles.selectBox}>
         <Select
           options={options1}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedWorkflow}
           onChange={handleSelectWorkflow}
           menuPosition="fixed"
         />
         <Select
           options={options2}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedPeriod}
           onChange={handleSelectPeriod}
           menuPosition="fixed"

@@ -60,7 +60,7 @@ export default function LoginPage() {
               <Input
                 placeholder="아이디를 입력해주세요."
                 value={memberId}
-                onChange={(e) => setMemberId(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMemberId(e.target.value)}
                 size="large"
                 customSize={{ width: '100%', height: '48px' }}
                 variant={errorMessage ? 'err' : 'default'}
@@ -83,7 +83,7 @@ export default function LoginPage() {
             <div className={styles.inputBox}>
               <Password
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 size="large"
                 customSize={{ width: '100%', height: '48px' }}
                 variant={errorMessage ? 'err' : 'default'}

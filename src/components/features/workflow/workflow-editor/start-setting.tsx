@@ -251,8 +251,8 @@ export const StartSetting = () => {
             </div>
             <Select
               options={FIELD_TYPE_OPTIONS}
-              getOptionLabel={(option) => option?.text ?? ''}
-              getOptionValue={(option) => option?.value ?? ''}
+              getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+              getOptionValue={(option: SelectOption) => option?.value ?? ''}
               value={selectedValue}
               onChange={onChangeSelect}
               menuPosition="fixed"

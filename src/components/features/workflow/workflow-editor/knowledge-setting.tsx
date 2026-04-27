@@ -55,8 +55,8 @@ export const KnowledgeBaseSetting = () => {
         </div>
         <Select
           options={options}
-          getOptionLabel={(option) => option?.text ?? ''}
-          getOptionValue={(option) => option?.value ?? ''}
+          getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+          getOptionValue={(option: SelectOption) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"
@@ -103,8 +103,8 @@ export const KnowledgeBaseSetting = () => {
         <Select
           isMulti
           options={options3}
-          getOptionLabel={(option) => option?.text ?? ''}
-          getOptionValue={(option) => option?.value ?? ''}
+          getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+          getOptionValue={(option: SelectOption) => option?.value ?? ''}
           value={selectedValue3}
           onChange={onChangeSelect3}
         />

@@ -1,5 +1,5 @@
 import { useGetModelForOptimizer, useGetOptimizers, useOptimize } from '@/hooks/service/models';
-import type { OptimizeRequest } from '@/types/model';
+import type { Optimizer, OptimizeRequest } from '@/types/model';
 import { Button, Modal, Select } from '@innogrid/ui';
 import { useState } from 'react';
 
@@ -67,10 +67,12 @@ export const HardwareOptimizationButton = ({ customModelId }: { customModelId?: 
             <Select
               menuPosition="fixed"
               options={optimizers}
-              getOptionLabel={(option) => option.optimizer_name}
-              getOptionValue={(option) => option.id.toString()}
-              value={optimizers.find((option) => option.id === hardwareOptimization.optimizer_id)}
-              onChange={(option) => {
+              getOptionLabel={(option: Optimizer) => option.optimizer_name}
+              getOptionValue={(option: Optimizer) => option.id.toString()}
+              value={optimizers.find(
+                (option: Optimizer) => option.id === hardwareOptimization.optimizer_id
+              )}
+              onChange={(option: Optimizer | null) => {
                 setHardwareOptimization({
                   optimizer_id: option?.id || 0,
                   saved_model_run_id: modelForOptimizer?.run_id ?? '',

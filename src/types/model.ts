@@ -181,14 +181,16 @@ export interface ModelForOptimizer {
   path: string;
 }
 
+export interface Optimizer {
+  id: number;
+  optimizer_name: string;
+  accelerator: string;
+  argument: Record<string, string>;
+}
+
 export interface Optimizers {
   data: {
-    items: {
-      id: number;
-      optimizer_name: string;
-      accelerator: string;
-      argument: Record<string, string>;
-    }[];
+    items: Optimizer[];
     current_page: number;
     page_size: number;
     total_count: number;

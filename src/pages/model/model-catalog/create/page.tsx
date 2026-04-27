@@ -118,8 +118,8 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 options={modelProviders}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelProvider) => option.name}
+                getOptionValue={(option: ModelProvider) => String(option.id)}
                 value={modelProviders.find((provider) => provider.id === modelCatalog.provider_id)}
                 onChange={(option: ModelProvider | null) =>
                   setModelCatalog((prev) => ({
@@ -136,8 +136,8 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 options={modelTypes}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelType) => option.name}
+                getOptionValue={(option: ModelType) => String(option.id)}
                 value={modelTypes.find((type) => type.id === modelCatalog.type_id)}
                 onChange={(option: ModelType | null) =>
                   setModelCatalog((prev) => ({
@@ -154,8 +154,8 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-data">
               <Select
                 options={modelFormats}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelFormat) => option.name}
+                getOptionValue={(option: ModelFormat) => String(option.id)}
                 value={modelFormats.find((format) => format.id === modelCatalog.format_id)}
                 onChange={(option: ModelFormat | null) =>
                   setModelCatalog((prev) => ({

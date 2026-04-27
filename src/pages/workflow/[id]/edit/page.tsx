@@ -345,8 +345,8 @@ export default function WorkflowEditPage() {
                   <div className={styles.select}>
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                       menuPosition="fixed"
@@ -365,8 +365,8 @@ export default function WorkflowEditPage() {
                   <div className={styles.select}>
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                       menuPosition="fixed"
@@ -385,8 +385,8 @@ export default function WorkflowEditPage() {
                   <div className={styles.select}>
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                       menuPosition="fixed"
@@ -425,8 +425,8 @@ export default function WorkflowEditPage() {
                 <div className={styles.select}>
                   <Select
                     options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
+                    getOptionLabel={(option: OptionType) => option.text}
+                    getOptionValue={(option: OptionType) => option.value}
                     value={selectedValue}
                     onChange={onChangeSelect}
                     menuPosition="fixed"

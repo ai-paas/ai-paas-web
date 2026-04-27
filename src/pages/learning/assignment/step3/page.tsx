@@ -63,8 +63,8 @@ export default function LearningAssignmentStep3Page() {
                 <div className="page-input_item-data">
                   <Select
                     options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
+                    getOptionLabel={(option: OptionType) => option.text}
+                    getOptionValue={(option: OptionType) => option.value}
                     value={selectedValue}
                     onChange={onChangeSelect}
                   />
@@ -79,15 +79,15 @@ export default function LearningAssignmentStep3Page() {
                   <div className="page-input_item-row2 page-gap-6">
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />
@@ -100,8 +100,8 @@ export default function LearningAssignmentStep3Page() {
                   <div className="page-input_item-row3">
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />

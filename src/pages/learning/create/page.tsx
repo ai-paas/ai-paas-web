@@ -473,10 +473,10 @@ const Step2 = ({
                 render={({ field, fieldState }) => (
                   <Select
                     options={datasetOptions}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => String(option.value)}
+                    getOptionLabel={(option: { text: string; value: number }) => option.text}
+                    getOptionValue={(option: { text: string; value: number }) => String(option.value)}
                     value={datasetOptions.find((o) => o.value === field.value) ?? null}
-                    onChange={(option) => field.onChange(option?.value)}
+                    onChange={(option: { text: string; value: number } | null) => field.onChange(option?.value)}
                     placeholder={isPending ? '불러오는 중...' : '데이터 셋을 선택해주세요.'}
                     errMessage={fieldState.error?.message}
                   />
@@ -513,10 +513,10 @@ const Step3 = () => {
               render={({ field, fieldState }) => (
                 <Select
                   options={modelOptions}
-                  getOptionLabel={(option) => option.text}
-                  getOptionValue={(option) => String(option.value)}
+                  getOptionLabel={(option: { text: string; value: number }) => option.text}
+                  getOptionValue={(option: { text: string; value: number }) => String(option.value)}
                   value={modelOptions.find((o) => o.value === field.value) ?? null}
-                  onChange={(option) => field.onChange(option?.value)}
+                  onChange={(option: { text: string; value: number } | null) => field.onChange(option?.value)}
                   placeholder={isPending ? '불러오는 중...' : '모델을 선택해주세요.'}
                   errMessage={fieldState.error?.message}
                 />
@@ -569,10 +569,10 @@ const Step3 = () => {
               render={({ field, fieldState }) => (
                 <Select
                   options={GPU_OPTIONS}
-                  getOptionLabel={(option) => option.text}
-                  getOptionValue={(option) => option.value}
+                  getOptionLabel={(option: { text: string; value: string }) => option.text}
+                  getOptionValue={(option: { text: string; value: string }) => option.value}
                   value={GPU_OPTIONS.find((o) => o.value === field.value) ?? null}
-                  onChange={(option) => field.onChange(option?.value)}
+                  onChange={(option: { text: string; value: string } | null) => field.onChange(option?.value)}
                   errMessage={fieldState.error?.message}
                 />
               )}

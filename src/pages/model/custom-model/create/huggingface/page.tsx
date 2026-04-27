@@ -548,7 +548,7 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
           <Input
             placeholder="검색어를 입력해주세요."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           />
         </div>
         <div className={styles.chipBox}>

@@ -152,8 +152,8 @@ export default function CustomModelCreatePage() {
               <Select
                 isDisabled={!!selectedModel}
                 options={modelProviders}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelProvider) => option.name}
+                getOptionValue={(option: ModelProvider) => String(option.id)}
                 value={modelProviders.find((provider) => provider.id === customModel.provider_id)}
                 onChange={(option: ModelProvider | null) =>
                   setCustomModel((prev) => ({
@@ -170,8 +170,8 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 options={modelTypes}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelType) => option.name}
+                getOptionValue={(option: ModelType) => String(option.id)}
                 value={modelTypes.find((type) => type.id === customModel.type_id)}
                 onChange={(option: ModelType | null) =>
                   setCustomModel((prev) => ({
@@ -188,8 +188,8 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-data">
               <Select
                 options={modelFormats}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => String(option.id)}
+                getOptionLabel={(option: ModelFormat) => option.name}
+                getOptionValue={(option: ModelFormat) => String(option.id)}
                 value={modelFormats.find((format) => format.id === customModel.format_id)}
                 onChange={(option: ModelFormat | null) =>
                   setCustomModel((prev) => ({

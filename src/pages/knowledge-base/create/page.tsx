@@ -19,6 +19,8 @@ import {
   useGetSearchMethods,
 } from '@/hooks/service/knowledgebase';
 import { useGetModels, useGetModelTypes } from '@/hooks/service/models';
+import type { ChunkType, SearchMethod } from '@/types/knowledgebase';
+import type { Model } from '@/types/model';
 
 interface FormData {
   name: string;
@@ -189,7 +191,7 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
             <Input
               placeholder="이름을 입력해주세요."
               value={formData?.name ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             />
             <p className="page-input_item-input-desc">이름 입력에 대한 설명글이 들어갑니다.</p>
           </div>
@@ -199,7 +201,7 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
           <div className="page-input_item-data">
             <Textarea
               value={formData?.description ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="설명을 입력해주세요."
             />
           </div>
@@ -274,7 +276,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               type="number"
               placeholder="청크 길이를 입력해주세요."
               value={formData?.chunk_size?.toString()}
-              onChange={(e) => setFormData((prev) => ({ ...prev, chunk_size: +e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, chunk_size: +e.target.value }))}
             />
             <p className="page-input_item-input-desc">청크 길이를 입력해주세요.</p>
           </div>
@@ -286,7 +288,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               type="number"
               placeholder="청크 중첩을 입력해주세요."
               value={formData?.chunk_overlap?.toString()}
-              onChange={(e) => setFormData((prev) => ({ ...prev, chunk_overlap: +e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, chunk_overlap: +e.target.value }))}
             />
             <p className="page-input_item-input-desc">청크 중첩을 입력해주세요.</p>
           </div>
@@ -297,10 +299,10 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
             <Select
               classNames={{ container: () => 'page-input_item-data_select' }}
               options={chunkTypes}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={chunkTypes.find((type) => type.id === formData?.chunk_type?.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: ChunkType) => option.name}
+              getOptionValue={(option: ChunkType) => option.id.toString()}
+              value={chunkTypes.find((type: ChunkType) => type.id === formData?.chunk_type?.id)}
+              onChange={(option: ChunkType | null) => {
                 if (option) setFormData((prev) => ({ ...prev, chunk_type: option }));
               }}
             />
@@ -334,10 +336,10 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
             <Select
               classNames={{ container: () => 'page-input_item-data_select' }}
               options={models}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={models.find((model) => model.id === formData?.embedding_model?.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: Model) => option.name}
+              getOptionValue={(option: Model) => option.id.toString()}
+              value={models.find((model: Model) => model.id === formData?.embedding_model?.id)}
+              onChange={(option: Model | null) => {
                 if (option) setFormData((prev) => ({ ...prev, embedding_model: option }));
               }}
             />
@@ -352,10 +354,10 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
             <Select
               classNames={{ container: () => 'page-input_item-data_select' }}
               options={searchMethods}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={searchMethods?.find((method) => method.id === formData?.search_method.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: SearchMethod) => option.name}
+              getOptionValue={(option: SearchMethod) => option.id.toString()}
+              value={searchMethods?.find((method: SearchMethod) => method.id === formData?.search_method.id)}
+              onChange={(option: SearchMethod | null) => {
                 if (option) setFormData((prev) => ({ ...prev, search_method: option }));
               }}
             />
@@ -381,7 +383,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   type="number"
                   placeholder="0"
                   value={formData?.top_k[0]}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setFormData((prev) => ({ ...prev, top_k: [Number(e.target.value)] }));
                   }}
                 />
@@ -439,7 +441,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   placeholder="0"
                   step={0.1}
                   value={formData?.threshold?.[0] ?? 0}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFormData((prev) => ({ ...prev, threshold: [Number(e.target.value)] }))
                   }
                 />

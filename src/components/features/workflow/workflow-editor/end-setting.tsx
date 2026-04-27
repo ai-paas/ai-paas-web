@@ -49,8 +49,8 @@ export const EndSetting = () => {
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
             options={options}
-            getOptionLabel={(option) => option?.text ?? ''}
-            getOptionValue={(option) => option?.value ?? ''}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
@@ -63,8 +63,8 @@ export const EndSetting = () => {
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
             options={options}
-            getOptionLabel={(option) => option?.text ?? ''}
-            getOptionValue={(option) => option?.value ?? ''}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
@@ -77,8 +77,8 @@ export const EndSetting = () => {
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
             options={options}
-            getOptionLabel={(option) => option?.text ?? ''}
-            getOptionValue={(option) => option?.value ?? ''}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
