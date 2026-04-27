@@ -30,7 +30,6 @@ export const DeleteServiceButton = ({ serviceId }: { serviceId?: string }) => {
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsAlertOpen(false)}
-        size="small"
       >
         <span>서비스를 삭제하시겠습니까?</span>
       </AlertDialog>

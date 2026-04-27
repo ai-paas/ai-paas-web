@@ -34,13 +34,13 @@ const options = [
 
 export default function LearningSolutionStep2Page() {
   //stepper
-  const [step, setStep] = useState<number>(1);
+  const [step] = useState<number>(1);
 
   //select
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   //radio button
@@ -146,7 +146,7 @@ export default function LearningSolutionStep2Page() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={() => {}} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>
@@ -164,25 +164,28 @@ export default function LearningSolutionStep2Page() {
                   데이터 유형
                 </div>
                 <div className="page-input_item-data">
-                  <Accordion
-                    className="page-input_item_round-box"
-                    components={accordionItems1}
-                    defaultValue="0"
-                  />
+                  <div className="page-input_item_round-box">
+                    <Accordion
+                      components={accordionItems1}
+                      defaultValue="0"
+                    />
+                  </div>
                 </div>
                 <div className="page-input_item-data">
-                  <Accordion
-                    className="page-input_item_round-box"
-                    components={accordionItems2}
-                    defaultValue="0"
-                  />
+                  <div className="page-input_item_round-box">
+                    <Accordion
+                      components={accordionItems2}
+                      defaultValue="0"
+                    />
+                  </div>
                 </div>
                 <div className="page-input_item-data">
-                  <Accordion
-                    className="page-input_item_round-box"
-                    components={accordionItems3}
-                    defaultValue="0"
-                  />
+                  <div className="page-input_item_round-box">
+                    <Accordion
+                      components={accordionItems3}
+                      defaultValue="0"
+                    />
+                  </div>
                 </div>
               </div>
               <div className="page-input_item-box">
@@ -319,10 +322,10 @@ export default function LearningSolutionStep2Page() {
                               <input type="number" placeholder="0" />
                               <div className="page-num-count-control">
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrUp" />
+                                  <span className="icon-arr icon-arrUp"><IconArrCount /></span>
                                 </button>
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrDown" />
+                                  <span className="icon-arr icon-arrDown"><IconArrCount /></span>
                                 </button>
                               </div>
                             </div>
@@ -337,10 +340,10 @@ export default function LearningSolutionStep2Page() {
                               <input type="number" placeholder="0" />
                               <div className="page-num-count-control">
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrUp" />
+                                  <span className="icon-arr icon-arrUp"><IconArrCount /></span>
                                 </button>
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrDown" />
+                                  <span className="icon-arr icon-arrDown"><IconArrCount /></span>
                                 </button>
                               </div>
                             </div>
@@ -355,10 +358,10 @@ export default function LearningSolutionStep2Page() {
                               <input type="number" placeholder="0" />
                               <div className="page-num-count-control">
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrUp" />
+                                  <span className="icon-arr icon-arrUp"><IconArrCount /></span>
                                 </button>
                                 <button type="button" className="btn-num">
-                                  <IconArrCount className="icon-arr icon-arrDown" />
+                                  <span className="icon-arr icon-arrDown"><IconArrCount /></span>
                                 </button>
                               </div>
                             </div>
@@ -413,7 +416,6 @@ export default function LearningSolutionStep2Page() {
                 <div className="page-input_item-name">이미지 데이터 셋</div>
                 <div className="page-input_item-data">
                   <Select
-                    className="page-input_item-data_select"
                     options={options}
                     getOptionLabel={(option) => option.text}
                     getOptionValue={(option) => option.value}

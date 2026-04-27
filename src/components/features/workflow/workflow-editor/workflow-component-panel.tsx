@@ -88,7 +88,6 @@ export const WorkflowComponentPanel = () => {
         <SearchInput
           variant="default"
           placeholder="검색어를 입력해주세요"
-          className="[&>[data-size='m-medium']]:!w-full"
           {...restProps}
         />
       </div>

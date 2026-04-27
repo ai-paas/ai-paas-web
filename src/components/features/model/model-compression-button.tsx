@@ -13,7 +13,7 @@ export const ModelCompressionButton = ({ customModelId }: { customModelId?: numb
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   return (
@@ -44,7 +44,6 @@ export const ModelCompressionButton = ({ customModelId }: { customModelId?: numb
           <div className="page-input_item-name page-icon-requisite">경량화 방식</div>
           <div className="page-input_item-data mt-2.5">
             <Select
-              size="m-full"
               menuPosition="fixed"
               options={options}
               getOptionLabel={(option) => option.text}

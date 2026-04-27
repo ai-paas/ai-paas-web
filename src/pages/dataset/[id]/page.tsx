@@ -61,7 +61,7 @@ export default function DatasetDetailPage() {
               <div className="page-detail_item-name">파일</div>
               <div className="page-detail_item-data">
                 {dataset?.dataset_registry.artifact_path || 'N/A'}{' '}
-                <IconDocument className="page-icon-document" />
+                <span className="page-icon-document"><IconDocument /></span>
               </div>
             </li>
             <li>

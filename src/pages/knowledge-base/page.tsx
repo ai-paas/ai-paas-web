@@ -7,7 +7,10 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type ColDef,
+  type TableRow,
 } from '@innogrid/ui';
+import type { KnowledgeBase } from '@/types/knowledgebase';
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
@@ -95,20 +98,20 @@ export default function KnowledgeBasePage() {
   );
 }
 
-const columns = [
+const columns: ColDef<KnowledgeBase>[] = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: Parameters<typeof HeaderCheckbox<KnowledgeBase>>[0]['table'] }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: TableRow<KnowledgeBase> }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: KnowledgeBase) => row.name,
     size: 225,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: TableRow<KnowledgeBase> }) => (
       <Link to={`/knowledge-base/${row.original.surro_knowledge_id}`} className="table-td-link">
         {row.original.name}
       </Link>
@@ -117,38 +120,38 @@ const columns = [
   {
     id: 'id',
     header: '유형',
-    accessorFn: (row) => row.tag,
+    accessorFn: (row: KnowledgeBase) => row.chunk_type,
     size: 200,
   },
   {
     id: 'created_by',
     header: '생성자',
-    accessorFn: (row) => row.created_by,
+    accessorFn: (row: KnowledgeBase) => row.language,
     size: 225,
   },
   {
     id: 'chunk_size',
     header: '용량',
-    accessorFn: (row) => row.chunk_size,
+    accessorFn: (row: KnowledgeBase) => row.search_method,
     size: 271,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'status',
     header: '데이터수',
-    accessorFn: (row) => row.status,
+    accessorFn: (row: KnowledgeBase) => row.description,
     size: 271,
   },
   {
     id: 'description',
     header: '설명',
-    accessorFn: (row) => row.description,
+    accessorFn: (row: KnowledgeBase) => row.description,
     size: 271,
   },
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row) => formatDateTime(row.created_at),
+    accessorFn: (row: KnowledgeBase) => formatDateTime(row.created_at),
     size: 225,
   },
 ];

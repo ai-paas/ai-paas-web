@@ -94,7 +94,7 @@ export const useGetKnowledgeBases = (params: GetKnowledgeBasesParams = {}) => {
   };
 };
 
-export const useGetKnowledgeBase = (surro_knowledge_id: number) => {
+export const useGetKnowledgeBase = (surro_knowledge_id?: number) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.knowledgeBases.detail(surro_knowledge_id),
     queryFn: () => api.get(`knowledge-bases/${surro_knowledge_id}`).json<KnowledgeBase>(),

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 import DefaultLayout from '../pages/layout';
 import ServicePage from '../pages/service/page';

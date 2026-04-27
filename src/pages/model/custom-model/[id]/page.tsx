@@ -69,7 +69,7 @@ export default function CustomModelDetailPage() {
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
-  const [rowData, setRowData] = useState([
+  const [rowData] = useState([
     {
       name: 'Model-0001-of-0004.safetensors',
       fileSize: '4.43 GB',

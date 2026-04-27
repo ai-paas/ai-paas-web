@@ -27,7 +27,6 @@ export const DeleteCustomModelButton = ({ customModelId }: { customModelId?: num
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>커스텀 모델을 삭제하시겠습니까?</span>
       </AlertDialog>

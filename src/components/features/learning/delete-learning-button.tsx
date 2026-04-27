@@ -45,7 +45,6 @@ export const DeleteLearningButton = ({ experimentId }: { experimentId?: number }
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>학습을 삭제하시겠습니까?</span>
       </AlertDialog>

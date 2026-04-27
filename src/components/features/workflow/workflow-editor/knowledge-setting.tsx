@@ -1,4 +1,4 @@
-import { Accordion, Input, Select, Slider } from '@innogrid/ui';
+import { Accordion, Input, Select, Slider, type SelectMultiValue } from '@innogrid/ui';
 import styles from '@/pages/workflow/workflow.module.scss';
 import { useState, type ChangeEvent } from 'react';
 import { IconArrCount, IconSet } from '@/assets/img/icon';
@@ -11,46 +11,27 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
-type OptionType = { text: string; value: string };
-
-const options2 = [
-  {
-    label: '추천 모델',
-    value: 'recommendation',
-    options: [
-      { value: 'option1', text: 'Meta-Liama-3-8B' },
-      { value: 'option2', text: 'gemma3:4b' },
-    ],
-  },
-  {
-    label: '모든 모델',
-    value: 'all',
-    options: [
-      { value: 'option1', text: 'openchat-3.6-8b-20240522' },
-      { value: 'option2', text: 'Qwen2-7B-Instruct' },
-    ],
-  },
-];
-
 const options3 = [
   { text: '지식 베이스 001', value: 'option1' },
   { text: '지식 베이스 002', value: 'option2' },
   { text: '지식 베이스 003', value: 'option3' },
 ];
 
+type SelectOption = { text: string; value: string };
+
 export const KnowledgeBaseSetting = () => {
   const [value, setValue] = useState<string>('');
   const [value2, setValue2] = useState<number[]>([30]);
-  const [selectedValue3, setSelectedValue3] = useState([]);
+  const [selectedValue3, setSelectedValue3] = useState<SelectOption[]>([]);
   //select
-  const [selectedValue, setSelectedValue] = useState();
+  const [selectedValue, setSelectedValue] = useState<SelectOption | null>(null);
 
-  const onChangeSelect = (option) => {
+  const onChangeSelect = (option: SelectOption | null) => {
     setSelectedValue(option);
   };
 
-  const onChangeSelect3 = (option) => {
-    setSelectedValue3(option);
+  const onChangeSelect3 = (newValue: SelectMultiValue<SelectOption>) => {
+    setSelectedValue3([...newValue]);
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -73,10 +54,9 @@ export const KnowledgeBaseSetting = () => {
           <div className={`${styles.addItemName} page-icon-requisite`}>쿼리변수</div>
         </div>
         <Select
-          className={styles.select}
           options={options}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option) => option?.text ?? ''}
+          getOptionValue={(option) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"
@@ -88,7 +68,7 @@ export const KnowledgeBaseSetting = () => {
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className={styles.btnSet}>
-                <IconSet className={styles.iconSet} />
+                <span className={styles.iconSet}><IconSet /></span>
               </button>
             </PopoverTrigger>
             <PopoverPortal>
@@ -106,10 +86,10 @@ export const KnowledgeBaseSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -121,18 +101,18 @@ export const KnowledgeBaseSetting = () => {
           </Popover>
         </div>
         <Select
-          className={styles.select}
           isMulti
-          useCheckboxOption
           options={options3}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option) => option?.text ?? ''}
+          getOptionValue={(option) => option?.value ?? ''}
           value={selectedValue3}
           onChange={onChangeSelect3}
         />
       </div>
       <div className={styles.addItemBox}>
-        <Accordion className={styles.accordion} components={accordionItems} />
+        <div>
+          <Accordion components={accordionItems} />
+        </div>
       </div>
     </div>
   );

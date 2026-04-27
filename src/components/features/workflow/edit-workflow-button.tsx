@@ -1,9 +1,7 @@
 import { Button, useTableSelection } from "@innogrid/ui";
-import { useNavigate } from "react-router";
 
 export const EditWorkflowButton = () => {
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const navigate = useNavigate();
+  const { rowSelection } = useTableSelection();
 
   const handleClick = () => {
     console.log(rowSelection);

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { ChangeEvent } from '@innogrid/ui';
+import { useState, type ChangeEvent } from 'react';
 import { BreadCrumb, Input, Button, Pagination } from '@innogrid/ui';
 
 import { IconAlign } from '../../../../../assets/img/icon';
@@ -29,7 +28,7 @@ export default function CustomModelCreateEtriPage() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={(path: string) => { void path; }} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">커스텀 모델 생성 - ETRI 연동</h2>
@@ -44,7 +43,7 @@ export default function CustomModelCreateEtriPage() {
               <span>모델 검색</span>
               <div className={styles.searchInputBox}>
                 <Input
-                  size={'m-large'}
+                  size="large"
                   placeholder="검색어를 입력해주세요."
                   value={value}
                   onChange={onChange}
@@ -53,7 +52,7 @@ export default function CustomModelCreateEtriPage() {
                   {/* 버튼 클릭시 클래스네임 active 추가 */}
                   {/* ${styles.active} */}
                   <button type="button" className={`${styles.btnAlign} ${styles.active}`}>
-                    <IconAlign className={styles.iconAlign} />
+                    <span className={styles.iconAlign}><IconAlign /></span>
                     정렬:<span>좋아요 수</span>
                   </button>
                   {/* 버튼 클릭시 클래스네임 active 추가 */}
@@ -91,153 +90,6 @@ export default function CustomModelCreateEtriPage() {
               </div>
               {/* 선택시 클래스네임 active 추가 */}
               <div className={`${styles.descInfoBox2} ${styles.active}`}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
-                <p>한국어 문서 사실성 검증 기술</p>
-                <div className={styles.descInfo}>
-                  <div>
-                    <span>카테고리</span>
-                    <div>언어</div>
-                  </div>
-                  <div>
-                    <span>등록일</span>
-                    <div>2024-11-11</div>
-                  </div>
-                  <div>
-                    <span>조회수</span>
-                    <div>90</div>
-                  </div>
-                  <div>
-                    <span>다운로드 수</span>
-                    <div>641</div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.descInfoBox2}>
                 <p>한국어 문서 사실성 검증 기술</p>
                 <div className={styles.descInfo}>
                   <div>

@@ -25,10 +25,6 @@ export const CreateServiceButton = () => {
     setService(INITIAL_SERVICE_STATE);
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setService((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
   const handleSubmit = useCallback(() => {
     createService({
       name: service.name,

@@ -19,7 +19,6 @@ export const DeleteWorkflowButton = () => {
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>(워크플로우 이름)를 삭제하시겠습니까?</span>
       </AlertDialog>

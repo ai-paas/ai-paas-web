@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { IconDel, IconFileUp } from '@/assets/img/icon';
 import { Button, Input, Textarea, useToast } from '@innogrid/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,6 +38,7 @@ export const DatasetForm = () => {
     watch,
     setError,
     clearErrors,
+    control,
     formState: { errors },
   } = useForm<Schema>({ resolver: zodResolver(schema) });
 
@@ -222,10 +223,18 @@ export const DatasetForm = () => {
           <div className="page-input_item-box">
             <div className="page-input_item-name">설명</div>
             <div className="page-input_item-data">
-              <Textarea
-                placeholder="설명을 입력해주세요."
-                errMessage={errors.description?.message}
-                {...register('description')}
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder="설명을 입력해주세요."
+                    errMessage={errors.description?.message}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { BreadCrumb, Table, useTablePagination } from '@innogrid/ui';
+import { BreadCrumb, Table } from '@innogrid/ui';
 
 import { IconMore, IconNode } from '../../assets/img/icon';
 import styles from './dashboard.module.scss';
@@ -611,29 +611,36 @@ export default function DashboardPage() {
   );
 }
 
+interface UserRow {
+  name: string;
+  role: string;
+  email: string;
+  date: string;
+}
+
 const userColumns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: UserRow) => row.name,
     size: 200,
   },
   {
     id: 'role',
     header: '권한',
-    accessorFn: (row) => row.role,
+    accessorFn: (row: UserRow) => row.role,
     size: 200,
   },
   {
     id: 'email',
     header: '이메일 주소',
-    accessorFn: (row) => row.email,
+    accessorFn: (row: UserRow) => row.email,
     size: 200,
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: UserRow) => row.date,
     size: 200,
   },
 ];
@@ -682,32 +689,39 @@ const UserTable = () => {
   );
 };
 
+interface EventRow {
+  time: string;
+  type: string;
+  content: string;
+  resource: string;
+}
+
 const eventColumns = [
   {
     id: 'time',
     header: '시간',
-    accessorFn: (row) => row.time,
+    accessorFn: (row: EventRow) => row.time,
     size: 200,
   },
   {
     id: 'type',
     header: '이벤트 타입',
-    accessorFn: (row) => row.type,
+    accessorFn: (row: EventRow) => row.type,
     size: 200,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: EventRow } }) => (
       <span className="table-td-state table-td-state-run">{row.original.type}</span>
     ),
   },
   {
     id: 'content',
     header: '이벤트 내용',
-    accessorFn: (row) => row.content,
+    accessorFn: (row: EventRow) => row.content,
     size: 200,
   },
   {
     id: 'resource',
     header: '대상 리소스',
-    accessorFn: (row) => row.resource,
+    accessorFn: (row: EventRow) => row.resource,
     size: 200,
   },
 ];

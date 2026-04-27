@@ -1,4 +1,4 @@
-import { BreadCrumb, Button } from '@innogrid/ui';
+import { BreadCrumb } from '@innogrid/ui';
 import { useNavigate, useParams } from 'react-router';
 import { EditPromptButton } from '../../../components/features/prompt/edit-prompt-button';
 import { DeletePromptButton } from '../../../components/features/prompt/delete-prompt-button';

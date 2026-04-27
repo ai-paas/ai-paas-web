@@ -82,7 +82,6 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              size={{ width: '100%', height: '32px' }}
             />
           </div>
           <div className={styles.inputBox}>
@@ -92,7 +91,6 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
           <div className={styles.inputBox}>
             <span>태그</span>
             <Input
-              size={{ width: '100%', height: '32px' }}
               placeholder="태그 내용을 입력해주세요."
               name="tags"
               value={formData.tags}

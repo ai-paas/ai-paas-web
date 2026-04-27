@@ -150,7 +150,6 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 공급자 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 isDisabled={!!selectedModel}
                 options={modelProviders}
                 getOptionLabel={(option) => option.name}
@@ -170,7 +169,6 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 타입 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 options={modelTypes}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}
@@ -189,7 +187,6 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 포맷 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 options={modelFormats}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}

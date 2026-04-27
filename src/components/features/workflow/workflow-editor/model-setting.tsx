@@ -14,6 +14,8 @@ import { IconArrCount } from '@/assets/img/icon';
 import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
 import { useWorkflowStore } from '@/store/useWorkflowStore';
 
+type SelectOption = { text: string; value: string };
+
 export const ModelSetting = () => {
   const selectedNode = useWorkflowStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
@@ -30,22 +32,16 @@ export const ModelSetting = () => {
   };
 
   //select
-  const [selectedValue, setSelectedValue] = useState();
+  const [selectedValue, setSelectedValue] = useState<SelectOption | null>(null);
 
-  const onChangeSelect = (option) => {
+  const onChangeSelect = (option: SelectOption | null) => {
     setSelectedValue(option);
   };
 
-  const [selectedValue3, setSelectedValue3] = useState([]);
-
-  const onChangeSelect3 = (option) => {
-    setSelectedValue3(option);
-  };
-
   //textarea
-  const [text, setText] = useState<string>('');
   const onTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+    // value managed by controlled prop
+    void e;
   };
 
   //radio button
@@ -59,8 +55,8 @@ export const ModelSetting = () => {
         <input
           type="text"
           placeholder="이름을 입력해주세요."
-          value={selectedNode?.data.name}
-          onChange={(e) => updateNodeData(selectedNode?.id, { name: e.target.value })}
+          value={selectedNode?.data.name ?? ''}
+          onChange={(e) => updateNodeData(selectedNode?.id ?? '', { name: e.target.value })}
           className={styles.addTitleInput}
         />
       </div>
@@ -95,10 +91,9 @@ export const ModelSetting = () => {
         </div>
         <div className={styles.row2}>
           <Select
-            className={styles.select}
             options={[]}
-            getOptionLabel={(option) => option.text}
-            getOptionValue={(option) => option.value}
+            getOptionLabel={(option) => option?.text ?? ''}
+            getOptionValue={(option) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
@@ -127,10 +122,10 @@ export const ModelSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -150,10 +145,10 @@ export const ModelSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -172,10 +167,10 @@ export const ModelSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -194,10 +189,10 @@ export const ModelSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -217,10 +212,10 @@ export const ModelSetting = () => {
                         <input type="number" placeholder="0" />
                         <div className={styles.numCountControl}>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                           </button>
                           <button type="button" className={styles.btnNum}>
-                            <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                            <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                           </button>
                         </div>
                       </div>
@@ -238,10 +233,9 @@ export const ModelSetting = () => {
           <div className={`${styles.addItemName} page-icon-requisite`}>컨텍스트</div>
         </div>
         <Select
-          className={styles.select}
           options={[]}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option) => option?.text ?? ''}
+          getOptionValue={(option) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"
@@ -252,10 +246,9 @@ export const ModelSetting = () => {
           <div className={`${styles.addItemName} page-icon-requisite`}>프롬프트</div>
         </div>
         <Select
-          className={styles.select}
           options={[]}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option) => option?.text ?? ''}
+          getOptionValue={(option) => option?.value ?? ''}
           value={selectedValue}
           onChange={onChangeSelect}
           menuPosition="fixed"
@@ -268,7 +261,9 @@ export const ModelSetting = () => {
         />
       </div>
       <div className={styles.addItemBox}>
-        <Accordion className={styles.accordion} components={accordionItems} />
+        <div>
+          <Accordion components={accordionItems} />
+        </div>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ export const queryKeys = {
     all: ['knowledge-bases'] as const,
     list: (params: GetKnowledgeBasesParams = {}) =>
       [...queryKeys.knowledgeBases.all, params] as const,
-    detail: (knowledgeBaseId: number) =>
+    detail: (knowledgeBaseId?: number) =>
       [...queryKeys.knowledgeBases.all, knowledgeBaseId] as const,
     files: (knowledgeBaseId: number) =>
       [...queryKeys.knowledgeBases.detail(knowledgeBaseId), 'files'] as const,

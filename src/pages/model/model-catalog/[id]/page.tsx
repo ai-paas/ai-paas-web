@@ -1,4 +1,5 @@
 import { useGetModel } from '@/hooks/service/models';
+import type { ModelCatalog } from '@/types/model';
 import { formatDateTime } from '@/util/date';
 import {
   BreadCrumb,
@@ -12,44 +13,52 @@ import {
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
+interface FileRow {
+  name: string;
+  id: string;
+  state: string;
+  desc: string;
+}
+
 const columns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: FileRow) => row.name,
     size: 425,
   },
   {
     id: 'id',
     header: '파일 크기',
-    accessorFn: (row) => row.id,
+    accessorFn: (row: FileRow) => row.id,
     size: 425,
   },
   {
     id: 'state',
     header: '업데이트 일시',
-    accessorFn: (row) => row.state,
+    accessorFn: (row: FileRow) => row.state,
     size: 425,
   },
   {
     id: 'desc',
     header: '다운로드',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: FileRow) => row.desc,
     size: 434,
-    cell: ({ row }) => <Button color="tertiary">버튼</Button>,
+    cell: () => <Button color="tertiary">버튼</Button>,
   },
 ];
 
 export default function ModelCatalogDetailPage() {
   const { id } = useParams();
-  const { model } = useGetModel(Number(id));
+  const { model: modelRaw } = useGetModel(Number(id));
+  const model = modelRaw as ModelCatalog | undefined;
   const navigate = useNavigate();
 
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
-  const [rowData, setRowData] = useState([
+  const [rowData] = useState([
     {
       name: 'Model-00001-of-D0004. safetensors',
       id: '워크플로우 001',
@@ -99,7 +108,7 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.created_at)}</div>
+              <div className="page-detail_item-data">{formatDateTime(model?.created_at?.toString())}</div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
@@ -113,7 +122,7 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.updated_at)}</div>
+              <div className="page-detail_item-data">{formatDateTime(model?.updated_at?.toString())}</div>
             </li>
             <li>
               <div className="page-detail_item-name">버전 정보</div>

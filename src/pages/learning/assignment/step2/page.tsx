@@ -26,13 +26,13 @@ const options = [
 
 export default function LearningAssignmentStep2Page() {
   //stepper
-  const [step, setStep] = useState<number>(1);
+  const [step] = useState<number>(1);
 
   //select
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   //radio button
@@ -43,7 +43,7 @@ export default function LearningAssignmentStep2Page() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={() => {}} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>
@@ -129,7 +129,6 @@ export default function LearningAssignmentStep2Page() {
                 <div className="page-input_item-name">이미지 데이터 셋</div>
                 <div className="page-input_item-data">
                   <Select
-                    className="page-input_item-data_select"
                     options={options}
                     getOptionLabel={(option) => option.text}
                     getOptionValue={(option) => option.value}
@@ -145,7 +144,6 @@ export default function LearningAssignmentStep2Page() {
                 <div className="page-input_item-data">
                   <div className="page-input_item-row2 page-gap-6">
                     <Select
-                      className="page-input_item-data_select"
                       options={options}
                       getOptionLabel={(option) => option.text}
                       getOptionValue={(option) => option.value}

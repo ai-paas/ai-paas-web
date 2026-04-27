@@ -65,7 +65,6 @@ export const HardwareOptimizationButton = ({ customModelId }: { customModelId?: 
           <div className="page-input_item-name page-icon-requisite">최적화 방식</div>
           <div className="page-input_item-data mt-2.5">
             <Select
-              size="m-full"
               menuPosition="fixed"
               options={optimizers}
               getOptionLabel={(option) => option.optimizer_name}

@@ -30,7 +30,6 @@ vi.mock('@innogrid/ui', () => ({
     children,
     title,
     action,
-    onRequestClose,
     buttonTitle,
     subButton,
   }: {

@@ -11,20 +11,29 @@ import { EditWorkflowButton } from '../workflow/edit-workflow-button';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 
+interface WorkflowRow {
+  name: string;
+  id: string | number;
+  state: string;
+  desc: string;
+  date: string;
+  [key: string]: unknown;
+}
+
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }) => <CellCheckbox row={row} />,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    header: ({ table }: { table: WorkflowRow }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: { original: WorkflowRow } }) => <CellCheckbox row={row} />,
+    enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: WorkflowRow) => row.name,
     size: 325,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: WorkflowRow } }) => (
       <Link to={`/workflow/${row.original.name}`} className="table-td-link">
         {row.original.name}
       </Link>
@@ -33,29 +42,29 @@ const columns = [
   {
     id: 'id',
     header: '워크플로우ID',
-    accessorFn: (row) => row.id,
+    accessorFn: (row: WorkflowRow) => row.id,
     size: 325,
   },
   {
     id: 'state',
     header: '상태',
-    accessorFn: (row) => row.state,
+    accessorFn: (row: WorkflowRow) => row.state,
     size: 325,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: WorkflowRow } }) => (
       <span className="table-td-state table-td-state-run">{row.original.state}</span>
     ),
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: WorkflowRow) => row.desc,
     size: 434,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    enableSorting: false,
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: WorkflowRow) => row.date,
     size: 325,
   },
 ];

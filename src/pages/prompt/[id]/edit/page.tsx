@@ -1,4 +1,4 @@
-import { useGetPrompt, useUpdatePrompt } from '@/hooks/service/prompts';
+import { useUpdatePrompt } from '@/hooks/service/prompts';
 import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -30,20 +30,18 @@ export default function PromptEditPage() {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     console.log('prompt:', prompt);
     if (!prompt.prompt.name || !prompt.prompt.description || !prompt.prompt.content) {
       alert('필수 항목을 모두 입력해주세요.');
       return;
     }
 
-    await updatePrompt({
+    updatePrompt({
       surro_prompt_id: promptId,
-      prompt: {
-        name: prompt.prompt.name,
-        description: prompt.prompt.description,
-        content: prompt.prompt.content,
-      },
+      name: prompt.prompt.name,
+      description: prompt.prompt.description,
+      content: prompt.prompt.content,
       prompt_variable: [],
     });
     navigate('/prompt');

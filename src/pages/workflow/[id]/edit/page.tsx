@@ -15,11 +15,13 @@ import {
 import styles from "../../workflow.module.scss";
 import { IconArrCount, IconDel } from "../../../../assets/img/icon";
 
+type OptionType = { text: string; value: string };
+
 //breadcrumb
 const items = [{ label: "워크플로우", path: "/workflow" }];
 
 //select option
-const options = [
+const options: OptionType[] = [
   { text: "옵션 1", value: "option1" },
   { text: "옵션 2", value: "option2" },
   { text: "옵션 3", value: "option3" },
@@ -27,7 +29,7 @@ const options = [
 
 export default function WorkflowEditPage() {
   //searchInput
-  const { searchValue, ...restProps } = useSearchInputState();
+  const { searchValue: _searchValue, ...restProps } = useSearchInputState();
 
   //input
   const [value, setValue] = useState<string>("");
@@ -40,7 +42,7 @@ export default function WorkflowEditPage() {
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   //checkBox
@@ -64,7 +66,7 @@ export default function WorkflowEditPage() {
                   id="checkbox-id"
                   label="문서"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>
                   txt, MD, MDX, MARKDOWN, PDF, HTML, XLSX, XLS, DOC, DOCX, CSV,
@@ -76,7 +78,7 @@ export default function WorkflowEditPage() {
                   id="checkbox-id"
                   label="이미지"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>JPG, JPEG, PNG, GIF, WEBP, SVG</p>
               </div>
@@ -85,7 +87,7 @@ export default function WorkflowEditPage() {
                   id="checkbox-id"
                   label="오디오"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>MP3, M4A, WAV, AMR, MPGA</p>
               </div>
@@ -94,7 +96,7 @@ export default function WorkflowEditPage() {
                   id="checkbox-id"
                   label="비디오"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>MP4, MOV, MPEG, WEBM</p>
               </div>
@@ -103,7 +105,7 @@ export default function WorkflowEditPage() {
                   id="checkbox-id"
                   label="기타"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <div className={styles.accordionAddCheckInput}>
                   <Input
@@ -157,14 +159,10 @@ export default function WorkflowEditPage() {
                   <input type="number" placeholder="0" />
                   <div className={styles.numCountControl}>
                     <button type="button" className={styles.btnNum}>
-                      <IconArrCount
-                        className={`${styles.iconArr} ${styles.iconArrUp}`}
-                      />
+                      <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                     </button>
                     <button type="button" className={styles.btnNum}>
-                      <IconArrCount
-                        className={`${styles.iconArr} ${styles.iconArrDown}`}
-                      />
+                      <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                     </button>
                   </div>
                 </div>
@@ -179,7 +177,7 @@ export default function WorkflowEditPage() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={(path: string) => { void path; }} />
       </div>
       <div className={styles.container}>
         <div className={styles.leftSearchBox}>
@@ -299,21 +297,15 @@ export default function WorkflowEditPage() {
                     <span>생성</span>
                   </button>
                 </div>
-                {/* 내용 없을때 */}
-                {/* <div className={styles.emptyBox}>
-                  <span>생성된 입력필드가 없습니다.</span>
-                </div> */}
-
                 {/* 입력필드 선택시 클래스네임 active 추가 */}
                 <div className={`${styles.addItemField} ${styles.active}`}>
-                  {/* ${styles.active} */}
                   <div>
                     <span>{"{X}"}</span>
                     <span className={styles.addItemFieldId}>app_id</span>
                   </div>
                   <span className={styles.addItemFieldText}>String</span>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
                 <div className={`${styles.addItemField}`}>
@@ -323,7 +315,7 @@ export default function WorkflowEditPage() {
                   </div>
                   <span className={styles.addItemFieldText}>String</span>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
                 <div className={`${styles.addItemField}`}>
@@ -333,7 +325,7 @@ export default function WorkflowEditPage() {
                   </div>
                   <span className={styles.addItemFieldText}>String</span>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
               </div>
@@ -350,17 +342,18 @@ export default function WorkflowEditPage() {
                     value={value}
                     onChange={onChange}
                   />
-                  <Select
-                    className={styles.select}
-                    options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
-                    value={selectedValue}
-                    onChange={onChangeSelect}
-                    menuPosition="fixed"
-                  />
+                  <div className={styles.select}>
+                    <Select
+                      options={options}
+                      getOptionLabel={(option) => option.text}
+                      getOptionValue={(option) => option.value}
+                      value={selectedValue}
+                      onChange={onChangeSelect}
+                      menuPosition="fixed"
+                    />
+                  </div>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
                 <div className={styles.row3}>
@@ -369,17 +362,18 @@ export default function WorkflowEditPage() {
                     value={value}
                     onChange={onChange}
                   />
-                  <Select
-                    className={styles.select}
-                    options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
-                    value={selectedValue}
-                    onChange={onChangeSelect}
-                    menuPosition="fixed"
-                  />
+                  <div className={styles.select}>
+                    <Select
+                      options={options}
+                      getOptionLabel={(option) => option.text}
+                      getOptionValue={(option) => option.value}
+                      value={selectedValue}
+                      onChange={onChangeSelect}
+                      menuPosition="fixed"
+                    />
+                  </div>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
                 <div className={styles.row3}>
@@ -388,17 +382,18 @@ export default function WorkflowEditPage() {
                     value={value}
                     onChange={onChange}
                   />
-                  <Select
-                    className={styles.select}
-                    options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
-                    value={selectedValue}
-                    onChange={onChangeSelect}
-                    menuPosition="fixed"
-                  />
+                  <div className={styles.select}>
+                    <Select
+                      options={options}
+                      getOptionLabel={(option) => option.text}
+                      getOptionValue={(option) => option.value}
+                      value={selectedValue}
+                      onChange={onChangeSelect}
+                      menuPosition="fixed"
+                    />
+                  </div>
                   <button type="button" className={styles.btnIconDel}>
-                    <IconDel className={styles.iconDel} />
+                    <span className={styles.iconDel}><IconDel /></span>
                   </button>
                 </div>
               </div>
@@ -422,24 +417,21 @@ export default function WorkflowEditPage() {
                     </Button>
                   </div>
                 </div>
-                {/* 내용 없을때 */}
-                {/* <div className={styles.emptyBox}>
-                  <span>입력필드를 생성하거나 선택해주세요.</span>
-                </div> */}
               </div>
               <div className={styles.addItemBox}>
                 <div className={styles.addItemNameBox}>
                   <div className={styles.addItemName}>필드 타입</div>
                 </div>
-                <Select
-                  className={styles.select}
-                  options={options}
-                  getOptionLabel={(option) => option.text}
-                  getOptionValue={(option) => option.value}
-                  value={selectedValue}
-                  onChange={onChangeSelect}
-                  menuPosition="fixed"
-                />
+                <div className={styles.select}>
+                  <Select
+                    options={options}
+                    getOptionLabel={(option) => option.text}
+                    getOptionValue={(option) => option.value}
+                    value={selectedValue}
+                    onChange={onChangeSelect}
+                    menuPosition="fixed"
+                  />
+                </div>
               </div>
               <div className={styles.addItemBox}>
                 <div className={styles.addItemNameBox}>
@@ -462,10 +454,11 @@ export default function WorkflowEditPage() {
                 />
               </div>
               <div className={styles.addItemBox}>
-                <Accordion
-                  className={styles.accordion}
-                  components={accordionItems}
-                />
+                <div className={styles.accordion}>
+                  <Accordion
+                    components={accordionItems}
+                  />
+                </div>
               </div>
             </div>
           </div>

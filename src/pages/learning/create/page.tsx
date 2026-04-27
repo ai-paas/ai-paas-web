@@ -22,8 +22,8 @@ import {
   useFormContext,
   useWatch,
   type SubmitHandler,
+  useForm,
 } from 'react-hook-form';
-import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import * as z from 'zod';
 
@@ -265,6 +265,7 @@ export default function LearningCreatePage() {
 const Step1 = () => {
   const {
     register,
+    control,
     formState: { errors },
   } = useFormContext<FormValues>();
 
@@ -285,10 +286,17 @@ const Step1 = () => {
         <div className="page-input_item-box">
           <div className="page-input_item-name">설명</div>
           <div className="page-input_item-data">
-            <Textarea
-              placeholder="설명을 입력해주세요."
-              errMessage={errors.description?.message}
-              {...register('description')}
+            <Controller
+              control={control}
+              name="description"
+              render={({ field, fieldState }) => (
+                <Textarea
+                  placeholder="설명을 입력해주세요."
+                  errMessage={fieldState.error?.message}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
         </div>
@@ -464,7 +472,6 @@ const Step2 = ({
                 name="dataset_id"
                 render={({ field, fieldState }) => (
                   <Select
-                    className="page-input_item-data_select"
                     options={datasetOptions}
                     getOptionLabel={(option) => option.text}
                     getOptionValue={(option) => String(option.value)}
@@ -505,7 +512,6 @@ const Step3 = () => {
               name="model_id"
               render={({ field, fieldState }) => (
                 <Select
-                  className="page-input_item-data_select"
                   options={modelOptions}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => String(option.value)}
@@ -562,7 +568,6 @@ const Step3 = () => {
               name="gpus"
               render={({ field, fieldState }) => (
                 <Select
-                  className="page-input_item-data_select"
                   options={GPU_OPTIONS}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => option.value}

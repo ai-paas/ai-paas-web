@@ -22,7 +22,6 @@ export const DeletePromptButton = ({ promptId }: { promptId?: number }) => {
         cancelButtonText="취소"
         onClickConfirm={handleConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>프롬프트를 삭제하시겠습니까?</span>
       </AlertDialog>

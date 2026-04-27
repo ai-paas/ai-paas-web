@@ -117,7 +117,6 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 공급자 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 options={modelProviders}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}
@@ -136,7 +135,6 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 타입 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 options={modelTypes}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}
@@ -155,7 +153,6 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-name page-icon-requisite">모델 포맷 ID</div>
             <div className="page-input_item-data">
               <Select
-                className="page-input_item-data_select"
                 options={modelFormats}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => String(option.id)}

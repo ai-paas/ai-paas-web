@@ -1,12 +1,20 @@
 import { Table, useTablePagination, type Sorting } from "@innogrid/ui";
 import { useState } from "react";
 
+interface RowData {
+  name: string;
+  creator: string;
+  variable: string;
+  desc: string;
+  date: string;
+}
+
 export const PromptTab = () => {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([
     { id: "name", desc: false },
   ]);
-  const [rowData, setRowData] = useState([
+  const [rowData] = useState<RowData[]>([
     {
       name: "프롬프트1",
       creator: "홍길동",
@@ -19,32 +27,32 @@ export const PromptTab = () => {
     {
       id: "name",
       header: "이름",
-      accessorFn: (row) => row.name,
+      accessorFn: (row: RowData) => row.name,
       size: 334,
     },
     {
       id: "creator",
       header: "생성자",
-      accessorFn: (row) => row.creator,
+      accessorFn: (row: RowData) => row.creator,
       size: 334,
     },
     {
       id: "variable",
       header: "변수",
-      accessorFn: (row) => row.variable,
+      accessorFn: (row: RowData) => row.variable,
       size: 334,
     },
     {
       id: "desc",
       header: "설명",
-      accessorFn: (row) => row.desc,
+      accessorFn: (row: RowData) => row.desc,
       size: 334,
       enableSorting: false, //오름차순/내림차순 아이콘 숨기기
     },
     {
       id: "date",
       header: "생성일시",
-      accessorFn: (row) => row.date,
+      accessorFn: (row: RowData) => row.date,
       size: 325,
     },
   ];

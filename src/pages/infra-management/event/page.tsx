@@ -17,7 +17,7 @@ export default function EventPage() {
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   return (
@@ -30,7 +30,7 @@ export default function EventPage() {
       </div>
       <div className="page-content">
         <Select
-          className="page-input_item-data_select"
+          classNames={{ container: () => 'page-input_item-data_select' }}
           options={options}
           getOptionLabel={(option) => option.text}
           getOptionValue={(option) => option.value}
@@ -40,11 +40,15 @@ export default function EventPage() {
         <div className={styles.eventBox}>
           <div className={styles.btnBox}>
             <button type="button" className={styles.btnPlay}>
-              <IconPlay className={styles.iconPlay} />
+              <span className={styles.iconPlay}>
+                <IconPlay />
+              </span>
               스트리밍 시작
             </button>
             <button type="button" className={styles.btnStop}>
-              <IconStop className={styles.iconStop} />
+              <span className={styles.iconStop}>
+                <IconStop />
+              </span>
               스트리밍 일시정지
             </button>
           </div>
@@ -52,7 +56,9 @@ export default function EventPage() {
             <hr className={styles.leftLine} />
             <div className={styles.cardBoxLeftInner}>
               <div className={styles.cardBoxLeft}>
-                <IconEventOn className={styles.iconEventOn} />
+                <span className={styles.iconEventOn}>
+                  <IconEventOn />
+                </span>
                 <div className={`${styles.card} ${styles.warning}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-warning">Warning</div>
@@ -63,7 +69,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxLeft}>
-                <IconEventOn className={styles.iconEventOn} />
+                <span className={styles.iconEventOn}>
+                  <IconEventOn />
+                </span>
                 <div className={`${styles.card} ${styles.warning}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-warning">Warning</div>
@@ -74,7 +82,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxLeft}>
-                <IconEventOff className={styles.iconEventOff} />
+                <span className={styles.iconEventOff}>
+                  <IconEventOff />
+                </span>
                 <div className={`${styles.card} ${styles.normal}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-run">Normal</div>
@@ -85,7 +95,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxLeft}>
-                <IconEventOn className={styles.iconEventOn} />
+                <span className={styles.iconEventOn}>
+                  <IconEventOn />
+                </span>
                 <div className={`${styles.card} ${styles.warning}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-warning">Warning</div>
@@ -98,7 +110,9 @@ export default function EventPage() {
             </div>
             <div className={styles.cardBoxRightInner}>
               <div className={styles.cardBoxRight}>
-                <IconEventOn className={styles.iconEventOn} />
+                <span className={styles.iconEventOn}>
+                  <IconEventOn />
+                </span>
                 <div className={`${styles.card} ${styles.warning}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-warning">Warning</div>
@@ -109,7 +123,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxRight}>
-                <IconEventOff className={styles.iconEventOff} />
+                <span className={styles.iconEventOff}>
+                  <IconEventOff />
+                </span>
                 <div className={`${styles.card} ${styles.normal}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-run">Normal</div>
@@ -120,7 +136,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxRight}>
-                <IconEventOff className={styles.iconEventOff} />
+                <span className={styles.iconEventOff}>
+                  <IconEventOff />
+                </span>
                 <div className={`${styles.card} ${styles.normal}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-run">Normal</div>
@@ -131,7 +149,9 @@ export default function EventPage() {
                 </div>
               </div>
               <div className={styles.cardBoxRight}>
-                <IconEventOn className={styles.iconEventOn} />
+                <span className={styles.iconEventOn}>
+                  <IconEventOn />
+                </span>
                 <div className={`${styles.card} ${styles.warning}`}>
                   <div className={styles.state}>
                     <div className="table-td-state table-td-state-warning">Warning</div>

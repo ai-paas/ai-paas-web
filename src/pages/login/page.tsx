@@ -61,7 +61,8 @@ export default function LoginPage() {
                 placeholder="아이디를 입력해주세요."
                 value={memberId}
                 onChange={(e) => setMemberId(e.target.value)}
-                size={{ width: '452px', height: '46px' }}
+                size="large"
+                customSize={{ width: '100%', height: '48px' }}
                 variant={errorMessage ? 'err' : 'default'}
                 errMessage={errorMessage}
               />
@@ -83,7 +84,8 @@ export default function LoginPage() {
               <Password
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                size={{ width: '452px', height: '46px' }}
+                size="large"
+                customSize={{ width: '100%', height: '48px' }}
                 variant={errorMessage ? 'err' : 'default'}
                 errMessage={errorMessage}
               />

@@ -4,7 +4,7 @@ import { Button } from '@innogrid/ui';
 
 export const SubmitWorkflowButton = () => {
   const { name, nodes, edges } = useWorkflowStore();
-  const { createWorkflow } = useCreateWorkflow();
+  useCreateWorkflow();
 
   const handleCreate = async () => {
     console.log('Creating workflow with nodes:', nodes, 'and edges:', edges, 'name:', name);

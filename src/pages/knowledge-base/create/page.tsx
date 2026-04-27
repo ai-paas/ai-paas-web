@@ -226,7 +226,9 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
                 <div className="mt-2">
                   {formData?.files.map((file, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <IconDocument className="page-icon-document" />
+                      <span className="page-icon-document">
+                        <IconDocument />
+                      </span>
                       <span>{file.name}</span>
                     </div>
                   ))}
@@ -293,7 +295,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">청크 타입</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={chunkTypes}
               getOptionLabel={(option) => option.name}
               getOptionValue={(option) => option.id.toString()}
@@ -330,7 +332,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">임베딩 모델</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={models}
               getOptionLabel={(option) => option.name}
               getOptionValue={(option) => option.id.toString()}
@@ -348,7 +350,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">검색 타입</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={searchMethods}
               getOptionLabel={(option) => option.name}
               getOptionValue={(option) => option.id.toString()}
@@ -370,7 +372,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   min={1}
                   max={50}
                   value={formData?.top_k ?? [0]}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, top_k: [value] }))}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, top_k: value }))}
                 />
               </div>
               {/* numCount disabled 일때 클래스네임 disabled 추가 */}
@@ -391,7 +393,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       setFormData((prev) => ({ ...prev, top_k: [(prev.top_k[0] || 0) + 1] }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrUp" />
+                    <span className="icon-arr icon-arrUp">
+                      <IconArrCount />
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -403,7 +407,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrDown" />
+                    <span className="icon-arr icon-arrDown">
+                      <IconArrCount />
+                    </span>
                   </button>
                 </div>
               </div>
@@ -422,7 +428,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   max={1}
                   value={formData?.threshold ?? [0]}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, threshold: [value] }))
+                    setFormData((prev) => ({ ...prev, threshold: value }))
                   }
                 />
               </div>
@@ -432,7 +438,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   type="number"
                   placeholder="0"
                   step={0.1}
-                  value={formData?.threshold ?? [0]}
+                  value={formData?.threshold?.[0] ?? 0}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, threshold: [Number(e.target.value)] }))
                   }
@@ -448,7 +454,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrUp" />
+                    <span className="icon-arr icon-arrUp">
+                      <IconArrCount />
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -460,7 +468,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrDown" />
+                    <span className="icon-arr icon-arrDown">
+                      <IconArrCount />
+                    </span>
                   </button>
                 </div>
               </div>
@@ -494,7 +504,7 @@ const Step3 = ({ formData }: Step3Props) => {
             <div className="page-accordion_item-box">
               <div className="page-accordion_item-name">파일</div>
               <div className="page-accordion_item-data">
-                {formData?.files.length > 0
+                {(formData?.files?.length ?? 0) > 0
                   ? formData?.files.map((item, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <IconDocument /> {item.name}
