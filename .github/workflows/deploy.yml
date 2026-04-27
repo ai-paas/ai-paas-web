@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           script: |
             cd /home/ubuntu/app-build
-            echo "${{ secrets.NPMRC }}" > .npmrc
+            pnpm i @innogrid/ui@link:/home/ubuntu/external-libs --save-exact
             pnpm install --frozen-lockfile
             pnpm run build
             rm .npmrc
