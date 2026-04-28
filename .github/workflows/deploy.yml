@@ -24,6 +24,8 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
+        env:
+          VITE_SERVER_URL: ${{ secrets.SERVER_URL }}
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -79,7 +81,6 @@ jobs:
             docker run -d \
               --name ai-paas-web \
               -p 80:80 \
-              -e VITE_SERVER_URL=${{ secrets.SERVER_URL }} \
               --restart always \
               ghcr.io/${{ github.repository }}:latest
 
