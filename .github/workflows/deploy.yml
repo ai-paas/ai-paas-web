@@ -25,13 +25,12 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
-        env:
-          VITE_SERVER_URL: ${{ secrets.SERVER_URL }}
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v7.0.1
         with:
           name: dist
           path: dist
+          retention-days: 1
 
   dockerize:
     needs: build
