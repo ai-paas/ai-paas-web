@@ -34,6 +34,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
       - name: Download a Build Artifact
         uses: actions/download-artifact@v7.0.0
         with:
@@ -53,8 +55,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/ai-paas-web:latest
-            ghcr.io/${{ github.repository }}/ai-paas-web:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
   deploy:
     needs: dockerize
@@ -69,7 +71,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           script: |
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ghcr.io/${{ github.repository }}/ai-paas-web:latest
+            docker pull ghcr.io/${{ github.repository }}:latest
 
             docker stop ai-paas-web || true
             docker rm ai-paas-web || true
@@ -79,6 +81,6 @@ jobs:
               -p 80:80 \
               -e VITE_SERVER_URL=${{ secrets.SERVER_URL }} \
               --restart always \
-              ghcr.io/${{ github.repository }}/ai-paas-web:latest
+              ghcr.io/${{ github.repository }}:latest
 
             docker image prune -f
