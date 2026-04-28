@@ -81,7 +81,13 @@ export const HardwareOptimizationButton = ({ customModelId }: { customModelId?: 
                   args: option?.argument,
                 });
               }}
-              styles={{ menuPortal: (base) => ({ ...base, top: 'unset', left: 'unset' }) }}
+              styles={{
+                menuPortal: (base: Record<string, unknown>) => ({
+                  ...base,
+                  top: 'unset',
+                  left: 'unset',
+                }),
+              }}
             />
           </div>
         </div>

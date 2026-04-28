@@ -145,8 +145,8 @@ export default function LearningAssignmentStep2Page() {
                   <div className="page-input_item-row2 page-gap-6">
                     <Select
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />

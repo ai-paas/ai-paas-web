@@ -50,7 +50,13 @@ export const ModelCompressionButton = ({ customModelId }: { customModelId?: numb
               getOptionValue={(option: OptionType) => option.value}
               value={selectedValue}
               onChange={onChangeSelect}
-              styles={{ menuPortal: (base) => ({ ...base, top: 'unset', left: 'unset' }) }}
+              styles={{
+                menuPortal: (base: Record<string, unknown>) => ({
+                  ...base,
+                  top: 'unset',
+                  left: 'unset',
+                }),
+              }}
             />
           </div>
         </div>
