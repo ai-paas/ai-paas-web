@@ -40,10 +40,13 @@ export const useCreatePrompt = () => {
   };
 };
 
-export const useGetPrompt = (surro_prompt_id: number) => {
+export const useGetPrompt = (surro_prompt_id?: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.prompts.detail(surro_prompt_id),
+    queryKey: surro_prompt_id !== undefined
+      ? queryKeys.prompts.detail(surro_prompt_id)
+      : ['prompts', 'detail', 'undefined'],
     queryFn: () => api.get(`prompts/${surro_prompt_id}`).json<Prompt>(),
+    enabled: surro_prompt_id !== undefined,
   });
 
   return {
@@ -59,8 +62,9 @@ export const useUpdatePrompt = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: ({ surro_prompt_id, ...data }: UpdatePromptRequest) =>
       api.put(`prompts/${surro_prompt_id}`, { json: data }).json<Prompt>(),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.prompts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.prompts.detail(variables.surro_prompt_id) });
     },
   });
 

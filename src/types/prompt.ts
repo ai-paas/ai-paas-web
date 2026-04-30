@@ -25,8 +25,8 @@ export interface CreatePromptRequest {
 
 export interface UpdatePromptRequest {
   surro_prompt_id: number;
-  name: string;
-  description: string;
-  content: string;
-  prompt_variable: string[];
+  name?: string;
+  description?: string;
+  content?: string;
+  prompt_variable?: string[];
 }
