@@ -22,7 +22,7 @@ export default function LearningAssignmentStep5Page() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={() => {}} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>

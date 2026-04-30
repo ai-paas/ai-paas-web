@@ -1,4 +1,4 @@
-import { Background, ReactFlow, type Edge, type Node } from '@xyflow/react';
+import { Background, ReactFlow, type Edge, type NodeProps } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { memo, useEffect } from 'react';
 import {
@@ -8,7 +8,7 @@ import {
   LlmIcon,
 } from '@/components/features/workflow/icons/workflow-icons';
 import { Handle, Position } from '@xyflow/react';
-import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { useWorkflowStore, type WorkflowNode } from '@/store/useWorkflowStore';
 
 const HANDLE_STYLE = {
   backgroundColor: '#296dff',
@@ -17,7 +17,7 @@ const HANDLE_STYLE = {
   borderRadius: '1px',
 };
 
-const StartNode = memo(({ data, isConnectable, selected }) => {
+const StartNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
     <div>
       <div
@@ -42,7 +42,7 @@ const StartNode = memo(({ data, isConnectable, selected }) => {
   );
 });
 
-const ModelNode = memo(({ data, isConnectable, selected }) => {
+const ModelNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
     <div>
       <Handle
@@ -73,7 +73,7 @@ const ModelNode = memo(({ data, isConnectable, selected }) => {
   );
 });
 
-const KnowledgebaseNode = memo(({ data, isConnectable, selected }) => {
+const KnowledgebaseNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
     <div>
       <Handle
@@ -104,7 +104,7 @@ const KnowledgebaseNode = memo(({ data, isConnectable, selected }) => {
   );
 });
 
-const EndNode = memo(({ data, isConnectable, selected }) => {
+const EndNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
     <div>
       <Handle
@@ -139,7 +139,7 @@ const nodeTypes = {
 const DEFAULT_VIEWPORT = { x: 0, y: 0, zoom: 1.5 };
 
 interface FlowChartProps {
-  initialNodes: Node[];
+  initialNodes: WorkflowNode[];
   initialEdges: Edge[];
 }
 

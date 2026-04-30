@@ -185,7 +185,7 @@ export default function CustomModelCreateHuggingfacePage() {
               <span>모델 검색</span>
               <div className={styles.searchInputBox}>
                 <SearchInput
-                  size="m-large"
+                  size="large"
                   variant="default"
                   placeholder="검색어를 입력해주세요"
                   {...restProps}
@@ -193,7 +193,9 @@ export default function CustomModelCreateHuggingfacePage() {
                 <div className={styles.selectBtnBox}>
                   <DropdownMenu menus={sortMenus}>
                     <button type="button" className={`${styles.btnAlign} ${styles.active}`}>
-                      <IconAlign className={styles.iconAlign} />
+                      <span className={styles.iconAlign}>
+                        <IconAlign />
+                      </span>
                       정렬: <span>{sortLabel}</span>
                     </button>
                   </DropdownMenu>
@@ -295,18 +297,9 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
         className={styles.tabs}
         labels={[
           'Main',
-          <div className="flex space-x-1">
-            <span>Tasks</span>
-            <Badge number={tasks?.length + tasksRemainingCount} />
-          </div>,
-          <div className="flex space-x-1">
-            <span>Libraries</span>
-            <Badge number={libraries?.length + librariesRemainingCount} />
-          </div>,
-          <div className="flex space-x-1">
-            <span>Languages</span>
-            <Badge number={languages?.length + languagesRemainingCount} />
-          </div>,
+          `Tasks${(tasks?.length ?? 0) + (tasksRemainingCount ?? 0) > 0 ? ` (${(tasks?.length ?? 0) + (tasksRemainingCount ?? 0)})` : ''}`,
+          `Libraries${(libraries?.length ?? 0) + (librariesRemainingCount ?? 0) > 0 ? ` (${(libraries?.length ?? 0) + (librariesRemainingCount ?? 0)})` : ''}`,
+          `Languages${(languages?.length ?? 0) + (languagesRemainingCount ?? 0) > 0 ? ` (${(languages?.length ?? 0) + (languagesRemainingCount ?? 0)})` : ''}`,
         ]}
         components={[
           <MainTab
@@ -551,12 +544,13 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
             <IconRefresh />
           </button>
         </div>
-        <Input
-          size={{ width: '300px', height: '32px' }}
-          placeholder="검색어를 입력해주세요."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div style={{ width: '300px', height: '32px' }}>
+          <Input
+            placeholder="검색어를 입력해주세요."
+            value={search}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+          />
+        </div>
         <div className={styles.chipBox}>
           {filteredItems?.map((item) => (
             <button
@@ -572,16 +566,6 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
       </div>
     </div>
   );
-};
-
-const Badge = ({ number }: { number?: number }) => {
-  if (!number) return null;
-
-  if (number < 100) {
-    return <span className={styles.chkMark}>{number}</span>;
-  }
-
-  return <div className={`${styles.chkMark} ${styles.active}`}>99+</div>;
 };
 
 interface ModelItemProps {

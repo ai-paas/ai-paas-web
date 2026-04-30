@@ -1,12 +1,22 @@
 import { Table, useTablePagination, type Sorting } from "@innogrid/ui";
 import { useState } from "react";
 
+interface RowData {
+  name: string;
+  modelId: string;
+  workflow: string;
+  type: string;
+  owner: string;
+  desc: string;
+  date: string;
+}
+
 export const ModelTab = () => {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([
     { id: "name", desc: false },
   ]);
-  const [rowData, setRowData] = useState([
+  const [rowData] = useState<RowData[]>([
     {
       name: "테스트 문서",
       modelId: "Qwen/QwQ-32B-Preview",
@@ -21,44 +31,44 @@ export const ModelTab = () => {
     {
       id: "name",
       header: "이름",
-      accessorFn: (row) => row.name,
+      accessorFn: (row: RowData) => row.name,
       size: 300,
     },
     {
       id: "modelId",
       header: "모델 ID",
-      accessorFn: (row) => row.modelId,
+      accessorFn: (row: RowData) => row.modelId,
       size: 300,
     },
     {
       id: "workflow",
       header: "워크플로우",
-      accessorFn: (row) => row.workflow,
+      accessorFn: (row: RowData) => row.workflow,
       size: 225,
     },
     {
       id: "type",
       header: "유형",
-      accessorFn: (row) => row.type,
+      accessorFn: (row: RowData) => row.type,
       size: 190,
     },
     {
       id: "owner",
       header: "소유자",
-      accessorFn: (row) => row.owner,
+      accessorFn: (row: RowData) => row.owner,
       size: 190,
     },
     {
       id: "desc",
       header: "모델 설명",
-      accessorFn: (row) => row.desc,
+      accessorFn: (row: RowData) => row.desc,
       size: 334,
       enableSorting: false, //오름차순/내림차순 아이콘 숨기기
     },
     {
       id: "date",
       header: "생성일시",
-      accessorFn: (row) => row.date,
+      accessorFn: (row: RowData) => row.date,
       size: 325,
     },
   ];

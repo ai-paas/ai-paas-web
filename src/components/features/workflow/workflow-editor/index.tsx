@@ -1,13 +1,14 @@
-import { ReactFlowProvider, type Edge, type Node } from '@xyflow/react';
+import { ReactFlowProvider, type Edge } from '@xyflow/react';
 import { WorkflowComponentPanel } from './workflow-component-panel';
 import { FlowChart } from '@/components/ui/flow-chart';
 import { Button } from '@innogrid/ui';
 import { SubmitWorkflowButton } from './submit-workflow-button';
 import { WorkflowSettingPanel } from './workflow-setting-panel';
 import styles from '@/pages/workflow/workflow.module.scss';
+import type { WorkflowNode } from '@/store/useWorkflowStore';
 
 interface WorkflowEditorProps {
-  initialNodes: Node[];
+  initialNodes: WorkflowNode[];
   initialEdges: Edge[];
 }
 

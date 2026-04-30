@@ -124,7 +124,6 @@ export const CreateMemberAction = ({ formData }: CreateMemberActionProps) => {
       {/* 확인 모달 */}
       <AlertDialog
         isOpen={isOpenConfirm}
-        size="medium"
         confirmButtonText={isPending ? '처리 중...' : '확인'}
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
@@ -136,7 +135,6 @@ export const CreateMemberAction = ({ formData }: CreateMemberActionProps) => {
       {/* 결과 모달 */}
       <AlertDialog
         isOpen={isOpenResult}
-        size="medium"
         confirmButtonText="닫기"
         onClickConfirm={handleCloseResult}
         onClickClose={handleCloseResult}
@@ -146,7 +144,6 @@ export const CreateMemberAction = ({ formData }: CreateMemberActionProps) => {
       {/* 에러 모달 */}
       <AlertDialog
         isOpen={isOpenError}
-        size="medium"
         confirmButtonText="확인"
         onClickConfirm={() => setIsOpenError(false)}
         onClickClose={() => setIsOpenError(false)}

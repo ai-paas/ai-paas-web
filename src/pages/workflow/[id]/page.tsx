@@ -7,36 +7,44 @@ import { Link, useNavigate } from 'react-router';
 import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
 import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
 
+interface DataType {
+  name: string;
+  id: string;
+  state: string;
+  desc: string;
+  date: string;
+}
+
 const columns = [
   {
     id: 'name',
     header: '모델 ID',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: DataType) => row.name,
     size: 325,
   },
   {
     id: 'id',
     header: '파라미터',
-    accessorFn: (row) => row.id,
+    accessorFn: (row: DataType) => row.id,
     size: 325,
   },
   {
     id: 'state',
     header: '테스크',
-    accessorFn: (row) => row.state,
+    accessorFn: (row: DataType) => row.state,
     size: 325,
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: DataType) => row.desc,
     size: 434,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: DataType) => row.date,
     size: 325,
   },
 ];
@@ -47,7 +55,7 @@ export default function WorkflowDetailPage() {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
-  const [rowData, setRowData] = useState<DataType[]>([
+  const [rowData] = useState<DataType[]>([
     {
       name: 'openchat/openchat-3.6-8b-20240522',
       id: '32.5B',

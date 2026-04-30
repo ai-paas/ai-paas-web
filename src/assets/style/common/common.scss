@@ -481,7 +481,8 @@ input {
     padding: 24px;
     @include transition-allEaseInOut;
   }
-  .fileUpload-preview:hover {
+  .fileUpload-preview:hover,
+  .fileUpload-preview--dragging {
     border-color: $color-gray-200;
     background-color: $color-gray-10;
     & b {

@@ -1,11 +1,19 @@
 import { useDeleteDataset } from '@/hooks/service/datasets';
 import { AlertDialog, Button, useToast } from '@innogrid/ui';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export const DeleteDatasetButton = ({ datasetId }: { datasetId?: number }) => {
+export const DeleteDatasetButton = ({
+  datasetId,
+  redirect,
+}: {
+  datasetId?: number;
+  redirect?: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { deleteDataset } = useDeleteDataset();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const handleClickConfirm = () => {
     if (!datasetId) return;
@@ -18,6 +26,9 @@ export const DeleteDatasetButton = ({ datasetId }: { datasetId?: number }) => {
           children: '데이터셋이 성공적으로 삭제되었습니다.',
         });
         setIsOpen(false);
+        if (redirect) {
+          navigate(redirect);
+        }
       },
       onError: () => {
         toast.open({
@@ -40,7 +51,6 @@ export const DeleteDatasetButton = ({ datasetId }: { datasetId?: number }) => {
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>데이터셋을 삭제하시겠습니까?</span>
       </AlertDialog>

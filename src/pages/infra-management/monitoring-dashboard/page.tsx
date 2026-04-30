@@ -20,41 +20,49 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
+interface MonitoringRow {
+  name: string;
+  workflow: string;
+  type: string;
+  desc: string;
+  date: string;
+}
+
 const columns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: MonitoringRow) => row.name,
     size: 300,
   },
   {
     id: 'workflow',
     header: '워크플로우',
-    accessorFn: (row) => row.workflow,
+    accessorFn: (row: MonitoringRow) => row.workflow,
     size: 300,
   },
   {
     id: 'type',
     header: '유형',
-    accessorFn: (row) => row.type,
+    accessorFn: (row: MonitoringRow) => row.type,
     size: 285,
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: MonitoringRow) => row.desc,
     size: 334,
     enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: MonitoringRow) => row.date,
     size: 325,
   },
 ];
 
-const rowData = [];
+const rowData: MonitoringRow[] = [];
 
 export default function MonitoringPage() {
   const { pagination, setPagination } = useTablePagination();
@@ -62,7 +70,7 @@ export default function MonitoringPage() {
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   return (
@@ -75,10 +83,10 @@ export default function MonitoringPage() {
       </div>
       <div className="page-content">
         <Select
-          className="page-input_item-data_select"
+          classNames={{ container: () => 'page-input_item-data_select' }}
           options={options}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedValue}
           onChange={onChangeSelect}
         />

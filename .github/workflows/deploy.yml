@@ -4,49 +4,61 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - name: Copy source to Server
-        uses: appleboy/scp-action@master
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6.4.0
         with:
-          host: ${{ secrets.HOST }}
-          port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          source: "."
-          target: "/home/ubuntu/app-build"
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
+          node-version: 24
+          cache: "pnpm"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.3
+      - name: Install & Build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v7.0.1
         with:
-          host: ${{ secrets.HOST }}
-          port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          script: |
-            cd /home/ubuntu/app-build
-            echo "${{ secrets.NPMRC }}" > .npmrc
-            pnpm install --frozen-lockfile
-            pnpm run build
-            rm .npmrc
+          name: dist
+          path: dist
+          retention-days: 1
 
   dockerize:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v7.0.0
         with:
-          host: ${{ secrets.HOST }}
-          port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          script: |
-            cd /home/ubuntu/app-build
-            docker build --no-cache -t ai-paas-web:latest .
-            docker save ai-paas-web:latest > ai-paas-web.tar
+          name: dist
+          path: dist
+
+      - name: GHCR Login
+        uses: docker/login-action@v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v7.1.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
   deploy:
     needs: dockerize
@@ -60,7 +72,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            docker load < /home/ubuntu/app-build/ai-paas-web.tar
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/${{ github.repository }}:latest
 
             docker stop ai-paas-web || true
             docker rm ai-paas-web || true
@@ -70,6 +83,6 @@ jobs:
               -p 80:80 \
               -e VITE_SERVER_URL=${{ secrets.SERVER_URL }} \
               --restart always \
-              ai-paas-web:latest
+              ghcr.io/${{ github.repository }}:latest
 
             docker image prune -f

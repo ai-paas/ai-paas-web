@@ -27,7 +27,6 @@ export const DeleteModelCatalogButton = ({ modelCatalogId }: { modelCatalogId: n
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>모델 카탈로그를 삭제하시겠습니까?</span>
       </AlertDialog>

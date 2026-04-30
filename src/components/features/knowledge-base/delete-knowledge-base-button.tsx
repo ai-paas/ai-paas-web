@@ -27,7 +27,6 @@ export const DeleteKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
         onClickClose={() => setIsOpen(false)}
-        size="small"
       >
         <span>지식 베이스를 삭제하시겠습니까?</span>
       </AlertDialog>

@@ -18,19 +18,32 @@ const FIELD_TYPE_OPTIONS = [
   { text: '파일 리스트', value: 'files' },
 ];
 
+type SelectOption = { text: string; value: string };
+
+type InputField = {
+  type: 'text' | 'file';
+  variable: string;
+  label: string;
+  max_length: number;
+  file_type: string;
+  file_upload: string;
+  file_max_number: number;
+  name?: string;
+};
+
 export const StartSetting = () => {
   const selectedNode = useWorkflowStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
 
   const [value, setValue] = useState<string>('');
   const [value2, setValue2] = useState<number[]>([30]);
-  const [selectedValue, setSelectedValue] = useState();
+  const [selectedValue, setSelectedValue] = useState<SelectOption | null>(null);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
 
-  const onChangeSelect = (option) => {
+  const onChangeSelect = (option: SelectOption | null) => {
     setSelectedValue(option);
   };
 
@@ -55,7 +68,7 @@ export const StartSetting = () => {
                   id="checkbox-id"
                   label="문서"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>
                   txt, MD, MDX, MARKDOWN, PDF, HTML, XLSX, XLS, DOC, DOCX, CSV, EML, MSG, PPTX, PPT,
@@ -67,7 +80,7 @@ export const StartSetting = () => {
                   id="checkbox-id"
                   label="이미지"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>JPG, JPEG, PNG, GIF, WEBP, SVG</p>
               </div>
@@ -76,7 +89,7 @@ export const StartSetting = () => {
                   id="checkbox-id"
                   label="오디오"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>MP3, M4A, WAV, AMR, MPGA</p>
               </div>
@@ -85,7 +98,7 @@ export const StartSetting = () => {
                   id="checkbox-id"
                   label="비디오"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <p>MP4, MOV, MPEG, WEBM</p>
               </div>
@@ -94,7 +107,7 @@ export const StartSetting = () => {
                   id="checkbox-id"
                   label="기타"
                   checked={checked}
-                  onCheckedChange={(value) => setChecked(value)}
+                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
                 />
                 <div className={styles.accordionAddCheckInput}>
                   <Input placeholder="텍스트 필드" value={value} onChange={onChange} />
@@ -136,10 +149,10 @@ export const StartSetting = () => {
                   <input type="number" placeholder="0" />
                   <div className={styles.numCountControl}>
                     <button type="button" className={styles.btnNum}>
-                      <IconArrCount className={`${styles.iconArr} ${styles.iconArrUp}`} />
+                      <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
                     </button>
                     <button type="button" className={styles.btnNum}>
-                      <IconArrCount className={`${styles.iconArr} ${styles.iconArrDown}`} />
+                      <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
                     </button>
                   </div>
                 </div>
@@ -152,6 +165,8 @@ export const StartSetting = () => {
   ];
 
   if (!selectedNode) return null;
+
+  const inputFields = (selectedNode.data.inputFields ?? []) as InputField[];
 
   return (
     <div className={styles.addInner}>
@@ -173,7 +188,7 @@ export const StartSetting = () => {
             onClick={() => {
               updateNodeData(selectedNode.id, {
                 inputFields: [
-                  ...(selectedNode.data.inputFields || []),
+                  ...inputFields,
                   {
                     type: 'text',
                     variable: '',
@@ -193,12 +208,12 @@ export const StartSetting = () => {
 
         {JSON.stringify(selectedNode.data)}
 
-        {selectedNode.data.inputFields && selectedNode.data.inputFields.length === 0 && (
+        {inputFields.length === 0 && (
           <div className={styles.emptyBox}>
             <span>생성된 입력필드가 없습니다.</span>
           </div>
         )}
-        {selectedNode.data.inputFields?.map((field, idx) => (
+        {inputFields.map((field, idx) => (
           <div
             key={field.name ? field.name : idx}
             className={`${styles.addItemField} ${styles.active}`}
@@ -209,7 +224,7 @@ export const StartSetting = () => {
             </div>
             <span className={styles.addItemFieldText}>String</span>
             <button type="button" className={styles.btnIconDel}>
-              <IconDel className={styles.iconDel} />
+              <span className={styles.iconDel}><IconDel /></span>
             </button>
           </div>
         ))}
@@ -228,17 +243,16 @@ export const StartSetting = () => {
           </div>
         </div>
       </div>
-      {selectedNode.data.inputFields?.length > 0 ? (
+      {inputFields.length > 0 ? (
         <>
           <div className={styles.addItemBox}>
             <div className={styles.addItemNameBox}>
               <div className={styles.addItemName}>필드 타입</div>
             </div>
             <Select
-              className={styles.select}
               options={FIELD_TYPE_OPTIONS}
-              getOptionLabel={(option) => option.text}
-              getOptionValue={(option) => option.value}
+              getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+              getOptionValue={(option: SelectOption) => option?.value ?? ''}
               value={selectedValue}
               onChange={onChangeSelect}
               menuPosition="fixed"
@@ -258,7 +272,9 @@ export const StartSetting = () => {
           </div>
 
           <div className={styles.addItemBox}>
-            <Accordion className={styles.accordion} components={accordionItems} />
+            <div>
+              <Accordion components={accordionItems} />
+            </div>
           </div>
         </>
       ) : (

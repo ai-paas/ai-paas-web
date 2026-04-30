@@ -26,7 +26,7 @@ export const EditMemberAction = ({ formData }: EditMemberActionProps) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [resultNode, setResultNode] = useState<React.ReactNode>(null);
 
-  const [errors, setErrors] = useState({
+  const [, setErrors] = useState({
     name: '',
     memberId: '',
     email: '',
@@ -130,7 +130,6 @@ export const EditMemberAction = ({ formData }: EditMemberActionProps) => {
       {/* 확인 모달 */}
       <AlertDialog
         isOpen={isOpenConfirm}
-        size="medium"
         confirmButtonText={isPending ? '처리 중...' : '확인'}
         cancelButtonText="취소"
         onClickConfirm={handleClickConfirm}
@@ -142,7 +141,6 @@ export const EditMemberAction = ({ formData }: EditMemberActionProps) => {
       {/* 결과 모달 */}
       <AlertDialog
         isOpen={isOpenResult}
-        size="small"
         confirmButtonText="닫기"
         onClickConfirm={handleCloseResult}
         onClickClose={handleCloseResult}

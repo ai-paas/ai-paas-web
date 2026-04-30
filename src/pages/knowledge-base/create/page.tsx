@@ -19,6 +19,8 @@ import {
   useGetSearchMethods,
 } from '@/hooks/service/knowledgebase';
 import { useGetModels, useGetModelTypes } from '@/hooks/service/models';
+import type { ChunkType, SearchMethod } from '@/types/knowledgebase';
+import type { Model } from '@/types/model';
 
 interface FormData {
   name: string;
@@ -189,7 +191,7 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
             <Input
               placeholder="이름을 입력해주세요."
               value={formData?.name ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             />
             <p className="page-input_item-input-desc">이름 입력에 대한 설명글이 들어갑니다.</p>
           </div>
@@ -199,7 +201,7 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
           <div className="page-input_item-data">
             <Textarea
               value={formData?.description ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="설명을 입력해주세요."
             />
           </div>
@@ -226,7 +228,9 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
                 <div className="mt-2">
                   {formData?.files.map((file, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <IconDocument className="page-icon-document" />
+                      <span className="page-icon-document">
+                        <IconDocument />
+                      </span>
                       <span>{file.name}</span>
                     </div>
                   ))}
@@ -272,7 +276,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               type="number"
               placeholder="청크 길이를 입력해주세요."
               value={formData?.chunk_size?.toString()}
-              onChange={(e) => setFormData((prev) => ({ ...prev, chunk_size: +e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, chunk_size: +e.target.value }))}
             />
             <p className="page-input_item-input-desc">청크 길이를 입력해주세요.</p>
           </div>
@@ -284,7 +288,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               type="number"
               placeholder="청크 중첩을 입력해주세요."
               value={formData?.chunk_overlap?.toString()}
-              onChange={(e) => setFormData((prev) => ({ ...prev, chunk_overlap: +e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev) => ({ ...prev, chunk_overlap: +e.target.value }))}
             />
             <p className="page-input_item-input-desc">청크 중첩을 입력해주세요.</p>
           </div>
@@ -293,12 +297,12 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">청크 타입</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={chunkTypes}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={chunkTypes.find((type) => type.id === formData?.chunk_type?.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: ChunkType) => option.name}
+              getOptionValue={(option: ChunkType) => option.id.toString()}
+              value={chunkTypes.find((type: ChunkType) => type.id === formData?.chunk_type?.id)}
+              onChange={(option: ChunkType | null) => {
                 if (option) setFormData((prev) => ({ ...prev, chunk_type: option }));
               }}
             />
@@ -330,12 +334,12 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">임베딩 모델</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={models}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={models.find((model) => model.id === formData?.embedding_model?.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: Model) => option.name}
+              getOptionValue={(option: Model) => option.id.toString()}
+              value={models.find((model: Model) => model.id === formData?.embedding_model?.id)}
+              onChange={(option: Model | null) => {
                 if (option) setFormData((prev) => ({ ...prev, embedding_model: option }));
               }}
             />
@@ -348,12 +352,12 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
           <div className="page-input_item-name page-icon-requisite">검색 타입</div>
           <div className="page-input_item-data">
             <Select
-              className="page-input_item-data_select"
+              classNames={{ container: () => 'page-input_item-data_select' }}
               options={searchMethods}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.id.toString()}
-              value={searchMethods?.find((method) => method.id === formData?.search_method.id)}
-              onChange={(option) => {
+              getOptionLabel={(option: SearchMethod) => option.name}
+              getOptionValue={(option: SearchMethod) => option.id.toString()}
+              value={searchMethods?.find((method: SearchMethod) => method.id === formData?.search_method.id)}
+              onChange={(option: SearchMethod | null) => {
                 if (option) setFormData((prev) => ({ ...prev, search_method: option }));
               }}
             />
@@ -370,7 +374,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   min={1}
                   max={50}
                   value={formData?.top_k ?? [0]}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, top_k: [value] }))}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, top_k: value }))}
                 />
               </div>
               {/* numCount disabled 일때 클래스네임 disabled 추가 */}
@@ -379,7 +383,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   type="number"
                   placeholder="0"
                   value={formData?.top_k[0]}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setFormData((prev) => ({ ...prev, top_k: [Number(e.target.value)] }));
                   }}
                 />
@@ -391,7 +395,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       setFormData((prev) => ({ ...prev, top_k: [(prev.top_k[0] || 0) + 1] }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrUp" />
+                    <span className="icon-arr icon-arrUp">
+                      <IconArrCount />
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -403,7 +409,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrDown" />
+                    <span className="icon-arr icon-arrDown">
+                      <IconArrCount />
+                    </span>
                   </button>
                 </div>
               </div>
@@ -422,7 +430,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   max={1}
                   value={formData?.threshold ?? [0]}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, threshold: [value] }))
+                    setFormData((prev) => ({ ...prev, threshold: value }))
                   }
                 />
               </div>
@@ -432,8 +440,8 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                   type="number"
                   placeholder="0"
                   step={0.1}
-                  value={formData?.threshold ?? [0]}
-                  onChange={(e) =>
+                  value={formData?.threshold?.[0] ?? 0}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFormData((prev) => ({ ...prev, threshold: [Number(e.target.value)] }))
                   }
                 />
@@ -448,7 +456,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrUp" />
+                    <span className="icon-arr icon-arrUp">
+                      <IconArrCount />
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -460,7 +470,9 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
                       }))
                     }
                   >
-                    <IconArrCount className="icon-arr icon-arrDown" />
+                    <span className="icon-arr icon-arrDown">
+                      <IconArrCount />
+                    </span>
                   </button>
                 </div>
               </div>
@@ -494,7 +506,7 @@ const Step3 = ({ formData }: Step3Props) => {
             <div className="page-accordion_item-box">
               <div className="page-accordion_item-name">파일</div>
               <div className="page-accordion_item-data">
-                {formData?.files.length > 0
+                {(formData?.files?.length ?? 0) > 0
                   ? formData?.files.map((item, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <IconDocument /> {item.name}

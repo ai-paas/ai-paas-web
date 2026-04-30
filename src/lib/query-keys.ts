@@ -1,5 +1,6 @@
 import type { GetDatasetsParams } from '@/types/dataset';
 import type { GetKnowledgeBasesParams, GetSearchRecordsParams } from '@/types/knowledgebase';
+import type { GetLearningParams } from '@/types/learning';
 import type { GetMembersParams } from '@/types/member';
 import type {
   GetCustomModelsParams,
@@ -36,7 +37,7 @@ export const queryKeys = {
     all: ['knowledge-bases'] as const,
     list: (params: GetKnowledgeBasesParams = {}) =>
       [...queryKeys.knowledgeBases.all, params] as const,
-    detail: (knowledgeBaseId: number) =>
+    detail: (knowledgeBaseId?: number) =>
       [...queryKeys.knowledgeBases.all, knowledgeBaseId] as const,
     files: (knowledgeBaseId: number) =>
       [...queryKeys.knowledgeBases.detail(knowledgeBaseId), 'files'] as const,
@@ -104,6 +105,13 @@ export const queryKeys = {
     all: ['services'] as const,
     list: (params: GetServicesParams = {}) => [...queryKeys.services.all, params] as const,
     detail: (serviceId?: string) => [...queryKeys.services.all, serviceId] as const,
+  },
+  learning: {
+    all: ['learning'] as const,
+    list: (params: GetLearningParams = {}) => [...queryKeys.learning.all, params] as const,
+    detail: (experimentId?: number) => [...queryKeys.learning.all, experimentId] as const,
+    status: (experimentId?: number) =>
+      [...queryKeys.learning.all, 'status', experimentId] as const,
   },
   workflows: {
     all: ['workflows'] as const,

@@ -124,24 +124,28 @@ export const MonitoringTab = () => {
       <div className={styles.selectBox}>
         <Select
           options={options1}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedWorkflow}
           onChange={handleSelectWorkflow}
           menuPosition="fixed"
         />
         <Select
           options={options2}
-          getOptionLabel={(option) => option.text}
-          getOptionValue={(option) => option.value}
+          getOptionLabel={(option: OptionType) => option.text}
+          getOptionValue={(option: OptionType) => option.value}
           value={selectedPeriod}
           onChange={handleSelectPeriod}
           menuPosition="fixed"
         />
       </div>
       <div className={styles.accordionBox}>
-        <Accordion className={styles.accordion} components={accordionItems1} />
-        <Accordion className={styles.accordion} components={accordionItems2} />
+        <div className={styles.accordion}>
+          <Accordion components={accordionItems1} />
+        </div>
+        <div className={styles.accordion}>
+          <Accordion components={accordionItems2} />
+        </div>
       </div>
     </div>
   );

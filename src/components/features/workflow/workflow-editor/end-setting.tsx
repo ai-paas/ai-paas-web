@@ -10,32 +10,7 @@ const options = [
   { text: '옵션 3', value: 'option3' },
 ];
 
-type OptionType = { text: string; value: string };
-
-const options2 = [
-  {
-    label: '추천 모델',
-    value: 'recommendation',
-    options: [
-      { value: 'option1', text: 'Meta-Liama-3-8B' },
-      { value: 'option2', text: 'gemma3:4b' },
-    ],
-  },
-  {
-    label: '모든 모델',
-    value: 'all',
-    options: [
-      { value: 'option1', text: 'openchat-3.6-8b-20240522' },
-      { value: 'option2', text: 'Qwen2-7B-Instruct' },
-    ],
-  },
-];
-
-const options3 = [
-  { text: '지식 베이스 001', value: 'option1' },
-  { text: '지식 베이스 002', value: 'option2' },
-  { text: '지식 베이스 003', value: 'option3' },
-];
+type SelectOption = { text: string; value: string };
 
 export const EndSetting = () => {
   //input
@@ -46,9 +21,9 @@ export const EndSetting = () => {
   };
 
   //select
-  const [selectedValue, setSelectedValue] = useState();
+  const [selectedValue, setSelectedValue] = useState<SelectOption | null>(null);
 
-  const onChangeSelect = (option) => {
+  const onChangeSelect = (option: SelectOption | null) => {
     setSelectedValue(option);
   };
 
@@ -73,46 +48,43 @@ export const EndSetting = () => {
         <div className={styles.row3}>
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
-            className={styles.select}
             options={options}
-            getOptionLabel={(option) => option.text}
-            getOptionValue={(option) => option.value}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
           />
           <button type="button" className={styles.btnIconDel}>
-            <IconDel className={styles.iconDel} />
+            <span className={styles.iconDel}><IconDel /></span>
           </button>
         </div>
         <div className={styles.row3}>
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
-            className={styles.select}
             options={options}
-            getOptionLabel={(option) => option.text}
-            getOptionValue={(option) => option.value}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
           />
           <button type="button" className={styles.btnIconDel}>
-            <IconDel className={styles.iconDel} />
+            <span className={styles.iconDel}><IconDel /></span>
           </button>
         </div>
         <div className={styles.row3}>
           <Input placeholder="설명을 입력해주세요." value={value} onChange={onChange} />
           <Select
-            className={styles.select}
             options={options}
-            getOptionLabel={(option) => option.text}
-            getOptionValue={(option) => option.value}
+            getOptionLabel={(option: SelectOption) => option?.text ?? ''}
+            getOptionValue={(option: SelectOption) => option?.value ?? ''}
             value={selectedValue}
             onChange={onChangeSelect}
             menuPosition="fixed"
           />
           <button type="button" className={styles.btnIconDel}>
-            <IconDel className={styles.iconDel} />
+            <span className={styles.iconDel}><IconDel /></span>
           </button>
         </div>
       </div>

@@ -13,51 +13,61 @@ import { EditKnowledgeBaseButton } from '../../../components/features/knowledge-
 import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
 import { formatDateTime } from '@/util/date';
 
+type FileRow = {
+  name: string;
+  status: string;
+  chunk: string;
+  word: string;
+  search: string;
+  desc: string;
+  date: string;
+};
+
 const columns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row) => row.name,
+    accessorFn: (row: FileRow) => row.name,
     size: 250,
   },
   {
     id: 'status',
     header: '상태',
-    accessorFn: (row) => row.status,
+    accessorFn: (row: FileRow) => row.status,
     size: 231,
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: FileRow } }) => (
       <span className="table-td-state table-td-state-run">{row.original.status}</span>
     ),
   },
   {
     id: 'chunk',
     header: '청크',
-    accessorFn: (row) => row.chunk,
+    accessorFn: (row: FileRow) => row.chunk,
     size: 291,
   },
   {
     id: 'word',
     header: '단어수',
-    accessorFn: (row) => row.word,
+    accessorFn: (row: FileRow) => row.word,
     size: 231,
   },
   {
     id: 'search',
     header: '검색횟수',
-    accessorFn: (row) => row.search,
+    accessorFn: (row: FileRow) => row.search,
     size: 231,
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row) => row.desc,
+    accessorFn: (row: FileRow) => row.desc,
     size: 291,
   },
 
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row) => row.date,
+    accessorFn: (row: FileRow) => row.date,
     size: 231,
   },
 ];
@@ -70,7 +80,7 @@ export default function KnowledgeBaseDetailPage() {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
-  const [rowData, setRowData] = useState([
+  const [rowData] = useState<FileRow[]>([
     {
       name: 'sample-test.txt',
       status: 'Success',

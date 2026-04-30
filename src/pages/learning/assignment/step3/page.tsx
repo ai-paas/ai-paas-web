@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import type { SelectSingleValue } from "@innogrid/ui";
 import { BreadCrumb, Button, Select, Stepper, Input } from "@innogrid/ui";
 
@@ -24,13 +24,13 @@ const options = [
 
 export default function LearningAssignmentStep3Page() {
   //stepper
-  const [step, setStep] = useState<number>(2);
+  const [step] = useState<number>(2);
 
   //select
   const [selectedValue, setSelectedValue] = useState<OptionType>();
 
   const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option);
+    setSelectedValue(option ?? undefined);
   };
 
   //input
@@ -43,7 +43,7 @@ export default function LearningAssignmentStep3Page() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => {}} />
+        <BreadCrumb items={items} onNavigate={() => {}} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">학습 생성</h2>
@@ -62,10 +62,9 @@ export default function LearningAssignmentStep3Page() {
                 </div>
                 <div className="page-input_item-data">
                   <Select
-                    className="page-input_item-data_select"
                     options={options}
-                    getOptionLabel={(option) => option.text}
-                    getOptionValue={(option) => option.value}
+                    getOptionLabel={(option: OptionType) => option.text}
+                    getOptionValue={(option: OptionType) => option.value}
                     value={selectedValue}
                     onChange={onChangeSelect}
                   />
@@ -79,18 +78,16 @@ export default function LearningAssignmentStep3Page() {
                 <div className="page-input_item-data">
                   <div className="page-input_item-row2 page-gap-6">
                     <Select
-                      className="page-input_item-data_select page-w-100per"
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />
                     <Select
-                      className="page-input_item-data_select page-w-100per"
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />
@@ -102,10 +99,9 @@ export default function LearningAssignmentStep3Page() {
                 <div className="page-input_item-data">
                   <div className="page-input_item-row3">
                     <Select
-                      className="page-input_item-data_select"
                       options={options}
-                      getOptionLabel={(option) => option.text}
-                      getOptionValue={(option) => option.value}
+                      getOptionLabel={(option: OptionType) => option.text}
+                      getOptionValue={(option: OptionType) => option.value}
                       value={selectedValue}
                       onChange={onChangeSelect}
                     />

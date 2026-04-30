@@ -58,7 +58,7 @@ export const GaugeChart = ({
             dataKey="value"
             stroke="none"
           >
-            {data.map((entry, index) => (
+            {data.map((_entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={index === 0 ? COLORS[color].completed : COLORS[color].remaining}

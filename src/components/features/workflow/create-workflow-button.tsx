@@ -9,13 +9,46 @@ import {
 import { useState } from 'react';
 import styles from '../../../pages/service/service.module.scss';
 import { useNavigate } from 'react-router';
-import { useCreateWorkflow } from '@/hooks/service/workflows';
+
+interface TemplateRow {
+  name: string;
+  category: string;
+  description: string;
+}
+
+const columns = [
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row: TemplateRow) => row.name,
+    size: 210,
+  },
+  {
+    id: 'category',
+    header: '카테고리',
+    accessorFn: (row: TemplateRow) => row.category,
+    size: 210,
+  },
+  {
+    id: 'description',
+    header: '설명',
+    accessorFn: (row: TemplateRow) => row.description,
+    size: 210,
+  },
+];
+
+const data: TemplateRow[] = [
+  {
+    name: 'automated email reply',
+    category: '채팅',
+    description: '설명이 들어갑니다.',
+  },
+];
 
 export const CreateWorkflowButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { pagination, setPagination } = useTablePagination();
   const navigate = useNavigate();
-  const { createWorkflow } = useCreateWorkflow();
 
   const handleAction = () => {
     alert('템플릿 생성 로직 추가 필요');
@@ -55,32 +88,3 @@ export const CreateWorkflowButton = () => {
     </>
   );
 };
-
-const columns = [
-  {
-    id: 'name',
-    header: '이름',
-    accessorFn: (row) => row.name,
-    size: 210,
-  },
-  {
-    id: 'category',
-    header: '카테고리',
-    accessorFn: (row) => row.category,
-    size: 210,
-  },
-  {
-    id: 'description',
-    header: '설명',
-    accessorFn: (row) => row.description,
-    size: 210,
-  },
-];
-
-const data = [
-  {
-    name: 'automated email reply',
-    category: '채팅',
-    description: '설명이 들어갑니다.',
-  },
-];
