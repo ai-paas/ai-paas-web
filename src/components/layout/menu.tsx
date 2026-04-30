@@ -13,39 +13,42 @@ import {
 } from '@/assets/img/nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
+const isPathActive = (pathname: string, path: string) =>
+  pathname === path || pathname.startsWith(`${path}/`);
+
 export const Menu = () => {
   const location = useLocation();
 
   return (
     <ul>
-      <MenuItem icon={<IconService />} label="서비스" href="/service" isActive={location.pathname === '/service'} />
-      <MenuItem icon={<IconWorkflow />} label="워크플로우" href="/workflow" isActive={location.pathname === '/workflow'} />
-      <MenuItem icon={<IconModel />} label="모델" isActive={location.pathname.startsWith('/model')}>
+      <MenuItem icon={<IconService />} label="서비스" href="/service" isActive={isPathActive(location.pathname, '/service')} />
+      <MenuItem icon={<IconWorkflow />} label="워크플로우" href="/workflow" isActive={isPathActive(location.pathname, '/workflow')} />
+      <MenuItem icon={<IconModel />} label="모델" isActive={isPathActive(location.pathname, '/model')}>
         <ul>
-          <MenuItem2 label="모델 카탈로그" href="/model/model-catalog" isActive={location.pathname === '/model/model-catalog'} />
-          <MenuItem2 label="커스텀 모델" href="/model/custom-model" isActive={location.pathname === '/model/custom-model'} />
+          <MenuItem2 label="모델 카탈로그" href="/model/model-catalog" isActive={isPathActive(location.pathname, '/model/model-catalog')} />
+          <MenuItem2 label="커스텀 모델" href="/model/custom-model" isActive={isPathActive(location.pathname, '/model/custom-model')} />
         </ul>
       </MenuItem>
-      <MenuItem icon={<IconDataset />} label="데이터셋" href="/dataset" isActive={location.pathname === '/dataset'} />
-      <MenuItem icon={<IconKnowledgeBase />} label="지식 기반" href="/knowledge-base" isActive={location.pathname === '/knowledge-base'} />
-      <MenuItem icon={<IconPrompt />} label="프롬프트" href="/prompt" isActive={location.pathname === '/prompt'} />
-      <MenuItem icon={<IconLearning />} label="학습" href="/learning" isActive={location.pathname === '/learning'} />
-      <MenuItem icon={<IconDashboard />} label="대시보드" href="/dashboard" isActive={location.pathname === '/dashboard'} />
-      <MenuItem icon={<IconInfraManagement />} label="인프라 관리" isActive={location.pathname.startsWith('/infra-management')}>
+      <MenuItem icon={<IconDataset />} label="데이터셋" href="/dataset" isActive={isPathActive(location.pathname, '/dataset')} />
+      <MenuItem icon={<IconKnowledgeBase />} label="지식 기반" href="/knowledge-base" isActive={isPathActive(location.pathname, '/knowledge-base')} />
+      <MenuItem icon={<IconPrompt />} label="프롬프트" href="/prompt" isActive={isPathActive(location.pathname, '/prompt')} />
+      <MenuItem icon={<IconLearning />} label="학습" href="/learning" isActive={isPathActive(location.pathname, '/learning')} />
+      <MenuItem icon={<IconDashboard />} label="대시보드" href="/dashboard" isActive={isPathActive(location.pathname, '/dashboard')} />
+      <MenuItem icon={<IconInfraManagement />} label="인프라 관리" isActive={isPathActive(location.pathname, '/infra-management')}>
         <ul>
-          <MenuItem2 label="클러스터 관리" href="/infra-management/cluster-management" isActive={location.pathname === '/infra-management/cluster-management'} />
-          <MenuItem2 label="모니터링 대시보드" href="/infra-management/monitoring-dashboard" isActive={location.pathname === '/infra-management/monitoring-dashboard'} />
-          <MenuItem2 label="이벤트" href="/infra-management/event" isActive={location.pathname === '/infra-management/event'} />
-          <MenuItem2 label="애플리케이션" isActive={location.pathname.startsWith('/infra-management/application')}>
+          <MenuItem2 label="클러스터 관리" href="/infra-management/cluster-management" isActive={isPathActive(location.pathname, '/infra-management/cluster-management')} />
+          <MenuItem2 label="모니터링 대시보드" href="/infra-management/monitoring-dashboard" isActive={isPathActive(location.pathname, '/infra-management/monitoring-dashboard')} />
+          <MenuItem2 label="이벤트" href="/infra-management/event" isActive={isPathActive(location.pathname, '/infra-management/event')} />
+          <MenuItem2 label="애플리케이션" isActive={isPathActive(location.pathname, '/infra-management/application')}>
             <ul>
-              <MenuItem3 label="카탈로그" href="/infra-management/application/catalog" isActive={location.pathname === '/infra-management/application/catalog'} />
-              <MenuItem3 label="헬름 릴리즈" href="/infra-management/application/helm-release" isActive={location.pathname === '/infra-management/application/helm-release'} />
-              <MenuItem3 label="헬름 저장소" href="/infra-management/application/helm-repository" isActive={location.pathname === '/infra-management/application/helm-repository'} />
+              <MenuItem3 label="카탈로그" href="/infra-management/application/catalog" isActive={isPathActive(location.pathname, '/infra-management/application/catalog')} />
+              <MenuItem3 label="헬름 릴리즈" href="/infra-management/application/helm-release" isActive={isPathActive(location.pathname, '/infra-management/application/helm-release')} />
+              <MenuItem3 label="헬름 저장소" href="/infra-management/application/helm-repository" isActive={isPathActive(location.pathname, '/infra-management/application/helm-repository')} />
             </ul>
           </MenuItem2>
         </ul>
       </MenuItem>
-      <MenuItem icon={<IconMemberManagement />} label="멤버 관리" href="/member-management" isActive={location.pathname === '/member-management'} />
+      <MenuItem icon={<IconMemberManagement />} label="멤버 관리" href="/member-management" isActive={isPathActive(location.pathname, '/member-management')} />
     </ul>
   );
 };
