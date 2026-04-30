@@ -49,7 +49,7 @@ export const EditServiceButton = ({ serviceId }: { serviceId?: string }) => {
         surro_service_id: serviceId,
         name: data.name,
         description: data.description ?? '',
-        tags: data.tags ? data.tags.split(',').map((tag) => tag.trim()) : [],
+        tags: data.tags ? data.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
       },
       {
         onSuccess: () => {
