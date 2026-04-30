@@ -19,7 +19,7 @@ export default function ServiceDetailPage() {
     <main>
       <div className="breadcrumbBox">
         <BreadCrumb
-          items={[{ label: '서비스', path: '/service' }, { label: '서비스 상세' }]}
+          items={[{ label: '서비스', path: '/service' }, { label: service?.name ?? '' }]}
           onNavigate={navigate}
         />
       </div>
