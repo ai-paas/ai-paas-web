@@ -43,7 +43,7 @@ export const CreateServiceButton = () => {
       {
         name: data.name,
         description: data.description ?? '',
-        tags: data.tags ? data.tags.split(',').map((tag) => tag.trim()) : [],
+        tags: data.tags ? data.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
       },
       {
         onSuccess: () => {
