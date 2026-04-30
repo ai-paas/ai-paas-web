@@ -1,6 +1,6 @@
 import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
 import { useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useGetPrompt, useUpdatePrompt } from '@/hooks/service/prompts';
@@ -15,7 +15,7 @@ type Schema = z.infer<typeof schema>;
 
 export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { prompt } = useGetPrompt(promptId);
+  const { prompt } = useGetPrompt(isModalOpen ? promptId : undefined);
   const { updatePrompt, isPending } = useUpdatePrompt();
   const toast = useToast();
 
@@ -23,15 +23,12 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors },
   } = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', description: '', content: '' },
   });
-
-  const descriptionValue = watch('description') ?? '';
-  const contentValue = watch('content') ?? '';
 
   const openModal = useCallback(() => {
     if (!promptId) return;
@@ -51,7 +48,9 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
         name: data.name,
         description: data.description ?? '',
         content: data.content,
-        prompt_variable: prompt?.prompt_variable?.map((v) => v.name) ?? [],
+        ...(prompt
+          ? { prompt_variable: prompt.prompt_variable?.map((v) => v.name) ?? [] }
+          : {}),
       },
       {
         onSuccess: () => {
@@ -118,22 +117,34 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
           <div className="flex flex-col gap-2.5">
             <div className="page-input_item-name">설명</div>
             <div className="page-input_item-data">
-              <Textarea
-                placeholder="설명을 입력해주세요."
-                errMessage={errors.description?.message}
-                {...register('description')}
-                value={descriptionValue}
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder="설명을 입력해주세요."
+                    errMessage={errors.description?.message}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="page-input_item-name page-icon-requisite">프롬프트 내용</div>
             <div className="page-input_item-data">
-              <Textarea
-                placeholder="프롬프트를 입력해주세요."
-                errMessage={errors.content?.message}
-                {...register('content')}
-                value={contentValue}
+              <Controller
+                name="content"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder="프롬프트를 입력해주세요."
+                    errMessage={errors.content?.message}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </div>

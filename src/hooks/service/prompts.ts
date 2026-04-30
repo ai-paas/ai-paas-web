@@ -42,9 +42,11 @@ export const useCreatePrompt = () => {
 
 export const useGetPrompt = (surro_prompt_id?: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.prompts.detail(surro_prompt_id!),
+    queryKey: surro_prompt_id !== undefined
+      ? queryKeys.prompts.detail(surro_prompt_id)
+      : ['prompts', 'detail', 'undefined'],
     queryFn: () => api.get(`prompts/${surro_prompt_id}`).json<Prompt>(),
-    enabled: !!surro_prompt_id,
+    enabled: surro_prompt_id !== undefined,
   });
 
   return {
