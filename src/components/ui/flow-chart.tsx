@@ -1,4 +1,4 @@
-import { Background, ReactFlow, type Edge, type NodeProps } from '@xyflow/react';
+import { Background, MiniMap, ReactFlow, type Edge, type NodeProps } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { memo, useEffect } from 'react';
 import {
@@ -166,6 +166,7 @@ export const FlowChart = ({ initialNodes, initialEdges }: FlowChartProps) => {
         onlyRenderVisibleElements
       >
         <Background />
+        <MiniMap position="bottom-left" pannable zoomable />
       </ReactFlow>
     </div>
   );
