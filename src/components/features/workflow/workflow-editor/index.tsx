@@ -1,7 +1,7 @@
 import { ReactFlowProvider, type Edge } from '@xyflow/react';
 import { WorkflowComponentPanel } from './workflow-component-panel';
 import { FlowChart } from '@/components/ui/flow-chart';
-import { Button } from '@innogrid/ui';
+import { ChecklistWorkflowButton } from './checklist-workflow-button';
 import { SubmitWorkflowButton } from './submit-workflow-button';
 import { WorkflowSettingPanel } from './workflow-setting-panel';
 import styles from '@/pages/workflow/workflow.module.scss';
@@ -13,8 +13,6 @@ interface WorkflowEditorProps {
 }
 
 export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorProps) => {
-  const handleChecklist = () => {};
-
   return (
     <ReactFlowProvider>
       <WorkflowComponentPanel />
@@ -25,9 +23,7 @@ export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorPro
         </div>
 
         <div className="absolute top-5 right-5 flex gap-1.5">
-          <Button onClick={handleChecklist} size="medium" color="tertiary">
-            체크리스트
-          </Button>
+          <ChecklistWorkflowButton />
           <SubmitWorkflowButton />
         </div>
 

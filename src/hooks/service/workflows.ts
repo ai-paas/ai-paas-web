@@ -7,6 +7,8 @@ import type {
   GetWorkflowComponentTypes,
   UpdateWorkflowRequest,
   UpdateWorkflowTemplateRequest,
+  ValidateWorkflowRequest,
+  ValidateWorkflowResponse,
   Workflow,
   WorkflowModel,
   WorkflowTemplate,
@@ -59,6 +61,22 @@ export const useGetTemplates = () => {
     },
     isPending,
     isError,
+  };
+};
+
+export const useValidateWorkflow = () => {
+  const { mutate, isPending, isError, isSuccess, data, reset } = useMutation({
+    mutationFn: (data: ValidateWorkflowRequest) =>
+      api.post('workflows/validate', { json: data }).json<ValidateWorkflowResponse>(),
+  });
+
+  return {
+    validateWorkflow: mutate,
+    validation: data,
+    isPending,
+    isError,
+    isSuccess,
+    reset,
   };
 };
 

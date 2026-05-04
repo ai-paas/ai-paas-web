@@ -27,24 +27,48 @@ export interface GetWorkflowComponentTypes {
   }[];
 }
 
+export interface WorkflowComponentDefinition {
+  ref_id: string;
+  name: string;
+  type: WorkflowComponentType;
+  description?: string;
+  model_id?: number;
+  knowledge_base_id?: number;
+  prompt_id?: number;
+  config?: Record<string, unknown>;
+}
+
+export interface WorkflowConnectionDefinition {
+  source_ref_id: string;
+  target_ref_id: string;
+}
+
+export interface WorkflowDefinition {
+  components: WorkflowComponentDefinition[];
+  connections: WorkflowConnectionDefinition[];
+}
+
 export interface CreateWorkflowRequest {
   name: string;
   description?: string;
   category?: string;
   service_id?: string;
-  workflow_definition: {
-    components: {
-      name: string;
-      type: WorkflowComponentType;
-      model_id?: number;
-      knowledge_base_id?: number;
-      prompt_id?: number;
-    }[];
-    connections: {
-      source_component_type: string;
-      target_component_type: string;
-    }[];
-  };
+  workflow_definition?: WorkflowDefinition;
+}
+
+export interface ValidateWorkflowRequest {
+  workflow_definition: WorkflowDefinition;
+}
+
+export interface ValidationCheck {
+  rule: string;
+  passed: boolean;
+  message?: string;
+}
+
+export interface ValidateWorkflowResponse {
+  valid: boolean;
+  checks: ValidationCheck[];
 }
 
 export interface UpdateWorkflowRequest extends CreateWorkflowRequest {
