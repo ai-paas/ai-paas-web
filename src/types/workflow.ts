@@ -16,7 +16,7 @@ export interface Workflow {
   template_id: string;
 }
 
-export interface WorkflowTemplate {}
+export type WorkflowTemplate = Workflow;
 
 export interface GetWorkflowComponentTypes {
   data: {
@@ -63,7 +63,7 @@ export interface ValidateWorkflowRequest {
 export interface ValidationCheck {
   rule: string;
   passed: boolean;
-  message?: string;
+  message?: string | null;
 }
 
 export interface ValidateWorkflowResponse {
@@ -71,9 +71,14 @@ export interface ValidateWorkflowResponse {
   checks: ValidationCheck[];
 }
 
-export interface UpdateWorkflowRequest extends CreateWorkflowRequest {
+export interface UpdateWorkflowRequest {
   workflowId: string;
-  status: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  status?: WorkflowTemplateStatus;
+  service_id?: string;
+  workflow_definition?: WorkflowDefinition;
 }
 
 export interface UpdateWorkflowTemplateRequest {
@@ -82,23 +87,10 @@ export interface UpdateWorkflowTemplateRequest {
   description?: string;
   category?: string;
   status?: WorkflowTemplateStatus;
-  service_id: string;
-  workflow_definition: {
-    components: {
-      name: string;
-      type: WorkflowComponentType;
-      model_id?: number;
-      knowledge_base_id?: number;
-      prompt_id?: number;
-    }[];
-    connections: {
-      source_component_type: string;
-      target_component_type: string;
-    }[];
-  };
+  workflow_definition?: WorkflowDefinition;
 }
 
-export interface WorkflowModel {}
+export type WorkflowModel = Record<string, unknown>;
 
 export interface ComponentDeployStatusBody {
   service_name: string;

@@ -17,6 +17,7 @@ interface BaseNodeData {
 }
 
 interface StartNodeData extends BaseNodeData {
+  description?: string;
   inputFields: {
     type: 'text' | 'file';
     variable: string;
@@ -31,6 +32,7 @@ interface KnowledgebaseNodeData extends BaseNodeData {
   description?: string;
   query_variable: string;
   knowledgebase_id: string;
+  top_k?: number;
 }
 
 interface ModelNodeData extends BaseNodeData {
@@ -39,6 +41,9 @@ interface ModelNodeData extends BaseNodeData {
   model_id: string;
   context: string;
   prompt_id: string;
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
 }
 
 interface EndNodeData extends BaseNodeData {

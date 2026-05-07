@@ -17,6 +17,14 @@ const DEFAULT_LABEL = {
   END: '끝',
 } as const;
 
+const createNodeId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `n${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+};
+
 export const WorkflowComponentPanel = () => {
   const { workflowComponentTypes } = useGetWorkflowComponentTypes();
   const { searchValue, ...restProps } = useSearchInputState();
@@ -43,18 +51,29 @@ export const WorkflowComponentPanel = () => {
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            query_variable: '',
+            knowledgebase_id: '',
+            top_k: 3,
           };
           break;
         case 'MODEL':
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            type: 'custom',
+            model_id: '',
+            context: '',
+            prompt_id: '',
+            temperature: 0.7,
+            top_p: 0.9,
+            max_tokens: 2048,
           };
           break;
         case 'END':
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            output_variable: [],
           };
           break;
         default:
@@ -66,7 +85,7 @@ export const WorkflowComponentPanel = () => {
 
     addNodes([
       {
-        id: `n${Math.floor(Math.random() * 1000)}`,
+        id: createNodeId(),
         position: { x: 0, y: 200 },
         data: generateNodeData(),
         type,

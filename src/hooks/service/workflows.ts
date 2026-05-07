@@ -118,10 +118,10 @@ export const useCreateWorkflowViaTemplate = () => {
   };
 };
 
-export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => {
+export const useGetWorkflow = (workflowId?: number | string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.detail(workflowId),
-    queryFn: () => api.get(`workflow/${workflowId}`).json<Workflow>(),
+    queryFn: () => api.get(`workflows/${workflowId}`).json<Workflow>(),
     enabled,
   });
 
@@ -135,7 +135,7 @@ export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => 
 export const useGetWorkflowTemplate = (templateId?: string) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.detail(templateId),
-    queryFn: () => api.get(`workflow/templates/${templateId}`).json<WorkflowTemplate>(),
+    queryFn: () => api.get(`workflows/templates/${templateId}`).json<WorkflowTemplate>(),
   });
 
   return {
