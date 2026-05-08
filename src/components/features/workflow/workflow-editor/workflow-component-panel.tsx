@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/accordion';
 import { useReactFlow } from '@xyflow/react';
 import { SearchInput, useSearchInputState } from '@innogrid/ui';
+import { useEffect } from 'react';
 import { useGetWorkflowComponentTypes } from '@/hooks/service/workflows';
 import { useWorkflowStore } from '@/store/useWorkflowStore';
 import type { WorkflowComponentType } from '@/types/workflow';
@@ -25,13 +26,23 @@ const createNodeId = () => {
   return `n${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 };
 
-export const WorkflowComponentPanel = () => {
+interface WorkflowComponentPanelProps {
+  initialName?: string;
+}
+
+export const WorkflowComponentPanel = ({ initialName }: WorkflowComponentPanelProps) => {
   const { workflowComponentTypes } = useGetWorkflowComponentTypes();
   const { searchValue, ...restProps } = useSearchInputState();
   const nodes = useWorkflowStore((s) => s.nodes);
   const name = useWorkflowStore((s) => s.name);
   const setName = useWorkflowStore((s) => s.setName);
   const { addNodes } = useReactFlow();
+
+  useEffect(() => {
+    if (initialName) {
+      setName(initialName);
+    }
+  }, [initialName, setName]);
 
   const handleClick = (type: WorkflowComponentType) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -104,11 +115,7 @@ export const WorkflowComponentPanel = () => {
         />
       </div>
       <div className="flex-shrink-0 px-2.5 pt-2.5 [&>[data-size='m-medium']]:w-full">
-        <SearchInput
-          variant="default"
-          placeholder="검색어를 입력해주세요"
-          {...restProps}
-        />
+        <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto px-4 py-1">
         <Accordion type="multiple" className="space-y-1">

@@ -11,7 +11,7 @@ import {
 import { CreateWorkflowButton } from '../../components/features/workflow/create-workflow-button';
 import { EditWorkflowButton } from '../../components/features/workflow/edit-workflow-button';
 import { DeleteWorkflowButton } from '../../components/features/workflow/delete-workflow-button';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -31,7 +31,7 @@ const columns = [
     accessorFn: (row: Workflow) => row.name,
     size: 220,
     cell: ({ row }: { row: { original: Workflow } }) => (
-      <Link to={'/workflow/detail'} className="table-td-link">
+      <Link to={`/workflow/${row.original.surro_workflow_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -94,6 +94,13 @@ export default function WorkflowPage() {
     search: searchValue,
   });
 
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+    if (selectedRowKeys.length !== 1) return;
+
+    return workflows[parseInt(selectedRowKeys[0])]?.surro_workflow_id;
+  }, [rowSelection, workflows]);
+
   useEffect(() => {
     if (searchValue) {
       initializePagination();
@@ -112,7 +119,7 @@ export default function WorkflowPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateWorkflowButton />
-            <EditWorkflowButton />
+            <EditWorkflowButton workflowId={selectedId} />
             <DeleteWorkflowButton />
           </div>
           <div>

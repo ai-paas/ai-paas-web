@@ -15,7 +15,7 @@ export default function WorkflowCreatePage() {
         />
       </div>
       <div className={styles.container}>
-        <WorkflowEditor initialNodes={[]} initialEdges={[]} />
+        <WorkflowEditor initialName="" initialNodes={[]} initialEdges={[]} />
       </div>
     </main>
   );

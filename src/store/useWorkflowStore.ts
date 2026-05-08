@@ -77,7 +77,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   setName: (name: string) => set({ name: name }),
-  setInitialData: (nodes: WorkflowNode[], edges: Edge[]) => set({ nodes, edges }),
+  setInitialData: (nodes: WorkflowNode[], edges: Edge[]) =>
+    set({ nodes, edges, selectedNodeId: null }),
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) =>
     set({ nodes: applyNodeChanges(changes, get().nodes) }),
   onEdgesChange: (changes: EdgeChange<Edge>[]) =>

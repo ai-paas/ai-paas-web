@@ -1,468 +1,71 @@
-import { useState, type ChangeEvent } from "react";
-import type { SelectSingleValue, CheckboxCheckedState } from "@innogrid/ui";
-import {
-  Accordion,
-  BreadCrumb,
-  Button,
-  Checkbox,
-  Input,
-  RadioButton,
-  SearchInput,
-  Select,
-  useSearchInputState,
-} from "@innogrid/ui";
-
-import styles from "../../workflow.module.scss";
-import { IconArrCount, IconDel } from "../../../../assets/img/icon";
-
-type OptionType = { text: string; value: string };
-
-//breadcrumb
-const items = [{ label: "워크플로우", path: "/workflow" }];
-
-//select option
-const options: OptionType[] = [
-  { text: "옵션 1", value: "option1" },
-  { text: "옵션 2", value: "option2" },
-  { text: "옵션 3", value: "option3" },
-];
+import { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { BreadCrumb } from '@innogrid/ui';
+import { WorkflowEditor } from '@/components/features/workflow/workflow-editor';
+import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
+import { useGetWorkflow } from '@/hooks/service/workflows';
+import styles from '../../workflow.module.scss';
 
 export default function WorkflowEditPage() {
-  //searchInput
-  const { searchValue: _searchValue, ...restProps } = useSearchInputState();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { workflow, isPending, isError } = useGetWorkflow(id, !!id);
 
-  //input
-  const [value, setValue] = useState<string>("");
+  const { nodes, edges } = useMemo(() => workflowToFlow(workflow), [workflow]);
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  };
-
-  //select
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
-
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option ?? undefined);
-  };
-
-  //checkBox
-  const [checked, setChecked] = useState<CheckboxCheckedState>(true);
-
-  //radio button
-  const onCheckedChange = (checked: boolean) => {
-    console.log("checked :", checked);
-  };
-
-  //accordion
-  const accordionItems = [
-    {
-      label: "타이틀",
-      component: (
-        <div className={styles.accordionAddBox}>
-          <div className={styles.accordionAdd}>
-            <div className={styles.accordionAddItem}>
-              <div className={styles.accordionAddCheckBox}>
-                <Checkbox
-                  id="checkbox-id"
-                  label="문서"
-                  checked={checked}
-                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
-                />
-                <p>
-                  txt, MD, MDX, MARKDOWN, PDF, HTML, XLSX, XLS, DOC, DOCX, CSV,
-                  EML, MSG, PPTX, PPT, XML, EPUB
-                </p>
-              </div>
-              <div className={styles.accordionAddCheckBox}>
-                <Checkbox
-                  id="checkbox-id"
-                  label="이미지"
-                  checked={checked}
-                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
-                />
-                <p>JPG, JPEG, PNG, GIF, WEBP, SVG</p>
-              </div>
-              <div className={styles.accordionAddCheckBox}>
-                <Checkbox
-                  id="checkbox-id"
-                  label="오디오"
-                  checked={checked}
-                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
-                />
-                <p>MP3, M4A, WAV, AMR, MPGA</p>
-              </div>
-              <div className={styles.accordionAddCheckBox}>
-                <Checkbox
-                  id="checkbox-id"
-                  label="비디오"
-                  checked={checked}
-                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
-                />
-                <p>MP4, MOV, MPEG, WEBM</p>
-              </div>
-              <div className={styles.accordionAddCheckBox}>
-                <Checkbox
-                  id="checkbox-id"
-                  label="기타"
-                  checked={checked}
-                  onCheckedChange={(value: CheckboxCheckedState) => setChecked(value)}
-                />
-                <div className={styles.accordionAddCheckInput}>
-                  <Input
-                    placeholder="텍스트 필드"
-                    value={value}
-                    onChange={onChange}
-                  />
-                  <button type="button" className={styles.btnIconPlusSm}>
-                    <span>생성</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className={styles.accordionAddItem}>
-              <div className={styles.addItemNameBox}>
-                <div className={styles.addItemName}>파일 업로드 방식</div>
-              </div>
-              <RadioButton
-                id="radio"
-                label="파일 업로드"
-                value="basic"
-                onCheckedChange={onCheckedChange}
-              />
-              <RadioButton
-                id="radio"
-                label="URL"
-                value="basic"
-                onCheckedChange={onCheckedChange}
-              />
-              <RadioButton
-                id="radio"
-                label="모두 사용"
-                value="basic"
-                onCheckedChange={onCheckedChange}
-              />
-            </div>
-            <div className={styles.accordionAddItem}>
-              <div className={styles.addItemNameBox}>
-                <div className={styles.addItemName}>최대 파일 수</div>
-              </div>
-              <div className={styles.accordionAddItemSet}>
-                {/* 게이지 드래그시 gaugeActionBar 필요 */}
-                <div className={styles.gauge}>
-                  <span className={styles.gaugePointer}></span>
-                  <span className={styles.gaugeActionBar}></span>
-                  <span className={styles.gaugeBar}></span>
-                </div>
-                {/* numCount disabled 일때 클래스네임 disabled 추가 */}
-                <div className={`${styles.numCount} ${styles.disabled}`}>
-                  {/* ${styles.disabled} */}
-                  <input type="number" placeholder="0" />
-                  <div className={styles.numCountControl}>
-                    <button type="button" className={styles.btnNum}>
-                      <span className={`${styles.iconArr} ${styles.iconArrUp}`}><IconArrCount /></span>
-                    </button>
-                    <button type="button" className={styles.btnNum}>
-                      <span className={`${styles.iconArr} ${styles.iconArrDown}`}><IconArrCount /></span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  if (isPending) {
+    return (
+      <main>
+        <div className="breadcrumbBox">
+          <BreadCrumb
+            items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+            onNavigate={navigate}
+          />
         </div>
-      ),
-    },
-  ];
+        <div className={styles.container}>
+          <div className="flex size-full items-center justify-center">Loading workflow...</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!id || isError || !workflow) {
+    return (
+      <main>
+        <div className="breadcrumbBox">
+          <BreadCrumb
+            items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+            onNavigate={navigate}
+          />
+        </div>
+        <div className={styles.container}>
+          <div className="flex size-full items-center justify-center">Failed to load workflow.</div>
+        </div>
+      </main>
+    );
+  }
+
+  const workflowId = workflow.surro_workflow_id || id;
 
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb items={items} onNavigate={(path: string) => { void path; }} />
+        <BreadCrumb
+          items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+          onNavigate={navigate}
+        />
       </div>
       <div className={styles.container}>
-        <div className={styles.leftSearchBox}>
-          <div className={styles.titleBox}>
-            <div className={styles.title}>테스트 템플릿 001</div>
-          </div>
-          <div className={styles.searchInputBox}>
-            <SearchInput
-              variant="default"
-              placeholder="검색어를 입력해주세요"
-              {...restProps}
-            />
-          </div>
-          <div className={styles.list}>
-            <div className={styles.item}>
-              <div className={styles.itemName}>
-                <button type="button" className={styles.btnMore}>
-                  <span>시작</span>
-                </button>
-              </div>
-            </div>
-            {/* 클릭 시 클래스네임 active 추가 */}
-            <div className={`${styles.item} ${styles.active}`}>
-              <div className={styles.itemName}>
-                <button type="button" className={styles.btnMore}>
-                  <span>모델</span>
-                </button>
-                <button type="button" className={styles.btnPlus}>
-                  <span>생성</span>
-                </button>
-              </div>
-              <div className={styles.itemList}>
-                <div>meta-liama/Meta-Liama-3-8B lim ank dn sdkd ndf nv</div>
-                <div>meta-liama/Meta-Liama-3-8B</div>
-                <div>meta-liama/Meta-Liama-3-8B</div>
-              </div>
-            </div>
-            <div className={styles.item}>
-              <div className={styles.itemName}>
-                <button type="button" className={styles.btnMore}>
-                  <span>데이터 셋</span>
-                </button>
-                <button type="button" className={styles.btnPlus}>
-                  <span>생성</span>
-                </button>
-              </div>
-              <div className={styles.itemList}>
-                <div>meta-liama/Meta-Liama-3-8B</div>
-              </div>
-            </div>
-            <div className={styles.item}>
-              <div className={styles.itemName}>
-                <button type="button" className={styles.btnMore}>
-                  <span>도구</span>
-                </button>
-                <button type="button" className={styles.btnPlus}>
-                  <span>생성</span>
-                </button>
-              </div>
-              <div className={styles.itemList}>
-                <div>meta-liama/Meta-Liama-3-8B</div>
-              </div>
-            </div>
-            <div className={styles.item}>
-              <div className={styles.itemName}>
-                <button type="button" className={styles.btnMore}>
-                  <span>끝</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.contentBox}>
-          <div className={styles.topBtnBox}>
-            <Button
-              onClick={() => alert("Button clicked!")}
-              size="medium"
-              color="tertiary"
-            >
-              체크리스트
-            </Button>
-            <Button
-              onClick={() => alert("Button clicked!")}
-              size="medium"
-              color="primary"
-            >
-              생성
-            </Button>
-          </div>
-          <div className="absolute top-[70px] right-5 bottom-8 w-[340px] rounded-lg bg-white py-[30px] shadow-[4px_8px_18px_0px_rgba(0,0,0,0.2)]">
-            <button type="button" className={styles.btnClose}>
-              <span>닫기</span>
-            </button>
-            <div className={styles.addInner}>
-              <div className={styles.addTopBox}>
-                <input
-                  type="text"
-                  placeholder="이름을 입력해주세요."
-                  value={"시작, 끝"}
-                  className={styles.addTitleInput}
-                />
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>설명</div>
-                </div>
-                <Input
-                  placeholder="설명을 입력해주세요."
-                  value={value}
-                  onChange={onChange}
-                />
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>입력필드</div>
-                  <button type="button" className={styles.btnPlus}>
-                    <span>생성</span>
-                  </button>
-                </div>
-                {/* 입력필드 선택시 클래스네임 active 추가 */}
-                <div className={`${styles.addItemField} ${styles.active}`}>
-                  <div>
-                    <span>{"{X}"}</span>
-                    <span className={styles.addItemFieldId}>app_id</span>
-                  </div>
-                  <span className={styles.addItemFieldText}>String</span>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-                <div className={`${styles.addItemField}`}>
-                  <div>
-                    <span>{"{X}"}</span>
-                    <span className={styles.addItemFieldId}>app_id</span>
-                  </div>
-                  <span className={styles.addItemFieldText}>String</span>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-                <div className={`${styles.addItemField}`}>
-                  <div>
-                    <span>{"{X}"}</span>
-                    <span className={styles.addItemFieldId}>app_id</span>
-                  </div>
-                  <span className={styles.addItemFieldText}>String</span>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>출력변수</div>
-                  <button type="button" className={styles.btnPlus}>
-                    <span>생성</span>
-                  </button>
-                </div>
-                <div className={styles.row3}>
-                  <Input
-                    placeholder="설명을 입력해주세요."
-                    value={value}
-                    onChange={onChange}
-                  />
-                  <div className={styles.select}>
-                    <Select
-                      options={options}
-                      getOptionLabel={(option: OptionType) => option.text}
-                      getOptionValue={(option: OptionType) => option.value}
-                      value={selectedValue}
-                      onChange={onChangeSelect}
-                      menuPosition="fixed"
-                    />
-                  </div>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-                <div className={styles.row3}>
-                  <Input
-                    placeholder="설명을 입력해주세요."
-                    value={value}
-                    onChange={onChange}
-                  />
-                  <div className={styles.select}>
-                    <Select
-                      options={options}
-                      getOptionLabel={(option: OptionType) => option.text}
-                      getOptionValue={(option: OptionType) => option.value}
-                      value={selectedValue}
-                      onChange={onChangeSelect}
-                      menuPosition="fixed"
-                    />
-                  </div>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-                <div className={styles.row3}>
-                  <Input
-                    placeholder="설명을 입력해주세요."
-                    value={value}
-                    onChange={onChange}
-                  />
-                  <div className={styles.select}>
-                    <Select
-                      options={options}
-                      getOptionLabel={(option: OptionType) => option.text}
-                      getOptionValue={(option: OptionType) => option.value}
-                      value={selectedValue}
-                      onChange={onChangeSelect}
-                      menuPosition="fixed"
-                    />
-                  </div>
-                  <button type="button" className={styles.btnIconDel}>
-                    <span className={styles.iconDel}><IconDel /></span>
-                  </button>
-                </div>
-              </div>
-              <div className={`${styles.addItemBox} ${styles.addItemHr}`}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>입력필드 설정</div>
-                  <div className={styles.row2}>
-                    <Button
-                      onClick={() => alert("Button clicked!")}
-                      size="small"
-                      color="tertiary"
-                    >
-                      취소
-                    </Button>
-                    <Button
-                      onClick={() => alert("Button clicked!")}
-                      size="small"
-                      color="primary"
-                    >
-                      저장
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>필드 타입</div>
-                </div>
-                <div className={styles.select}>
-                  <Select
-                    options={options}
-                    getOptionLabel={(option: OptionType) => option.text}
-                    getOptionValue={(option: OptionType) => option.value}
-                    value={selectedValue}
-                    onChange={onChangeSelect}
-                    menuPosition="fixed"
-                  />
-                </div>
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>변수명</div>
-                </div>
-                <Input
-                  placeholder="변수명을 입력해주세요."
-                  value={value}
-                  onChange={onChange}
-                />
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.addItemNameBox}>
-                  <div className={styles.addItemName}>레이블명</div>
-                </div>
-                <Input
-                  placeholder="레이블명을 입력해주세요."
-                  value={value}
-                  onChange={onChange}
-                />
-              </div>
-              <div className={styles.addItemBox}>
-                <div className={styles.accordion}>
-                  <Accordion
-                    components={accordionItems}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <WorkflowEditor
+          key={workflowId}
+          initialName={workflow.name}
+          initialNodes={nodes}
+          initialEdges={edges}
+          mode="edit"
+          workflowId={workflowId}
+          status={workflow.status}
+          serviceId={workflow.service_id}
+        />
       </div>
     </main>
   );

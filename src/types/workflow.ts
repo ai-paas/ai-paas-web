@@ -1,4 +1,4 @@
-type WorkflowTemplateStatus = 'DRAFT' | 'ACTIVE' | 'ERROR';
+export type WorkflowStatus = 'DRAFT' | 'ACTIVE' | 'ERROR';
 export type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE';
 
 export interface Workflow {
@@ -10,13 +10,39 @@ export interface Workflow {
   name: string;
   description: string;
   category: string;
-  status: string;
+  status: WorkflowStatus;
   service_id: string;
   is_template: boolean;
   template_id: string;
 }
 
-export type WorkflowTemplate = Workflow;
+export interface WorkflowComponent {
+  id: string;
+  workflow_id: string;
+  name: string;
+  type: WorkflowComponentType;
+  description?: string | null;
+  model_id?: number | null;
+  model?: unknown;
+  knowledge_base_id?: number | null;
+  prompt_id?: number | null;
+  config?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WorkflowComponentConnection {
+  id?: string;
+  source_component_id: string;
+  target_component_id: string;
+}
+
+export interface WorkflowRead extends Workflow {
+  components?: WorkflowComponent[];
+  component_connections?: WorkflowComponentConnection[];
+}
+
+export type WorkflowTemplate = WorkflowRead;
 
 export interface GetWorkflowComponentTypes {
   data: {
@@ -76,7 +102,7 @@ export interface UpdateWorkflowRequest {
   name?: string;
   description?: string;
   category?: string;
-  status?: WorkflowTemplateStatus;
+  status?: WorkflowStatus;
   service_id?: string;
   workflow_definition?: WorkflowDefinition;
 }
@@ -86,7 +112,7 @@ export interface UpdateWorkflowTemplateRequest {
   name?: string;
   description?: string;
   category?: string;
-  status?: WorkflowTemplateStatus;
+  status?: WorkflowStatus;
   workflow_definition?: WorkflowDefinition;
 }
 

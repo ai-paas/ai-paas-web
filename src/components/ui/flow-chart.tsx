@@ -149,7 +149,7 @@ export const FlowChart = ({ initialNodes, initialEdges }: FlowChartProps) => {
 
   useEffect(() => {
     setInitialData(initialNodes, initialEdges);
-  }, []);
+  }, [initialEdges, initialNodes, setInitialData]);
 
   return (
     <div className="size-full">

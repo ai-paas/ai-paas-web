@@ -10,6 +10,7 @@ import type {
   ValidateWorkflowRequest,
   ValidateWorkflowResponse,
   Workflow,
+  WorkflowRead,
   WorkflowModel,
   WorkflowTemplate,
 } from '@/types/workflow';
@@ -121,8 +122,8 @@ export const useCreateWorkflowViaTemplate = () => {
 export const useGetWorkflow = (workflowId?: number | string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.detail(workflowId),
-    queryFn: () => api.get(`workflows/${workflowId}`).json<Workflow>(),
-    enabled,
+    queryFn: () => api.get(`workflows/${workflowId}`).json<WorkflowRead>(),
+    enabled: enabled && !!workflowId,
   });
 
   return {
