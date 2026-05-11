@@ -10,6 +10,7 @@ import { DeleteWorkflowButton } from '../workflow/delete-workflow-button';
 import { EditWorkflowButton } from '../workflow/edit-workflow-button';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
+import { useMemo } from 'react';
 
 interface WorkflowRow {
   name: string;
@@ -76,14 +77,20 @@ export const WorkflowTab = () => {
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
   });
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+    if (selectedRowKeys.length !== 1) return;
+
+    return workflows[parseInt(selectedRowKeys[0])]?.surro_workflow_id;
+  }, [rowSelection, workflows]);
 
   return (
     <div className="tabs-Content">
       <div className="page-toolBox">
         <div className="page-toolBox-btns">
           <CreateWorkflowButton />
-          <EditWorkflowButton />
-          <DeleteWorkflowButton />
+          <EditWorkflowButton workflowId={selectedId} />
+          <DeleteWorkflowButton workflowId={selectedId} />
         </div>
       </div>
       <div>

@@ -188,7 +188,7 @@ export const useDeleteWorkflow = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (workflowId: number) => api.delete(`workflows/${workflowId}`).json<string>(),
+    mutationFn: (workflowId: string) => api.delete(`workflows/${workflowId}`).json<string>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },

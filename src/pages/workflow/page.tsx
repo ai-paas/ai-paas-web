@@ -120,15 +120,13 @@ export default function WorkflowPage() {
           <div className="page-toolBox-btns">
             <CreateWorkflowButton />
             <EditWorkflowButton workflowId={selectedId} />
-            <DeleteWorkflowButton />
+            <DeleteWorkflowButton workflowId={selectedId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div className="h-[481px]">
+        <div className="h-120.25">
           <Table
             columns={columns}
             data={workflows}

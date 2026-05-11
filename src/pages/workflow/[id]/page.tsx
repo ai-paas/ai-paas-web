@@ -3,7 +3,7 @@ import type { Sorting } from '@innogrid/ui';
 import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from '@innogrid/ui';
 
 import { IconCopy } from '../../../assets/img/icon';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
 import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
 
@@ -51,6 +51,7 @@ const columns = [
 
 export default function WorkflowDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
@@ -91,8 +92,8 @@ export default function WorkflowDetailPage() {
         <h2 className="page-title">워크플로우 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditWorkflowButton />
-            <DeleteWorkflowButton />
+            <EditWorkflowButton workflowId={id} />
+            <DeleteWorkflowButton workflowId={id} redirect="/workflow" />
           </div>
         </div>
       </div>
