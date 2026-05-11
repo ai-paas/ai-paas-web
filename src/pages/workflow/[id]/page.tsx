@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Sorting } from '@innogrid/ui';
 import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from '@innogrid/ui';
 
@@ -6,85 +6,162 @@ import { IconCopy } from '../../../assets/img/icon';
 import { Link, useNavigate, useParams } from 'react-router';
 import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
 import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
+import { FlowChart } from '@/components/ui/flow-chart';
+import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
+import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows';
+import { formatDateTime } from '@/util/date';
+import type { WorkflowModel } from '@/types/workflow';
 
-interface DataType {
-  name: string;
-  id: string;
-  state: string;
-  desc: string;
-  date: string;
-}
+const EMPTY_VALUE = '-';
+
+const toRecord = (value: unknown): Record<string, unknown> =>
+  value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+
+const stringifyValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') return EMPTY_VALUE;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  return EMPTY_VALUE;
+};
+
+const getModelValue = (row: WorkflowModel, keys: string[]) => {
+  const record = toRecord(row);
+
+  for (const key of keys) {
+    const value = record[key];
+    const stringValue = stringifyValue(value);
+    if (stringValue !== EMPTY_VALUE) return stringValue;
+  }
+
+  const model = toRecord(record.model);
+  for (const key of keys) {
+    const value = model[key];
+    const stringValue = stringifyValue(value);
+    if (stringValue !== EMPTY_VALUE) return stringValue;
+  }
+
+  return EMPTY_VALUE;
+};
+
+const getWorkflowValue = (workflow: unknown, keys: string[]) => {
+  const record = toRecord(workflow);
+
+  for (const key of keys) {
+    const value = record[key];
+    const stringValue = stringifyValue(value);
+    if (stringValue !== EMPTY_VALUE) return stringValue;
+  }
+
+  return EMPTY_VALUE;
+};
+
+const copyText = (value: string) => {
+  if (!value || value === EMPTY_VALUE || !navigator.clipboard) return;
+  void navigator.clipboard.writeText(value);
+};
 
 const columns = [
   {
     id: 'name',
     header: '모델 ID',
-    accessorFn: (row: DataType) => row.name,
+    accessorFn: (row: WorkflowModel) =>
+      getModelValue(row, ['model_name', 'name', 'model_id', 'id']),
     size: 325,
   },
   {
-    id: 'id',
+    id: 'parameter',
     header: '파라미터',
-    accessorFn: (row: DataType) => row.id,
+    accessorFn: (row: WorkflowModel) =>
+      getModelValue(row, ['parameter', 'parameters', 'num_parameters', 'size']),
     size: 325,
   },
   {
     id: 'state',
-    header: '테스크',
-    accessorFn: (row: DataType) => row.state,
+    header: '상태',
+    accessorFn: (row: WorkflowModel) => getModelValue(row, ['status', 'state']),
     size: 325,
+    cell: ({ row }: { row: { original: WorkflowModel } }) => (
+      <span className="table-td-state table-td-state-run">
+        {getModelValue(row.original, ['status', 'state'])}
+      </span>
+    ),
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row: DataType) => row.desc,
+    accessorFn: (row: WorkflowModel) => getModelValue(row, ['description', 'desc']),
     size: 434,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    enableSorting: false,
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row: DataType) => row.date,
+    accessorFn: (row: WorkflowModel) => {
+      const createdAt = getModelValue(row, ['created_at', 'createdAt']);
+      return createdAt === EMPTY_VALUE ? EMPTY_VALUE : formatDateTime(createdAt);
+    },
     size: 325,
   },
 ];
 
 export default function WorkflowDetailPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
-  const [rowData] = useState<DataType[]>([
-    {
-      name: 'openchat/openchat-3.6-8b-20240522',
-      id: '32.5B',
-      state: '32.5B',
-      desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-      date: '2025-12-31 10:12',
-    },
-    {
-      name: 'Qwen/QwQ-32B-Preview',
-      id: '4B',
-      state: '4B',
-      desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-      date: '2025-12-31 10:12',
-    },
-    {
-      name: 'deepseek-ai/DeepSeek-V2.5-1210',
-      id: '236B',
-      state: '236B',
-      desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-      date: '2025-12-31 10:12',
-    },
+  const { workflow, isPending, isError } = useGetWorkflow(id, !!id);
+  const workflowId = workflow?.surro_workflow_id || id;
+  const {
+    workflowModels,
+    page,
+    isPending: isModelsPending,
+    isError: isModelsError,
+  } = useGetWorkflowModels(workflowId);
+  const { nodes, edges } = useMemo(() => workflowToFlow(workflow), [workflow]);
+
+  const publicUrl = getWorkflowValue(workflow, [
+    'public_url',
+    'publicUrl',
+    'endpoint_url',
+    'endpoint',
+    'url',
   ]);
+  const backendApi = getWorkflowValue(workflow, [
+    'backend_api_url',
+    'backendApiUrl',
+    'api_url',
+    'apiUrl',
+    'internal_url',
+    'internalUrl',
+    'backend_url',
+  ]);
+
+  if (!id || isError) {
+    return (
+      <main>
+        <div className="breadcrumbBox">
+          <BreadCrumb
+            items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 상세' }]}
+            onNavigate={navigate}
+          />
+        </div>
+        <div className="page-content page-pb-40">
+          <div className="flex size-full items-center justify-center">
+            워크플로우 정보를 불러오지 못했습니다.
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
       <div className="breadcrumbBox">
         <BreadCrumb
-          items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 상세' }]}
+          items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
           onNavigate={navigate}
         />
       </div>
@@ -92,66 +169,88 @@ export default function WorkflowDetailPage() {
         <h2 className="page-title">워크플로우 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditWorkflowButton workflowId={id} />
-            <DeleteWorkflowButton workflowId={id} redirect="/workflow" />
+            <EditWorkflowButton workflowId={workflowId} />
+            <DeleteWorkflowButton workflowId={workflowId} redirect="/workflow" />
           </div>
         </div>
       </div>
       <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
-        <div className="page-detail-list-box">
-          {/* 최대 ul 3개, li 5개 사용 해주세요. */}
-          <ul className="page-detail-list">
-            <li>
-              <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">테스트 워크플로우</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">2025-12-31 10:12</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">태그</div>
-              <div className="page-detail_item-data">
-                <Link to={'/service/test'} className="page-detail_item-data-link">
-                  테스트 서비스
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">공개 URL</div>
-              <div className="page-detail_item-data">
-                http://123.456.789.000/workflow/dummyApp123
-                <button className="btn-copy">
-                  <IconCopy />
-                </button>
-              </div>
-            </li>
-          </ul>
-          <ul className="page-detail-list">
-            <li>
-              <div className="page-detail_item-name">백엔드 서비스 API</div>
-              <div className="page-detail_item-data">
-                http://192.168.160.247/v1
-                <button className="btn-copy">
-                  <IconCopy />
-                </button>
-              </div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">카테고리</div>
-              <div className="page-detail_item-data">채팅플로우</div>
-            </li>
-            <li>
-              <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">설명이 들어갑니다. 설명이 들어갑니다.</div>
-            </li>
-          </ul>
-        </div>
+        {isPending ? (
+          <div className="flex size-full items-center justify-center">Loading workflow...</div>
+        ) : (
+          <div className="page-detail-list-box">
+            <ul className="page-detail-list">
+              <li>
+                <div className="page-detail_item-name">이름</div>
+                <div className="page-detail_item-data">{workflow?.name || EMPTY_VALUE}</div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">생성일시</div>
+                <div className="page-detail_item-data">
+                  {formatDateTime(workflow?.created_at) || EMPTY_VALUE}
+                </div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">최근 업데이트</div>
+                <div className="page-detail_item-data">
+                  {formatDateTime(workflow?.updated_at) || EMPTY_VALUE}
+                </div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">서비스</div>
+                <div className="page-detail_item-data">
+                  {workflow?.service_id ? (
+                    <Link
+                      to={`/service/${workflow.service_id}`}
+                      className="page-detail_item-data-link"
+                    >
+                      {workflow.service_id}
+                    </Link>
+                  ) : (
+                    EMPTY_VALUE
+                  )}
+                </div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">공개 URL</div>
+                <div className="page-detail_item-data">
+                  {publicUrl}
+                  {publicUrl !== EMPTY_VALUE && (
+                    <button className="btn-copy" onClick={() => copyText(publicUrl)}>
+                      <IconCopy />
+                    </button>
+                  )}
+                </div>
+              </li>
+            </ul>
+            <ul className="page-detail-list">
+              <li>
+                <div className="page-detail_item-name">백엔드 서비스 API</div>
+                <div className="page-detail_item-data">
+                  {backendApi}
+                  {backendApi !== EMPTY_VALUE && (
+                    <button className="btn-copy" onClick={() => copyText(backendApi)}>
+                      <IconCopy />
+                    </button>
+                  )}
+                </div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">카테고리</div>
+                <div className="page-detail_item-data">{workflow?.category || EMPTY_VALUE}</div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">상태</div>
+                <div className="page-detail_item-data">{workflow?.status || EMPTY_VALUE}</div>
+              </li>
+              <li>
+                <div className="page-detail_item-name">설명</div>
+                <div className="page-detail_item-data">{workflow?.description || EMPTY_VALUE}</div>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
@@ -159,20 +258,35 @@ export default function WorkflowDetailPage() {
             labels={['워크플로우 오버뷰', '모델']}
             components={[
               <div className="tabs-Content">
-                <div>뷰 영역</div>
+                {nodes.length > 0 ? (
+                  <div className="h-70">
+                    <FlowChart initialNodes={nodes} initialEdges={edges} />
+                  </div>
+                ) : (
+                  <div className="flex size-full items-center justify-center">
+                    표시할 워크플로우 구성 정보가 없습니다.
+                  </div>
+                )}
               </div>,
               <div className="tabs-Content">
-                <Table
-                  columns={columns}
-                  data={rowData}
-                  totalCount={rowData.length}
-                  pagination={pagination}
-                  setPagination={setPagination}
-                  rowSelection={rowSelection}
-                  setRowSelection={setRowSelection}
-                  setSorting={setSorting}
-                  sorting={sorting}
-                />
+                <div className="h-70">
+                  <Table
+                    useClientPagination
+                    columns={columns}
+                    data={workflowModels}
+                    isLoading={isModelsPending}
+                    emptyMessage={
+                      isModelsError ? '모델 목록을 불러오지 못했습니다.' : '모델이 없습니다.'
+                    }
+                    totalCount={page.total}
+                    pagination={pagination}
+                    setPagination={setPagination}
+                    rowSelection={rowSelection}
+                    setRowSelection={setRowSelection}
+                    setSorting={setSorting}
+                    sorting={sorting}
+                  />
+                </div>
               </div>,
             ]}
           />

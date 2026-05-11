@@ -238,6 +238,7 @@ export const useGetWorkflowModels = (surroWorkflowId?: string) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.models(surroWorkflowId),
     queryFn: () => api.get<Page<WorkflowModel>>(`workflows/${surroWorkflowId}/models`).json(),
+    enabled: !!surroWorkflowId,
   });
 
   return {
