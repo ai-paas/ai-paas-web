@@ -26,6 +26,21 @@ const createNodeId = () => {
   return `n${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 };
 
+const NODE_X_GAP = 300;
+const TOP_ROW_Y = 120;
+const DEFAULT_ROW_Y = 220;
+
+const getNextNodePosition = (
+  nodes: ReturnType<typeof useWorkflowStore.getState>['nodes'],
+  type: WorkflowComponentType
+) => {
+  const nextX =
+    nodes.length === 0 ? 0 : Math.max(...nodes.map((node) => node.position.x)) + NODE_X_GAP;
+  const y = type === 'START' || type === 'END' ? TOP_ROW_Y : DEFAULT_ROW_Y;
+
+  return { x: nextX, y };
+};
+
 interface WorkflowComponentPanelProps {
   initialName?: string;
 }
@@ -97,7 +112,7 @@ export const WorkflowComponentPanel = ({ initialName }: WorkflowComponentPanelPr
     addNodes([
       {
         id: createNodeId(),
-        position: { x: 0, y: 200 },
+        position: getNextNodePosition(nodes, type),
         data: generateNodeData(),
         type,
       },
