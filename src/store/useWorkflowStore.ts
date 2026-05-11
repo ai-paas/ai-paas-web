@@ -78,9 +78,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   selectedNodeId: null,
   setName: (name: string) => set({ name: name }),
   setInitialData: (nodes: WorkflowNode[], edges: Edge[]) =>
-    set({ nodes, edges, selectedNodeId: null }),
+    set({
+      nodes: nodes.map((node) => ({ ...node, selected: false })),
+      edges,
+      selectedNodeId: null,
+    }),
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) =>
-    set({ nodes: applyNodeChanges(changes, get().nodes) }),
+    set(() => {
+      const nodes = applyNodeChanges(changes, get().nodes);
+      const selectedNodeId = nodes.find((node) => node.selected)?.id ?? null;
+
+      return { nodes, selectedNodeId };
+    }),
   onEdgesChange: (changes: EdgeChange<Edge>[]) =>
     set({ edges: applyEdgeChanges(changes, get().edges) }),
   onConnect: (connection: Edge | Connection) => set({ edges: addEdge(connection, get().edges) }),
@@ -90,5 +99,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
       ),
     })),
-  selectNode: (nodeId: string | null) => set({ selectedNodeId: nodeId }),
+  selectNode: (nodeId: string | null) =>
+    set((state) => ({
+      selectedNodeId: nodeId,
+      nodes: state.nodes.map((node) => ({ ...node, selected: node.id === nodeId })),
+    })),
 }));
