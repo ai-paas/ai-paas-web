@@ -9,45 +9,34 @@ import {
 import { useState } from 'react';
 import styles from '../../../pages/service/service.module.scss';
 import { useNavigate } from 'react-router';
-
-interface TemplateRow {
-  name: string;
-  category: string;
-  description: string;
-}
+import { useGetTemplates } from '@/hooks/service/workflows';
+import type { WorkflowTemplate } from '@/types/workflow';
 
 const columns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: TemplateRow) => row.name,
+    accessorFn: (row: WorkflowTemplate) => row.name,
     size: 210,
   },
   {
     id: 'category',
     header: '카테고리',
-    accessorFn: (row: TemplateRow) => row.category,
+    accessorFn: (row: WorkflowTemplate) => row.category,
     size: 210,
   },
   {
     id: 'description',
     header: '설명',
-    accessorFn: (row: TemplateRow) => row.description,
+    accessorFn: (row: WorkflowTemplate) => row.description,
     size: 210,
-  },
-];
-
-const data: TemplateRow[] = [
-  {
-    name: 'automated email reply',
-    category: '채팅',
-    description: '설명이 들어갑니다.',
   },
 ];
 
 export const CreateWorkflowButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { pagination, setPagination } = useTablePagination();
+  const { workflowTemplates, isPending, isError } = useGetTemplates();
   const navigate = useNavigate();
 
   const handleAction = () => {
@@ -75,14 +64,22 @@ export const CreateWorkflowButton = () => {
         }
       >
         <div className={styles.modalBox}>
-          <Table
-            usePagination={false}
-            columns={columns}
-            data={data}
-            totalCount={data.length}
-            pagination={pagination}
-            setPagination={setPagination}
-          />
+          <div className="h-40">
+            <Table
+              usePagination={false}
+              columns={columns}
+              data={workflowTemplates}
+              isLoading={isPending}
+              emptyMessage={
+                isError
+                  ? '템플릿 목록을 불러오는 데 실패했습니다.'
+                  : '사용 가능한 템플릿이 없습니다.'
+              }
+              totalCount={workflowTemplates.length}
+              pagination={pagination}
+              setPagination={setPagination}
+            />
+          </div>
         </div>
       </Modal>
     </>

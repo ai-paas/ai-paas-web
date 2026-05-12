@@ -38,7 +38,7 @@ export const UpdateWorkflowButton = ({
             title: '워크플로우 업데이트 성공',
             children: '워크플로우가 성공적으로 업데이트되었습니다.',
           });
-          navigate(`/workflow/${workflowId}`);
+          navigate('/workflow');
         },
         onError: async (error) => {
           toast.open({
