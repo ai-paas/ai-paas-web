@@ -34,11 +34,18 @@ const columns = [
     header: '이름',
     accessorFn: (row: WorkflowRow) => row.name,
     size: 325,
-    cell: ({ row }: { row: { original: WorkflowRow } }) => (
-      <Link to={`/workflow/${row.original.name}`} className="table-td-link">
-        {row.original.name}
-      </Link>
-    ),
+    cell: ({ row }: { row: { original: WorkflowRow } }) => {
+      const workflowId =
+        typeof row.original.surro_workflow_id === 'string'
+          ? row.original.surro_workflow_id
+          : row.original.id;
+
+      return (
+        <Link to={`/workflow/workflow/${workflowId}`} className="table-td-link">
+          {row.original.name}
+        </Link>
+      );
+    },
   },
   {
     id: 'id',

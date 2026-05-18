@@ -42,7 +42,54 @@ export interface WorkflowRead extends Workflow {
   component_connections?: WorkflowComponentConnection[];
 }
 
-export type WorkflowTemplate = WorkflowRead;
+export interface WorkflowTemplateCreator {
+  id: number;
+  username: string;
+  name: string;
+  password: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+}
+
+export interface WorkflowTemplateBrief {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  status: WorkflowStatus;
+  service_id: string | null;
+  creator_id: number;
+  creator: WorkflowTemplateCreator;
+  created_by?: string | null;
+  updated_by?: string | null;
+  is_template: true;
+  template_id: string | null;
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowTemplateListResponse {
+  total: number;
+  items: WorkflowTemplateBrief[];
+}
+
+export type WorkflowTemplate = Omit<WorkflowRead, 'id' | 'service_id' | 'template_id'> & {
+  id: string;
+  service_id: string | null;
+  template_id: string | null;
+  creator_id?: number;
+  creator?: WorkflowTemplateCreator;
+  usage_count?: number;
+};
+
+export interface WorkflowTemplateListParams {
+  page?: number;
+  size?: number;
+  category?: string;
+}
 
 export interface GetWorkflowComponentTypes {
   data: {
@@ -82,6 +129,79 @@ export interface CreateWorkflowRequest {
   workflow_definition?: WorkflowDefinition;
 }
 
+export interface CreateWorkflowTemplateRequest {
+  name: string;
+  description?: string;
+  category?: string;
+  service_id?: string;
+  workflow_definition: WorkflowDefinition;
+}
+
+export interface CloneWorkflowTemplateRequest {
+  templateId: string;
+  workflow_name: string;
+  service_id?: number;
+}
+
+export interface CleanupWorkflowResponse {
+  message: string;
+  workflow_id: string;
+  cleanup_run_id: string;
+  status: 'cleanup_in_progress' | string;
+  next_step: string;
+}
+
+export interface DeleteWorkflowResponse {
+  message: string;
+  workflow_id: string;
+  cleanup_run_id: string;
+  status: 'cleanup_in_progress' | string;
+  next_step: string;
+}
+
+export interface FinalizeWorkflowDeletionResponse {
+  message?: string;
+  workflow_id?: string;
+  status?: string;
+}
+
+export interface FinalizeWorkflowCleanupResponse {
+  message?: string;
+  workflow_id?: string;
+  status?: string;
+}
+
+export interface ExecuteWorkflowResponse {
+  workflow_id: string;
+  kubeflow_run_id: string;
+  status: 'PENDING' | string;
+  message: string;
+}
+
+export interface WorkflowStatusModel {
+  component_id: string;
+  service_name: string;
+  service_hostname?: string | null;
+  model_name: string;
+  sanitized_model_name: string;
+  deployment_type: 'KSERVE' | 'OLLAMA' | 'REMOTE' | string;
+  internal_url?: string | null;
+  gateway_url?: string | null;
+  public_url?: string | null;
+  backend_api_url?: string | null;
+  status: 'PENDING' | 'DEPLOYING' | 'DEPLOYED' | 'FAILED' | 'DELETED' | string;
+  deployed_at?: string | null;
+  error_message?: string | null;
+  model_id?: number | null;
+}
+
+export interface WorkflowStatusResponse {
+  workflow_id: string;
+  status: WorkflowStatus | string;
+  kubeflow_run_id?: string | null;
+  deployed_models?: WorkflowStatusModel[];
+}
+
 export interface ValidateWorkflowRequest {
   workflow_definition: WorkflowDefinition;
 }
@@ -116,7 +236,57 @@ export interface UpdateWorkflowTemplateRequest {
   workflow_definition?: WorkflowDefinition;
 }
 
-export type WorkflowModel = Record<string, unknown>;
+export interface WorkflowModel {
+  workflow_id: string;
+  component_id: string;
+  component_name: string;
+  model_id: number;
+  model_name: string;
+  sanitized_model_name: string;
+  service_name: string;
+  service_hostname?: string | null;
+  status: 'DEPLOYING' | 'DEPLOYED' | 'FAILED' | 'DELETED' | string;
+  internal_url?: string | null;
+  deployment_type: 'KSERVE' | 'OLLAMA' | 'REMOTE' | string;
+  public_url?: string | null;
+  backend_api_url?: string | null;
+  gateway_url?: string | null;
+  deployed_at?: string | null;
+  deleted_at?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowModelsResponse {
+  workflow_id: string;
+  backend_api_url?: string | null;
+  deployed_models: WorkflowModel[];
+  total: number;
+}
+
+export interface WorkflowTestResult {
+  component_id: string;
+  component_name: string;
+  component_type: WorkflowComponentType;
+  model_type?: 'LLM' | 'ODM' | string;
+  result?: unknown;
+  error?: string | null;
+}
+
+export interface WorkflowRagTestResponse {
+  workflow_id: string;
+  execution_order: string[];
+  results: WorkflowTestResult[];
+  final_result: string;
+}
+
+export interface WorkflowMlTestResponse {
+  workflow_id: string;
+  execution_order: string[];
+  results: WorkflowTestResult[];
+  final_result: string;
+}
 
 export interface ComponentDeployStatusBody {
   service_name: string;

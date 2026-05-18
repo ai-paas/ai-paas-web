@@ -10,7 +10,7 @@ export const EditWorkflowButton = ({ workflowId }: EditWorkflowButtonProps) => {
 
   const handleClick = () => {
     if (workflowId) {
-      navigate(`/workflow/${workflowId}/edit`);
+      navigate(`/workflow/workflow/${workflowId}/edit`);
     }
   };
 

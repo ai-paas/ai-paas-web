@@ -1,6 +1,15 @@
 import type { Edge } from '@xyflow/react';
 import type { WorkflowNode } from '@/store/useWorkflowStore';
-import type { WorkflowComponent, WorkflowComponentType, WorkflowRead } from '@/types/workflow';
+import type { WorkflowComponent, WorkflowComponentType } from '@/types/workflow';
+
+interface WorkflowFlowSource {
+  components?: WorkflowComponent[];
+  component_connections?: {
+    id?: string;
+    source_component_id: string;
+    target_component_id: string;
+  }[];
+}
 
 const DEFAULT_LABEL: Record<WorkflowComponentType, string> = {
   START: 'START',
@@ -52,7 +61,7 @@ const createNodeData = (component: WorkflowComponent): WorkflowNode['data'] => {
   };
 };
 
-export const workflowToFlow = (workflow?: WorkflowRead) => {
+export const workflowToFlow = (workflow?: WorkflowFlowSource) => {
   const components = workflow?.components ?? [];
   const componentIds = new Set(components.map((component) => component.id));
 
@@ -73,7 +82,9 @@ export const workflowToFlow = (workflow?: WorkflowRead) => {
         componentIds.has(connection.target_component_id)
     )
     .map<Edge>((connection, index) => ({
-      id: connection.id ?? `e-${connection.source_component_id}-${connection.target_component_id}-${index}`,
+      id:
+        connection.id ??
+        `e-${connection.source_component_id}-${connection.target_component_id}-${index}`,
       source: connection.source_component_id,
       target: connection.target_component_id,
     }));

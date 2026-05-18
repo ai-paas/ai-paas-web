@@ -8,9 +8,11 @@ import {
   useTablePagination,
   useTableSelection,
 } from '@innogrid/ui';
-import { CreateWorkflowButton } from '../../components/features/workflow/create-workflow-button';
-import { EditWorkflowButton } from '../../components/features/workflow/edit-workflow-button';
-import { DeleteWorkflowButton } from '../../components/features/workflow/delete-workflow-button';
+import { CreateWorkflowButton } from '../../../components/features/workflow/create-workflow-button';
+import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
+import { ExecuteWorkflowButton } from '../../../components/features/workflow/execute-workflow-button';
+import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
+import { StopWorkflowDeploymentButton } from '../../../components/features/workflow/stop-workflow-deployment-button';
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
@@ -31,7 +33,7 @@ const columns = [
     accessorFn: (row: Workflow) => row.name,
     size: 220,
     cell: ({ row }: { row: { original: Workflow } }) => (
-      <Link to={`/workflow/${row.original.surro_workflow_id}`} className="table-td-link">
+      <Link to={`/workflow/workflow/${row.original.surro_workflow_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -121,6 +123,8 @@ export default function WorkflowPage() {
             <CreateWorkflowButton />
             <EditWorkflowButton workflowId={selectedId} />
             <DeleteWorkflowButton workflowId={selectedId} />
+            <ExecuteWorkflowButton workflowId={selectedId} />
+            <StopWorkflowDeploymentButton workflowId={selectedId} />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />

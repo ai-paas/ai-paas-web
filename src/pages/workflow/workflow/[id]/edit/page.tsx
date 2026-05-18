@@ -4,7 +4,7 @@ import { BreadCrumb } from '@innogrid/ui';
 import { WorkflowEditor } from '@/components/features/workflow/workflow-editor';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflow } from '@/hooks/service/workflows';
-import styles from '../../workflow.module.scss';
+import styles from '../../../workflow.module.scss';
 
 export default function WorkflowEditPage() {
   const navigate = useNavigate();
@@ -18,7 +18,10 @@ export default function WorkflowEditPage() {
       <main>
         <div className="breadcrumbBox">
           <BreadCrumb
-            items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+            items={[
+              { label: '워크플로우', path: '/workflow/workflow' },
+              { label: workflow?.name ?? '' },
+            ]}
             onNavigate={navigate}
           />
         </div>
@@ -34,7 +37,10 @@ export default function WorkflowEditPage() {
       <main>
         <div className="breadcrumbBox">
           <BreadCrumb
-            items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+            items={[
+              { label: '워크플로우', path: '/workflow/workflow' },
+              { label: workflow?.name ?? '' },
+            ]}
             onNavigate={navigate}
           />
         </div>
@@ -51,7 +57,10 @@ export default function WorkflowEditPage() {
     <main>
       <div className="breadcrumbBox">
         <BreadCrumb
-          items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+          items={[
+            { label: '워크플로우', path: '/workflow/workflow' },
+            { label: workflow?.name ?? '' },
+          ]}
           onNavigate={navigate}
         />
       </div>

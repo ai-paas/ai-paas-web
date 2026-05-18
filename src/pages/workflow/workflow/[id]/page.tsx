@@ -2,11 +2,15 @@ import { useMemo, useState } from 'react';
 import type { Sorting } from '@innogrid/ui';
 import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from '@innogrid/ui';
 
-import { IconCopy } from '../../../assets/img/icon';
+import { IconCopy } from '@/assets/img/icon';
 import { Link, useNavigate, useParams } from 'react-router';
-import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
-import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
+import { EditWorkflowButton } from '@/components/features/workflow/edit-workflow-button';
+import { DeleteWorkflowButton } from '@/components/features/workflow/delete-workflow-button';
+import { ExecuteWorkflowButton } from '@/components/features/workflow/execute-workflow-button';
 import { FlowChart } from '@/components/ui/flow-chart';
+import { StopWorkflowDeploymentButton } from '@/components/features/workflow/stop-workflow-deployment-button';
+import { WorkflowInferenceTestPanel } from '@/components/features/workflow/workflow-inference-test-panel';
+import { WorkflowStatusPanel } from '@/components/features/workflow/workflow-status-panel';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -22,25 +26,6 @@ const stringifyValue = (value: unknown): string => {
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
-  return EMPTY_VALUE;
-};
-
-const getModelValue = (row: WorkflowModel, keys: string[]) => {
-  const record = toRecord(row);
-
-  for (const key of keys) {
-    const value = record[key];
-    const stringValue = stringifyValue(value);
-    if (stringValue !== EMPTY_VALUE) return stringValue;
-  }
-
-  const model = toRecord(record.model);
-  for (const key of keys) {
-    const value = model[key];
-    const stringValue = stringifyValue(value);
-    if (stringValue !== EMPTY_VALUE) return stringValue;
-  }
-
   return EMPTY_VALUE;
 };
 
@@ -63,45 +48,64 @@ const copyText = (value: string) => {
 
 const columns = [
   {
-    id: 'name',
-    header: '모델 ID',
-    accessorFn: (row: WorkflowModel) =>
-      getModelValue(row, ['model_name', 'name', 'model_id', 'id']),
-    size: 325,
+    id: 'model_name',
+    header: '모델명',
+    accessorFn: (row: WorkflowModel) => row.model_name || EMPTY_VALUE,
+    size: 220,
   },
   {
-    id: 'parameter',
-    header: '파라미터',
-    accessorFn: (row: WorkflowModel) =>
-      getModelValue(row, ['parameter', 'parameters', 'num_parameters', 'size']),
-    size: 325,
+    id: 'component_name',
+    header: '컴포넌트',
+    accessorFn: (row: WorkflowModel) => row.component_name || EMPTY_VALUE,
+    size: 180,
   },
   {
     id: 'state',
     header: '상태',
-    accessorFn: (row: WorkflowModel) => getModelValue(row, ['status', 'state']),
-    size: 325,
+    accessorFn: (row: WorkflowModel) => row.status || EMPTY_VALUE,
+    size: 140,
     cell: ({ row }: { row: { original: WorkflowModel } }) => (
-      <span className="table-td-state table-td-state-run">
-        {getModelValue(row.original, ['status', 'state'])}
-      </span>
+      <span className="table-td-state table-td-state-run">{row.original.status}</span>
     ),
   },
   {
-    id: 'desc',
-    header: '설명',
-    accessorFn: (row: WorkflowModel) => getModelValue(row, ['description', 'desc']),
-    size: 434,
-    enableSorting: false,
+    id: 'deployment_type',
+    header: '배포 유형',
+    accessorFn: (row: WorkflowModel) => row.deployment_type || EMPTY_VALUE,
+    size: 140,
+  },
+  {
+    id: 'backend_api_url',
+    header: '백엔드 API',
+    accessorFn: (row: WorkflowModel) => row.backend_api_url ?? EMPTY_VALUE,
+    size: 320,
+    cell: ({ row }: { row: { original: WorkflowModel } }) => {
+      const backendApiUrl = row.original.backend_api_url ?? EMPTY_VALUE;
+
+      return (
+        <span>
+          {backendApiUrl}
+          {backendApiUrl !== EMPTY_VALUE && (
+            <button className="btn-copy" onClick={() => copyText(backendApiUrl)}>
+              <IconCopy />
+            </button>
+          )}
+        </span>
+      );
+    },
+  },
+  {
+    id: 'public_url',
+    header: '공개 URL',
+    accessorFn: (row: WorkflowModel) => row.public_url ?? EMPTY_VALUE,
+    size: 260,
   },
   {
     id: 'date',
-    header: '생성일시',
-    accessorFn: (row: WorkflowModel) => {
-      const createdAt = getModelValue(row, ['created_at', 'createdAt']);
-      return createdAt === EMPTY_VALUE ? EMPTY_VALUE : formatDateTime(createdAt);
-    },
-    size: 325,
+    header: '배포일시',
+    accessorFn: (row: WorkflowModel) =>
+      row.deployed_at ? formatDateTime(row.deployed_at) : EMPTY_VALUE,
+    size: 225,
   },
 ];
 
@@ -116,6 +120,7 @@ export default function WorkflowDetailPage() {
   const workflowId = workflow?.surro_workflow_id || id;
   const {
     workflowModels,
+    backendApiUrl,
     page,
     isPending: isModelsPending,
     isError: isModelsError,
@@ -129,22 +134,27 @@ export default function WorkflowDetailPage() {
     'endpoint',
     'url',
   ]);
-  const backendApi = getWorkflowValue(workflow, [
-    'backend_api_url',
-    'backendApiUrl',
-    'api_url',
-    'apiUrl',
-    'internal_url',
-    'internalUrl',
-    'backend_url',
-  ]);
+  const backendApi =
+    backendApiUrl ??
+    getWorkflowValue(workflow, [
+      'backend_api_url',
+      'backendApiUrl',
+      'api_url',
+      'apiUrl',
+      'internal_url',
+      'internalUrl',
+      'backend_url',
+    ]);
 
   if (!id || isError) {
     return (
       <main>
         <div className="breadcrumbBox">
           <BreadCrumb
-            items={[{ label: '워크플로우', path: '/workflow' }, { label: '워크플로우 상세' }]}
+            items={[
+              { label: '워크플로우', path: '/workflow/workflow' },
+              { label: '워크플로우 상세' },
+            ]}
             onNavigate={navigate}
           />
         </div>
@@ -161,7 +171,10 @@ export default function WorkflowDetailPage() {
     <main>
       <div className="breadcrumbBox">
         <BreadCrumb
-          items={[{ label: '워크플로우', path: '/workflow' }, { label: workflow?.name ?? '' }]}
+          items={[
+            { label: '워크플로우', path: '/workflow/workflow' },
+            { label: workflow?.name ?? '' },
+          ]}
           onNavigate={navigate}
         />
       </div>
@@ -170,7 +183,9 @@ export default function WorkflowDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditWorkflowButton workflowId={workflowId} />
-            <DeleteWorkflowButton workflowId={workflowId} redirect="/workflow" />
+            <DeleteWorkflowButton workflowId={workflowId} redirect="/workflow/workflow" />
+            <ExecuteWorkflowButton workflowId={workflowId} />
+            <StopWorkflowDeploymentButton workflowId={workflowId} />
           </div>
         </div>
       </div>
@@ -255,7 +270,7 @@ export default function WorkflowDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['워크플로우 오버뷰', '모델']}
+            labels={['워크플로우 오버뷰', '모델', '배포 상태', '추론 테스트']}
             components={[
               <div className="tabs-Content">
                 {nodes.length > 0 ? (
@@ -288,6 +303,8 @@ export default function WorkflowDetailPage() {
                   />
                 </div>
               </div>,
+              <WorkflowStatusPanel workflowId={workflowId} />,
+              <WorkflowInferenceTestPanel workflowId={workflowId} />,
             ]}
           />
         </div>

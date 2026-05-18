@@ -21,7 +21,7 @@ export const SubmitWorkflowButton = () => {
             title: '워크플로우 생성 성공',
             children: '워크플로우가 성공적으로 생성되었습니다.',
           });
-          navigate('/workflow');
+          navigate('/workflow/workflow');
         },
         onError: async (error) => {
           toast.open({
