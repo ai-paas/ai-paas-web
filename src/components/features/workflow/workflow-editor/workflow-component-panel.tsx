@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/accordion';
 import { useReactFlow } from '@xyflow/react';
 import { SearchInput, useSearchInputState } from '@innogrid/ui';
+import { useEffect } from 'react';
 import { useGetWorkflowComponentTypes } from '@/hooks/service/workflows';
 import { useWorkflowStore } from '@/store/useWorkflowStore';
 import type { WorkflowComponentType } from '@/types/workflow';
@@ -17,13 +18,46 @@ const DEFAULT_LABEL = {
   END: '끝',
 } as const;
 
-export const WorkflowComponentPanel = () => {
+const createNodeId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `n${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+};
+
+const NODE_X_GAP = 300;
+const TOP_ROW_Y = 120;
+const DEFAULT_ROW_Y = 220;
+
+const getNextNodePosition = (
+  nodes: ReturnType<typeof useWorkflowStore.getState>['nodes'],
+  type: WorkflowComponentType
+) => {
+  const nextX =
+    nodes.length === 0 ? 0 : Math.max(...nodes.map((node) => node.position.x)) + NODE_X_GAP;
+  const y = type === 'START' || type === 'END' ? TOP_ROW_Y : DEFAULT_ROW_Y;
+
+  return { x: nextX, y };
+};
+
+interface WorkflowComponentPanelProps {
+  initialName?: string;
+}
+
+export const WorkflowComponentPanel = ({ initialName }: WorkflowComponentPanelProps) => {
   const { workflowComponentTypes } = useGetWorkflowComponentTypes();
   const { searchValue, ...restProps } = useSearchInputState();
   const nodes = useWorkflowStore((s) => s.nodes);
   const name = useWorkflowStore((s) => s.name);
   const setName = useWorkflowStore((s) => s.setName);
   const { addNodes } = useReactFlow();
+
+  useEffect(() => {
+    if (initialName) {
+      setName(initialName);
+    }
+  }, [initialName, setName]);
 
   const handleClick = (type: WorkflowComponentType) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -43,18 +77,29 @@ export const WorkflowComponentPanel = () => {
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            query_variable: '',
+            knowledgebase_id: '',
+            top_k: 3,
           };
           break;
         case 'MODEL':
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            type: 'custom',
+            model_id: '',
+            context: '',
+            prompt_id: '',
+            temperature: 0.7,
+            top_p: 0.9,
+            max_tokens: 2048,
           };
           break;
         case 'END':
           newNodeData = {
             label: DEFAULT_LABEL[type],
             name: DEFAULT_LABEL[type],
+            output_variable: [],
           };
           break;
         default:
@@ -66,8 +111,8 @@ export const WorkflowComponentPanel = () => {
 
     addNodes([
       {
-        id: `n${Math.floor(Math.random() * 1000)}`,
-        position: { x: 0, y: 200 },
+        id: createNodeId(),
+        position: getNextNodePosition(nodes, type),
         data: generateNodeData(),
         type,
       },
@@ -85,11 +130,7 @@ export const WorkflowComponentPanel = () => {
         />
       </div>
       <div className="flex-shrink-0 px-2.5 pt-2.5 [&>[data-size='m-medium']]:w-full">
-        <SearchInput
-          variant="default"
-          placeholder="검색어를 입력해주세요"
-          {...restProps}
-        />
+        <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto px-4 py-1">
         <Accordion type="multiple" className="space-y-1">

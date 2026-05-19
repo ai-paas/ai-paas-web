@@ -8,10 +8,12 @@ import {
   useTablePagination,
   useTableSelection,
 } from '@innogrid/ui';
-import { CreateWorkflowButton } from '../../components/features/workflow/create-workflow-button';
-import { EditWorkflowButton } from '../../components/features/workflow/edit-workflow-button';
-import { DeleteWorkflowButton } from '../../components/features/workflow/delete-workflow-button';
-import { useEffect } from 'react';
+import { CreateWorkflowButton } from '../../../components/features/workflow/create-workflow-button';
+import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
+import { ExecuteWorkflowButton } from '../../../components/features/workflow/execute-workflow-button';
+import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
+import { StopWorkflowDeploymentButton } from '../../../components/features/workflow/stop-workflow-deployment-button';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -31,7 +33,7 @@ const columns = [
     accessorFn: (row: Workflow) => row.name,
     size: 220,
     cell: ({ row }: { row: { original: Workflow } }) => (
-      <Link to={'/workflow/detail'} className="table-td-link">
+      <Link to={`/workflow/workflow/${row.original.surro_workflow_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
@@ -94,6 +96,13 @@ export default function WorkflowPage() {
     search: searchValue,
   });
 
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+    if (selectedRowKeys.length !== 1) return;
+
+    return workflows[parseInt(selectedRowKeys[0])]?.surro_workflow_id;
+  }, [rowSelection, workflows]);
+
   useEffect(() => {
     if (searchValue) {
       initializePagination();
@@ -112,16 +121,16 @@ export default function WorkflowPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateWorkflowButton />
-            <EditWorkflowButton />
-            <DeleteWorkflowButton />
+            <EditWorkflowButton workflowId={selectedId} />
+            <DeleteWorkflowButton workflowId={selectedId} />
+            <ExecuteWorkflowButton workflowId={selectedId} />
+            <StopWorkflowDeploymentButton workflowId={selectedId} />
           </div>
           <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div className="h-[481px]">
+        <div className="h-120.25">
           <Table
             columns={columns}
             data={workflows}

@@ -13,6 +13,7 @@ import type {
   GetOptimizersParams,
 } from '@/types/model';
 import type { GetServicesParams } from '@/types/service';
+import type { WorkflowTemplateListParams } from '@/types/workflow';
 
 export type HubModelTagParams = {
   group: 'region' | 'library' | 'task' | 'framework' | 'language';
@@ -110,15 +111,15 @@ export const queryKeys = {
     all: ['learning'] as const,
     list: (params: GetLearningParams = {}) => [...queryKeys.learning.all, params] as const,
     detail: (experimentId?: number) => [...queryKeys.learning.all, experimentId] as const,
-    status: (experimentId?: number) =>
-      [...queryKeys.learning.all, 'status', experimentId] as const,
+    status: (experimentId?: number) => [...queryKeys.learning.all, 'status', experimentId] as const,
   },
   workflows: {
     all: ['workflows'] as const,
     list: (params: WorkflowListParams) => [...queryKeys.workflows.all, params] as const,
     detail: (workflowId?: number | string) => [...queryKeys.workflows.all, workflowId] as const,
     componentTypes: () => [...queryKeys.workflows.all, 'component-types'] as const,
-    templates: () => [...queryKeys.workflows.all, 'templates'] as const,
+    templates: (params: WorkflowTemplateListParams = {}) =>
+      [...queryKeys.workflows.all, 'templates', params] as const,
     status: (workflowId?: string) => [...queryKeys.workflows.all, 'status', workflowId] as const,
     models: (workflowId?: string) => [...queryKeys.workflows.all, 'models', workflowId] as const,
   },

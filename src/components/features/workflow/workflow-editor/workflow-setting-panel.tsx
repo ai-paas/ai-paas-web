@@ -1,29 +1,17 @@
-import { useState } from 'react';
-import { type Node, useOnSelectionChange, useReactFlow } from '@xyflow/react';
 import { StartSetting } from './start-setting';
 import { ModelSetting } from './model-setting';
 import { KnowledgeBaseSetting } from './knowledge-setting';
 import { EndSetting } from './end-setting';
 import styles from '@/pages/workflow/workflow.module.scss';
+import { useWorkflowStore } from '@/store/useWorkflowStore';
 
 export const WorkflowSettingPanel = () => {
-  const { setNodes, getNodes } = useReactFlow();
-  const [selectedNode, setSelectedNode] = useState<Node>();
+  const selectedNode = useWorkflowStore((s) =>
+    s.nodes.find((node) => node.id === s.selectedNodeId)
+  );
+  const selectNode = useWorkflowStore((s) => s.selectNode);
 
-  const clearSelection = () => {
-    const updatedNodes = getNodes().map((node) => ({
-      ...node,
-      selected: false,
-    }));
-    setNodes(updatedNodes);
-  };
-
-  useOnSelectionChange({
-    onChange: ({ nodes }) => {
-      const selected = nodes.find((node) => node.selected);
-      setSelectedNode(selected);
-    },
-  });
+  const clearSelection = () => selectNode(null);
 
   if (!selectedNode) return null;
 

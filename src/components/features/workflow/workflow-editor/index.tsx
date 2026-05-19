@@ -1,23 +1,44 @@
 import { ReactFlowProvider, type Edge } from '@xyflow/react';
 import { WorkflowComponentPanel } from './workflow-component-panel';
 import { FlowChart } from '@/components/ui/flow-chart';
-import { Button } from '@innogrid/ui';
+import { ChecklistWorkflowButton } from './checklist-workflow-button';
+import { CreateWorkflowTemplateButton } from './create-workflow-template-button';
 import { SubmitWorkflowButton } from './submit-workflow-button';
+import { UpdateWorkflowButton } from './update-workflow-button';
+import { UpdateWorkflowTemplateButton } from './update-workflow-template-button';
 import { WorkflowSettingPanel } from './workflow-setting-panel';
 import styles from '@/pages/workflow/workflow.module.scss';
 import type { WorkflowNode } from '@/store/useWorkflowStore';
+import type { WorkflowStatus } from '@/types/workflow';
 
 interface WorkflowEditorProps {
   initialNodes: WorkflowNode[];
   initialEdges: Edge[];
+  initialName?: string;
+  mode?: 'create' | 'edit' | 'template' | 'templateEdit';
+  workflowId?: string;
+  templateId?: string;
+  templateDescription?: string;
+  templateCategory?: string;
+  status?: WorkflowStatus;
+  serviceId?: string;
 }
 
-export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorProps) => {
-  const handleChecklist = () => {};
-
+export const WorkflowEditor = ({
+  initialNodes,
+  initialEdges,
+  initialName,
+  mode = 'create',
+  workflowId,
+  templateId,
+  templateDescription,
+  templateCategory,
+  status,
+  serviceId,
+}: WorkflowEditorProps) => {
   return (
     <ReactFlowProvider>
-      <WorkflowComponentPanel />
+      <WorkflowComponentPanel initialName={initialName} />
 
       <div className={styles.contentBox}>
         <div className="size-full">
@@ -25,10 +46,21 @@ export const WorkflowEditor = ({ initialNodes, initialEdges }: WorkflowEditorPro
         </div>
 
         <div className="absolute top-5 right-5 flex gap-1.5">
-          <Button onClick={handleChecklist} size="medium" color="tertiary">
-            체크리스트
-          </Button>
-          <SubmitWorkflowButton />
+          <ChecklistWorkflowButton />
+          {mode === 'edit' && workflowId ? (
+            <UpdateWorkflowButton workflowId={workflowId} status={status} serviceId={serviceId} />
+          ) : mode === 'templateEdit' && templateId ? (
+            <UpdateWorkflowTemplateButton
+              templateId={templateId}
+              description={templateDescription}
+              category={templateCategory}
+              status={status}
+            />
+          ) : mode === 'template' ? (
+            <CreateWorkflowTemplateButton buttonTitle="생성" redirect="/workflow/templates" />
+          ) : (
+            <SubmitWorkflowButton />
+          )}
         </div>
 
         <WorkflowSettingPanel />

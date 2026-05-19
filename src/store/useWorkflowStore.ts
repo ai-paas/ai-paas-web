@@ -17,6 +17,7 @@ interface BaseNodeData {
 }
 
 interface StartNodeData extends BaseNodeData {
+  description?: string;
   inputFields: {
     type: 'text' | 'file';
     variable: string;
@@ -31,6 +32,7 @@ interface KnowledgebaseNodeData extends BaseNodeData {
   description?: string;
   query_variable: string;
   knowledgebase_id: string;
+  top_k?: number;
 }
 
 interface ModelNodeData extends BaseNodeData {
@@ -39,6 +41,9 @@ interface ModelNodeData extends BaseNodeData {
   model_id: string;
   context: string;
   prompt_id: string;
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
 }
 
 interface EndNodeData extends BaseNodeData {
@@ -72,9 +77,19 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   setName: (name: string) => set({ name: name }),
-  setInitialData: (nodes: WorkflowNode[], edges: Edge[]) => set({ nodes, edges }),
+  setInitialData: (nodes: WorkflowNode[], edges: Edge[]) =>
+    set({
+      nodes: nodes.map((node) => ({ ...node, selected: false })),
+      edges,
+      selectedNodeId: null,
+    }),
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) =>
-    set({ nodes: applyNodeChanges(changes, get().nodes) }),
+    set(() => {
+      const nodes = applyNodeChanges(changes, get().nodes);
+      const selectedNodeId = nodes.find((node) => node.selected)?.id ?? null;
+
+      return { nodes, selectedNodeId };
+    }),
   onEdgesChange: (changes: EdgeChange<Edge>[]) =>
     set({ edges: applyEdgeChanges(changes, get().edges) }),
   onConnect: (connection: Edge | Connection) => set({ edges: addEdge(connection, get().edges) }),
@@ -84,5 +99,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
       ),
     })),
-  selectNode: (nodeId: string | null) => set({ selectedNodeId: nodeId }),
+  selectNode: (nodeId: string | null) =>
+    set((state) => ({
+      selectedNodeId: nodeId,
+      nodes: state.nodes.map((node) => ({ ...node, selected: node.id === nodeId })),
+    })),
 }));

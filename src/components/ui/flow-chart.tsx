@@ -1,4 +1,4 @@
-import { Background, ReactFlow, type Edge, type NodeProps } from '@xyflow/react';
+import { Background, MiniMap, ReactFlow, type Edge, type NodeProps } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { memo, useEffect } from 'react';
 import {
@@ -136,7 +136,8 @@ const nodeTypes = {
   END: EndNode,
 };
 
-const DEFAULT_VIEWPORT = { x: 0, y: 0, zoom: 1.5 };
+const DEFAULT_VIEWPORT = { x: 0, y: 0, zoom: 1 };
+const FIT_VIEW_OPTIONS = { padding: 0.2, maxZoom: 1 };
 
 interface FlowChartProps {
   initialNodes: WorkflowNode[];
@@ -149,7 +150,7 @@ export const FlowChart = ({ initialNodes, initialEdges }: FlowChartProps) => {
 
   useEffect(() => {
     setInitialData(initialNodes, initialEdges);
-  }, []);
+  }, [initialEdges, initialNodes, setInitialData]);
 
   return (
     <div className="size-full">
@@ -163,9 +164,11 @@ export const FlowChart = ({ initialNodes, initialEdges }: FlowChartProps) => {
         nodeTypes={nodeTypes}
         defaultViewport={DEFAULT_VIEWPORT}
         fitView
+        fitViewOptions={FIT_VIEW_OPTIONS}
         onlyRenderVisibleElements
       >
         <Background />
+        <MiniMap position="bottom-left" pannable zoomable />
       </ReactFlow>
     </div>
   );

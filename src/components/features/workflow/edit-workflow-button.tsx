@@ -1,14 +1,21 @@
-import { Button, useTableSelection } from "@innogrid/ui";
+import { Button } from '@innogrid/ui';
+import { useNavigate } from 'react-router';
 
-export const EditWorkflowButton = () => {
-  const { rowSelection } = useTableSelection();
+interface EditWorkflowButtonProps {
+  workflowId?: string;
+}
+
+export const EditWorkflowButton = ({ workflowId }: EditWorkflowButtonProps) => {
+  const navigate = useNavigate();
 
   const handleClick = () => {
-    console.log(rowSelection);
+    if (workflowId) {
+      navigate(`/workflow/workflow/${workflowId}/edit`);
+    }
   };
 
   return (
-    <Button onClick={handleClick} size="medium" color="secondary">
+    <Button onClick={handleClick} size="medium" color="secondary" disabled={!workflowId}>
       편집
     </Button>
   );

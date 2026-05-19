@@ -2,16 +2,32 @@ import { api } from '@/lib/api';
 import { queryKeys, type WorkflowListParams } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
+  CloneWorkflowTemplateRequest,
+  CleanupWorkflowResponse,
   ComponentDeployStatusBody,
+  CreateWorkflowTemplateRequest,
   CreateWorkflowRequest,
+  DeleteWorkflowResponse,
+  ExecuteWorkflowResponse,
+  FinalizeWorkflowCleanupResponse,
+  FinalizeWorkflowDeletionResponse,
   GetWorkflowComponentTypes,
   UpdateWorkflowRequest,
   UpdateWorkflowTemplateRequest,
+  ValidateWorkflowRequest,
+  ValidateWorkflowResponse,
   Workflow,
-  WorkflowModel,
+  WorkflowRead,
+  WorkflowModelsResponse,
+  WorkflowMlTestResponse,
+  WorkflowRagTestResponse,
+  WorkflowStatusResponse,
   WorkflowTemplate,
+  WorkflowTemplateListParams,
+  WorkflowTemplateListResponse,
 } from '@/types/workflow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { HTTPError } from 'ky';
 
 export const useGetWorkflows = (params: WorkflowListParams) => {
   const { data, isPending, isError } = useQuery({
@@ -44,21 +60,42 @@ export const useGetWorkflowComponentTypes = () => {
   };
 };
 
-export const useGetTemplates = () => {
+export const useGetTemplates = (params: WorkflowTemplateListParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.workflows.templates(),
-    queryFn: () => api.get<Page<WorkflowTemplate>>('workflows/templates').json(),
+    queryKey: queryKeys.workflows.templates(params),
+    queryFn: () =>
+      api
+        .get<WorkflowTemplateListResponse>('workflows/templates', { searchParams: { ...params } })
+        .json(),
   });
 
+  const workflowTemplates = data?.items ?? [];
+
   return {
-    workflowTemplates: data?.data ?? [],
+    workflowTemplates,
     page: {
-      number: data?.page ?? 1,
-      total: data?.total ?? 1,
-      size: data?.size ?? 1,
+      number: params.page ?? 1,
+      total: data?.total ?? 0,
+      size: params.size ?? workflowTemplates.length,
     },
     isPending,
     isError,
+  };
+};
+
+export const useValidateWorkflow = () => {
+  const { mutate, isPending, isError, isSuccess, data, reset } = useMutation({
+    mutationFn: (data: ValidateWorkflowRequest) =>
+      api.post('workflows/validate', { json: data }).json<ValidateWorkflowResponse>(),
+  });
+
+  return {
+    validateWorkflow: mutate,
+    validation: data,
+    isPending,
+    isError,
+    isSuccess,
+    reset,
   };
 };
 
@@ -100,11 +137,11 @@ export const useCreateWorkflowViaTemplate = () => {
   };
 };
 
-export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => {
+export const useGetWorkflow = (workflowId?: number | string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.detail(workflowId),
-    queryFn: () => api.get(`workflow/${workflowId}`).json<Workflow>(),
-    enabled,
+    queryFn: () => api.get(`workflows/${workflowId}`).json<WorkflowRead>(),
+    enabled: enabled && !!workflowId,
   });
 
   return {
@@ -117,13 +154,61 @@ export const useGetWorkflow = (workflowId?: number, enabled: boolean = true) => 
 export const useGetWorkflowTemplate = (templateId?: string) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.detail(templateId),
-    queryFn: () => api.get(`workflow/templates/${templateId}`).json<WorkflowTemplate>(),
+    queryFn: () => api.get(`workflows/templates/${templateId}`).json<WorkflowTemplate>(),
+    enabled: !!templateId,
   });
 
   return {
     workflowTemplate: data,
     isPending,
     isError,
+  };
+};
+
+export const useCreateWorkflowTemplate = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (data: CreateWorkflowTemplateRequest) =>
+      api.post('workflows/templates', { json: data }).json<string>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
+    },
+  });
+
+  return {
+    createWorkflowTemplate: mutate,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};
+
+export const useCloneWorkflowTemplate = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess } = useMutation({
+    mutationFn: ({ templateId, workflow_name, service_id }: CloneWorkflowTemplateRequest) => {
+      const searchParams: Record<string, string | number> = { workflow_name };
+
+      if (service_id !== undefined) {
+        searchParams.service_id = service_id;
+      }
+
+      return api
+        .post(`workflows/templates/${templateId}/clone`, { searchParams })
+        .json<WorkflowRead>();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
+    },
+  });
+
+  return {
+    cloneWorkflowTemplate: mutate,
+    isPending,
+    isError,
+    isSuccess,
   };
 };
 
@@ -169,7 +254,8 @@ export const useDeleteWorkflow = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (workflowId: number) => api.delete(`workflows/${workflowId}`).json<string>(),
+    mutationFn: (workflowId: string) =>
+      api.delete(`workflows/${workflowId}`).json<DeleteWorkflowResponse>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -202,31 +288,49 @@ export const useDeleteWorkflowTemplate = () => {
   };
 };
 
-export const useGetWorkflowStatus = (surroWorkflowId?: string) => {
-  const { data, isPending, isError } = useQuery({
+const isWorkflowDeploying = (data?: WorkflowStatusResponse) => {
+  const models = data?.deployed_models ?? [];
+
+  return models.some((model) => model.status === 'PENDING' || model.status === 'DEPLOYING');
+};
+
+export const useGetWorkflowStatus = (
+  surroWorkflowId?: string,
+  { enabled = true, polling = false }: { enabled?: boolean; polling?: boolean } = {}
+) => {
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: queryKeys.workflows.status(surroWorkflowId),
-    queryFn: () => api.get(`workflows/${surroWorkflowId}/status`).json<string>(),
+    queryFn: () => api.get(`workflows/${surroWorkflowId}/status`).json<WorkflowStatusResponse>(),
+    enabled: enabled && !!surroWorkflowId,
+    refetchInterval: polling
+      ? (query) => (isWorkflowDeploying(query.state.data) ? 7000 : false)
+      : false,
   });
 
   return {
     workflowStatus: data,
+    isDeploying: isWorkflowDeploying(data),
     isPending,
     isError,
+    refetch,
   };
 };
 
 export const useGetWorkflowModels = (surroWorkflowId?: string) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.models(surroWorkflowId),
-    queryFn: () => api.get<Page<WorkflowModel>>(`workflows/${surroWorkflowId}/models`).json(),
+    queryFn: () => api.get<WorkflowModelsResponse>(`workflows/${surroWorkflowId}/models`).json(),
+    enabled: !!surroWorkflowId,
   });
 
   return {
-    workflowModels: data?.data ?? [],
+    workflowModels: data?.deployed_models ?? [],
+    backendApiUrl: data?.backend_api_url ?? null,
+    workflowId: data?.workflow_id,
     page: {
-      number: data?.page ?? 1,
-      total: data?.total ?? 1,
-      size: data?.size ?? 1,
+      number: 1,
+      total: data?.total ?? 0,
+      size: data?.deployed_models.length ?? 0,
     },
     isPending,
     isError,
@@ -237,12 +341,10 @@ export const useFinalizeWorkflowDeletion = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (params: { surro_workflow_id: string; run_id: string }) =>
+    mutationFn: (params: { surro_workflow_id: string }) =>
       api
-        .post(`workflows/${params.surro_workflow_id}/finalize-deletion`, {
-          searchParams: params.run_id,
-        })
-        .json<Workflow>(),
+        .post(`workflows/${params.surro_workflow_id}/finalize-deletion`)
+        .json<FinalizeWorkflowDeletionResponse>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -256,12 +358,25 @@ export const useFinalizeWorkflowDeletion = () => {
   };
 };
 
+export const isExecuteTimeoutError = async (error: unknown) => {
+  const httpError = error as HTTPError;
+
+  if (httpError?.response?.status !== 500) return false;
+
+  try {
+    const body = (await httpError.response.clone().json()) as { detail?: unknown };
+    return body.detail === '' || body.detail === null || body.detail === undefined;
+  } catch {
+    return false;
+  }
+};
+
 export const useExecuteWorkflow = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (params: { surro_workflow_id: string }) =>
-      api.post(`workflows/${params.surro_workflow_id}/execute`).json<Workflow>(),
+      api.post(`workflows/${params.surro_workflow_id}/execute`).json<ExecuteWorkflowResponse>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -303,10 +418,84 @@ export const useUpdateComponentDeployStatus = () => {
   };
 };
 
-export const useTestRagWorkflow = () => {};
+export const useTestRagWorkflow = () => {
+  const { mutate, isPending, isError, isSuccess, data } = useMutation({
+    mutationFn: (params: { surro_workflow_id: string; text: string }) => {
+      const formData = new FormData();
+      formData.append('text', params.text);
 
-export const useTestMLWorkflow = () => {};
+      return api
+        .post(`workflows/${params.surro_workflow_id}/test/rag`, { body: formData })
+        .json<WorkflowRagTestResponse>();
+    },
+  });
 
-export const useCleanupWorkflow = () => {};
+  return {
+    testRagWorkflow: mutate,
+    testResult: data,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};
 
-export const useFinalizeWorkflowCleanup = () => {};
+export const useTestMLWorkflow = () => {
+  const { mutate, isPending, isError, isSuccess, data } = useMutation({
+    mutationFn: (params: { surro_workflow_id: string; image: File }) => {
+      const formData = new FormData();
+      formData.append('image', params.image);
+
+      return api
+        .post(`workflows/${params.surro_workflow_id}/test/ml`, { body: formData })
+        .json<WorkflowMlTestResponse>();
+    },
+  });
+
+  return {
+    testMLWorkflow: mutate,
+    testResult: data,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};
+
+export const useCleanupWorkflow = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (params: { surro_workflow_id: string }) =>
+      api.post(`workflows/${params.surro_workflow_id}/cleanup`).json<CleanupWorkflowResponse>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
+    },
+  });
+
+  return {
+    cleanupWorkflow: mutate,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};
+
+export const useFinalizeWorkflowCleanup = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess } = useMutation({
+    mutationFn: (params: { surro_workflow_id: string }) =>
+      api
+        .post(`workflows/${params.surro_workflow_id}/finalize-cleanup`)
+        .json<FinalizeWorkflowCleanupResponse>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
+    },
+  });
+
+  return {
+    finalizeWorkflowCleanup: mutate,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};

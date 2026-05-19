@@ -1,12 +1,15 @@
 import { Suspense } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { Navigate, createBrowserRouter } from 'react-router';
 import DefaultLayout from '../pages/layout';
 import ServicePage from '../pages/service/page';
 import ServiceDetailPage from '../pages/service/[id]/page';
-import WorkflowPage from '../pages/workflow/page';
-import WorkflowCreatePage from '../pages/workflow/create/page';
-import WorkflowDetailPage from '../pages/workflow/[id]/page';
-import WorkflowEditPage from '../pages/workflow/[id]/edit/page';
+import WorkflowPage from '../pages/workflow/workflow/page';
+import WorkflowCreatePage from '../pages/workflow/workflow/create/page';
+import WorkflowDetailPage from '../pages/workflow/workflow/[id]/page';
+import WorkflowEditPage from '../pages/workflow/workflow/[id]/edit/page';
+import WorkflowTemplatePage from '../pages/workflow/templates/page';
+import WorkflowTemplateCreatePage from '../pages/workflow/templates/create/page';
+import WorkflowTemplateEditPage from '../pages/workflow/templates/[id]/edit/page';
 import ModelCatalogPage from '../pages/model/model-catalog/page';
 import ModelCatalogCreatePage from '../pages/model/model-catalog/create/page';
 import ModelCatalogDetailPage from '../pages/model/model-catalog/[id]/page';
@@ -88,35 +91,69 @@ export const router = createBrowserRouter([
       },
       {
         path: 'workflow',
-        element: (
-          <Suspense fallback={<></>}>
-            <WorkflowPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'workflow/create',
-        element: (
-          <Suspense fallback={<></>}>
-            <WorkflowCreatePage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'workflow/:id',
-        element: (
-          <Suspense fallback={<></>}>
-            <WorkflowDetailPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'workflow/:id/edit',
-        element: (
-          <Suspense fallback={<></>}>
-            <WorkflowEditPage />
-          </Suspense>
-        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="workflow" replace />,
+          },
+          {
+            path: 'workflow',
+            index: true,
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'templates',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowTemplatePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'templates/create',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowTemplateCreatePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'templates/:id/edit',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowTemplateEditPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'workflow/create',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowCreatePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'workflow/:id',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowDetailPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'workflow/:id/edit',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowEditPage />
+              </Suspense>
+            ),
+          },
+        ],
       },
       {
         path: 'model',

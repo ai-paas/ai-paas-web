@@ -64,7 +64,7 @@ export default function KnowledgeBasePage() {
             </div>
           </div>
         </div>
-        <div>
+        <div className="h-120.25">
           <Table
             columns={columns}
             data={knowledgeBases}
@@ -102,7 +102,11 @@ const columns: ColDef<KnowledgeBase>[] = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: Parameters<typeof HeaderCheckbox<KnowledgeBase>>[0]['table'] }) => <HeaderCheckbox table={table} />,
+    header: ({
+      table,
+    }: {
+      table: Parameters<typeof HeaderCheckbox<KnowledgeBase>>[0]['table'];
+    }) => <HeaderCheckbox table={table} />,
     cell: ({ row }: { row: TableRow<KnowledgeBase> }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },

@@ -21,34 +21,135 @@ export const Menu = () => {
 
   return (
     <ul>
-      <MenuItem icon={<IconService />} label="서비스" href="/service" isActive={isPathActive(location.pathname, '/service')} />
-      <MenuItem icon={<IconWorkflow />} label="워크플로우" href="/workflow" isActive={isPathActive(location.pathname, '/workflow')} />
-      <MenuItem icon={<IconModel />} label="모델" isActive={isPathActive(location.pathname, '/model')}>
+      <MenuItem
+        icon={<IconService />}
+        label="서비스"
+        href="/service"
+        isActive={isPathActive(location.pathname, '/service')}
+      />
+      <MenuItem
+        icon={<IconWorkflow />}
+        label="워크플로우"
+        isActive={isPathActive(location.pathname, '/workflow')}
+      >
         <ul>
-          <MenuItem2 label="모델 카탈로그" href="/model/model-catalog" isActive={isPathActive(location.pathname, '/model/model-catalog')} />
-          <MenuItem2 label="커스텀 모델" href="/model/custom-model" isActive={isPathActive(location.pathname, '/model/custom-model')} />
+          <MenuItem2
+            label="워크플로우"
+            href="/workflow/workflow"
+            isActive={isPathActive(location.pathname, '/workflow/workflow')}
+          />
+          <MenuItem2
+            label="워크플로우 템플릿"
+            href="/workflow/templates"
+            isActive={isPathActive(location.pathname, '/workflow/templates')}
+          />
         </ul>
       </MenuItem>
-      <MenuItem icon={<IconDataset />} label="데이터셋" href="/dataset" isActive={isPathActive(location.pathname, '/dataset')} />
-      <MenuItem icon={<IconKnowledgeBase />} label="지식 기반" href="/knowledge-base" isActive={isPathActive(location.pathname, '/knowledge-base')} />
-      <MenuItem icon={<IconPrompt />} label="프롬프트" href="/prompt" isActive={isPathActive(location.pathname, '/prompt')} />
-      <MenuItem icon={<IconLearning />} label="학습" href="/learning" isActive={isPathActive(location.pathname, '/learning')} />
-      <MenuItem icon={<IconDashboard />} label="대시보드" href="/dashboard" isActive={isPathActive(location.pathname, '/dashboard')} />
-      <MenuItem icon={<IconInfraManagement />} label="인프라 관리" isActive={isPathActive(location.pathname, '/infra-management')}>
+      <MenuItem
+        icon={<IconModel />}
+        label="모델"
+        isActive={isPathActive(location.pathname, '/model')}
+      >
         <ul>
-          <MenuItem2 label="클러스터 관리" href="/infra-management/cluster-management" isActive={isPathActive(location.pathname, '/infra-management/cluster-management')} />
-          <MenuItem2 label="모니터링 대시보드" href="/infra-management/monitoring-dashboard" isActive={isPathActive(location.pathname, '/infra-management/monitoring-dashboard')} />
-          <MenuItem2 label="이벤트" href="/infra-management/event" isActive={isPathActive(location.pathname, '/infra-management/event')} />
-          <MenuItem2 label="애플리케이션" isActive={isPathActive(location.pathname, '/infra-management/application')}>
+          <MenuItem2
+            label="모델 카탈로그"
+            href="/model/model-catalog"
+            isActive={isPathActive(location.pathname, '/model/model-catalog')}
+          />
+          <MenuItem2
+            label="커스텀 모델"
+            href="/model/custom-model"
+            isActive={isPathActive(location.pathname, '/model/custom-model')}
+          />
+        </ul>
+      </MenuItem>
+      <MenuItem
+        icon={<IconDataset />}
+        label="데이터셋"
+        href="/dataset"
+        isActive={isPathActive(location.pathname, '/dataset')}
+      />
+      <MenuItem
+        icon={<IconKnowledgeBase />}
+        label="지식 기반"
+        href="/knowledge-base"
+        isActive={isPathActive(location.pathname, '/knowledge-base')}
+      />
+      <MenuItem
+        icon={<IconPrompt />}
+        label="프롬프트"
+        href="/prompt"
+        isActive={isPathActive(location.pathname, '/prompt')}
+      />
+      <MenuItem
+        icon={<IconLearning />}
+        label="학습"
+        href="/learning"
+        isActive={isPathActive(location.pathname, '/learning')}
+      />
+      <MenuItem
+        icon={<IconDashboard />}
+        label="대시보드"
+        href="/dashboard"
+        isActive={isPathActive(location.pathname, '/dashboard')}
+      />
+      <MenuItem
+        icon={<IconInfraManagement />}
+        label="인프라 관리"
+        isActive={isPathActive(location.pathname, '/infra-management')}
+      >
+        <ul>
+          <MenuItem2
+            label="클러스터 관리"
+            href="/infra-management/cluster-management"
+            isActive={isPathActive(location.pathname, '/infra-management/cluster-management')}
+          />
+          <MenuItem2
+            label="모니터링 대시보드"
+            href="/infra-management/monitoring-dashboard"
+            isActive={isPathActive(location.pathname, '/infra-management/monitoring-dashboard')}
+          />
+          <MenuItem2
+            label="이벤트"
+            href="/infra-management/event"
+            isActive={isPathActive(location.pathname, '/infra-management/event')}
+          />
+          <MenuItem2
+            label="애플리케이션"
+            isActive={isPathActive(location.pathname, '/infra-management/application')}
+          >
             <ul>
-              <MenuItem3 label="카탈로그" href="/infra-management/application/catalog" isActive={isPathActive(location.pathname, '/infra-management/application/catalog')} />
-              <MenuItem3 label="헬름 릴리즈" href="/infra-management/application/helm-release" isActive={isPathActive(location.pathname, '/infra-management/application/helm-release')} />
-              <MenuItem3 label="헬름 저장소" href="/infra-management/application/helm-repository" isActive={isPathActive(location.pathname, '/infra-management/application/helm-repository')} />
+              <MenuItem3
+                label="카탈로그"
+                href="/infra-management/application/catalog"
+                isActive={isPathActive(location.pathname, '/infra-management/application/catalog')}
+              />
+              <MenuItem3
+                label="헬름 릴리즈"
+                href="/infra-management/application/helm-release"
+                isActive={isPathActive(
+                  location.pathname,
+                  '/infra-management/application/helm-release'
+                )}
+              />
+              <MenuItem3
+                label="헬름 저장소"
+                href="/infra-management/application/helm-repository"
+                isActive={isPathActive(
+                  location.pathname,
+                  '/infra-management/application/helm-repository'
+                )}
+              />
             </ul>
           </MenuItem2>
         </ul>
       </MenuItem>
-      <MenuItem icon={<IconMemberManagement />} label="멤버 관리" href="/member-management" isActive={isPathActive(location.pathname, '/member-management')} />
+      <MenuItem
+        icon={<IconMemberManagement />}
+        label="멤버 관리"
+        href="/member-management"
+        isActive={isPathActive(location.pathname, '/member-management')}
+      />
     </ul>
   );
 };
@@ -74,10 +175,12 @@ const MenuItem = ({ icon, label, href, isActive = false, children }: MenuItemPro
     return (
       <li>
         <Link to={href}>
-          <div className={`relative mb-1 flex h-10 items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? "bg-[#e8e8e8]":""}`}>
-            <div className={`${isActive ?"opacity-100":"opacity-65"}`}>{icon}</div>
+          <div
+            className={`relative mb-1 flex h-10 items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? 'bg-[#e8e8e8]' : ''}`}
+          >
+            <div className={`${isActive ? 'opacity-100' : 'opacity-65'}`}>{icon}</div>
             <div className="ml-1 truncate text-xs -tracking-[0.5px] text-[#525252] transition-[width_0.6s_ease-in-out]">
-              <span className={`${isActive ? "text-[#1a1a1a] font-semibold" : ""}`}>{label}</span>
+              <span className={`${isActive ? 'font-semibold text-[#1a1a1a]' : ''}`}>{label}</span>
             </div>
           </div>
         </Link>
@@ -89,12 +192,16 @@ const MenuItem = ({ icon, label, href, isActive = false, children }: MenuItemPro
     <li>
       <Collapsible className="group/collapsible">
         <CollapsibleTrigger asChild>
-          <div className={`relative mb-1 flex h-10 cursor-pointer items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? "group-data-[width=52]/sidebar:bg-[#e8e8e8]":""}`}>
-            <div className={`${isActive ?"opacity-100":"opacity-65"}`}>{icon}</div>
+          <div
+            className={`relative mb-1 flex h-10 cursor-pointer items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? 'group-data-[width=52]/sidebar:bg-[#e8e8e8]' : ''}`}
+          >
+            <div className={`${isActive ? 'opacity-100' : 'opacity-65'}`}>{icon}</div>
             <div className="ml-1 w-full truncate text-xs -tracking-[0.5px] text-[#525252] transition-[width_0.6s_ease-in-out]">
               <div className="flex w-full items-center justify-between">
-                <span className={`${isActive ? "text-[#1a1a1a] font-semibold" : ""}`}>{label}</span>
-                <i className={`mr-1 hidden size-[7px] -translate-y-1/3 rotate-45 border-r border-b group-hover/sidebar:block group-data-[pinned=true]/sidebar:block group-data-[state=open]/collapsible:rotate-[225deg] group-data-[state=open]/collapsible:translate-y-1/3 ${isActive?"border-[#1a1a1a]":"border-[#999]"}`} />
+                <span className={`${isActive ? 'font-semibold text-[#1a1a1a]' : ''}`}>{label}</span>
+                <i
+                  className={`mr-1 hidden size-[7px] -translate-y-1/3 rotate-45 border-r border-b group-hover/sidebar:block group-data-[pinned=true]/sidebar:block group-data-[state=open]/collapsible:translate-y-1/3 group-data-[state=open]/collapsible:rotate-[225deg] ${isActive ? 'border-[#1a1a1a]' : 'border-[#999]'}`}
+                />
               </div>
             </div>
           </div>
@@ -126,9 +233,11 @@ const MenuItem2 = ({ label, href, isActive = false, children }: MenuItem2Props) 
     return (
       <li>
         <Link to={href}>
-          <div className={`relative mb-1 flex h-10 items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? "bg-[#e8e8e8]":""}`}>
+          <div
+            className={`relative mb-1 flex h-10 items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? 'bg-[#e8e8e8]' : ''}`}
+          >
             <div className="ml-1 truncate pl-6 text-xs -tracking-[0.5px] text-[#525252] transition-[width_0.6s_ease-in-out]">
-              <span className={`${isActive ? "text-[#1a1a1a] font-semibold" : ""}`}>{label}</span>
+              <span className={`${isActive ? 'font-semibold text-[#1a1a1a]' : ''}`}>{label}</span>
             </div>
           </div>
         </Link>
@@ -142,10 +251,10 @@ const MenuItem2 = ({ label, href, isActive = false, children }: MenuItem2Props) 
         <CollapsibleTrigger asChild>
           <div className="relative mb-1 flex h-10 cursor-pointer items-center rounded-sm p-2 hover:bg-[#e8e8e8]">
             <div className="ml-1 truncate pl-6 text-xs -tracking-[0.5px] text-[#525252] transition-[width_0.6s_ease-in-out]">
-              <span className={`${isActive ? "text-[#1a1a1a] font-semibold" : ""}`}>{label}</span>
+              <span className={`${isActive ? 'font-semibold text-[#1a1a1a]' : ''}`}>{label}</span>
             </div>
             <i
-              className={`absolute top-[45%] right-3 size-[7px] -translate-y-1/2 rotate-45 border-r border-b group-hover:block group-data-[state=open]/collapsible2:top-[55%] group-data-[state=open]/collapsible2:rotate-[225deg] ${isActive ? "border-[#1a1a1a]" : "border-[#999]"}`}
+              className={`absolute top-[45%] right-3 size-[7px] -translate-y-1/2 rotate-45 border-r border-b group-hover:block group-data-[state=open]/collapsible2:top-[55%] group-data-[state=open]/collapsible2:rotate-[225deg] ${isActive ? 'border-[#1a1a1a]' : 'border-[#999]'}`}
             />
           </div>
         </CollapsibleTrigger>
@@ -165,10 +274,12 @@ const MenuItem3 = ({ label, href, isActive = false }: MenuItem3Props) => {
   return (
     <li>
       <Link to={href}>
-        <div className={`relative mb-1 flex h-10 cursor-pointer items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? "bg-[#e8e8e8]" : ""}`}>
+        <div
+          className={`relative mb-1 flex h-10 cursor-pointer items-center rounded-sm p-2 hover:bg-[#e8e8e8] ${isActive ? 'bg-[#e8e8e8]' : ''}`}
+        >
           <div className="ml-1 flex items-center truncate pl-6 text-xs -tracking-[0.5px] text-[#525252] transition-[width_0.6s_ease-in-out]">
-            <i className={`mr-2 h-[1.5px] w-1.5 ${isActive ? "bg-[#1a1a1a]" : "bg-[#B8B8B8]"}`} />
-            <span className={`${isActive ? "text-[#1a1a1a] font-semibold" : ""}`}>{label}</span>
+            <i className={`mr-2 h-[1.5px] w-1.5 ${isActive ? 'bg-[#1a1a1a]' : 'bg-[#B8B8B8]'}`} />
+            <span className={`${isActive ? 'font-semibold text-[#1a1a1a]' : ''}`}>{label}</span>
           </div>
         </div>
       </Link>
