@@ -305,6 +305,10 @@
 .accordion {
   border: 0;
 
+  div[data-orientation='vertical'] {
+    border: 0;
+  }
+
   & > [data-orientation='vertical'] {
     border: 0;
   }
