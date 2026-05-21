@@ -11,78 +11,68 @@ import { EditWorkflowButton } from '../workflow/edit-workflow-button';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { useMemo } from 'react';
-
-interface WorkflowRow {
-  name: string;
-  id: string | number;
-  state: string;
-  desc: string;
-  date: string;
-  [key: string]: unknown;
-}
+import { formatDateTime } from '@/util/date';
+import { getWorkflowStatus } from '@/util/workflow';
+import type { Workflow } from '@/types/workflow';
 
 const columns = [
   {
     id: 'select',
     size: 30,
-    header: ({ table }: { table: WorkflowRow }) => <HeaderCheckbox table={table} />,
-    cell: ({ row }: { row: { original: WorkflowRow } }) => <CellCheckbox row={row} />,
+    header: ({ table }: { table: Workflow }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: { original: Workflow } }) => <CellCheckbox row={row} />,
     enableSorting: false,
   },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: WorkflowRow) => row.name,
+    accessorFn: (row: Workflow) => row.name,
     size: 325,
-    cell: ({ row }: { row: { original: WorkflowRow } }) => {
-      const workflowId =
-        typeof row.original.surro_workflow_id === 'string'
-          ? row.original.surro_workflow_id
-          : row.original.id;
-
-      return (
-        <Link to={`/workflow/workflow/${workflowId}`} className="table-td-link">
-          {row.original.name}
-        </Link>
-      );
-    },
+    cell: ({ row }: { row: { original: Workflow } }) => (
+      <Link to={`/workflow/workflow/${row.original.surro_workflow_id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
   },
   {
     id: 'id',
     header: '워크플로우ID',
-    accessorFn: (row: WorkflowRow) => row.id,
+    accessorFn: (row: Workflow) => row.surro_workflow_id,
     size: 325,
   },
   {
     id: 'state',
     header: '상태',
-    accessorFn: (row: WorkflowRow) => row.state,
+    accessorFn: (row: Workflow) => row.status,
     size: 325,
-    cell: ({ row }: { row: { original: WorkflowRow } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.state}</span>
-    ),
+    cell: ({ row }: { row: { original: Workflow } }) => {
+      const state = getWorkflowStatus(row.original.status);
+
+      return <span className={`table-td-state ${state.className}`}>{state.label}</span>;
+    },
   },
   {
     id: 'desc',
     header: '설명',
-    accessorFn: (row: WorkflowRow) => row.desc,
+    accessorFn: (row: Workflow) => row.description,
     size: 434,
     enableSorting: false,
   },
   {
     id: 'date',
     header: '생성일시',
-    accessorFn: (row: WorkflowRow) => row.date,
+    accessorFn: (row: Workflow) => formatDateTime(row.created_at),
     size: 325,
   },
 ];
 
-export const WorkflowTab = () => {
+export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
   const { workflows, page, isPending, isError } = useGetWorkflows({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
+    service_id: serviceId,
   });
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);

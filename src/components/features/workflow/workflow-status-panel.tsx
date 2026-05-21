@@ -1,5 +1,6 @@
 import { Button } from '@innogrid/ui';
 import { useGetWorkflowStatus } from '@/hooks/service/workflows';
+import { getWorkflowModelStatus, getWorkflowStatus } from '@/util/workflow';
 
 interface WorkflowStatusPanelProps {
   workflowId?: string;
@@ -50,7 +51,9 @@ export const WorkflowStatusPanel = ({ workflowId }: WorkflowStatusPanelProps) =>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <div className="text-sm text-gray-500">워크플로우 상태</div>
-              <div className="mt-1 font-semibold">{workflowStatus?.status ?? EMPTY_VALUE}</div>
+              <div className="mt-1 font-semibold">
+                {workflowStatus?.status ? getWorkflowStatus(workflowStatus.status).label : EMPTY_VALUE}
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-500">Kubeflow Run ID</div>
@@ -87,7 +90,9 @@ export const WorkflowStatusPanel = ({ workflowId }: WorkflowStatusPanelProps) =>
                     <tr className="border-b" key={model.component_id}>
                       <td className="p-2">{model.model_name || EMPTY_VALUE}</td>
                       <td className="p-2">{model.deployment_type || EMPTY_VALUE}</td>
-                      <td className="p-2">{model.status || EMPTY_VALUE}</td>
+                      <td className="p-2">
+                        {model.status ? getWorkflowModelStatus(model.status).label : EMPTY_VALUE}
+                      </td>
                       <td className="p-2 break-all">{model.service_name || EMPTY_VALUE}</td>
                       <td className="p-2 break-all">{model.error_message || EMPTY_VALUE}</td>
                     </tr>

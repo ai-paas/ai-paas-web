@@ -65,7 +65,7 @@ export default function ServiceDetailPage() {
           <Tabs
             labels={['워크플로우', '지식 베이스', '모델', '프롬프트', '모니터링']}
             components={[
-              <WorkflowTab />,
+              <WorkflowTab serviceId={id} />,
               <KnowledgeBaseTab />,
               <ModelTab />,
               <PromptTab />,
