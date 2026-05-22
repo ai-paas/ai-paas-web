@@ -566,7 +566,7 @@ export const StartSetting = () => {
           {draft.type === 'file' && (
             <div className={styles.addItemBox}>
               <Accordion
-                className={styles.accordion}
+
                 components={accordionItems}
                 defaultValue="0"
               />

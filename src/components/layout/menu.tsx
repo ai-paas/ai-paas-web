@@ -105,14 +105,24 @@ export const Menu = () => {
             isActive={isPathActive(location.pathname, '/infra-management/cluster-management')}
           />
           <MenuItem2
-            label="모니터링 대시보드"
-            href="/infra-management/monitoring-dashboard"
-            isActive={isPathActive(location.pathname, '/infra-management/monitoring-dashboard')}
+            label="모니터링"
+            href="/infra-management/monitoring"
+            isActive={isPathActive(location.pathname, '/infra-management/monitoring')}
           />
           <MenuItem2
-            label="이벤트"
-            href="/infra-management/event"
-            isActive={isPathActive(location.pathname, '/infra-management/event')}
+            label="워크로드"
+            href="/infra-management/workload"
+            isActive={isPathActive(location.pathname, '/infra-management/workload')}
+          />
+          <MenuItem2
+            label="가속기"
+            href="/infra-management/accelerator"
+            isActive={isPathActive(location.pathname, '/infra-management/accelerator')}
+          />
+          <MenuItem2
+            label="사용량"
+            href="/infra-management/usage"
+            isActive={isPathActive(location.pathname, '/infra-management/usage')}
           />
           <MenuItem2
             label="애플리케이션"

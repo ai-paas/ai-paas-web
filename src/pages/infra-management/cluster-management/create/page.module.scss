@@ -1,0 +1,78 @@
+.radioGroup {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.radioItem input[type='radio'] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  accent-color: #007bff;
+}
+
+.radioLabel {
+  user-select: none;
+}
+
+.radioItem:hover .radioLabel {
+  color: #007bff;
+}
+
+.selectContainer {
+  width: 100%;
+}
+
+.selectContainer :global(.innogrid-select),
+.selectContainer :global(.select-container),
+.selectContainer :global(.react-select__control),
+.selectContainer :global(.react-select__value-container),
+.selectContainer :global(.react-select__input-container) {
+  width: 100% !important;
+}
+
+.selectContainer :global(.react-select__control) {
+  min-height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.textareaContainer {
+  position: relative;
+  width: 100%;
+}
+
+.kubernetesTextarea {
+  height: 100px;
+  width: 100%;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.placeholderText {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  color: #9ca3af;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  pointer-events: none;
+  white-space: pre;
+  z-index: 1;
+}
+
+.placeholderText div {
+  margin: 0;
+  padding: 0;
+}

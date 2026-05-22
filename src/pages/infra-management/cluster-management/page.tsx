@@ -1,437 +1,190 @@
-import { useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { Link } from 'react-router';
 import {
   BreadCrumb,
-  LineChart,
-  Select,
+  SearchInput,
   Table,
+  HeaderCheckbox,
+  CellCheckbox,
+  useTableSelection,
   useTablePagination,
-  type SelectSingleValue,
+  useSearchInputState,
 } from '@innogrid/ui';
-import { IconHexagon } from '../../../assets/img/icon';
-import styles from '../inframonitor.module.scss';
-import { GaugeChart } from '@/components/ui/gauge-chart';
 
-//select option
-type OptionType = { text: string; value: string };
+import { EditClusterButton } from '@/components/features/infra-managememt/cluster-management/edit-cluster-button';
+import { CreateClusterButton } from '@/components/features/infra-managememt/cluster-management/create-cluster-button';
+import { DeleteClusterButton } from '@/components/features/infra-managememt/cluster-management/delete-cluster-button';
+import { formatDateTime } from '@/util/date';
+import { useGetClusters } from '@/hooks/service/clusters';
+import type { Cluster } from '@/types/cluster';
 
-const options = [
-  { text: '옵션 1', value: 'option1' },
-  { text: '옵션 2', value: 'option2' },
-  { text: '옵션 3', value: 'option3' },
-];
-
-interface ClusterRow {
-  name: string;
-  workflow: string;
-  type: string;
-  desc: string;
-  date: string;
-}
-
+// 테이블 컬럼 설정
 const columns = [
+  {
+    id: 'select',
+    size: 50,
+    header: ({ table }: { table: Cluster }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: Cluster }) => <CellCheckbox row={row} />,
+    enableSorting: false,
+  },
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: ClusterRow) => row.name,
-    size: 300,
+    accessorFn: (row: Cluster) => row.id,
+    size: 200,
+    cell: ({ row }: { row: { original: Cluster } }) => (
+      <Link
+        to={`/infra-management/cluster-management/${row.original.id}`}
+        className="table-td-link"
+      >
+        {row.original.id}
+      </Link>
+    ),
   },
   {
-    id: 'workflow',
-    header: '워크플로우',
-    accessorFn: (row: ClusterRow) => row.workflow,
-    size: 300,
+    id: 'connectionStatus',
+    header: '연동 상태',
+    accessorFn: (row: Cluster) => (row.monitServerUrl ? '연결됨' : '연결 안됨'),
+    size: 150,
+    cell: ({ row }: { row: { original: Cluster } }) => {
+      const status = row.original.monitServerUrl ? '연결됨' : '연결 안됨';
+      return (
+        <span
+          className={`table-td-state table-td-state-${status === '연결됨' ? 'run' : 'negative'}`}
+        >
+          {status}
+        </span>
+      );
+    },
   },
   {
     id: 'type',
     header: '유형',
-    accessorFn: (row: ClusterRow) => row.type,
-    size: 285,
+    accessorFn: (row: Cluster) => row.clusterType || '-',
+    size: 150,
   },
   {
-    id: 'desc',
-    header: '설명',
-    accessorFn: (row: ClusterRow) => row.desc,
-    size: 334,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    id: 'provider',
+    header: '프로바이더',
+    accessorFn: (row: Cluster) => row.clusterProvider || '-',
+    size: 150,
   },
   {
-    id: 'date',
-    header: '생성일시',
-    accessorFn: (row: ClusterRow) => row.date,
-    size: 325,
+    id: 'version',
+    header: '쿠버네티스 버전',
+    accessorFn: (row: Cluster) => row.version || '-',
+    size: 200,
+  },
+  {
+    id: 'apiServerUrl',
+    header: 'API 서버 URL',
+    accessorFn: (row: Cluster) => row.apiServerUrl,
+    size: 300,
+  },
+  {
+    id: 'createdAt',
+    header: '생성 일시',
+    accessorFn: (row: Cluster) => formatDateTime(row.createdAt),
+    size: 200,
   },
 ];
 
-const rowData: ClusterRow[] = [];
+export default function ClusterManagementPage() {
+  const { searchValue, ...restProps } = useSearchInputState();
+  const { pagination, setPagination, initializePagination } = useTablePagination();
+  const { rowSelection, setRowSelection } = useTableSelection();
 
-export default function MonitoringPage() {
-  const { pagination, setPagination } = useTablePagination();
-  //select
-  const [selectedValue, setSelectedValue] = useState<OptionType>();
+  // API에서 클러스터 데이터 가져오기
+  const { clusters: allClusters, isPending, isError } = useGetClusters();
 
-  const onChangeSelect = (option: SelectSingleValue<OptionType>) => {
-    setSelectedValue(option ?? undefined);
+  // 클라이언트 사이드 검색 필터링
+  const filteredClusters = useMemo(() => {
+    if (!searchValue) return allClusters;
+
+    return allClusters.filter(
+      (cluster) =>
+        cluster.id.toLowerCase().includes(searchValue.toLowerCase()) ||
+        cluster.apiServerUrl.toLowerCase().includes(searchValue.toLowerCase()) ||
+        (cluster.version && cluster.version.toLowerCase().includes(searchValue.toLowerCase()))
+    );
+  }, [allClusters, searchValue]);
+
+  // 클라이언트 사이드 페이지네이션
+  const clusters = useMemo(() => {
+    const startIndex = pagination.pageIndex * pagination.pageSize;
+    const endIndex = startIndex + pagination.pageSize;
+    return filteredClusters.slice(startIndex, endIndex);
+  }, [filteredClusters, pagination.pageIndex, pagination.pageSize]);
+
+  // 선택된 행의 ID를 추출
+  const selectedId = useMemo(() => {
+    const selectedRowKeys = Object.keys(rowSelection);
+
+    // 단일 선택만 허용
+    if (selectedRowKeys.length !== 1) return null;
+
+    return clusters[parseInt(selectedRowKeys[0])]?.id || null;
+  }, [rowSelection, clusters]);
+
+  // 검색어가 변경되면 페이지네이션 초기화
+  useEffect(() => {
+    if (searchValue) {
+      initializePagination();
+    }
+  }, [searchValue, initializePagination]);
+
+  // 삭제 성공 시 체크박스 선택 상태 초기화
+  const handleDeleteSuccess = () => {
+    setRowSelection({});
   };
 
   return (
     <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '인프라 모니터' }, { label: '모니터링' }]} />
-      </div>
+      <BreadCrumb
+        items={[{ label: '인프라 관리' }, { label: '클러스터 관리' }]}
+      />
       <div className="page-title-box">
-        <h2 className="page-title">모니터링</h2>
+        <h2 className="page-title">클러스터 관리</h2>
       </div>
       <div className="page-content">
-        <Select
-          classNames={{ container: () => 'page-input_item-data_select' }}
-          options={options}
-          getOptionLabel={(option: OptionType) => option.text}
-          getOptionValue={(option: OptionType) => option.value}
-          value={selectedValue}
-          onChange={onChangeSelect}
-        />
-        <div className="page-content-detail-col2 page-mt-16">
-          <div className="page-detail-round-box page-flex-1 page-mt-0">
-            <div className="page-detail-round-name">리소스 요청 및 제한</div>
-            <div className="page-detail-round-data">
-              <div className="page-content-detail-row2">
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">CPU</div>
-                  <div className="page-detail-round-data page-h-216">
-                    <div className={styles.chartRow}>
-                      <GaugeChart
-                        value={76.68}
-                        startAngle={240}
-                        endAngle={-60}
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            74.68%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Request</div>
-                        </div>
-                      </GaugeChart>
-                      <GaugeChart
-                        value={12.45}
-                        startAngle={240}
-                        endAngle={-60}
-                        color="green"
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            12.45%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Limit</div>
-                        </div>
-                      </GaugeChart>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">Memory</div>
-                  <div className="page-detail-round-data page-h-216">
-                    <div className={styles.chartRow}>
-                      <GaugeChart
-                        value={32.78}
-                        startAngle={240}
-                        endAngle={-60}
-                        color="yellow"
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            32.78%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Request</div>
-                        </div>
-                      </GaugeChart>
-                      <GaugeChart
-                        value={32.78}
-                        startAngle={240}
-                        endAngle={-60}
-                        color="yellow"
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            32.78%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Limit</div>
-                        </div>
-                      </GaugeChart>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">GPU</div>
-                  <div className="page-detail-round-data page-h-216">
-                    <div className={styles.chartRow}>
-                      <GaugeChart
-                        value={12.45}
-                        startAngle={240}
-                        endAngle={-60}
-                        color="green"
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            12.45%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Request</div>
-                        </div>
-                      </GaugeChart>
-                      <GaugeChart
-                        value={32.78}
-                        startAngle={240}
-                        endAngle={-60}
-                        color="yellow"
-                        className="size-[176px]"
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="absolute top-[35%] text-2xl font-bold text-[#1a1a1a]">
-                            32.78%
-                          </div>
-                          <div className="absolute top-[52%] mt-2 font-[13px] text-[#1a1a1a]">
-                            2 / 16 Core
-                          </div>
-                          <div className="absolute top-[72%] mt-6 text-xs text-[#999]">Limit</div>
-                        </div>
-                      </GaugeChart>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="page-toolBox">
+          <div className="page-toolBox-btns">
+            <CreateClusterButton />
+            <EditClusterButton clusterId={selectedId} />
+            <DeleteClusterButton clusterId={selectedId} onDeleteSuccess={handleDeleteSuccess} />
           </div>
-          <div className="page-detail-round-box page-flex-1">
-            <div className="page-detail-round-name">리소스 현황</div>
-            <div className="page-detail-round-data">
-              <div className="page-content-detail-row2">
-                <div className={styles.chartRow}>
-                  <GaugeChart
-                    value={100.0}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">CPU</div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        100.00%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94 GiB
-                      </div>
-                    </div>
-                  </GaugeChart>
-                  <GaugeChart
-                    value={64.92}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">
-                        메모리
-                      </div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        64.92%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94 GiB
-                      </div>
-                    </div>
-                  </GaugeChart>
-                  <GaugeChart
-                    value={12.82}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">
-                        파일 시스템
-                      </div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        12.82%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94 GiB
-                      </div>
-                    </div>
-                  </GaugeChart>
-                  <GaugeChart
-                    value={39.25}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">
-                        영구 볼륨
-                      </div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        39.25%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94 GiB
-                      </div>
-                    </div>
-                  </GaugeChart>
-                  <GaugeChart
-                    value={64.92}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">파드</div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        64.92%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94
-                      </div>
-                    </div>
-                  </GaugeChart>
-                  <GaugeChart
-                    value={39.25}
-                    startAngle={90}
-                    endAngle={-270}
-                    color="blue"
-                    className="size-[176px]"
-                  >
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="absolute top-[18%] mt-2 font-[13px] text-[#1a1a1a]">GPU</div>
-                      <div className="absolute top-[38%] text-2xl font-bold text-[#1a1a1a]">
-                        39.25%
-                      </div>
-                      <div className="absolute top-[50%] mt-6 text-xs text-[#999]">
-                        34.8 of 104.94
-                      </div>
-                    </div>
-                  </GaugeChart>
-                </div>
-              </div>
-            </div>
+          <div>
+            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
-          <div className="page-detail-round-box page-flex-1">
-            <div className="page-detail-round-name">파드</div>
-            <div className="page-detail-round-data">
-              <div className={styles.symbolBox}>
-                <IconHexagon />
-                <em>38</em>
+        </div>
+        <div className="h-[481px]">
+          <Table
+            columns={columns}
+            data={clusters}
+            isLoading={isPending}
+            globalFilter={searchValue}
+            emptySearchMessage={
+              <div className="flex flex-col items-center gap-4">
+                <div>검색 결과가 없습니다.</div>
+                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
               </div>
-              <div className="page-h-240">
-                <Table
-                  columns={columns}
-                  data={rowData}
-                  totalCount={rowData.length}
-                  pagination={pagination}
-                  setPagination={setPagination}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="page-detail-round-box page-flex-1">
-            <div className="page-detail-round-name">성능 지표</div>
-            <div className="page-detail-round-data">
-              <div className="page-content-detail-row2">
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">CPU</div>
-                  <div className="page-detail-round-data page-h-548 page-p-24">
-                    <LineChart
-                      xDataKey="name"
-                      yDataKey={['workflow1']}
-                      data={[
-                        {
-                          name: '2022.04.12',
-                          workflow1: 120,
-                        },
-                        {
-                          name: '24',
-                          workflow1: 162,
-                        },
-                        {
-                          name: '25',
-                          workflow1: 118,
-                        },
-                        {
-                          name: '26',
-                          workflow1: 131,
-                        },
-                        {
-                          name: '27',
-                          workflow1: 85,
-                        },
-                        {
-                          name: '2022.04.28',
-                          workflow1: 81,
-                        },
-                      ]}
-                    />
-                  </div>
+            }
+            emptyMessage={
+              isError ? (
+                '클러스터 목록을 불러오는 데 실패했습니다.'
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div>클러스터가 없습니다.</div>
+                  <div>생성 버튼을 클릭해 클러스터를 생성해 보세요.</div>
                 </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">CPU load average</div>
-                  <div className="page-detail-round-data page-h-548 page-p-24">
-                    <LineChart
-                      xDataKey="name"
-                      yDataKey={['workflow1']}
-                      data={[
-                        {
-                          name: '2022.04.12',
-                          workflow1: 120,
-                        },
-                        {
-                          name: '24',
-                          workflow1: 162,
-                        },
-                        {
-                          name: '25',
-                          workflow1: 118,
-                        },
-                        {
-                          name: '26',
-                          workflow1: 131,
-                        },
-                        {
-                          name: '27',
-                          workflow1: 85,
-                        },
-                        {
-                          name: '2022.04.28',
-                          workflow1: 81,
-                        },
-                      ]}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              )
+            }
+            totalCount={filteredClusters.length}
+            pagination={pagination}
+            setPagination={setPagination}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+          />
         </div>
       </div>
     </main>

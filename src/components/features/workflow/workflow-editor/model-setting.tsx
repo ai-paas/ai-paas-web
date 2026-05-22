@@ -332,8 +332,8 @@ export const ModelSetting = () => {
         </div>
       </div>
       <div className={styles.addItemBox}>
-        <div className={styles.accordion}>
-          <Accordion className={styles.accordion} components={accordionItems} defaultValue="0" />
+        <div>
+          <Accordion components={accordionItems} defaultValue="0" />
         </div>
       </div>
     </div>

@@ -1,0 +1,239 @@
+.filterToolbar {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.filterField {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+}
+
+.filterLabel {
+  color: $page-font-color-900;
+  font-size: $page-font-14;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.clusterSelect {
+  width: 180px;
+}
+
+.rangeFilterRow {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid $color-gray-300;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rangeChip {
+  min-width: 60px;
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-right: 1px solid $color-gray-300;
+  background-color: $color-white;
+  color: $page-font-color-900;
+  font-size: $page-font-14;
+  font-weight: 700;
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  &:hover {
+    background-color: #f4f8ff;
+  }
+}
+
+.rangeChipActive {
+  color: $color-white;
+  background-color: $page-font-color-blue;
+
+  &:hover {
+    background-color: $page-font-color-blue;
+  }
+}
+
+.usageSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.summaryCard {
+  min-height: 108px;
+  padding: 16px 20px;
+  border: 1px solid $color-gray-300;
+  border-radius: 4px;
+  background-color: $color-white;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.summaryName {
+  color: $page-font-color-900;
+  font-size: $page-font-16;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.summaryValue {
+  margin-top: 8px;
+  color: $page-font-color-900;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.summaryDevices {
+  margin-top: 7px;
+  color: $page-font-color-600;
+  font-size: $page-font-14;
+  font-weight: 700;
+}
+
+.heatmapSection {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px solid $color-gray-200;
+}
+
+.sectionTitle {
+  color: $page-font-color-900;
+  font-size: $page-font-18;
+  font-weight: 800;
+}
+
+.heatmapScroller {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid $color-gray-300;
+  border-radius: 4px;
+  background-color: $color-white;
+}
+
+.heatmapGrid {
+  display: grid;
+  grid-template-columns: 220px repeat(var(--heatmap-column-count, 13), minmax(30px, 1fr));
+  min-width: 860px;
+}
+
+.heatmapHeaderCell,
+.heatmapTimeCell,
+.heatmapDeviceCell {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid $color-gray-200;
+  color: $page-font-color-600;
+  font-size: $page-font-root;
+  font-weight: 800;
+}
+
+.heatmapHeaderCell,
+.heatmapDeviceCell {
+  justify-content: flex-start;
+}
+
+.heatmapTimeCell {
+  justify-content: center;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+.heatmapRow {
+  display: contents;
+}
+
+.heatmapDeviceCell {
+  gap: 6px;
+  min-width: 0;
+  color: $page-font-color-900;
+
+  span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.acceleratorBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 3px;
+  background-color: #eef4ff;
+  color: $page-font-color-blue;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.heatCell {
+  width: calc(100% - 6px);
+  height: 20px;
+  margin: 10px 3px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 3px;
+  background-color: color-mix(
+    in srgb,
+    #f1f5f9 calc(100% - var(--heat-level, 0) * 1%),
+    #86efac calc(var(--heat-level, 0) * 1%)
+  );
+}
+
+.heatCellEmpty {
+  background: repeating-linear-gradient(
+    -45deg,
+    #f8fafc,
+    #f8fafc 4px,
+    #e5e7eb 4px,
+    #e5e7eb 8px
+  );
+}
+
+.emptyState {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $page-font-color-600;
+  font-size: $page-font-14;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .usageSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterToolbar {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .filterField {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .clusterSelect,
+  .rangeFilterRow {
+    width: 100%;
+  }
+
+  .rangeChip {
+    flex: 1;
+  }
+}
