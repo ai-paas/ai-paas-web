@@ -12,7 +12,7 @@ import { formatDateTime } from '@/util/date';
 
 export default function ServiceDetailPage() {
   const { id } = useParams();
-  const { service } = useGetService(id);
+  const { service, isPending, isError } = useGetService(id);
   const navigate = useNavigate();
 
   return (
@@ -66,9 +66,13 @@ export default function ServiceDetailPage() {
             labels={['워크플로우', '지식 베이스', '모델', '프롬프트', '모니터링']}
             components={[
               <WorkflowTab serviceId={id} />,
-              <KnowledgeBaseTab />,
-              <ModelTab />,
-              <PromptTab />,
+              <KnowledgeBaseTab
+                knowledgeBases={service?.knowledge_bases}
+                isLoading={isPending}
+                isError={isError}
+              />,
+              <ModelTab models={service?.models} isLoading={isPending} isError={isError} />,
+              <PromptTab prompts={service?.prompts} isLoading={isPending} isError={isError} />,
               <MonitoringTab />,
             ]}
           />

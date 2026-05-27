@@ -90,7 +90,7 @@ export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
           <DeleteWorkflowButton workflowId={selectedId} />
         </div>
       </div>
-      <div>
+      <div className="h-65.5">
         <Table
           columns={columns}
           data={workflows}

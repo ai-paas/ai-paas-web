@@ -47,9 +47,12 @@ export const mockServiceDetail: ServiceDetail = {
       success_rate: 98,
     },
     workflow_metrics: [],
-    period_start: new Date('2024-01-01'),
-    period_end: new Date('2024-01-31'),
+    period_start: '2024-01-01',
+    period_end: '2024-01-31',
   },
+  knowledge_bases: [],
+  models: [],
+  prompts: [],
 };
 
 export const handlers = [

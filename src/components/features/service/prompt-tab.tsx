@@ -1,69 +1,67 @@
-import { Table, useTablePagination, type Sorting } from "@innogrid/ui";
-import { useState } from "react";
+import { Table, useTablePagination, type Sorting } from '@innogrid/ui';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { formatDateTime } from '@/util/date';
+import type { PromptSummary } from '@/types/service';
 
-interface RowData {
-  name: string;
-  creator: string;
-  variable: string;
-  desc: string;
-  date: string;
+interface PromptTabProps {
+  prompts?: PromptSummary[];
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
-export const PromptTab = () => {
+const columns = [
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row: PromptSummary) => row.name,
+    size: 334,
+    cell: ({ row }: { row: { original: PromptSummary } }) => (
+      <Link to={`/prompt/${row.original.id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
+  },
+  {
+    id: 'creator',
+    header: '생성자',
+    accessorFn: (row: PromptSummary) => row.created_by,
+    size: 334,
+  },
+  {
+    id: 'variable',
+    header: '변수',
+    accessorFn: (row: PromptSummary) => `${row.variables.length}개`,
+    size: 334,
+  },
+  {
+    id: 'desc',
+    header: '설명',
+    accessorFn: (row: PromptSummary) => row.description ?? '',
+    size: 334,
+    enableSorting: false,
+  },
+  {
+    id: 'date',
+    header: '생성일시',
+    accessorFn: (row: PromptSummary) => formatDateTime(row.created_at),
+    size: 325,
+  },
+];
+
+export const PromptTab = ({ prompts = [], isLoading, isError }: PromptTabProps) => {
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([
-    { id: "name", desc: false },
-  ]);
-  const [rowData] = useState<RowData[]>([
-    {
-      name: "프롬프트1",
-      creator: "홍길동",
-      variable: "3개",
-      desc: "설명이 들어갑니다. 설명이 들어갑니다.",
-      date: "2025-12-31 10:12",
-    },
-  ]);
-  const columns = [
-    {
-      id: "name",
-      header: "이름",
-      accessorFn: (row: RowData) => row.name,
-      size: 334,
-    },
-    {
-      id: "creator",
-      header: "생성자",
-      accessorFn: (row: RowData) => row.creator,
-      size: 334,
-    },
-    {
-      id: "variable",
-      header: "변수",
-      accessorFn: (row: RowData) => row.variable,
-      size: 334,
-    },
-    {
-      id: "desc",
-      header: "설명",
-      accessorFn: (row: RowData) => row.desc,
-      size: 334,
-      enableSorting: false, //오름차순/내림차순 아이콘 숨기기
-    },
-    {
-      id: "date",
-      header: "생성일시",
-      accessorFn: (row: RowData) => row.date,
-      size: 325,
-    },
-  ];
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   return (
-    <div className="tabs-Content">
+    <div className="tabs-Content h-65.5">
       <Table
         useClientPagination
         columns={columns}
-        data={rowData}
-        totalCount={rowData.length}
+        data={prompts}
+        isLoading={isLoading}
+        emptyMessage={isError ? '프롬프트를 불러오지 못했습니다.' : '연결된 프롬프트가 없습니다.'}
+        totalCount={prompts.length}
         pagination={pagination}
         setPagination={setPagination}
         setSorting={setSorting}
