@@ -14,6 +14,7 @@ import { WorkflowStatusPanel } from '@/components/features/workflow/workflow-sta
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
+import { getWorkflowModelStatus, getWorkflowStatus } from '@/util/workflow';
 import type { WorkflowModel } from '@/types/workflow';
 
 const EMPTY_VALUE = '-';
@@ -64,9 +65,11 @@ const columns = [
     header: '상태',
     accessorFn: (row: WorkflowModel) => row.status || EMPTY_VALUE,
     size: 140,
-    cell: ({ row }: { row: { original: WorkflowModel } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
+    cell: ({ row }: { row: { original: WorkflowModel } }) => {
+      const state = getWorkflowModelStatus(row.original.status);
+
+      return <span className={`table-td-state ${state.className}`}>{state.label}</span>;
+    },
   },
   {
     id: 'deployment_type',
@@ -257,7 +260,9 @@ export default function WorkflowDetailPage() {
               </li>
               <li>
                 <div className="page-detail_item-name">상태</div>
-                <div className="page-detail_item-data">{workflow?.status || EMPTY_VALUE}</div>
+                <div className="page-detail_item-data">
+                  {workflow?.status ? getWorkflowStatus(workflow.status).label : EMPTY_VALUE}
+                </div>
               </li>
               <li>
                 <div className="page-detail_item-name">설명</div>

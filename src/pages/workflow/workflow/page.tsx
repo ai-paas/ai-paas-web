@@ -17,6 +17,7 @@ import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
+import { getWorkflowStatus } from '@/util/workflow';
 import type { Workflow } from '@/types/workflow';
 
 const columns = [
@@ -68,9 +69,11 @@ const columns = [
     header: '상태',
     accessorFn: (row: Workflow) => row.status,
     size: 100,
-    cell: ({ row }: { row: { original: Workflow } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
+    cell: ({ row }: { row: { original: Workflow } }) => {
+      const state = getWorkflowStatus(row.original.status);
+
+      return <span className={`table-td-state ${state.className}`}>{state.label}</span>;
+    },
   },
   {
     id: 'desc',

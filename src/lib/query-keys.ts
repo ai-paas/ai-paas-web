@@ -24,7 +24,8 @@ export type WorkflowListParams = {
   page?: number;
   size?: number;
   search?: string;
-  creator_id?: number;
+  creator_id?: string;
+  service_id?: string;
   status?: 'DRAFT' | 'ACTIVE' | 'ERROR';
 };
 

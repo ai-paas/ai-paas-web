@@ -1,75 +1,80 @@
 import { Table, useTablePagination, type Sorting } from '@innogrid/ui';
 import { useState } from 'react';
+import { Link } from 'react-router';
+import { formatDateTime } from '@/util/date';
+import type { KnowledgeBaseSummary } from '@/types/service';
 
-interface RowData {
-  name: string;
-  workflow: string;
-  type: string;
-  owner: string;
-  desc: string;
-  date: string;
+interface KnowledgeBaseTabProps {
+  knowledgeBases?: KnowledgeBaseSummary[];
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
-export const KnowledgeBaseTab = () => {
+const columns = [
+  {
+    id: 'name',
+    header: '이름',
+    accessorFn: (row: KnowledgeBaseSummary) => row.name,
+    size: 300,
+    cell: ({ row }: { row: { original: KnowledgeBaseSummary } }) => (
+      <Link to={`/knowledge-base/${row.original.id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
+  },
+  {
+    id: 'workflow',
+    header: '워크플로우',
+    accessorFn: (row: KnowledgeBaseSummary) => row.workflow_refs.map((ref) => ref.name).join(', '),
+    size: 300,
+    enableSorting: false,
+  },
+  {
+    id: 'type',
+    header: '유형',
+    accessorFn: (row: KnowledgeBaseSummary) => row.type,
+    size: 285,
+  },
+  {
+    id: 'owner',
+    header: '소유자',
+    accessorFn: (row: KnowledgeBaseSummary) => row.created_by,
+    size: 325,
+  },
+  {
+    id: 'desc',
+    header: '설명',
+    accessorFn: (row: KnowledgeBaseSummary) => row.description ?? '',
+    size: 334,
+    enableSorting: false,
+  },
+  {
+    id: 'date',
+    header: '생성일시',
+    accessorFn: (row: KnowledgeBaseSummary) => formatDateTime(row.created_at),
+    size: 325,
+  },
+];
+
+export const KnowledgeBaseTab = ({
+  knowledgeBases = [],
+  isLoading,
+  isError,
+}: KnowledgeBaseTabProps) => {
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
-  const [rowData] = useState<RowData[]>([
-    {
-      name: '테스트 문서',
-      workflow: '워크플로우1',
-      type: 'RAG',
-      owner: '홍길동',
-      desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-      date: '2025-12-31 10:12',
-    },
-  ]);
-  const columns = [
-    {
-      id: 'name',
-      header: '이름',
-      accessorFn: (row: RowData) => row.name,
-      size: 300,
-    },
-    {
-      id: 'workflow',
-      header: '워크플로우',
-      accessorFn: (row: RowData) => row.workflow,
-      size: 300,
-    },
-    {
-      id: 'type',
-      header: '유형',
-      accessorFn: (row: RowData) => row.type,
-      size: 285,
-    },
-    {
-      id: 'owner',
-      header: '소유자',
-      accessorFn: (row: RowData) => row.owner,
-      size: 325,
-    },
-    {
-      id: 'desc',
-      header: '설명',
-      accessorFn: (row: RowData) => row.desc,
-      size: 334,
-      enableSorting: false, //오름차순/내림차순 아이콘 숨기기
-    },
-    {
-      id: 'date',
-      header: '생성일시',
-      accessorFn: (row: RowData) => row.date,
-      size: 325,
-    },
-  ];
 
   return (
-    <div className="tabs-Content">
+    <div className="tabs-Content h-65.5">
       <Table
         useClientPagination
         columns={columns}
-        data={rowData}
-        totalCount={rowData.length}
+        data={knowledgeBases}
+        isLoading={isLoading}
+        emptyMessage={
+          isError ? '지식 베이스를 불러오지 못했습니다.' : '연결된 지식 베이스가 없습니다.'
+        }
+        totalCount={knowledgeBases.length}
         pagination={pagination}
         setPagination={setPagination}
         setSorting={setSorting}
