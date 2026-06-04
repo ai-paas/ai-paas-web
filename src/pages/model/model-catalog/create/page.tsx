@@ -98,7 +98,9 @@ export default function ModelCatalogCreatePage() {
                 value={modelCatalog.name ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                화면에 표시될 모델의 이름을 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -110,7 +112,9 @@ export default function ModelCatalogCreatePage() {
                 value={modelCatalog.repo_id ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                모델 저장소(Repository)의 고유 ID를 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -120,7 +124,10 @@ export default function ModelCatalogCreatePage() {
                 options={modelProviders}
                 getOptionLabel={(option: ModelProvider) => option.name}
                 getOptionValue={(option: ModelProvider) => String(option.id)}
-                value={modelProviders.find((provider) => provider.id === modelCatalog.provider_id)}
+                value={
+                  modelProviders.find((provider) => provider.id === modelCatalog.provider_id) ??
+                  null
+                }
                 onChange={(option: ModelProvider | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -128,7 +135,7 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델을 제공하는 공급자를 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -138,7 +145,7 @@ export default function ModelCatalogCreatePage() {
                 options={modelTypes}
                 getOptionLabel={(option: ModelType) => option.name}
                 getOptionValue={(option: ModelType) => String(option.id)}
-                value={modelTypes.find((type) => type.id === modelCatalog.type_id)}
+                value={modelTypes.find((type) => type.id === modelCatalog.type_id) ?? null}
                 onChange={(option: ModelType | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -146,7 +153,7 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델의 용도에 맞는 타입을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -156,7 +163,7 @@ export default function ModelCatalogCreatePage() {
                 options={modelFormats}
                 getOptionLabel={(option: ModelFormat) => option.name}
                 getOptionValue={(option: ModelFormat) => String(option.id)}
-                value={modelFormats.find((format) => format.id === modelCatalog.format_id)}
+                value={modelFormats.find((format) => format.id === modelCatalog.format_id) ?? null}
                 onChange={(option: ModelFormat | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -164,7 +171,7 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델 가중치 파일의 포맷을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
