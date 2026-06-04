@@ -71,7 +71,7 @@ export const Menu = () => {
       />
       <MenuItem
         icon={<IconKnowledgeBase />}
-        label="지식 기반"
+        label="지식 베이스"
         href="/knowledge-base"
         isActive={isPathActive(location.pathname, '/knowledge-base')}
       />
