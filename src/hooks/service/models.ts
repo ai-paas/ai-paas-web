@@ -140,10 +140,10 @@ export const useGetModelFormats = (params: GetModelFormatsParams = {}) => {
   };
 };
 
-export const useGetModel = (model_id: number) => {
+export const useGetModel = <T = Model>(model_id: number) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.models.detail(model_id),
-    queryFn: () => api.get(`models/${model_id}`).json<Model>(),
+    queryFn: () => api.get(`models/${model_id}`).json<T>(),
   });
 
   return {
