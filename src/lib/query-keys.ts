@@ -1,3 +1,12 @@
+import type {
+  GetApiMetricsParams,
+  GetEventsParams,
+  GetInfraNodesParams,
+  GetInfraResourcesParams,
+  GetProvidersHealthParams,
+  GetTopUsersParams,
+  GetTrendsParams,
+} from '@/types/dashboard';
 import type { GetDatasetsParams } from '@/types/dataset';
 import type { GetKnowledgeBasesParams, GetSearchRecordsParams } from '@/types/knowledgebase';
 import type { GetLearningParams } from '@/types/learning';
@@ -30,6 +39,25 @@ export type WorkflowListParams = {
 };
 
 export const queryKeys = {
+  dashboard: {
+    all: ['dashboard'] as const,
+    summary: () => [...queryKeys.dashboard.all, 'summary'] as const,
+    topUsers: (params: GetTopUsersParams) =>
+      [...queryKeys.dashboard.all, 'users', 'top', params] as const,
+    infraStatus: () => [...queryKeys.dashboard.all, 'infra', 'status'] as const,
+    infraNodes: (params: GetInfraNodesParams) =>
+      [...queryKeys.dashboard.all, 'infra', 'nodes', params] as const,
+    infraResources: (params: GetInfraResourcesParams) =>
+      [...queryKeys.dashboard.all, 'infra', 'resources', params] as const,
+    events: (params: GetEventsParams = {}) =>
+      [...queryKeys.dashboard.all, 'events', params] as const,
+    trends: (params: GetTrendsParams = {}) =>
+      [...queryKeys.dashboard.all, 'trends', params] as const,
+    apiMetrics: (params: GetApiMetricsParams = {}) =>
+      [...queryKeys.dashboard.all, 'api-metrics', params] as const,
+    providersHealth: (params: GetProvidersHealthParams = {}) =>
+      [...queryKeys.dashboard.all, 'providers', 'health', params] as const,
+  },
   datasets: {
     all: ['datasets'] as const,
     list: (params: GetDatasetsParams = {}) => [...queryKeys.datasets.all, params] as const,
