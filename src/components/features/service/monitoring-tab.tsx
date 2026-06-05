@@ -1,151 +1,151 @@
-import { Accordion, LineChart, Select, type SelectSingleValue } from '@innogrid/ui';
+import { Select, type SelectSingleValue } from '@innogrid/ui';
+import { useMemo, useState } from 'react';
 import styles from '@/pages/service/service.module.scss';
-import { useState } from 'react';
+import type {
+  MetricsPeriod,
+  PeriodMetrics,
+  ServiceMonitoringData,
+} from '@/types/service';
+import { formatCount } from '@/util/count';
+import { formatDateTime } from '@/util/date';
 
-type OptionType = { text: string; value: string };
-const options1 = [
-  { text: '워크플로우 전체', value: '워크플로우 전체' },
-  { text: '워크플로우 1', value: 'option2' },
-  { text: '워크플로우 2', value: 'option3' },
+interface MonitoringTabProps {
+  monitoringData?: ServiceMonitoringData | null;
+  isLoading?: boolean;
+  isError?: boolean;
+}
+
+type WorkflowOption = { text: string; value: string }; // value: 'total' | workflow_id
+type PeriodOption = { text: string; value: MetricsPeriod };
+
+const TOTAL_VALUE = 'total';
+
+const periodOptions: PeriodOption[] = [
+  { text: '최근 1시간', value: '1h' },
+  { text: '최근 1일', value: '1d' },
+  { text: '최근 1주일', value: '1w' },
 ];
-const options2 = [
-  { text: '최근 1시간', value: '최근 1시간' },
-  { text: '최근 1일', value: 'option2' },
-  { text: '최근 1주일', value: 'option3' },
-];
 
-export const MonitoringTab = () => {
-  const [selectedWorkflow, setSelectedWorkflow] = useState<OptionType>();
-  const [selectedPeriod, setSelectedPeriod] = useState<OptionType>();
+const metricItems: { key: keyof PeriodMetrics; label: string; format: (value: number) => string }[] =
+  [
+    { key: 'message_count', label: '총 메시지 수', format: formatCount },
+    { key: 'active_users', label: '활성 사용자 수', format: formatCount },
+    { key: 'token_usage', label: '토큰 사용량', format: formatCount },
+    {
+      key: 'avg_interaction_count',
+      label: '평균 상호작용 수',
+      format: (value) => value.toFixed(1),
+    },
+    {
+      key: 'response_time_ms',
+      label: '평균 응답 시간',
+      format: (value) => `${value.toFixed(0)} ms`,
+    },
+    { key: 'error_count', label: '오류 수', format: formatCount },
+    { key: 'success_rate', label: '성공률', format: (value) => `${value.toFixed(1)}%` },
+  ];
 
-  const handleSelectWorkflow = (option: SelectSingleValue<OptionType>) => {
+export const MonitoringTab = ({ monitoringData, isLoading, isError }: MonitoringTabProps) => {
+  const [selectedWorkflowValue, setSelectedWorkflowValue] = useState<string>(TOTAL_VALUE);
+  const [selectedPeriod, setSelectedPeriod] = useState<MetricsPeriod>('1d');
+
+  const workflowOptions = useMemo<WorkflowOption[]>(
+    () => [
+      { text: '워크플로우 전체', value: TOTAL_VALUE },
+      ...(monitoringData?.workflow_metrics.map((wf) => ({
+        text: wf.workflow_name,
+        value: wf.workflow_id,
+      })) ?? []),
+    ],
+    [monitoringData]
+  );
+
+  const selectedWorkflow =
+    workflowOptions.find((option) => option.value === selectedWorkflowValue) ?? workflowOptions[0];
+  const selectedPeriodOption =
+    periodOptions.find((option) => option.value === selectedPeriod) ?? periodOptions[1];
+
+  const metrics: PeriodMetrics | undefined = useMemo(() => {
+    if (!monitoringData) return undefined;
+    const source =
+      selectedWorkflowValue === TOTAL_VALUE
+        ? monitoringData.total_metrics
+        : monitoringData.workflow_metrics.find((wf) => wf.workflow_id === selectedWorkflowValue)
+            ?.metrics;
+    return source?.[selectedPeriod];
+  }, [monitoringData, selectedWorkflowValue, selectedPeriod]);
+
+  const handleSelectWorkflow = (option: SelectSingleValue<WorkflowOption>) => {
     if (!option) return;
-    setSelectedWorkflow(option);
+    setSelectedWorkflowValue(option.value);
   };
 
-  const handleSelectPeriod = (option: SelectSingleValue<OptionType>) => {
+  const handleSelectPeriod = (option: SelectSingleValue<PeriodOption>) => {
     if (!option) return;
-    setSelectedPeriod(option);
+    setSelectedPeriod(option.value);
   };
 
-  const accordionItems1 = [
-    {
-      label: '총 메시지 수',
-      component: (
-        <div className={styles.accordionContent}>
-          <LineChart
-            xDataKey="name"
-            yDataKey={['workflow1', 'workflow2']}
-            data={[
-              {
-                name: '2022.04.12',
-                workflow1: 120,
-                workflow2: 100,
-              },
-              {
-                name: '24',
-                workflow1: 162,
-                workflow2: 100,
-              },
-              {
-                name: '25',
-                workflow1: 118,
-                workflow2: 120,
-              },
-              {
-                name: '26',
-                workflow1: 131,
-                workflow2: 89,
-              },
-              {
-                name: '27',
-                workflow1: 85,
-                workflow2: 121,
-              },
-              {
-                name: '2022.04.28',
-                workflow1: 81,
-                workflow2: 100,
-              },
-            ]}
-          />
-        </div>
-      ),
-    },
-  ];
-  const accordionItems2 = [
-    {
-      label: '활성 사용자 수',
-      component: (
-        <div className={styles.accordionContent}>
-          <LineChart
-            xDataKey="name"
-            yDataKey={['workflow1', 'workflow2']}
-            data={[
-              {
-                name: '2022.04.12',
-                workflow1: 120,
-                workflow2: 100,
-              },
-              {
-                name: '24',
-                workflow1: 162,
-                workflow2: 100,
-              },
-              {
-                name: '25',
-                workflow1: 118,
-                workflow2: 120,
-              },
-              {
-                name: '26',
-                workflow1: 131,
-                workflow2: 89,
-              },
-              {
-                name: '27',
-                workflow1: 85,
-                workflow2: 121,
-              },
-              {
-                name: '2022.04.28',
-                workflow1: 81,
-                workflow2: 100,
-              },
-            ]}
-          />
-        </div>
-      ),
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="tabs-Content">
+        <div className={styles.metricEmpty}>모니터링 데이터를 불러오는 중입니다.</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="tabs-Content">
+        <div className={styles.metricEmpty}>모니터링 데이터를 불러오지 못했습니다.</div>
+      </div>
+    );
+  }
+
+  if (!monitoringData || !metrics) {
+    return (
+      <div className="tabs-Content">
+        <div className={styles.metricEmpty}>모니터링 데이터가 없습니다.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="tabs-Content">
       <div className={styles.selectBox}>
         <Select
-          options={options1}
-          getOptionLabel={(option: OptionType) => option.text}
-          getOptionValue={(option: OptionType) => option.value}
+          options={workflowOptions}
+          getOptionLabel={(option: WorkflowOption) => option.text}
+          getOptionValue={(option: WorkflowOption) => option.value}
           value={selectedWorkflow}
           onChange={handleSelectWorkflow}
           menuPosition="fixed"
         />
         <Select
-          options={options2}
-          getOptionLabel={(option: OptionType) => option.text}
-          getOptionValue={(option: OptionType) => option.value}
-          value={selectedPeriod}
+          options={periodOptions}
+          getOptionLabel={(option: PeriodOption) => option.text}
+          getOptionValue={(option: PeriodOption) => option.value}
+          value={selectedPeriodOption}
           onChange={handleSelectPeriod}
           menuPosition="fixed"
         />
       </div>
-      <div className={styles.accordionBox}>
-        <div className={styles.accordion}>
-          <Accordion components={accordionItems1} />
-        </div>
-        <div className={styles.accordion}>
-          <Accordion components={accordionItems2} />
-        </div>
+
+      <div className={styles.metricGrid}>
+        {metricItems.map(({ key, label, format }) => {
+          const value = metrics[key];
+          return (
+            <div key={key} className={styles.metricCard}>
+              <span className={styles.metricLabel}>{label}</span>
+              <strong className={styles.metricValue}>
+                {value === null || value === undefined ? '-' : format(value)}
+              </strong>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={styles.metricAggregatedAt}>
+        집계 기준: {formatDateTime(monitoringData.aggregated_at)}
       </div>
     </div>
   );

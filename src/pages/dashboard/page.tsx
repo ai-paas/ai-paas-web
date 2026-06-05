@@ -19,7 +19,7 @@ import type {
   NodeStatus,
 } from '../../types/dashboard';
 import type { Member } from '../../types/member';
-import type { MonitoringMetrics, ServiceDetail } from '../../types/service';
+import type { MetricsPeriod, PeriodMetrics, ServiceDetail } from '../../types/service';
 import { formatCount } from '../../util/count';
 import { formatDateTime } from '../../util/date';
 import styles from './dashboard.module.scss';
@@ -512,8 +512,10 @@ const ResourceBar = ({ label, used, total }: ResourceBarProps) => {
 // ────────────────────────────────────────────────────────────
 
 const MONITORING_SIZE = 5;
+// 대시보드 Top 5는 최근 1일(1d) 누적 기준
+const MONITORING_PERIOD: MetricsPeriod = '1d';
 
-const monitoringMetrics: { key: keyof MonitoringMetrics; label: string }[] = [
+const monitoringMetrics: { key: keyof PeriodMetrics; label: string }[] = [
   { key: 'message_count', label: '총 메시지 수' },
   { key: 'active_users', label: '활성 사용자 수' },
   { key: 'token_usage', label: '토큰 사용량' },
@@ -536,12 +538,12 @@ const MonitoringSection = () => {
     .map((query) => query.data)
     .filter((detail): detail is ServiceDetail => Boolean(detail));
 
-  const getTop5 = (key: keyof MonitoringMetrics) =>
+  const getTop5 = (key: keyof PeriodMetrics) =>
     details
       .map((detail) => ({
         id: detail.surro_service_id,
         name: detail.name,
-        value: detail.monitoring_data?.total_metrics[key] ?? 0,
+        value: detail.monitoring_data?.total_metrics[MONITORING_PERIOD][key] ?? 0,
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);

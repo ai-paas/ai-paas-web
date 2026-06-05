@@ -73,7 +73,11 @@ export default function ServiceDetailPage() {
               />,
               <ModelTab models={service?.models} isLoading={isPending} isError={isError} />,
               <PromptTab prompts={service?.prompts} isLoading={isPending} isError={isError} />,
-              <MonitoringTab />,
+              <MonitoringTab
+                monitoringData={service?.monitoring_data}
+                isLoading={isPending}
+                isError={isError}
+              />,
             ]}
           />
         </div>
