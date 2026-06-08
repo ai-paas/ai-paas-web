@@ -13,12 +13,17 @@ import type {
   GetEventsParams,
   GetInfraNodesParams,
   GetInfraResourcesParams,
+  GetMeActivitiesParams,
+  GetMeMonitoringParams,
   GetProvidersHealthParams,
   GetTopUsersParams,
   GetTrendsParams,
   InfraNodes,
   InfraResources,
   InfraStatus,
+  MeActivity,
+  MeDashboardMonitoring,
+  MeDashboardServices,
   MeDashboardSummary,
   ProvidersHealth,
   TrendsRefreshResult,
@@ -64,6 +69,73 @@ export const useGetMeDashboardSummary = () => {
 
   return {
     summary: data,
+    isPending,
+    isError,
+  };
+};
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/services — 내 서비스 현황 카드
+// ────────────────────────────────────────────────────────────
+
+export const useGetMeDashboardServices = () => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.dashboard.meServices(),
+    queryFn: () => api.get<MeDashboardServices>(`${ME_BASE}/services`).json(),
+  });
+
+  return {
+    services: data?.services ?? [],
+    source: data?.source,
+    isPending,
+    isError,
+  };
+};
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/monitoring — 내 서비스 기간별 메트릭 + Top N
+// ────────────────────────────────────────────────────────────
+
+export const useGetMeDashboardMonitoring = (params: GetMeMonitoringParams = {}) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.dashboard.meMonitoring(params),
+    queryFn: () =>
+      api
+        .get<MeDashboardMonitoring>(`${ME_BASE}/monitoring`, {
+          searchParams: toSearchParams(params),
+        })
+        .json(),
+  });
+
+  return {
+    services: data?.services ?? [],
+    top: data?.top ?? {},
+    source: data?.source,
+    isPending,
+    isError,
+  };
+};
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/activities — 내 작업 이력
+// ────────────────────────────────────────────────────────────
+
+export const useGetMeDashboardActivities = (params: GetMeActivitiesParams = {}) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.dashboard.meActivities(params),
+    queryFn: () =>
+      api
+        .get<Page<MeActivity>>(`${ME_BASE}/activities`, { searchParams: toSearchParams(params) })
+        .json(),
+  });
+
+  return {
+    activities: data?.data ?? [],
+    page: {
+      number: data?.page ?? 1,
+      size: data?.size ?? 20,
+      total: data?.total ?? 0,
+    },
     isPending,
     isError,
   };

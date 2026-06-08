@@ -1,6 +1,8 @@
 // 관리자 대시보드 API 타입 정의
 // 출처: GET/POST /api/v1/admin/dashboard/*
 
+import type { MonitoringMetrics } from '@/types/service';
+
 /** 8개 자산 도메인 */
 export type AssetDomain =
   | 'service'
@@ -88,6 +90,110 @@ export interface MeDashboardSummary {
   prompts: AssetCount;
   /** 응답 생성 시각 (UTC, ISO 8601) */
   generated_at: string;
+}
+
+// ────────────────────────────────────────────────────────────
+// me/dashboard 공통
+// ────────────────────────────────────────────────────────────
+
+/** cache=스냅샷 / live=즉시 집계 / empty=보유 서비스 없음 */
+export type MeDashboardSource = 'cache' | 'live' | 'empty';
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/services — 내 서비스 현황 카드
+// ────────────────────────────────────────────────────────────
+
+export interface MeServiceCard {
+  /** MLOps 서비스 UUID */
+  surro_service_id: string;
+  /** gateway DB 실시간 값 */
+  name: string;
+  /** gateway DB 실시간 값 */
+  description: string;
+  /** 연결 워크플로우 수 */
+  workflow_count: number;
+  /** 사용 모델 distinct 수. 미집계 시(DASHBOARD_INCLUDE_MODEL_COUNT=false) null */
+  model_count: number | null;
+}
+
+export interface MeDashboardServices {
+  member_id: string;
+  services: MeServiceCard[];
+  source: MeDashboardSource;
+  generated_at: string;
+}
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/monitoring — 내 서비스 모니터링 + 메트릭별 Top N
+// ────────────────────────────────────────────────────────────
+
+/** Top N 순위 대상 메트릭 (4개 위젯) */
+export type MeMonitoringMetric =
+  | 'message_count'
+  | 'active_users'
+  | 'token_usage'
+  | 'avg_interaction_count';
+
+export interface GetMeMonitoringParams {
+  /** 기간별 메트릭 순위 항목 수 (1~20, 기본 5) */
+  top_n?: number;
+}
+
+export interface MeMonitoringService {
+  surro_service_id: string;
+  name: string;
+  /** { "1h": {...}, "1d": {...}, "1w": {...} } */
+  metrics: MonitoringMetrics;
+  /** MLOps 집계 기준 끝점 (UTC) */
+  aggregated_at: string;
+}
+
+export interface MeMonitoringTopItem {
+  surro_service_id: string;
+  name: string;
+  value: number;
+}
+
+/** 단일 기간의 메트릭별 Top N 순위 */
+export type MeMonitoringTopByMetric = Record<MeMonitoringMetric, MeMonitoringTopItem[]>;
+
+export interface MeDashboardMonitoring {
+  member_id: string;
+  source: MeDashboardSource;
+  top_n: number;
+  services: MeMonitoringService[];
+  /** 기간(1h/1d/1w) → 메트릭별 Top N 순위 */
+  top: Record<string, MeMonitoringTopByMetric>;
+  generated_at: string;
+}
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/activities — 내 작업 이력
+// ────────────────────────────────────────────────────────────
+
+export interface GetMeActivitiesParams {
+  /** 1부터, 기본 1 */
+  page?: number;
+  /** 1~200, 기본 20 */
+  size?: number;
+  /** 대상 도메인 필터. 미지정 시 전체 */
+  resource_type?: AssetDomain;
+  /** 액션 필터. 미지정 시 전체 */
+  action?: AuditAction;
+  /** 이 시각(UTC) 이후만. ISO 8601 */
+  since?: string;
+}
+
+/** 본인이 UI에서 수행한 작업 (audit_logs 의 사용자 관점 부분 집합) */
+export interface MeActivity {
+  id: number;
+  action: AuditAction;
+  resource_type: AuditResourceType;
+  /** gateway PK 또는 surro id */
+  resource_id: string | null;
+  /** 액션별 부가 JSON (예: {"name":"..."}, 상태변경 시 {"from":...,"to":...}) */
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 }
 
 // ────────────────────────────────────────────────────────────

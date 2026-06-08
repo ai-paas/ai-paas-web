@@ -3,6 +3,8 @@ import type {
   GetEventsParams,
   GetInfraNodesParams,
   GetInfraResourcesParams,
+  GetMeActivitiesParams,
+  GetMeMonitoringParams,
   GetProvidersHealthParams,
   GetTopUsersParams,
   GetTrendsParams,
@@ -43,6 +45,11 @@ export const queryKeys = {
     all: ['dashboard'] as const,
     summary: () => [...queryKeys.dashboard.all, 'summary'] as const,
     meSummary: () => [...queryKeys.dashboard.all, 'me', 'summary'] as const,
+    meServices: () => [...queryKeys.dashboard.all, 'me', 'services'] as const,
+    meMonitoring: (params: GetMeMonitoringParams = {}) =>
+      [...queryKeys.dashboard.all, 'me', 'monitoring', params] as const,
+    meActivities: (params: GetMeActivitiesParams = {}) =>
+      [...queryKeys.dashboard.all, 'me', 'activities', params] as const,
     topUsers: (params: GetTopUsersParams) =>
       [...queryKeys.dashboard.all, 'users', 'top', params] as const,
     infraStatus: () => [...queryKeys.dashboard.all, 'infra', 'status'] as const,
