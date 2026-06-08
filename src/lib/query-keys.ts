@@ -42,6 +42,7 @@ export const queryKeys = {
   dashboard: {
     all: ['dashboard'] as const,
     summary: () => [...queryKeys.dashboard.all, 'summary'] as const,
+    meSummary: () => [...queryKeys.dashboard.all, 'me', 'summary'] as const,
     topUsers: (params: GetTopUsersParams) =>
       [...queryKeys.dashboard.all, 'users', 'top', params] as const,
     infraStatus: () => [...queryKeys.dashboard.all, 'infra', 'status'] as const,

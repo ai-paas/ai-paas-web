@@ -19,11 +19,13 @@ import type {
   InfraNodes,
   InfraResources,
   InfraStatus,
+  MeDashboardSummary,
   ProvidersHealth,
   TrendsRefreshResult,
 } from '@/types/dashboard';
 
 const BASE = 'admin/dashboard';
+const ME_BASE = 'me/dashboard';
 
 /** null/undefined/'' 값을 제거해 ky searchParams 에 'undefined' 문자열이 들어가지 않도록 정리 */
 const toSearchParams = (params: object) =>
@@ -41,6 +43,23 @@ export const useGetDashboardSummary = () => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.dashboard.summary(),
     queryFn: () => api.get<DashboardSummary>(`${BASE}/summary`).json(),
+  });
+
+  return {
+    summary: data,
+    isPending,
+    isError,
+  };
+};
+
+// ────────────────────────────────────────────────────────────
+// GET /me/dashboard/summary — 본인 자산만 집계한 KPI 요약
+// ────────────────────────────────────────────────────────────
+
+export const useGetMeDashboardSummary = () => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.dashboard.meSummary(),
+    queryFn: () => api.get<MeDashboardSummary>(`${ME_BASE}/summary`).json(),
   });
 
   return {

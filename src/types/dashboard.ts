@@ -72,6 +72,25 @@ export interface DashboardSummary {
 }
 
 // ────────────────────────────────────────────────────────────
+// GET /me/dashboard/summary — 본인 자산만 집계 (users/infra 섹션 없음)
+// ────────────────────────────────────────────────────────────
+
+export interface MeDashboardSummary {
+  /** 현재 로그인 사용자 식별자 */
+  member_id: string;
+  services: AssetCount;
+  workflows: AssetCount;
+  models: AssetCount;
+  model_improvements: AssetCount;
+  datasets: AssetCount;
+  experiments: AssetCount;
+  knowledge_bases: AssetCount;
+  prompts: AssetCount;
+  /** 응답 생성 시각 (UTC, ISO 8601) */
+  generated_at: string;
+}
+
+// ────────────────────────────────────────────────────────────
 // GET /users/top
 // ────────────────────────────────────────────────────────────
 
