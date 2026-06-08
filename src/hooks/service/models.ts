@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import { queryKeys, type HubModelTagParams } from '@/lib/query-keys';
-import type { Page, Pagination } from '@/types/api';
+import type { Page } from '@/types/api';
 import type {
   CustomModel,
   GetCustomModelsParams,
@@ -11,7 +11,7 @@ import type {
   GetModelsParams,
   GetModelTypesParams,
   GetOptimizersParams,
-  HubModel,
+  HubModelsResponse,
   HubModelTag,
   Model,
   ModelCatalog,
@@ -192,18 +192,20 @@ export const useCreateModel = () => {
 };
 
 export const useGetHubModels = (params: GetHubModelsParams) => {
-  const searchParams = new URLSearchParams(
-    Object.entries(params).filter(
-      ([, value]) =>
-        value !== '' &&
-        value !== null &&
-        value !== undefined &&
-        (!Array.isArray(value) || value.length > 0)
-    )
-  );
+  // 다중 필터(library/language/apps/inference_provider/other)는 키를 반복해 전달
+  // (FastAPI array<string> 규약). 빈 값/빈 배열은 제외.
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === '' || value === null || value === undefined) return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => searchParams.append(key, String(item)));
+    } else {
+      searchParams.append(key, String(value));
+    }
+  });
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.hubModels.list(params),
-    queryFn: () => api.get<Pagination<HubModel>>('hub-connect/models', { searchParams }).json(),
+    queryFn: () => api.get<HubModelsResponse>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
   });
 
@@ -214,6 +216,9 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
       size: data?.pagination.limit ?? 1,
       total: data?.pagination.total ?? 1,
     },
+    // Kaggle 등 total 이 하한값인 마켓에서 다음 페이지 이동 판단용
+    hasMore: data?.pagination.has_more ?? false,
+    totalIsExact: data?.pagination.total_is_exact ?? true,
     isPending,
     isError,
   };

@@ -157,11 +157,29 @@ export interface HubModel {
   pipeline_tag: string;
   task: string;
   library_name: string;
-  parameterDisplay: string;
-  parameterRange: string;
+  numParameters: number | null;
+  /** 사람이 읽기 쉬운 파라미터 표기. Kaggle은 항상 null */
+  parameterDisplay: string | null;
+  /** 파라미터 범주 정보. Kaggle은 항상 null */
+  parameterRange: string | null;
   private: boolean;
   gated: boolean;
   sha: string | null;
+}
+
+export interface HubModelsResponse {
+  data: HubModel[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    /** 다음 페이지가 있을 가능성 (Kaggle 등 lower-bound total 마켓에서 페이지 이동 판단용) */
+    has_more?: boolean;
+    /** total 이 정확한 전체 수인지 (HuggingFace=true, Kaggle=false 하한값) */
+    total_is_exact?: boolean;
+    /** 실제 업스트림에 적용된 필터 정보 */
+    applied_filters?: Record<string, unknown>;
+  };
 }
 
 export interface HubModelTag {
@@ -255,7 +273,7 @@ export interface GetModelFormatsParams {
 }
 
 export interface GetHubModelsParams {
-  market: string;
+  market: 'huggingface' | 'kaggle';
   sort?: string;
   page?: number;
   limit?: number;
@@ -265,7 +283,7 @@ export interface GetHubModelsParams {
   task?: string;
   library?: string[];
   language?: string[];
-  license?: string[];
+  license?: string | null;
   apps?: string[];
   inference_provider?: string[];
   other?: string[];

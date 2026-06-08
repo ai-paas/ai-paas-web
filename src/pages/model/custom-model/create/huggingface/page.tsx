@@ -572,7 +572,7 @@ interface ModelItemProps {
   model: {
     modelId: string;
     task: string;
-    parameterDisplay: string;
+    parameterDisplay: string | null;
     downloads: number;
     likes: number;
     lastModified: string;
