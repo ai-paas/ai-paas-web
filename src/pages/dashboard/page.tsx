@@ -5,19 +5,17 @@ import { useNavigate } from 'react-router';
 import { IconMore, IconNode } from '../../assets/img/icon';
 import {
   useGetDashboardEvents,
+  useGetDashboardSummary,
+  useGetDashboardTopUsers,
   useGetInfraNodes,
   useGetInfraStatus,
 } from '../../hooks/service/dashboard';
+import { useAuth } from '../../hooks/useAuth';
 import { useGetMembers } from '../../hooks/service/member';
 import { useGetServices } from '../../hooks/service/services';
 import { api } from '../../lib/api';
 import { queryKeys } from '../../lib/query-keys';
-import type {
-  AuditAction,
-  AuditLog,
-  AuditResourceType,
-  NodeStatus,
-} from '../../types/dashboard';
+import type { AuditAction, AuditLog, AuditResourceType, NodeStatus } from '../../types/dashboard';
 import type { Member } from '../../types/member';
 import type { MetricsPeriod, PeriodMetrics, ServiceDetail } from '../../types/service';
 import { formatCount } from '../../util/count';
@@ -28,6 +26,16 @@ import styles from './dashboard.module.scss';
 const items = [{ label: '대시보드', path: '/dashboard' }];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+
+  const { summary } = useGetDashboardSummary();
+  const serviceUsers = useGetDashboardTopUsers({ domain: 'service', size: 3 });
+  const workflowUsers = useGetDashboardTopUsers({ domain: 'workflow', size: 3 });
+  const modelUsers = useGetDashboardTopUsers({ domain: 'model', size: 3 });
+  const datasetUsers = useGetDashboardTopUsers({ domain: 'dataset', size: 3 });
+  const knowledgeBaseUsers = useGetDashboardTopUsers({ domain: 'knowledge_base', size: 3 });
+
   return (
     <main>
       <div className="breadcrumbBox">
@@ -41,285 +49,316 @@ export default function DashboardPage() {
           <div className="page-detail-round-box page-flex-1 page-mt-0">
             <div className="page-detail-round-name">서비스 현황</div>
             <div className="page-detail-round-data">
-              <div className="page-content-detail-row2">
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    서비스
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
+              {/* 관리자: 전체 자산 카운트 */}
+              {isAdmin && (
+                <div className="page-content-detail-row2">
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      서비스
+                      <button
+                        type="button"
+                        className="btn-more"
+                        onClick={() => navigate('/service')}
+                      >
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-110">
+                      <div className={styles.stateDataBox}>
+                        <div className={styles.stateDataNum}>{summary?.services.total ?? 0}</div>
+                        <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
+                          {serviceUsers.items.length === 0 ? (
+                            <div className={styles.stateDataEmpty}>사용자 없음</div>
+                          ) : (
+                            serviceUsers.items.map((user) => (
+                              <div key={user.member_id} className={styles.stateDataDesc}>
+                                <span>{user.name ?? user.member_id}</span>
+                                <em>{user.count}</em>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="page-detail-round-data page-h-110">
-                    <div className={styles.stateDataBox}>
-                      <div className={styles.stateDataNum}>202</div>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      워크플로우
+                      <button
+                        type="button"
+                        className="btn-more"
+                        onClick={() => navigate('/workflow/workflow')}
+                      >
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-110">
+                      <div className={styles.stateDataBox}>
+                        <div className={styles.stateDataNum}>{summary?.workflows.total ?? 0}</div>
+                        <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
+                          {workflowUsers.items.length === 0 ? (
+                            <div className={styles.stateDataEmpty}>사용자 없음</div>
+                          ) : (
+                            workflowUsers.items.map((user) => (
+                              <div key={user.member_id} className={styles.stateDataDesc}>
+                                <span>{user.name ?? user.member_id}</span>
+                                <em>{user.count}</em>
+                              </div>
+                            ))
+                          )}
                         </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      모델
+                      <button
+                        type="button"
+                        className="btn-more"
+                        onClick={() => navigate('/model/model-catalog')}
+                      >
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-110">
+                      <div className={styles.stateDataBox}>
+                        <div className={styles.stateDataNum}>{summary?.models.total ?? 0}</div>
+                        <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
+                          {modelUsers.items.length === 0 ? (
+                            <div className={styles.stateDataEmpty}>사용자 없음</div>
+                          ) : (
+                            modelUsers.items.map((user) => (
+                              <div key={user.member_id} className={styles.stateDataDesc}>
+                                <span>{user.name ?? user.member_id}</span>
+                                <em>{user.count}</em>
+                              </div>
+                            ))
+                          )}
                         </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자3</span>
-                          <em>24</em>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      데이터 셋
+                      <button
+                        type="button"
+                        className="btn-more"
+                        onClick={() => navigate('/dataset')}
+                      >
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-110">
+                      <div className={styles.stateDataBox}>
+                        <div className={styles.stateDataNum}>{summary?.datasets.total ?? 0}</div>
+                        <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
+                          {datasetUsers.items.length === 0 ? (
+                            <div className={styles.stateDataEmpty}>사용자 없음</div>
+                          ) : (
+                            datasetUsers.items.map((user) => (
+                              <div key={user.member_id} className={styles.stateDataDesc}>
+                                <span>{user.name ?? user.member_id}</span>
+                                <em>{user.count}</em>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      지식 베이스
+                      <button
+                        type="button"
+                        className="btn-more"
+                        onClick={() => navigate('/knowledge-base')}
+                      >
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-110">
+                      <div className={styles.stateDataBox}>
+                        <div className={styles.stateDataNum}>
+                          {summary?.knowledge_bases.total ?? 0}
+                        </div>
+                        <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
+                          {knowledgeBaseUsers.items.length === 0 ? (
+                            <div className={styles.stateDataEmpty}>사용자 없음</div>
+                          ) : (
+                            knowledgeBaseUsers.items.map((user) => (
+                              <div key={user.member_id} className={styles.stateDataDesc}>
+                                <span>{user.name ?? user.member_id}</span>
+                                <em>{user.count}</em>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    워크플로우
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
+              )}
+              {/* 사용자: 나의 서비스 */}
+              {!isAdmin && (
+                <div className="page-content-detail-row2">
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      나의 서비스 001
+                      <button type="button" className="btn-more">
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-130">
+                      <div className={`${styles.stateDataBox} page-content-detail-col2`}>
+                        <div className={styles.stateDataText}>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자1</span>
+                            <em>142</em>
+                          </div>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자2</span>
+                            <em>36</em>
+                          </div>
+                        </div>
+                        <div className={styles.stateDataNoti}>
+                          RAG 유형 모델을 사용한 채팅 서비스
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="page-detail-round-data page-h-110">
-                    <div className={styles.stateDataBox}>
-                      <div className={styles.stateDataNum}>86</div>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      나의 서비스 001
+                      <button type="button" className="btn-more">
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-130">
+                      <div className={`${styles.stateDataBox} page-content-detail-col2`}>
+                        <div className={styles.stateDataText}>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자1</span>
+                            <em>142</em>
+                          </div>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자2</span>
+                            <em>36</em>
+                          </div>
                         </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
+                        <div className={styles.stateDataNoti}>
+                          RAG 유형 모델을 사용한 채팅 서비스
                         </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자3</span>
-                          <em>24</em>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      나의 서비스 001
+                      <button type="button" className="btn-more">
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-130">
+                      <div className={`${styles.stateDataBox} page-content-detail-col2`}>
+                        <div className={styles.stateDataText}>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자1</span>
+                            <em>142</em>
+                          </div>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자2</span>
+                            <em>36</em>
+                          </div>
+                        </div>
+                        <div className={styles.stateDataNoti}>
+                          RAG 유형 모델을 사용한 채팅 서비스
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      나의 서비스 001
+                      <button type="button" className="btn-more">
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-130">
+                      <div className={`${styles.stateDataBox} page-content-detail-col2`}>
+                        <div className={styles.stateDataText}>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자1</span>
+                            <em>142</em>
+                          </div>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용자2</span>
+                            <em>36</em>
+                          </div>
+                        </div>
+                        <div className={styles.stateDataNoti}>
+                          RAG 유형 모델을 사용한 채팅 서비스
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
+                    <div className="page-detail-round-name">
+                      나의 서비스 001
+                      <button type="button" className="btn-more">
+                        <IconMore />
+                        <span>바로가기</span>
+                      </button>
+                    </div>
+                    <div className="page-detail-round-data page-h-130">
+                      <div className={`${styles.stateDataBox} page-content-detail-col2`}>
+                        <div className={styles.stateDataText}>
+                          <div className={styles.stateDataDesc}>
+                            <span>워크플로우</span>
+                            <em>142</em>
+                          </div>
+                          <div className={styles.stateDataDesc}>
+                            <span>사용 모델</span>
+                            <em>36</em>
+                          </div>
+                        </div>
+                        <div className={styles.stateDataNoti}>
+                          RAG 유형 모델을 사용한 채팅 서비스
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    모델
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-110">
-                    <div className={styles.stateDataBox}>
-                      <div className={styles.stateDataNum}>73</div>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자3</span>
-                          <em>24</em>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    데이터 셋
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-110">
-                    <div className={styles.stateDataBox}>
-                      <div className={styles.stateDataNum}>58</div>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자3</span>
-                          <em>24</em>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    지식 베이스
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-110">
-                    <div className={styles.stateDataBox}>
-                      <div className={styles.stateDataNum}>49</div>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자3</span>
-                          <em>24</em>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* 나의 서비스 일때 */}
-              <div className="page-content-detail-row2">
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    나의 서비스 001
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-130">
-                    <div className={`${styles.stateDataBox} page-content-detail-col2`}>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                      </div>
-                      <div className={styles.stateDataNoti}>RAG 유형 모델을 사용한 채팅 서비스</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    나의 서비스 001
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-130">
-                    <div className={`${styles.stateDataBox} page-content-detail-col2`}>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                      </div>
-                      <div className={styles.stateDataNoti}>RAG 유형 모델을 사용한 채팅 서비스</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    나의 서비스 001
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-130">
-                    <div className={`${styles.stateDataBox} page-content-detail-col2`}>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                      </div>
-                      <div className={styles.stateDataNoti}>RAG 유형 모델을 사용한 채팅 서비스</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    나의 서비스 001
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-130">
-                    <div className={`${styles.stateDataBox} page-content-detail-col2`}>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자1</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용자2</span>
-                          <em>36</em>
-                        </div>
-                      </div>
-                      <div className={styles.stateDataNoti}>RAG 유형 모델을 사용한 채팅 서비스</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
-                  <div className="page-detail-round-name">
-                    나의 서비스 001
-                    <button type="button" className="btn-more">
-                      <IconMore />
-                      <span>바로가기</span>
-                    </button>
-                  </div>
-                  <div className="page-detail-round-data page-h-130">
-                    <div className={`${styles.stateDataBox} page-content-detail-col2`}>
-                      <div className={styles.stateDataText}>
-                        <div className={styles.stateDataDesc}>
-                          <span>워크플로우</span>
-                          <em>142</em>
-                        </div>
-                        <div className={styles.stateDataDesc}>
-                          <span>사용 모델</span>
-                          <em>36</em>
-                        </div>
-                      </div>
-                      <div className={styles.stateDataNoti}>RAG 유형 모델을 사용한 채팅 서비스</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* 인프라 */}
-          <InfraSection />
+          {/* 관리자: 인프라 */}
+          {isAdmin && <InfraSection />}
 
-          {/* 서비스 모니터링 */}
-          <MonitoringSection />
+          {/* 사용자: 서비스 모니터링 */}
+          {!isAdmin && <MonitoringSection />}
 
           <div className="page-content-detail-row2">
             <div className="page-detail-round-box page-flex-1">
               <div className="page-detail-round-name">
                 사용자
-                <button type="button" className="btn-more">
+                <button
+                  type="button"
+                  className="btn-more"
+                  onClick={() => navigate('/member-management')}
+                >
                   <IconMore />
                   <span>바로가기</span>
                 </button>
@@ -331,7 +370,11 @@ export default function DashboardPage() {
             <div className="page-detail-round-box page-flex-1">
               <div className="page-detail-round-name">
                 이벤트
-                <button type="button" className="btn-more">
+                <button
+                  type="button"
+                  className="btn-more"
+                  onClick={() => navigate('/infra-management/event')}
+                >
                   <IconMore />
                   <span>바로가기</span>
                 </button>
@@ -359,6 +402,7 @@ const nodeStatusClass: Record<NodeStatus, string> = {
 };
 
 const InfraSection = () => {
+  const navigate = useNavigate();
   const { clusters, hasData } = useGetInfraStatus();
   const clusterName = clusters[0]?.name ?? '';
   const { nodes } = useGetInfraNodes({ cluster: clusterName }, hasData && !!clusterName);
@@ -409,7 +453,11 @@ const InfraSection = () => {
           <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
             <div className="page-detail-round-name">
               노드
-              <button type="button" className="btn-more">
+              <button
+                type="button"
+                className="btn-more"
+                onClick={() => navigate('/infra-management/monitoring-dashboard')}
+              >
                 <IconMore />
                 <span>바로가기</span>
               </button>
@@ -452,7 +500,11 @@ const InfraSection = () => {
           <div className="page-detail-round-box page-detail-round-color page-flex-1 page-mt-0">
             <div className="page-detail-round-name">
               리소스
-              <button type="button" className="btn-more">
+              <button
+                type="button"
+                className="btn-more"
+                onClick={() => navigate('/infra-management/monitoring-dashboard')}
+              >
                 <IconMore />
                 <span>바로가기</span>
               </button>

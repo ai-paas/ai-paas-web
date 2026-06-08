@@ -1,6 +1,7 @@
 //dashboard style
 
 .stateDataBox {
+  height: 100%;
   display: flex;
 
   @include font-style;
@@ -45,6 +46,18 @@
     color: $page-font-color-600;
     font-size: $page-font-root;
     @include ellipsis(1);
+  }
+
+  // 상위 사용자 목록: 실제 사용자만 표시할 때 세로 가운데 정렬
+  .stateDataTextCenter {
+    justify-content: center;
+  }
+  // 상위 사용자 0명일 때 빈 영역 placeholder
+  .stateDataEmpty {
+    width: 100%;
+    text-align: center;
+    color: $page-font-color-300;
+    font-size: $page-font-root;
   }
 }
 
