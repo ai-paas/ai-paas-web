@@ -44,10 +44,11 @@ const toSearchParams = (params: object) =>
 // GET /summary — 대시보드 KPI 요약
 // ────────────────────────────────────────────────────────────
 
-export const useGetDashboardSummary = () => {
+export const useGetDashboardSummary = (enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.dashboard.summary(),
     queryFn: () => api.get<DashboardSummary>(`${BASE}/summary`).json(),
+    enabled,
   });
 
   return {
@@ -145,14 +146,14 @@ export const useGetMeDashboardActivities = (params: GetMeActivitiesParams = {}) 
 // GET /users/top — 도메인별 자산 보유 상위 사용자
 // ────────────────────────────────────────────────────────────
 
-export const useGetDashboardTopUsers = (params: GetTopUsersParams) => {
+export const useGetDashboardTopUsers = (params: GetTopUsersParams, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.dashboard.topUsers(params),
     queryFn: () =>
       api
         .get<DashboardTopUsers>(`${BASE}/users/top`, { searchParams: toSearchParams(params) })
         .json(),
-    enabled: !!params.domain,
+    enabled: enabled && !!params.domain,
   });
 
   return {

@@ -194,6 +194,30 @@
   }
 }
 
+// 나의 서비스 카드 뷰포트: 트랙(motion)을 드래그해 가로로 넘김
+.myServiceViewport {
+  overflow: hidden;
+}
+// 오버플로로 드래그 가능할 때만 grab 커서
+.draggable {
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
+}
+// 드래그 대상 트랙: 카드 폭 합만큼 늘어남(max-content)
+.myServiceTrack {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: max-content;
+  user-select: none;
+}
+// 나의 서비스 카드: 폭은 인라인 style 로 지정, 줄어들지 않음
+.myServiceCard {
+  flex: 0 0 auto;
+}
+
 .msgBox {
   display: flex;
   flex-direction: column;
