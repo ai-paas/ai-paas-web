@@ -203,7 +203,7 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
       searchParams.append(key, String(value));
     }
   });
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isFetching, isError } = useQuery({
     queryKey: queryKeys.hubModels.list(params),
     queryFn: () => api.get<HubModelsResponse>('hub-connect/models', { searchParams }).json(),
     placeholderData: keepPreviousData,
@@ -220,6 +220,8 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
     hasMore: data?.pagination.has_more ?? false,
     totalIsExact: data?.pagination.total_is_exact ?? true,
     isPending,
+    // 페이지/필터/검색 변경 등 모든 요청 진행 중에 true (스켈레톤 표시용)
+    isFetching,
     isError,
   };
 };
@@ -241,11 +243,14 @@ export const useGetHubModelTagsByGroup = (params: HubModelTagParams) => {
   };
 };
 
-export const useGetModelForOptimizer = (model_id?: number) => {
+export const useGetModelForOptimizer = (
+  model_id?: number,
+  { enabled = true }: { enabled?: boolean } = {}
+) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.modelForOptimizer.detail(model_id),
     queryFn: () => api.get(`checked/model/${model_id}`).json<{ data: ModelForOptimizer }>(),
-    enabled: !!model_id,
+    enabled: !!model_id && enabled,
   });
 
   return {
@@ -255,7 +260,10 @@ export const useGetModelForOptimizer = (model_id?: number) => {
   };
 };
 
-export const useGetOptimizers = (params: GetOptimizersParams) => {
+export const useGetOptimizers = (
+  params: GetOptimizersParams,
+  { enabled = true }: { enabled?: boolean } = {}
+) => {
   const searchParams = new URLSearchParams(
     Object.entries(params).filter(
       ([, value]) =>
@@ -269,6 +277,7 @@ export const useGetOptimizers = (params: GetOptimizersParams) => {
     queryKey: queryKeys.optimizers.list(params),
     queryFn: () => api.get<Optimizers>('checked/optimizer', { searchParams }).json(),
     placeholderData: keepPreviousData,
+    enabled,
   });
 
   return {

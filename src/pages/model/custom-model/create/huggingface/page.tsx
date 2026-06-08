@@ -8,6 +8,7 @@ import {
   Pagination,
   DropdownMenu,
   SearchInput,
+  Skeleton,
   useSearchInputState,
 } from '@innogrid/ui';
 import { IconRefresh, IconAlign } from '../../../../../assets/img/icon';
@@ -117,6 +118,26 @@ const useSort = (initialSort: SortType = 'downloads') => {
   return { sort, sortLabel, sortMenus };
 };
 
+// 로딩 중 모델 카드(descInfoBox) 레이아웃에 맞춘 스켈레톤
+const SKELETON_COUNT = 30;
+function ModelCardSkeleton() {
+  return (
+    <div className={styles.descInfoBox}>
+      {/* 제목 <p> 줄 높이: 13px * 1.5 = 19.5px */}
+      <Skeleton variant="slide" style={{ width: 280, height: 20, borderRadius: 4 }} />
+      <div className={styles.descInfo}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          // 라벨/값 줄 높이: 12px * 1.5 = 18px (gap 4 포함 컬럼 총 40px)
+          <div key={i}>
+            <Skeleton variant="slide" style={{ width: 56, height: 18, borderRadius: 4 }} />
+            <Skeleton variant="slide" style={{ width: 80, height: 18, borderRadius: 4 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CustomModelCreateHuggingfacePage() {
   const navigate = useNavigate();
   const [selectedModel, setSelectedModel] = useState<HubModel | null>(null);
@@ -131,7 +152,7 @@ export default function CustomModelCreateHuggingfacePage() {
     language: [],
   });
 
-  const { hubModels, page } = useGetHubModels({
+  const { hubModels, page, isFetching, isError } = useGetHubModels({
     market: 'huggingface',
     sort,
     search: searchValue,
@@ -205,14 +226,30 @@ export default function CustomModelCreateHuggingfacePage() {
           </div>
           <div className={`${styles.descBodyBox} pb-6`}>
             <div className={styles.descContent}>
-              {hubModels.map((model) => (
-                <ModelItem
-                  key={model.id}
-                  model={model}
-                  isActive={selectedModel?.id === model.id}
-                  onClick={() => handleModelSelect(model)}
-                />
-              ))}
+              {isFetching ? (
+                Array.from({ length: SKELETON_COUNT }).map((_, i) => <ModelCardSkeleton key={i} />)
+              ) : isError ? (
+                <div className={styles.descStateBox}>
+                  <p className={styles.descStateText}>모델을 불러오지 못했습니다.</p>
+                  <p className={styles.descStateSub}>잠시 후 다시 시도해주세요.</p>
+                </div>
+              ) : hubModels.length === 0 ? (
+                <div className={styles.descStateBox}>
+                  <p className={styles.descStateText}>검색 결과가 없습니다.</p>
+                  <p className={styles.descStateSub}>
+                    다른 검색어나 필터 조건으로 다시 시도해보세요.
+                  </p>
+                </div>
+              ) : (
+                hubModels.map((model) => (
+                  <ModelItem
+                    key={model.id}
+                    model={model}
+                    isActive={selectedModel?.id === model.id}
+                    onClick={() => handleModelSelect(model)}
+                  />
+                ))
+              )}
             </div>
             <Pagination
               pageSizeOption={[10, 15, 20, 30, 50, 100, 500]}

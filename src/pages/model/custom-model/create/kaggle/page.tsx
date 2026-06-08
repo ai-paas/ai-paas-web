@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { BreadCrumb, Input, Button, Pagination } from '@innogrid/ui';
+import { BreadCrumb, Input, Button, Pagination, Skeleton, DropdownMenu } from '@innogrid/ui';
 
 import { IconAlign } from '../../../../../assets/img/icon';
 import { useGetHubModels } from '@/hooks/service/models';
@@ -18,6 +18,26 @@ const sortOptions: { value: KaggleSort; label: string }[] = [
 
 const pageSizeOption = [10, 15, 20, 30, 50, 100];
 
+// 로딩 중 모델 카드(descInfoBox2) 레이아웃에 맞춘 스켈레톤
+const SKELETON_COUNT = 10;
+function ModelCardSkeleton() {
+  return (
+    <div className={styles.descInfoBox2}>
+      {/* 제목 <p> 줄 높이: 13px * 1.5 = 19.5px */}
+      <Skeleton variant="slide" style={{ width: 280, height: 20, borderRadius: 4 }} />
+      <div className={styles.descInfo}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          // 라벨/값 줄 높이: 12px * 1.5 = 18px (gap 4 포함 컬럼 총 40px)
+          <div key={i}>
+            <Skeleton variant="slide" style={{ width: 56, height: 18, borderRadius: 4 }} />
+            <Skeleton variant="slide" style={{ width: 80, height: 18, borderRadius: 4 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CustomModelCreateKagglePage() {
   const navigate = useNavigate();
   //input
@@ -29,8 +49,14 @@ export default function CustomModelCreateKagglePage() {
 
   //sort
   const [sort, setSort] = useState<KaggleSort>('downloads');
-  const [isSortOpen, setIsSortOpen] = useState(false);
   const sortLabel = sortOptions.find((option) => option.value === sort)?.label ?? '';
+  const sortMenus = sortOptions.map((option) => ({
+    label: option.label,
+    onSelect: () => {
+      setSort(option.value);
+      setPage(1);
+    },
+  }));
 
   //selection
   const [selectedModel, setSelectedModel] = useState<HubModel | null>(null);
@@ -43,6 +69,8 @@ export default function CustomModelCreateKagglePage() {
     hubModels,
     page: pageInfo,
     hasMore,
+    isFetching,
+    isError,
   } = useGetHubModels({
     market: 'kaggle',
     search: value,
@@ -87,39 +115,34 @@ export default function CustomModelCreateKagglePage() {
                   onChange={onChange}
                 />
                 <div className={styles.selectBtnBox}>
-                  <button
-                    type="button"
-                    className={`${styles.btnAlign} ${isSortOpen ? styles.active : ''}`}
-                    onClick={() => setIsSortOpen((open) => !open)}
-                  >
-                    <span className={styles.iconAlign}>
-                      <IconAlign />
-                    </span>
-                    정렬:<span>{sortLabel}</span>
-                  </button>
-                  <ul className={`${styles.selectOptionBox} ${isSortOpen ? styles.active : ''}`}>
-                    {sortOptions.map((option) => (
-                      <li
-                        key={option.value}
-                        className={`${styles.selectOption} ${sort === option.value ? styles.active : ''}`}
-                        onClick={() => {
-                          setSort(option.value);
-                          setPage(1);
-                          setIsSortOpen(false);
-                        }}
-                      >
-                        {option.label}
-                      </li>
-                    ))}
-                  </ul>
+                  <DropdownMenu menus={sortMenus}>
+                    <button type="button" className={`${styles.btnAlign} ${styles.active}`}>
+                      <span className={styles.iconAlign}>
+                        <IconAlign />
+                      </span>
+                      정렬: <span>{sortLabel}</span>
+                    </button>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
           </div>
           <div className={styles.descBodyBox2}>
             <div className={styles.descContent}>
-              {hubModels.length === 0 ? (
-                <div className={styles.descInfoBox2}>모델이 없습니다.</div>
+              {isFetching ? (
+                Array.from({ length: SKELETON_COUNT }).map((_, i) => <ModelCardSkeleton key={i} />)
+              ) : isError ? (
+                <div className={styles.descStateBox}>
+                  <p className={styles.descStateText}>모델을 불러오지 못했습니다.</p>
+                  <p className={styles.descStateSub}>잠시 후 다시 시도해주세요.</p>
+                </div>
+              ) : hubModels.length === 0 ? (
+                <div className={styles.descStateBox}>
+                  <p className={styles.descStateText}>검색 결과가 없습니다.</p>
+                  <p className={styles.descStateSub}>
+                    다른 검색어나 정렬 조건으로 다시 시도해보세요.
+                  </p>
+                </div>
               ) : (
                 hubModels.map((model) => (
                   <div
@@ -174,7 +197,12 @@ export default function CustomModelCreateKagglePage() {
           <Button size="large" color="secondary" onClick={() => alert('Button clicked!')}>
             취소
           </Button>
-          <Button size="large" color="primary" onClick={() => alert('Button clicked!')}>
+          <Button
+            size="large"
+            color="primary"
+            disabled={!selectedModel}
+            onClick={() => alert('Button clicked!')}
+          >
             생성
           </Button>
         </div>

@@ -402,3 +402,27 @@
   gap: 6px;
   margin-left: 24px;
 }
+
+//custom-model 모델 리스트 로딩/빈 상태
+.descStateBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 320px;
+  padding: 40px 20px;
+  border-radius: 8px;
+
+  .descStateText {
+    @include font-style;
+    font-size: $page-font-14;
+    color: $page-font-color-600;
+  }
+  .descStateSub {
+    @include font-style;
+    font-size: $page-font-root;
+    color: $page-font-color-300;
+  }
+}
