@@ -11,6 +11,7 @@ import {
   IconService,
   IconWorkflow,
 } from '@/assets/img/nav';
+import { useAuth } from '@/hooks/useAuth';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 const isPathActive = (pathname: string, path: string) =>
@@ -18,6 +19,7 @@ const isPathActive = (pathname: string, path: string) =>
 
 export const Menu = () => {
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
   return (
     <ul>
@@ -144,12 +146,15 @@ export const Menu = () => {
           </MenuItem2>
         </ul>
       </MenuItem>
-      <MenuItem
-        icon={<IconMemberManagement />}
-        label="멤버 관리"
-        href="/member-management"
-        isActive={isPathActive(location.pathname, '/member-management')}
-      />
+      {/* 멤버 관리는 admin 전용 */}
+      {isAdmin && (
+        <MenuItem
+          icon={<IconMemberManagement />}
+          label="멤버 관리"
+          href="/member-management"
+          isActive={isPathActive(location.pathname, '/member-management')}
+        />
+      )}
     </ul>
   );
 };

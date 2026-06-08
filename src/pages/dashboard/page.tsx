@@ -44,22 +44,25 @@ export default function DashboardPage() {
           {!isAdmin && <MonitoringSection />}
 
           <div className="page-content-detail-row2">
-            <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-name">
-                사용자
-                <button
-                  type="button"
-                  className="btn-more"
-                  onClick={() => navigate('/member-management')}
-                >
-                  <IconMore />
-                  <span>바로가기</span>
-                </button>
+            {/* 사용자(회원 목록)는 admin 전용 */}
+            {isAdmin && (
+              <div className="page-detail-round-box page-flex-1">
+                <div className="page-detail-round-name">
+                  사용자
+                  <button
+                    type="button"
+                    className="btn-more"
+                    onClick={() => navigate('/member-management')}
+                  >
+                    <IconMore />
+                    <span>바로가기</span>
+                  </button>
+                </div>
+                <div className="page-detail-round-data page-h-288">
+                  <UserTable />
+                </div>
               </div>
-              <div className="page-detail-round-data page-h-288">
-                <UserTable />
-              </div>
-            </div>
+            )}
             <div className="page-detail-round-box page-flex-1">
               <div className="page-detail-round-name">
                 이벤트
