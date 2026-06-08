@@ -27,7 +27,7 @@ export const AssetSummarySection = () => {
         </div>
         <div className="page-detail-round-data page-h-110">
           <div className={styles.stateDataBox}>
-            <div className={styles.stateDataNum}>{summary?.services.total ?? 0}</div>
+            <div className={styles.stateDataNum}>{summary?.services.active ?? 0}</div>
             <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
               {serviceUsers.items.length === 0 ? (
                 <div className={styles.stateDataEmpty}>사용자 없음</div>
@@ -53,7 +53,7 @@ export const AssetSummarySection = () => {
         </div>
         <div className="page-detail-round-data page-h-110">
           <div className={styles.stateDataBox}>
-            <div className={styles.stateDataNum}>{summary?.workflows.total ?? 0}</div>
+            <div className={styles.stateDataNum}>{summary?.workflows.active ?? 0}</div>
             <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
               {workflowUsers.items.length === 0 ? (
                 <div className={styles.stateDataEmpty}>사용자 없음</div>
@@ -79,7 +79,7 @@ export const AssetSummarySection = () => {
         </div>
         <div className="page-detail-round-data page-h-110">
           <div className={styles.stateDataBox}>
-            <div className={styles.stateDataNum}>{summary?.models.total ?? 0}</div>
+            <div className={styles.stateDataNum}>{summary?.models.active ?? 0}</div>
             <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
               {modelUsers.items.length === 0 ? (
                 <div className={styles.stateDataEmpty}>사용자 없음</div>
@@ -105,7 +105,7 @@ export const AssetSummarySection = () => {
         </div>
         <div className="page-detail-round-data page-h-110">
           <div className={styles.stateDataBox}>
-            <div className={styles.stateDataNum}>{summary?.datasets.total ?? 0}</div>
+            <div className={styles.stateDataNum}>{summary?.datasets.active ?? 0}</div>
             <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
               {datasetUsers.items.length === 0 ? (
                 <div className={styles.stateDataEmpty}>사용자 없음</div>
@@ -131,7 +131,7 @@ export const AssetSummarySection = () => {
         </div>
         <div className="page-detail-round-data page-h-110">
           <div className={styles.stateDataBox}>
-            <div className={styles.stateDataNum}>{summary?.knowledge_bases.total ?? 0}</div>
+            <div className={styles.stateDataNum}>{summary?.knowledge_bases.active ?? 0}</div>
             <div className={`${styles.stateDataText} ${styles.stateDataTextCenter}`}>
               {knowledgeBaseUsers.items.length === 0 ? (
                 <div className={styles.stateDataEmpty}>사용자 없음</div>
