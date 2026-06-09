@@ -615,6 +615,10 @@ input {
 
 //// 버튼
 .btn-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   opacity: 0.2;
   transition: opacity 0.3s ease-in-out;
 

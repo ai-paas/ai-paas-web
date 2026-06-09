@@ -1,5 +1,6 @@
 import { IconCopy } from '@/assets/img/icon';
 import { cn } from '@/lib/utils';
+import { copyTextToClipboard } from '@/util/clipboard';
 import { Fragment, useState, type ReactNode } from 'react';
 
 interface CodeBlockProps {
@@ -104,8 +105,9 @@ export function CodeBlock({
   const lines = trimmed.split('\n');
 
   const handleCopy = () => {
-    if (!hasCode || !navigator.clipboard) return;
-    void navigator.clipboard.writeText(trimmed).then(() => {
+    if (!hasCode) return;
+    void copyTextToClipboard(trimmed).then((copied) => {
+      if (!copied) return;
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     });

@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import type { Sorting } from '@innogrid/ui';
 import { BreadCrumb, useTableSelection, useTablePagination, Tabs, Table } from '@innogrid/ui';
 
-import { IconCopy } from '@/assets/img/icon';
 import { Link, useNavigate, useParams } from 'react-router';
 import { EditWorkflowButton } from '@/components/features/workflow/edit-workflow-button';
 import { DeleteWorkflowButton } from '@/components/features/workflow/delete-workflow-button';
 import { ExecuteWorkflowButton } from '@/components/features/workflow/execute-workflow-button';
+import { CopyButton } from '@/components/ui/copy-button';
 import { FlowChart } from '@/components/ui/flow-chart';
 import { StopWorkflowDeploymentButton } from '@/components/features/workflow/stop-workflow-deployment-button';
 import { WorkflowInferenceTestPanel } from '@/components/features/workflow/workflow-inference-test-panel';
@@ -40,11 +40,6 @@ const getWorkflowValue = (workflow: unknown, keys: string[]) => {
   }
 
   return EMPTY_VALUE;
-};
-
-const copyText = (value: string) => {
-  if (!value || value === EMPTY_VALUE || !navigator.clipboard) return;
-  void navigator.clipboard.writeText(value);
 };
 
 const columns = [
@@ -89,9 +84,7 @@ const columns = [
         <span>
           {backendApiUrl}
           {backendApiUrl !== EMPTY_VALUE && (
-            <button className="btn-copy" onClick={() => copyText(backendApiUrl)}>
-              <IconCopy />
-            </button>
+            <CopyButton value={backendApiUrl} style={{ marginLeft: 4 }} />
           )}
         </span>
       );
@@ -234,11 +227,7 @@ export default function WorkflowDetailPage() {
                 <div className="page-detail_item-name">공개 URL</div>
                 <div className="page-detail_item-data">
                   {publicUrl}
-                  {publicUrl !== EMPTY_VALUE && (
-                    <button className="btn-copy" onClick={() => copyText(publicUrl)}>
-                      <IconCopy />
-                    </button>
-                  )}
+                  {publicUrl !== EMPTY_VALUE && <CopyButton value={publicUrl} />}
                 </div>
               </li>
             </ul>
@@ -247,11 +236,7 @@ export default function WorkflowDetailPage() {
                 <div className="page-detail_item-name">백엔드 서비스 API</div>
                 <div className="page-detail_item-data">
                   {backendApi}
-                  {backendApi !== EMPTY_VALUE && (
-                    <button className="btn-copy" onClick={() => copyText(backendApi)}>
-                      <IconCopy />
-                    </button>
-                  )}
+                  {backendApi !== EMPTY_VALUE && <CopyButton value={backendApi} />}
                 </div>
               </li>
               <li>

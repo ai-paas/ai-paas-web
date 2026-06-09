@@ -98,7 +98,7 @@ export default function ModelCatalogDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">{model?.created_by ?? '-'}</div>
+              <div className="page-detail_item-data">{model?.created_by || '-'}</div>
             </li>
             <li>
               <div className="page-detail_item-name">task</div>
