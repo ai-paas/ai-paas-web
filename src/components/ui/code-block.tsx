@@ -1,4 +1,4 @@
-import { IconCopy } from '@/assets/img/icon';
+import { IconCopy, IconDocument } from '@/assets/img/icon';
 import { cn } from '@/lib/utils';
 import { copyTextToClipboard } from '@/util/clipboard';
 import { Fragment, useState, type ReactNode } from 'react';
@@ -12,8 +12,15 @@ interface CodeBlockProps {
   emptyText?: string;
   /** 줄 번호 표시 여부 */
   showLineNumbers?: boolean;
+  /** 최소 너비 (기본 720px). 숫자는 px 로 처리 */
+  minWidth?: number | string;
+  /** 최대 너비 (기본 '100%'). 숫자는 px 로 처리 */
+  maxWidth?: number | string;
   className?: string;
 }
+
+const toCssSize = (value: number | string) =>
+  typeof value === 'number' ? `${value}px` : value;
 
 /**
  * 언어를 특정할 수 없는 코드를 위한 경량 토크나이저.
@@ -55,25 +62,25 @@ function highlight(code: string): ReactNode[] {
 
     if (comment !== undefined) {
       nodes.push(
-        <span key={key++} className="text-[#8b949e] italic">
+        <span key={key++} className="text-[#6e7781] italic">
           {match}
         </span>
       );
     } else if (str !== undefined) {
       nodes.push(
-        <span key={key++} className="text-[#a5d6ff]">
+        <span key={key++} className="text-[#0a3069]">
           {match}
         </span>
       );
     } else if (num !== undefined) {
       nodes.push(
-        <span key={key++} className="text-[#79c0ff]">
+        <span key={key++} className="text-[#0550ae]">
           {match}
         </span>
       );
     } else if (word !== undefined && KEYWORDS.has(word)) {
       nodes.push(
-        <span key={key++} className="text-[#ff7b72]">
+        <span key={key++} className="text-[#cf222e]">
           {match}
         </span>
       );
@@ -96,9 +103,13 @@ export function CodeBlock({
   language,
   emptyText = '등록된 샘플 코드가 없습니다.',
   showLineNumbers = true,
+  minWidth = 720,
+  maxWidth = '100%',
   className,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+
+  const sizeStyle = { minWidth: toCssSize(minWidth), maxWidth: toCssSize(maxWidth) };
 
   const trimmed = code?.trim() ?? '';
   const hasCode = trimmed.length > 0;
@@ -115,33 +126,45 @@ export function CodeBlock({
 
   if (!hasCode) {
     return (
-      <div className={cn('rounded-md border border-[#DEDEDE] px-6 py-5 text-sm text-[#999]', className)}>
-        {emptyText}
+      <div
+        style={sizeStyle}
+        className={cn(
+          'flex w-fit flex-col items-center justify-center gap-3 rounded-md border border-dashed border-[#DEDEDE] bg-[#FAFAFA] px-6 py-12',
+          className
+        )}
+      >
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F2F2F2] [&>svg]:h-6 [&>svg]:w-6 [&>svg]:opacity-25">
+          <IconDocument />
+        </span>
+        <p className="text-sm text-[#999]">{emptyText}</p>
       </div>
     );
   }
 
   return (
-    <div className={cn('overflow-hidden rounded-md border border-[#2d333b] bg-[#1e2228]', className)}>
-      <div className="flex items-center justify-between border-b border-[#2d333b] px-4 py-2">
-        <span className="text-xs font-medium tracking-wide text-[#8b949e] uppercase">
+    <div
+      style={sizeStyle}
+      className={cn('w-fit overflow-hidden rounded-md border border-[#DEDEDE] bg-[#F2F2F2]', className)}
+    >
+      <div className="flex items-center justify-between border-b border-[#DEDEDE] px-4 py-2">
+        <span className="text-xs font-medium tracking-wide text-[#57606a] uppercase">
           {language ?? 'CODE'}
         </span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 rounded px-2 py-1 text-xs text-[#8b949e] transition-colors hover:bg-[#2d333b] hover:text-[#e6edf3]"
+          className="flex items-center gap-1 rounded px-2 py-1 text-xs text-[#57606a] transition-colors hover:bg-[#E5E5E5] hover:text-[#24292f]"
         >
           <IconCopy />
           {copied ? '복사됨' : '복사'}
         </button>
       </div>
       <pre className="overflow-x-auto px-4 py-4 text-[13px] leading-[1.6]">
-        <code className="block font-mono text-[#e6edf3]">
+        <code className="block font-mono text-[#24292f]">
           {lines.map((line, index) => (
             <span key={index} className="grid grid-cols-[auto_1fr] gap-4">
               {showLineNumbers && (
-                <span className="text-right text-[#636e7b] select-none">{index + 1}</span>
+                <span className="text-right text-[#8c959f] select-none">{index + 1}</span>
               )}
               <span className="whitespace-pre">{line ? highlight(line) : ' '}</span>
             </span>

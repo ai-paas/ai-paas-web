@@ -108,7 +108,9 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.created_at?.toString())}</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(model?.created_at?.toString())}
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
@@ -122,7 +124,9 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.updated_at?.toString())}</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(model?.updated_at?.toString())}
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">버전 정보</div>
