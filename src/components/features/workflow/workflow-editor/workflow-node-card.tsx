@@ -18,13 +18,15 @@ const NODE_CARD_VISUAL: Record<WorkflowComponentType, { icon: ReactNode; iconBg:
 interface WorkflowNodeCardProps {
   type: WorkflowComponentType;
   name?: ReactNode;
+  /** 헤더 아래에 표시되는 부가 콘텐츠(예: 모델 노드에 설정된 모델). */
+  children?: ReactNode;
 }
 
 /**
  * 워크플로우 노드의 카드 본문. 실제 캔버스 노드와 배치 미리보기(ghost)가
  * 동일하게 보이도록 두 곳에서 공유한다.
  */
-export const WorkflowNodeCard = ({ type, name }: WorkflowNodeCardProps) => {
+export const WorkflowNodeCard = ({ type, name, children }: WorkflowNodeCardProps) => {
   const { icon, iconBg } = NODE_CARD_VISUAL[type];
 
   return (
@@ -37,6 +39,7 @@ export const WorkflowNodeCard = ({ type, name }: WorkflowNodeCardProps) => {
         </div>
         <div className="mr-1 flex grow items-center truncate">{name}</div>
       </div>
+      {children}
     </div>
   );
 };
