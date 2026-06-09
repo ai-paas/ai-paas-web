@@ -23,13 +23,6 @@ import { useGetCustomModels, useGetModelCatalogs } from '@/hooks/service/models'
 import { useGetKnowledgeBases } from '@/hooks/service/knowledgebase';
 import { useWorkflowStore, type WorkflowNode } from '@/store/useWorkflowStore';
 
-const HANDLE_STYLE = {
-  backgroundColor: '#296dff',
-  height: '12px',
-  width: '2px',
-  borderRadius: '1px',
-};
-
 const INPUT_FIELD_TYPE_LABELS: Record<string, string> = {
   text: 'String',
   file: 'File List',
@@ -75,7 +68,7 @@ const StartNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNod
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
     </div>
   );
@@ -116,7 +109,7 @@ const ModelNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNod
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
       <div
         className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
@@ -129,7 +122,7 @@ const ModelNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNod
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
     </div>
   );
@@ -166,7 +159,7 @@ const KnowledgebaseNode = memo(({ data, isConnectable, selected }: NodeProps<Wor
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
       <div
         className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
@@ -179,7 +172,7 @@ const KnowledgebaseNode = memo(({ data, isConnectable, selected }: NodeProps<Wor
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
     </div>
   );
@@ -192,7 +185,7 @@ const EndNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        style={HANDLE_STYLE}
+        className="workflow-handle"
       />
       <div
         className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
@@ -280,7 +273,7 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
 
   return (
     <div
-      className={`relative size-full ${pendingNodeType ? '[&_.react-flow\\_\\_pane]:cursor-crosshair' : ''}`}
+      className={`relative size-full ${readOnly ? 'workflow-canvas--readonly' : ''} ${pendingNodeType ? '[&_.react-flow\\_\\_pane]:cursor-crosshair' : ''}`}
     >
       <ReactFlow
         nodes={nodes}
@@ -294,6 +287,7 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
         defaultViewport={DEFAULT_VIEWPORT}
         fitView
         fitViewOptions={FIT_VIEW_OPTIONS}
+        connectionRadius={40}
         minZoom={0.2}
         maxZoom={2}
         panOnDrag={readOnly || (isHandMode && !pendingNodeType)}

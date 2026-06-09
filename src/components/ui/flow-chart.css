@@ -7,3 +7,56 @@
   border: none;
   background: transparent;
 }
+
+/* 연결 핸들 기본 모양: 얇은 파란 막대 */
+.workflow-handle {
+  z-index: 10;
+  background-color: #296dff;
+  width: 2px;
+  height: 12px;
+  border: none;
+  border-radius: 1px;
+  transition:
+    width 0.12s ease,
+    height 0.12s ease,
+    border-radius 0.12s ease;
+}
+
+/*
+ * ::before 로 투명한 히트 영역을 넓혀, 막대가 얇아도 엣지 연결을 시작하기 쉽게 한다.
+ */
+.workflow-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+}
+
+/*
+ * 노드 hover(또는 핸들 직접 hover) 시 핸들이 원형 + 버튼으로 확장된다.
+ */
+.react-flow__node:hover .workflow-handle,
+.workflow-handle:hover {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 10 10'%3E%3Cpath d='M5 1v8M1 5h8' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
+}
+
+/*
+ * 오버뷰 등 읽기 전용 캔버스에서는 호버 시 핸들이 확장되지 않고
+ * 기본 막대 모양을 유지한다(+ 아이콘 미표시).
+ */
+.workflow-canvas--readonly .react-flow__node:hover .workflow-handle,
+.workflow-canvas--readonly .workflow-handle:hover {
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background-image: none;
+}
