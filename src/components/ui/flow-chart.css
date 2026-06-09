@@ -1,0 +1,9 @@
+/*
+ * 드래그로 여러 노드를 선택한 뒤 React Flow 가 노드들을 감싸 표시하는
+ * 바운딩 박스를 숨긴다. 개별 노드의 선택 하이라이트(파란 테두리)는 그대로 유지되며,
+ * 선택된 노드 중 하나를 드래그하면 그룹 이동도 정상 동작한다.
+ */
+.react-flow__nodesselection-rect {
+  border: none;
+  background: transparent;
+}

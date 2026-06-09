@@ -7,6 +7,7 @@ import { EditWorkflowButton } from '@/components/features/workflow/edit-workflow
 import { DeleteWorkflowButton } from '@/components/features/workflow/delete-workflow-button';
 import { ExecuteWorkflowButton } from '@/components/features/workflow/execute-workflow-button';
 import { CopyButton } from '@/components/ui/copy-button';
+import { ReactFlowProvider } from '@xyflow/react';
 import { FlowChart } from '@/components/ui/flow-chart';
 import { StopWorkflowDeploymentButton } from '@/components/features/workflow/stop-workflow-deployment-button';
 import { WorkflowInferenceTestPanel } from '@/components/features/workflow/workflow-inference-test-panel';
@@ -265,7 +266,9 @@ export default function WorkflowDetailPage() {
               <div className="tabs-Content">
                 {nodes.length > 0 ? (
                   <div className="h-70">
-                    <FlowChart initialNodes={nodes} initialEdges={edges} />
+                    <ReactFlowProvider>
+                      <FlowChart initialNodes={nodes} initialEdges={edges} readOnly />
+                    </ReactFlowProvider>
                   </div>
                 ) : (
                   <div className="flex size-full items-center justify-center">

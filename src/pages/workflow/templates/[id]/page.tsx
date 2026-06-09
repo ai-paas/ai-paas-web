@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { BreadCrumb, Button, Tabs } from '@innogrid/ui';
 import { useNavigate, useParams } from 'react-router';
 import { DeleteWorkflowTemplateButton } from '@/components/features/workflow/delete-workflow-template-button';
+import { ReactFlowProvider } from '@xyflow/react';
 import { FlowChart } from '@/components/ui/flow-chart';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflowTemplate } from '@/hooks/service/workflows';
@@ -139,7 +140,9 @@ export default function WorkflowTemplateDetailPage() {
               <div className="tabs-Content">
                 {nodes.length > 0 ? (
                   <div className="h-70">
-                    <FlowChart initialNodes={nodes} initialEdges={edges} />
+                    <ReactFlowProvider>
+                      <FlowChart initialNodes={nodes} initialEdges={edges} readOnly />
+                    </ReactFlowProvider>
                   </div>
                 ) : (
                   <div className="flex size-full items-center justify-center">

@@ -8,6 +8,12 @@ const toNumberOrUndefined = (value: unknown): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+// 노드 위치(x, y)는 드래그 시 소수점이 생기는데 백엔드는 정수만 저장하므로 반올림한다.
+const toIntegerOrUndefined = (value: unknown): number | undefined => {
+  const n = toNumberOrUndefined(value);
+  return n === undefined ? undefined : Math.round(n);
+};
+
 const buildComponentConfig = (type: WorkflowComponentType, data: Record<string, unknown>) => {
   if (type === 'MODEL') {
     return {
@@ -30,26 +36,28 @@ export const buildWorkflowDefinition = (
   nodes: WorkflowNode[],
   edges: Edge[]
 ): WorkflowDefinition => {
-  const components = nodes.map((node) => {
-    const type = node.type as WorkflowComponentType;
-    const data = node.data as Record<string, unknown>;
-    const config = Object.fromEntries(
-      Object.entries(buildComponentConfig(type, data)).filter(([, value]) => value !== undefined)
-    );
+  const components = nodes
+    .filter((node) => node.type !== 'NOTE')
+    .map((node) => {
+      const type = node.type as WorkflowComponentType;
+      const data = node.data as Record<string, unknown>;
+      const config = Object.fromEntries(
+        Object.entries(buildComponentConfig(type, data)).filter(([, value]) => value !== undefined)
+      );
 
-    return {
-      ref_id: node.id,
-      name: typeof data.name === 'string' && data.name ? data.name : node.id,
-      type,
-      description: typeof data.description === 'string' ? data.description : undefined,
-      model_id: toNumberOrUndefined(data.model_id),
-      knowledge_base_id: toNumberOrUndefined(data.knowledgebase_id),
-      prompt_id: toNumberOrUndefined(data.prompt_id),
-      config: Object.keys(config).length > 0 ? config : undefined,
-      x: toNumberOrUndefined(node.position?.x),
-      y: toNumberOrUndefined(node.position?.y),
-    };
-  });
+      return {
+        ref_id: node.id,
+        name: typeof data.name === 'string' && data.name ? data.name : node.id,
+        type,
+        description: typeof data.description === 'string' ? data.description : undefined,
+        model_id: toNumberOrUndefined(data.model_id),
+        knowledge_base_id: toNumberOrUndefined(data.knowledgebase_id),
+        prompt_id: toNumberOrUndefined(data.prompt_id),
+        config: Object.keys(config).length > 0 ? config : undefined,
+        x: toIntegerOrUndefined(node.position?.x),
+        y: toIntegerOrUndefined(node.position?.y),
+      };
+    });
 
   const connections = edges.map((edge) => ({
     source_ref_id: edge.source,
