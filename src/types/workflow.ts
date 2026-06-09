@@ -80,7 +80,6 @@ export interface WorkflowTemplateCreator {
   id: number;
   username: string;
   name: string;
-  password: string;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -110,14 +109,24 @@ export interface WorkflowTemplateListResponse {
   items: WorkflowTemplateBrief[];
 }
 
-export type WorkflowTemplate = Omit<WorkflowRead, 'id' | 'service_id' | 'template_id'> & {
+/** WorkflowTemplateReadSchema — 템플릿 상세 조회(GET /workflows/templates/{id}) 응답 */
+export interface WorkflowTemplate {
   id: string;
+  name: string;
+  description: string;
+  category: string;
+  status: WorkflowStatus;
   service_id: string | null;
+  creator_id: number;
+  creator: WorkflowTemplateCreator;
+  is_template: true;
   template_id: string | null;
-  creator_id?: number;
-  creator?: WorkflowTemplateCreator;
-  usage_count?: number;
-};
+  components?: WorkflowComponent[];
+  component_connections?: WorkflowComponentConnection[];
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface WorkflowTemplateListParams {
   page?: number;
@@ -177,6 +186,26 @@ export interface CloneWorkflowTemplateRequest {
   templateId: string;
   workflow_name: string;
   service_id?: number;
+}
+
+export interface ClonedWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  status: WorkflowStatus;
+  service_id: string | null;
+  service_name: string | null;
+  creator_id: number;
+  creator: WorkflowTemplateCreator;
+  is_template: false;
+  template_id: string | null;
+  template_name: string | null;
+  kubeflow_run_id: string | null;
+  components?: WorkflowComponent[];
+  component_connections?: WorkflowComponentConnection[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CleanupWorkflowResponse {

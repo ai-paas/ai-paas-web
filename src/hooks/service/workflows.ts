@@ -3,6 +3,7 @@ import { queryKeys, type WorkflowListParams } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
   CloneWorkflowTemplateRequest,
+  ClonedWorkflow,
   CleanupWorkflowResponse,
   ComponentDeployStatusBody,
   CreateWorkflowTemplateRequest,
@@ -197,7 +198,7 @@ export const useCloneWorkflowTemplate = () => {
 
       return api
         .post(`workflows/templates/${templateId}/clone`, { searchParams })
-        .json<WorkflowRead>();
+        .json<ClonedWorkflow>();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
