@@ -10,7 +10,7 @@ import {
   useTableSelection,
 } from '@innogrid/ui';
 import { useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { DeleteWorkflowTemplateButton } from '@/components/features/workflow/delete-workflow-template-button';
 import { useGetTemplates } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -29,6 +29,11 @@ const columns = [
     header: '이름',
     accessorFn: (row: WorkflowTemplateBrief) => row.name,
     size: 240,
+    cell: ({ row }: { row: { original: WorkflowTemplateBrief } }) => (
+      <Link to={`/workflow/templates/${row.original.id}`} className="table-td-link">
+        {row.original.name}
+      </Link>
+    ),
   },
   {
     id: 'category',

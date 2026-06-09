@@ -9,6 +9,7 @@ import WorkflowDetailPage from '../pages/workflow/workflow/[id]/page';
 import WorkflowEditPage from '../pages/workflow/workflow/[id]/edit/page';
 import WorkflowTemplatePage from '../pages/workflow/templates/page';
 import WorkflowTemplateCreatePage from '../pages/workflow/templates/create/page';
+import WorkflowTemplateDetailPage from '../pages/workflow/templates/[id]/page';
 import WorkflowTemplateEditPage from '../pages/workflow/templates/[id]/edit/page';
 import ModelCatalogPage from '../pages/model/model-catalog/page';
 import ModelCatalogCreatePage from '../pages/model/model-catalog/create/page';
@@ -118,6 +119,14 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<></>}>
                 <WorkflowTemplateCreatePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'templates/:id',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowTemplateDetailPage />
               </Suspense>
             ),
           },
