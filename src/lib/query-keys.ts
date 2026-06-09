@@ -38,6 +38,8 @@ export type WorkflowListParams = {
   creator_id?: string;
   service_id?: string;
   status?: 'DRAFT' | 'ACTIVE' | 'ERROR';
+  /** 정렬 기준. `,`로 다중 키, `-` 접두사는 DESC. 기본 -created_at. 허용: id, name, created_at, updated_at, created_by, status */
+  sort?: string;
 };
 
 export const queryKeys = {

@@ -1,6 +1,7 @@
 export type WorkflowStatus = 'DRAFT' | 'ACTIVE' | 'ERROR';
 export type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE';
 
+/** WorkflowResponse — 목록 조회(GET /workflows) 및 생성(POST /workflows) 응답 */
 export interface Workflow {
   id: number;
   surro_workflow_id: string;
@@ -11,33 +12,66 @@ export interface Workflow {
   description: string;
   category: string;
   status: WorkflowStatus;
-  service_id: string;
+  service_id: string | null;
   is_template: boolean;
-  template_id: string;
+  template_id: string | null;
+}
+
+export interface WorkflowComponentInfo {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface WorkflowModelBrief {
+  id: number;
+  name: string;
+  description: string;
+  provider_info?: WorkflowComponentInfo | null;
+  type_info?: WorkflowComponentInfo | null;
+  format_info?: WorkflowComponentInfo | null;
+  parent_model_id?: number | null;
+  registry?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface WorkflowComponent {
   id: string;
   workflow_id: string;
+  component_id: string;
   name: string;
   type: WorkflowComponentType;
   description?: string | null;
   model_id?: number | null;
-  model?: unknown;
   knowledge_base_id?: number | null;
   prompt_id?: number | null;
   config?: Record<string, unknown> | null;
+  x?: number | null;
+  y?: number | null;
+  model?: WorkflowModelBrief | null;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface WorkflowComponentConnection {
   id?: string;
+  workflow_id?: string;
   source_component_id: string;
   target_component_id: string;
+  source_component?: WorkflowComponent;
+  target_component?: WorkflowComponent;
+  created_at?: string;
 }
 
+/** WorkflowDetailResponse — 상세 조회(GET /workflows/{id}) 응답 */
 export interface WorkflowRead extends Workflow {
+  service_name: string | null;
+  creator_id: number;
+  template_name: string | null;
+  kubeflow_run_id: string | null;
+  public_url: string | null;
+  backend_api_url: string | null;
   components?: WorkflowComponent[];
   component_connections?: WorkflowComponentConnection[];
 }
@@ -109,6 +143,8 @@ export interface WorkflowComponentDefinition {
   knowledge_base_id?: number;
   prompt_id?: number;
   config?: Record<string, unknown>;
+  x?: number;
+  y?: number;
 }
 
 export interface WorkflowConnectionDefinition {
@@ -223,7 +259,7 @@ export interface UpdateWorkflowRequest {
   description?: string;
   category?: string;
   status?: WorkflowStatus;
-  service_id?: string;
+  service_id?: string | null;
   workflow_definition?: WorkflowDefinition;
 }
 

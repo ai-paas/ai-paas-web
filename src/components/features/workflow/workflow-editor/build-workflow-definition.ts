@@ -46,6 +46,8 @@ export const buildWorkflowDefinition = (
       knowledge_base_id: toNumberOrUndefined(data.knowledgebase_id),
       prompt_id: toNumberOrUndefined(data.prompt_id),
       config: Object.keys(config).length > 0 ? config : undefined,
+      x: toNumberOrUndefined(node.position?.x),
+      y: toNumberOrUndefined(node.position?.y),
     };
   });
 
