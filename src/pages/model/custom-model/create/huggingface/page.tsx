@@ -762,7 +762,7 @@ const ModelItem = ({ model, isActive, onClick }: ModelItemProps) => {
       <div className={styles.descInfo}>
         <div>
           <span>Tasks</span>
-          <div>{model.task}</div>
+          <div>{model.task || '-'}</div>
         </div>
         <div>
           <span>Parameters</span>
