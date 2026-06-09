@@ -6,6 +6,7 @@ export { default as IconDocument } from './icon_document.svg';
 export { default as IconFileUp } from './icon_file_up.svg';
 export { default as IconErrRed } from './icon_err_red.svg';
 export { default as IconChkGreen } from './icon_chk_green.svg';
+export { default as IconCheck } from './icon_check.svg';
 export { default as IconMore } from './icon_more.svg';
 export { default as IconNode } from './icon_node.svg';
 export { default as IconHexagon } from './icon_hexagon.svg';
