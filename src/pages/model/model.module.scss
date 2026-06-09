@@ -36,7 +36,25 @@
 ////왼쪽 탭메뉴
 .tabs {
   position: relative;
+  // 좁은 필터 패널(348px)에서 탭이 가로로 넘칠 때 줄바꿈 대신 가로 스크롤/드래그
+  [role='tablist'] {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    cursor: grab;
+    // 스크롤바 숨김 (드래그로 이동)
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    &.dragging {
+      cursor: grabbing;
+      user-select: none;
+    }
+  }
   button[role='tab'] {
+    flex: 0 0 auto;
     &:nth-child(2),
     &:nth-child(3) {
       padding-right: 20px;
@@ -117,6 +135,24 @@
     .iconDownload {
       fill: $color-gray-900;
     }
+  }
+
+  // 새로고침(refetch) 진행 중 아이콘 회전
+  &.spinning {
+    pointer-events: none;
+    svg {
+      transform-origin: center;
+      animation: refreshSpin 0.8s linear infinite;
+    }
+  }
+}
+
+@keyframes refreshSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
   }
 }
 

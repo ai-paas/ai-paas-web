@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   BreadCrumb,
   Tabs,
@@ -116,6 +116,81 @@ const useSort = (initialSort: SortType = 'downloads') => {
   );
 
   return { sort, sortLabel, sortMenus };
+};
+
+// 탭 리스트(role=tablist)를 마우스로 좌우 드래그해 스크롤
+const useDragScrollTabs = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const list = ref.current?.querySelector<HTMLElement>('[role="tablist"]');
+    if (!list) return;
+
+    let isDown = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDown = true;
+      moved = false;
+      startX = e.pageX;
+      startScroll = list.scrollLeft;
+      list.classList.add(styles.dragging);
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDown) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 3) moved = true;
+      list.scrollLeft = startScroll - dx;
+    };
+    const onPointerUp = () => {
+      isDown = false;
+      list.classList.remove(styles.dragging);
+    };
+    // 드래그 직후 탭이 선택되지 않도록 클릭 차단
+    const onClickCapture = (e: MouseEvent) => {
+      if (moved) {
+        e.stopPropagation();
+        e.preventDefault();
+        moved = false;
+      }
+    };
+
+    list.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    list.addEventListener('click', onClickCapture, true);
+    return () => {
+      list.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      list.removeEventListener('click', onClickCapture, true);
+    };
+  }, []);
+
+  return ref;
+};
+
+// 새로고침 클릭 시 최소 1회전(애니메이션 1주기)은 보이도록 보장.
+// 응답이 너무 빨라 isFetching이 순간적으로만 true여도 회전이 보인다.
+const REFRESH_SPIN_MS = 800;
+const useRefreshSpin = (onRefresh: () => void, isFetching?: boolean) => {
+  const [minSpin, setMinSpin] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    onRefresh();
+    setMinSpin(true);
+  }, [onRefresh]);
+
+  useEffect(() => {
+    if (!minSpin) return;
+    const timer = setTimeout(() => setMinSpin(false), REFRESH_SPIN_MS);
+    return () => clearTimeout(timer);
+  }, [minSpin]);
+
+  // 최소 회전 시간이 지나도 아직 fetch 중이면 계속 회전
+  return { spinning: minSpin || !!isFetching, handleRefresh };
 };
 
 // 로딩 중 모델 카드(descInfoBox) 레이아웃에 맞춘 스켈레톤
@@ -293,6 +368,7 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
     hubModelTags: tasks,
     remaining_count: tasksRemainingCount,
     refetch: refetchTasks,
+    isFetching: isTasksFetching,
   } = useGetHubModelTagsByGroup({
     market: 'huggingface',
     group: 'task',
@@ -301,6 +377,7 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
     hubModelTags: libraries,
     remaining_count: librariesRemainingCount,
     refetch: refetchLibraries,
+    isFetching: isLibrariesFetching,
   } = useGetHubModelTagsByGroup({
     market: 'huggingface',
     group: 'library',
@@ -309,11 +386,13 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
     hubModelTags: languages,
     remaining_count: languagesRemainingCount,
     refetch: refetchLanguages,
+    isFetching: isLanguagesFetching,
   } = useGetHubModelTagsByGroup({
     market: 'huggingface',
     group: 'language',
   });
   const [parameter, setParameter] = useState<number[]>([0, 100]);
+  const tabsRef = useDragScrollTabs();
 
   useEffect(() => {
     const [min, max] = parameter;
@@ -329,7 +408,7 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
   }, [parameter]);
 
   return (
-    <div className={styles.flexContentLeft}>
+    <div className={styles.flexContentLeft} ref={tabsRef}>
       <Tabs
         className={styles.tabs}
         labels={[
@@ -347,11 +426,18 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
             setParameter={setParameter}
             filter={filter}
             setFilter={setFilter}
+            refetchTasks={refetchTasks}
+            refetchLibraries={refetchLibraries}
+            refetchLanguages={refetchLanguages}
+            isTasksFetching={isTasksFetching}
+            isLibrariesFetching={isLibrariesFetching}
+            isLanguagesFetching={isLanguagesFetching}
           />,
           <FilterTab
             title="Tasks"
             items={tasks}
             refetch={refetchTasks}
+            isRefreshing={isTasksFetching}
             filter={filter}
             setFilter={setFilter}
             filterKey="task"
@@ -360,6 +446,7 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
             title="Libraries"
             items={libraries}
             refetch={refetchLibraries}
+            isRefreshing={isLibrariesFetching}
             filter={filter}
             setFilter={setFilter}
             filterKey="library"
@@ -368,6 +455,7 @@ const FilterPanel = ({ filter, setFilter }: FilterPanelProps) => {
             title="Languages"
             items={languages}
             refetch={refetchLanguages}
+            isRefreshing={isLanguagesFetching}
             filter={filter}
             setFilter={setFilter}
             filterKey="language"
@@ -386,6 +474,12 @@ interface MainTabProps {
   setParameter: React.Dispatch<React.SetStateAction<number[]>>;
   filter: FilterState;
   setFilter: React.Dispatch<React.SetStateAction<FilterState>>;
+  refetchTasks: () => void;
+  refetchLibraries: () => void;
+  refetchLanguages: () => void;
+  isTasksFetching: boolean;
+  isLibrariesFetching: boolean;
+  isLanguagesFetching: boolean;
 }
 
 const MainTab = ({
@@ -396,6 +490,12 @@ const MainTab = ({
   setParameter,
   filter,
   setFilter,
+  refetchTasks,
+  refetchLibraries,
+  refetchLanguages,
+  isTasksFetching,
+  isLibrariesFetching,
+  isLanguagesFetching,
 }: MainTabProps) => {
   const handleItemClick = useCallback(
     (filterKey: 'task' | 'library' | 'language', itemId: string) => {
@@ -420,12 +520,19 @@ const MainTab = ({
         filterKey="task"
         initialDisplayLimit={6}
         onItemClick={handleItemClick}
+        onRefresh={refetchTasks}
+        isRefreshing={isTasksFetching}
       />
 
       <div className={styles.inner}>
         <div className={styles.titleBox}>
           <p className={styles.leftTitle}>Parameters</p>
-          <button type="button" className={styles.btnRefresh}>
+          {/* 슬라이더 범위를 기본값으로 리셋 */}
+          <button
+            type="button"
+            onClick={() => setParameter([0, 100])}
+            className={styles.btnRefresh}
+          >
             <IconRefresh />
           </button>
         </div>
@@ -450,6 +557,8 @@ const MainTab = ({
         filterKey="library"
         initialDisplayLimit={10}
         onItemClick={handleItemClick}
+        onRefresh={refetchLibraries}
+        isRefreshing={isLibrariesFetching}
       />
 
       <FilterSection
@@ -459,6 +568,8 @@ const MainTab = ({
         filterKey="language"
         initialDisplayLimit={12}
         onItemClick={handleItemClick}
+        onRefresh={refetchLanguages}
+        isRefreshing={isLanguagesFetching}
       />
     </div>
   );
@@ -471,6 +582,8 @@ interface FilterSectionProps {
   filterKey: 'task' | 'library' | 'language';
   initialDisplayLimit: number;
   onItemClick: (filterKey: 'task' | 'library' | 'language', itemId: string) => void;
+  onRefresh: () => void;
+  isRefreshing?: boolean;
 }
 
 const FilterSection = ({
@@ -480,8 +593,11 @@ const FilterSection = ({
   filterKey,
   initialDisplayLimit,
   onItemClick,
+  onRefresh,
+  isRefreshing,
 }: FilterSectionProps) => {
   const [displayLimit, setDisplayLimit] = useState(initialDisplayLimit);
+  const { spinning, handleRefresh } = useRefreshSpin(onRefresh, isRefreshing);
 
   const isItemActive = (itemId: string) => {
     if (filterKey === 'task') {
@@ -501,7 +617,11 @@ const FilterSection = ({
     <div className={styles.inner}>
       <div className={styles.titleBox}>
         <p className={styles.leftTitle}>{title}</p>
-        <button type="button" className={styles.btnRefresh}>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          className={`${styles.btnRefresh} ${spinning ? styles.spinning : ''}`}
+        >
           <IconRefresh />
         </button>
       </div>
@@ -532,13 +652,23 @@ interface FilterTabProps {
   title: string;
   items: TagItem[] | undefined;
   refetch: () => void;
+  isRefreshing?: boolean;
   filter: FilterState;
   setFilter: React.Dispatch<React.SetStateAction<FilterState>>;
   filterKey: 'task' | 'library' | 'language';
 }
 
-const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: FilterTabProps) => {
+const FilterTab = ({
+  title,
+  items,
+  refetch,
+  isRefreshing,
+  filter,
+  setFilter,
+  filterKey,
+}: FilterTabProps) => {
   const [search, setSearch] = useState('');
+  const { spinning, handleRefresh } = useRefreshSpin(refetch, isRefreshing);
 
   const filteredItems = useMemo(
     () =>
@@ -577,7 +707,11 @@ const FilterTab = ({ title, items, refetch, filter, setFilter, filterKey }: Filt
       <div className={styles.inner2}>
         <div className={styles.titleBox}>
           <p className={styles.leftTitle}>{title}</p>
-          <button type="button" onClick={refetch} className={styles.btnRefresh}>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className={`${styles.btnRefresh} ${spinning ? styles.spinning : ''}`}
+          >
             <IconRefresh />
           </button>
         </div>
