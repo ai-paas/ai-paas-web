@@ -480,23 +480,39 @@ export const useCleanupWorkflow = () => {
   };
 };
 
-export const useFinalizeWorkflowCleanup = () => {
-  const queryClient = useQueryClient();
+const FINALIZE_CLEANUP_POLL_INTERVAL = 3000;
 
-  const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (params: { surro_workflow_id: string }) =>
+/**
+ * cleanup API가 반환한 run_id로 finalize-cleanup을 폴링한다.
+ * status가 'in_progress'인 동안 refetchInterval로 재호출하고,
+ * 'completed' 또는 'failed'가 되면 멈춘다.
+ */
+export const useFinalizeWorkflowCleanup = (params: {
+  surro_workflow_id?: string;
+  run_id?: string;
+  enabled?: boolean;
+}) => {
+  const enabled = Boolean(params.enabled && params.surro_workflow_id && params.run_id);
+
+  const { data, isFetching, isError } = useQuery({
+    queryKey: queryKeys.workflows.finalizeCleanup(params.surro_workflow_id, params.run_id),
+    queryFn: () =>
       api
-        .post(`workflows/${params.surro_workflow_id}/finalize-cleanup`)
+        .post(`workflows/${params.surro_workflow_id}/finalize-cleanup`, {
+          searchParams: { run_id: params.run_id ?? '' },
+        })
         .json<FinalizeWorkflowCleanupResponse>(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
-    },
+    enabled,
+    refetchInterval: (query) =>
+      query.state.data?.status === 'in_progress' ? FINALIZE_CLEANUP_POLL_INTERVAL : false,
+    gcTime: 0,
+    staleTime: 0,
   });
 
   return {
-    finalizeWorkflowCleanup: mutate,
-    isPending,
+    status: data?.status,
+    result: data,
+    isPolling: isFetching || data?.status === 'in_progress',
     isError,
-    isSuccess,
   };
 };

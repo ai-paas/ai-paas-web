@@ -161,5 +161,7 @@ export const queryKeys = {
       [...queryKeys.workflows.all, 'templates', params] as const,
     status: (workflowId?: string) => [...queryKeys.workflows.all, 'status', workflowId] as const,
     models: (workflowId?: string) => [...queryKeys.workflows.all, 'models', workflowId] as const,
+    finalizeCleanup: (workflowId?: string, runId?: string) =>
+      [...queryKeys.workflows.all, 'finalize-cleanup', workflowId, runId] as const,
   },
 };

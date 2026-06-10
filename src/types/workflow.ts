@@ -233,7 +233,8 @@ export interface FinalizeWorkflowDeletionResponse {
 export interface FinalizeWorkflowCleanupResponse {
   message?: string;
   workflow_id?: string;
-  status?: string;
+  status?: 'completed' | 'in_progress' | 'failed' | string;
+  workflow_updated?: boolean;
 }
 
 export interface ExecuteWorkflowResponse {
