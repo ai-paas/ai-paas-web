@@ -140,6 +140,7 @@ export const queryKeys = {
   prompts: {
     all: ['prompts'] as const,
     detail: (promptId: number) => ['prompt', promptId] as const,
+    variableTypes: () => [...queryKeys.prompts.all, 'variable-types'] as const,
   },
   services: {
     all: ['services'] as const,

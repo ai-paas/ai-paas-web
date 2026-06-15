@@ -1,7 +1,12 @@
 import { api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
-import type { CreatePromptRequest, Prompt, UpdatePromptRequest } from '@/types/prompt';
+import type {
+  CreatePromptRequest,
+  Prompt,
+  PromptVariableTypeList,
+  UpdatePromptRequest,
+} from '@/types/prompt';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useGetPrompts = () => {
@@ -17,6 +22,19 @@ export const useGetPrompts = () => {
       size: data?.size ?? 1,
       total: data?.total ?? 1,
     },
+    isPending,
+    isError,
+  };
+};
+
+export const useGetPromptVariableTypes = () => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.prompts.variableTypes(),
+    queryFn: () => api.get('prompts/variable-types').json<PromptVariableTypeList>(),
+  });
+
+  return {
+    availableTypes: data?.available_types ?? [],
     isPending,
     isError,
   };
