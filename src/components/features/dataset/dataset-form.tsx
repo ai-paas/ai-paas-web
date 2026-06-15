@@ -1,8 +1,6 @@
-import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useForm, Controller } from 'react-hook-form';
-import { IconDel, IconFileUp } from '@/assets/img/icon';
-import { Button, Input, Textarea, useToast } from '@innogrid/ui';
+import { Button, FileDrop, Input, Textarea, useToast } from '@innogrid/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useValidateDataset, useCreateDataset } from '@/hooks/service/datasets';
 import * as z from 'zod';
@@ -29,8 +27,6 @@ export const DatasetForm = () => {
   const { validateDataset } = useValidateDataset();
   const { createDataset, isPending } = useCreateDataset();
   const toast = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const {
     register,
     handleSubmit,
@@ -44,25 +40,14 @@ export const DatasetForm = () => {
 
   const selectedFile = watch('file');
 
-  const resetFileInput = () => {
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const clearFile = () => {
+    setValue('file', undefined as unknown as File, { shouldValidate: false });
   };
 
   const processFile = async (file: File) => {
-    const isZip =
-      file.name.endsWith('.zip') ||
-      file.type === 'application/zip' ||
-      file.type === 'application/x-zip-compressed';
-    if (!isZip) {
-      setError('file', { type: 'manual', message: 'zip 파일만 업로드 가능합니다.' });
-      setValue('file', undefined as unknown as File, { shouldValidate: false });
-      resetFileInput();
-      return;
-    }
     if (file.size > 50 * 1024 * 1024) {
       setError('file', { type: 'manual', message: '파일 크기는 50MB 이하여야 합니다.' });
-      setValue('file', undefined as unknown as File, { shouldValidate: false });
-      resetFileInput();
+      clearFile();
       return;
     }
 
@@ -73,8 +58,7 @@ export const DatasetForm = () => {
 
       if (!response.is_valid) {
         setError('file', { type: 'manual', message: '유효하지 않은 데이터셋 구조입니다.' });
-        setValue('file', undefined as unknown as File, { shouldValidate: false });
-        resetFileInput();
+        clearFile();
         return;
       }
 
@@ -82,43 +66,24 @@ export const DatasetForm = () => {
       setValue('file', file, { shouldValidate: true });
     } catch {
       setError('file', { type: 'manual', message: '파일 검증 중 서버 오류가 발생했습니다.' });
-      setValue('file', undefined as unknown as File, { shouldValidate: false });
-      resetFileInput();
+      clearFile();
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleAddFile = (files: File[]) => {
+    const file = files[0];
     if (!file) return;
-    await processFile(file);
+    void processFile(file);
   };
 
-  const handleDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
+  const handleDeleteFile = () => {
+    clearFile();
+    clearErrors('file');
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'copy';
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    await processFile(file);
+  const handleFileError = () => {
+    setError('file', { type: 'manual', message: 'zip 파일만 업로드 가능합니다.' });
+    clearFile();
   };
 
   const onSubmit = async (data: Schema) => {
@@ -168,52 +133,23 @@ export const DatasetForm = () => {
             <div className="page-input_item-name page-icon-requisite">학습 파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label
-                  className={`fileUpload-preview ${isDragging ? 'fileUpload-preview--dragging' : ''}`}
-                  onDragEnter={handleDragEnter}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".zip, application/zip, application/x-zip-compressed"
-                    onChange={handleFileChange}
-                    className="fileUpload-file"
-                  />
-                  <IconFileUp />
-                  <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요.
-                    <br />
-                    (zip 50MB 이하)
-                  </p>
-                </label>
-                {selectedFile && (
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3.5 text-[13px]">
-                      <span className="shrink cursor-default text-ellipsis whitespace-nowrap text-[#525252]">
-                        {selectedFile.name}
-                      </span>
-                      <span className="shrink-0 cursor-default leading-5 whitespace-nowrap text-[#999]">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setValue('file', undefined as unknown as File, { shouldValidate: false });
-                        clearErrors('file');
-                        resetFileInput();
-                      }}
-                      className="flex size-7 items-center justify-center fill-gray-600 hover:fill-[#dc4646]"
-                    >
-                      <IconDel />
-                    </button>
-                  </div>
-                )}
+                <FileDrop
+                  id="dataset-file"
+                  extensions={['zip']}
+                  description={
+                    <>
+                      파일을 여기에 드래그하거나 클릭하여 업로드하세요.
+                      <br />
+                      (zip 50MB 이하)
+                    </>
+                  }
+                  files={selectedFile ? [selectedFile] : []}
+                  onAddFile={handleAddFile}
+                  onDeleteFile={handleDeleteFile}
+                  onError={handleFileError}
+                />
                 {errors.file && (
-                  <p className="mt-1 text-xs leading-[1.5] -tracking-[.5px] text-[#dc4646]">
+                  <p className="mt-1 text-xs leading-normal tracking-[-0.5px] text-[#dc4646]">
                     {errors.file.message}
                   </p>
                 )}

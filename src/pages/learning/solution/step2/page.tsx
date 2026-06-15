@@ -3,6 +3,7 @@ import type { SelectSingleValue } from "@innogrid/ui";
 import {
   BreadCrumb,
   Button,
+  FileDrop,
   Select,
   Stepper,
   RadioButton,
@@ -10,7 +11,7 @@ import {
 } from "@innogrid/ui";
 
 import styles from "../../learning.module.scss";
-import { IconArrCount, IconFileUp } from "../../../../assets/img/icon";
+import { IconArrCount } from "../../../../assets/img/icon";
 
 //breadcrumb
 const items = [{ label: "학습", path: "/learning" }, { label: "학습 생성" }];
@@ -215,17 +216,20 @@ export default function LearningSolutionStep2Page() {
                 </div>
                 <div className="page-input_item-data">
                   <div className="page-input_item-data_fileUpload">
-                    <label className="fileUpload-preview">
-                      <input type="file" className="fileUpload-file" />
-                      <IconFileUp />
-                      <p className="fileUpload-preview_msg">
-                        파일을 여기에 드래그하거나 클릭하여 업로드하세요.
-                        (파일당 최대 크기 15MB)
-                        <br />
-                        허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx,
-                        xls, docx, csv,md,htm
-                      </p>
-                    </label>
+                    <FileDrop
+                      id="solution-file"
+                      description={
+                        <>
+                          파일을 여기에 드래그하거나 클릭하여 업로드하세요.
+                          (파일당 최대 크기 15MB)
+                          <br />
+                          허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx,
+                          xls, docx, csv,md,htm
+                        </>
+                      }
+                      files={[]}
+                      onAddFile={() => {}}
+                    />
                   </div>
                   <div className="page-flex-right page-pt-10">
                     <Button

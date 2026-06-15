@@ -1,4 +1,3 @@
-import { IconFileUp } from '@/assets/img/icon';
 import {
   useCreateModel,
   useGetModelFormats,
@@ -6,7 +5,7 @@ import {
   useGetModelTypes,
 } from '@/hooks/service/models';
 import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
-import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
+import { BreadCrumb, Button, FileDrop, Input, Select, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -22,7 +21,7 @@ interface ModelCatalog {
   parameter?: string;
   sample_code?: string;
   model_registry_schema?: string;
-  file?: string;
+  file?: File;
 }
 
 const INITIAL_MODEL_CATALOG: ModelCatalog = {
@@ -48,6 +47,16 @@ export default function ModelCatalogCreatePage() {
     });
   };
 
+  const handleAddFile = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+    setModelCatalog((prev) => ({ ...prev, file }));
+  };
+
+  const handleDeleteFile = () => {
+    setModelCatalog((prev) => ({ ...prev, file: undefined }));
+  };
+
   const handleSubmit = async () => {
     console.log('modelCatalog:', modelCatalog);
     if (
@@ -67,6 +76,7 @@ export default function ModelCatalogCreatePage() {
     formData.append('provider_id', String(modelCatalog.provider_id));
     formData.append('type_id', String(modelCatalog.type_id));
     formData.append('format_id', String(modelCatalog.format_id));
+    if (modelCatalog.file) formData.append('file', modelCatalog.file);
 
     await createModel(formData);
     navigate('/model/model-catalog');
@@ -178,15 +188,13 @@ export default function ModelCatalogCreatePage() {
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label className="fileUpload-preview">
-                  <input type="file" className="fileUpload-file" />
-                  <IconFileUp />
-                  <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                    <br />
-                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
-                  </p>
-                </label>
+                <FileDrop
+                  id="model-catalog-file"
+                  description="파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)"
+                  files={modelCatalog.file ? [modelCatalog.file] : []}
+                  onAddFile={handleAddFile}
+                  onDeleteFile={handleDeleteFile}
+                />
               </div>
             </div>
           </div>

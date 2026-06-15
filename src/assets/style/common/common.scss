@@ -465,6 +465,14 @@ input {
 
 //// 파일업로드
 .page-input_item-data_fileUpload {
+  // @innogrid/ui FileDrop 컨테이너는 width 400px 고정이라 풀폭으로 덮어씀
+  > div {
+    width: 100%;
+    // 설명 텍스트(.text)의 max-width(300px) 제거해 풀폭 활용
+    p {
+      max-width: none;
+    }
+  }
   .fileUpload-file {
     display: none;
   }

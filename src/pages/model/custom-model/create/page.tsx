@@ -1,4 +1,3 @@
-import { IconFileUp } from '@/assets/img/icon';
 import {
   useCreateModel,
   useGetModelFormats,
@@ -6,7 +5,7 @@ import {
   useGetModelTypes,
 } from '@/hooks/service/models';
 import type { HubModel, ModelFormat, ModelProvider, ModelType } from '@/types/model';
-import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
+import { BreadCrumb, Button, FileDrop, Input, Select, Textarea } from '@innogrid/ui';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -50,22 +49,14 @@ export default function CustomModelCreatePage() {
     });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const allowedExtensions = ['safetensors', 'onnx'];
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  const handleAddFile = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+    setCustomModel((prev) => ({ ...prev, file }));
+  };
 
-      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-        alert('허용되지 않는 파일 형식입니다.');
-        return;
-      }
-
-      setCustomModel((prev) => ({
-        ...prev,
-        file,
-      }));
-    }
+  const handleDeleteFile = () => {
+    setCustomModel((prev) => ({ ...prev, file: undefined }));
   };
 
   const handleSubmit = async () => {
@@ -212,29 +203,17 @@ export default function CustomModelCreatePage() {
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label
-                  className={`fileUpload-preview ${selectedModel ? '!cursor-not-allowed' : ''}`}
-                >
-                  <input
-                    disabled={!!selectedModel}
-                    type="file"
-                    className="fileUpload-file"
-                    onChange={handleFileChange}
-                  />
-                  <IconFileUp />
-                  {selectedModel ? (
-                    <p>{selectedModel.id}</p>
-                  ) : (
-                    (customModel.file?.name ?? (
-                      <p className="fileUpload-preview_msg">
-                        파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                        <br />
-                        허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx,
-                        csv,md,htm
-                      </p>
-                    ))
-                  )}
-                </label>
+                <FileDrop
+                  id="custom-model-file"
+                  description={
+                    selectedModel
+                      ? selectedModel.id
+                      : '파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)'
+                  }
+                  files={!selectedModel && customModel.file ? [customModel.file] : []}
+                  onAddFile={selectedModel ? () => {} : handleAddFile}
+                  onDeleteFile={handleDeleteFile}
+                />
               </div>
             </div>
           </div>

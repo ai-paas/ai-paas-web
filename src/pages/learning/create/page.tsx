@@ -1,4 +1,3 @@
-import { IconDel, IconFileUp } from '@/assets/img/icon';
 import { useCreateDataset, useGetDatasets, useValidateDataset } from '@/hooks/service/datasets';
 import { useSubmitTraining } from '@/hooks/service/learning';
 import { useGetModels } from '@/hooks/service/models';
@@ -7,6 +6,7 @@ import {
   Accordion,
   BreadCrumb,
   Button,
+  FileDrop,
   Input,
   RadioButton,
   RadioGroupButton,
@@ -15,7 +15,7 @@ import {
   Textarea,
   useToast,
 } from '@innogrid/ui';
-import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   Controller,
   FormProvider,
@@ -324,7 +324,6 @@ const Step2 = ({
   const { validateDataset } = useValidateDataset();
   const sourceType = useWatch({ control, name: 'source_type' });
   const [isValidating, setIsValidating] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const datasetOptions = useMemo(
     () => datasets.map((d) => ({ text: d.name, value: d.id })),
@@ -408,47 +407,26 @@ const Step2 = ({
             <div className="page-input_item-name page-icon-requisite">파일 업로드</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label className="fileUpload-preview">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".zip"
-                    className="fileUpload-file"
-                    onChange={(e) => {
-                      setUploadedFile(e.target.files?.[0] ?? null);
-                      setIsFileValidated(false);
-                    }}
-                  />
-                  <IconFileUp />
-                  <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 <b>클릭하여 업로드</b>하세요. (파일당 최대 크기 15MB)
-                    <br />
-                    허용되는 파일 형식:zip
-                  </p>
-                </label>
-                {uploadedFile && (
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3.5 text-[13px]">
-                      <span className="shrink cursor-default text-ellipsis whitespace-nowrap text-[#525252]">
-                        {uploadedFile.name}
-                      </span>
-                      <span className="shrink-0 cursor-default leading-5 whitespace-nowrap text-[#999]">
-                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUploadedFile(null);
-                        setIsFileValidated(false);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      className="flex size-7 items-center justify-center fill-gray-600 hover:fill-[#dc4646]"
-                    >
-                      <IconDel />
-                    </button>
-                  </div>
-                )}
+                <FileDrop
+                  id="learning-dataset-file"
+                  extensions={['zip']}
+                  description={
+                    <>
+                      파일을 여기에 드래그하거나 <b>클릭하여 업로드</b>하세요. (파일당 최대 크기 15MB)
+                      <br />
+                      허용되는 파일 형식:zip
+                    </>
+                  }
+                  files={uploadedFile ? [uploadedFile] : []}
+                  onAddFile={(files) => {
+                    setUploadedFile(files[0] ?? null);
+                    setIsFileValidated(false);
+                  }}
+                  onDeleteFile={() => {
+                    setUploadedFile(null);
+                    setIsFileValidated(false);
+                  }}
+                />
               </div>
               <div className="page-flex-right page-pt-10">
                 <Button
