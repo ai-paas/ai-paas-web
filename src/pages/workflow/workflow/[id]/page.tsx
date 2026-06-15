@@ -11,7 +11,6 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { FlowChart } from '@/components/ui/flow-chart';
 import { StopWorkflowDeploymentButton } from '@/components/features/workflow/stop-workflow-deployment-button';
 import { WorkflowInferenceTestPanel } from '@/components/features/workflow/workflow-inference-test-panel';
-import { WorkflowStatusPanel } from '@/components/features/workflow/workflow-status-panel';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -261,7 +260,7 @@ export default function WorkflowDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['워크플로우 오버뷰', '모델', '배포 상태', '추론 테스트']}
+            labels={['워크플로우 오버뷰', '모델', '추론 테스트']}
             components={[
               <div className="tabs-Content">
                 {nodes.length > 0 ? (
@@ -296,7 +295,6 @@ export default function WorkflowDetailPage() {
                   />
                 </div>
               </div>,
-              <WorkflowStatusPanel workflowId={workflowId} />,
               <WorkflowInferenceTestPanel workflowId={workflowId} />,
             ]}
           />
