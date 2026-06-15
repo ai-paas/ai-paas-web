@@ -74,12 +74,12 @@ export default function LearningCreatePage() {
       train_name: '',
       description: '',
       source_type: 'select',
-      epochs: '100',
-      batch_size: '16',
-      save_period: '-1',
+      epochs: '5',
+      batch_size: '32',
+      save_period: '1',
       gpus: '1',
       lr0: '0.01',
-      lrf: '0.01',
+      lrf: '0.05',
       weight_decay: '0.0005',
     },
     mode: 'onChange',
@@ -412,7 +412,8 @@ const Step2 = ({
                   extensions={['zip']}
                   description={
                     <>
-                      파일을 여기에 드래그하거나 <b>클릭하여 업로드</b>하세요. (파일당 최대 크기 15MB)
+                      파일을 여기에 드래그하거나 <b>클릭하여 업로드</b>하세요. (파일당 최대 크기
+                      15MB)
                       <br />
                       허용되는 파일 형식:zip
                     </>
@@ -452,9 +453,13 @@ const Step2 = ({
                   <Select
                     options={datasetOptions}
                     getOptionLabel={(option: { text: string; value: number }) => option.text}
-                    getOptionValue={(option: { text: string; value: number }) => String(option.value)}
+                    getOptionValue={(option: { text: string; value: number }) =>
+                      String(option.value)
+                    }
                     value={datasetOptions.find((o) => o.value === field.value) ?? null}
-                    onChange={(option: { text: string; value: number } | null) => field.onChange(option?.value)}
+                    onChange={(option: { text: string; value: number } | null) =>
+                      field.onChange(option?.value)
+                    }
                     placeholder={isPending ? '불러오는 중...' : '데이터 셋을 선택해주세요.'}
                     errMessage={fieldState.error?.message}
                   />
@@ -494,7 +499,9 @@ const Step3 = () => {
                   getOptionLabel={(option: { text: string; value: number }) => option.text}
                   getOptionValue={(option: { text: string; value: number }) => String(option.value)}
                   value={modelOptions.find((o) => o.value === field.value) ?? null}
-                  onChange={(option: { text: string; value: number } | null) => field.onChange(option?.value)}
+                  onChange={(option: { text: string; value: number } | null) =>
+                    field.onChange(option?.value)
+                  }
                   placeholder={isPending ? '불러오는 중...' : '모델을 선택해주세요.'}
                   errMessage={fieldState.error?.message}
                 />
@@ -550,7 +557,9 @@ const Step3 = () => {
                   getOptionLabel={(option: { text: string; value: string }) => option.text}
                   getOptionValue={(option: { text: string; value: string }) => option.value}
                   value={GPU_OPTIONS.find((o) => o.value === field.value) ?? null}
-                  onChange={(option: { text: string; value: string } | null) => field.onChange(option?.value)}
+                  onChange={(option: { text: string; value: string } | null) =>
+                    field.onChange(option?.value)
+                  }
                   errMessage={fieldState.error?.message}
                 />
               )}
