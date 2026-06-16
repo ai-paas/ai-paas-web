@@ -1,5 +1,13 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
-import { BreadCrumb, Input, Button, Pagination, Skeleton, DropdownMenu } from '@innogrid/ui';
+import { useEffect, useState } from 'react';
+import {
+  BreadCrumb,
+  Button,
+  Pagination,
+  Skeleton,
+  DropdownMenu,
+  SearchInput,
+  useSearchInputState,
+} from '@innogrid/ui';
 
 import { IconAlign } from '../../../../../assets/img/icon';
 import { useGetHubModels } from '@/hooks/service/models';
@@ -41,11 +49,7 @@ function ModelCardSkeleton() {
 export default function CustomModelCreateKagglePage() {
   const navigate = useNavigate();
   //input
-  const [value, setValue] = useState<string>('');
-
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  };
+  const { searchValue, ...restProps } = useSearchInputState();
 
   //sort
   const [sort, setSort] = useState<KaggleSort>('downloads');
@@ -73,7 +77,7 @@ export default function CustomModelCreateKagglePage() {
     isError,
   } = useGetHubModels({
     market: 'kaggle',
-    search: value,
+    search: searchValue,
     sort,
     page,
     limit: size,
@@ -82,7 +86,7 @@ export default function CustomModelCreateKagglePage() {
   // 검색어 변경 시 첫 페이지로
   useEffect(() => {
     setPage(1);
-  }, [value]);
+  }, [searchValue]);
 
   return (
     <main>
@@ -108,11 +112,11 @@ export default function CustomModelCreateKagglePage() {
             <div className={styles.descSearch}>
               <span>모델 검색</span>
               <div className={styles.searchInputBox}>
-                <Input
+                <SearchInput
                   size="large"
-                  placeholder="검색어를 입력해주세요."
-                  value={value}
-                  onChange={onChange}
+                  variant="default"
+                  placeholder="검색어를 입력해주세요"
+                  {...restProps}
                 />
                 <div className={styles.selectBtnBox}>
                   <DropdownMenu menus={sortMenus}>
@@ -127,7 +131,7 @@ export default function CustomModelCreateKagglePage() {
               </div>
             </div>
           </div>
-          <div className={styles.descBodyBox2}>
+          <div className={`${styles.descBodyBox2} pb-6`}>
             <div className={styles.descContent}>
               {isFetching ? (
                 Array.from({ length: SKELETON_COUNT }).map((_, i) => <ModelCardSkeleton key={i} />)
@@ -194,14 +198,22 @@ export default function CustomModelCreateKagglePage() {
       </div>
       <div className={`page-footer ${styles.footer}`}>
         <div className="page-footer_btn-box">
-          <Button size="large" color="secondary" onClick={() => alert('Button clicked!')}>
+          <Button
+            size="large"
+            color="secondary"
+            onClick={() => navigate('/model/custom-model')}
+          >
             취소
           </Button>
           <Button
             size="large"
             color="primary"
             disabled={!selectedModel}
-            onClick={() => alert('Button clicked!')}
+            onClick={() => {
+              if (selectedModel) {
+                navigate('/model/custom-model/create', { state: { selectedModel } });
+              }
+            }}
           >
             생성
           </Button>

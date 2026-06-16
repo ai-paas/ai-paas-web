@@ -150,8 +150,7 @@ export default function CustomModelCreatePage() {
                 getOptionLabel={(option: ModelProvider) => option.name}
                 getOptionValue={(option: ModelProvider) => String(option.id)}
                 value={
-                  modelProviders.find((provider) => provider.id === customModel.provider_id) ??
-                  null
+                  modelProviders.find((provider) => provider.id === customModel.provider_id) ?? null
                 }
                 onChange={(option: ModelProvider | null) =>
                   setCustomModel((prev) => ({
@@ -202,7 +201,16 @@ export default function CustomModelCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
-              <div className="page-input_item-data_fileUpload">
+              {/* 외부 연동 모델은 저장소 파일을 사용하므로 직접 업로드/변경을 막는다. */}
+              <div
+                className="page-input_item-data_fileUpload"
+                aria-disabled={!!selectedModel}
+                style={
+                  selectedModel
+                    ? { pointerEvents: 'none', opacity: 0.6, userSelect: 'none' }
+                    : undefined
+                }
+              >
                 <FileDrop
                   id="custom-model-file"
                   description={
