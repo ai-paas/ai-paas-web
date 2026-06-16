@@ -1,8 +1,13 @@
+/** 모델 분류. 게이트웨이가 관련 모델 노드에 보강하며, 보강 실패 시 null. */
+export type ModelVisibility = 'CATALOG' | 'CUSTOM';
+
 /** 부모 모델 정보 (재귀적). 파인튜닝된 모델의 원본 계보를 거슬러 올라간다. */
 export interface ModelReadParent {
   id: number;
   name: string;
   description: string | null;
+  /** 부모 모델 분류 (CATALOG 또는 CUSTOM). 게이트웨이 보강 실패 시 null. */
+  visibility?: ModelVisibility | null;
   parent_model?: ModelReadParent | null;
 }
 
@@ -11,6 +16,8 @@ export interface ModelReadChild {
   id: number;
   name: string;
   description: string | null;
+  /** 자식 모델 분류 (CATALOG 또는 CUSTOM). 게이트웨이 보강 실패 시 null. */
+  visibility?: ModelVisibility | null;
   child_models?: ModelReadChild[] | null;
 }
 

@@ -18,7 +18,6 @@ import { useGetCustomModels } from '@/hooks/service/models';
 import { useEffect, useMemo } from 'react';
 import type { CustomModel } from '@/types/model';
 import { formatDateTime } from '@/util/date';
-import { useAuth } from '@/hooks/useAuth';
 
 const columns = [
   {
@@ -85,7 +84,6 @@ const columns = [
 ];
 
 export default function CustomModelPage() {
-  const { isAdmin } = useAuth();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
@@ -120,15 +118,11 @@ export default function CustomModelPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            {!isAdmin && (
-              <>
-                <CreateCustomModelButton />
-                <EditCustomModelButton customModelId={selectedId} />
-                <DeleteCustomModelButton customModelId={selectedId} />
-                <HardwareOptimizationButton customModelId={selectedId} />
-                <ModelCompressionButton customModelId={selectedId} />
-              </>
-            )}
+            <CreateCustomModelButton />
+            <EditCustomModelButton customModelId={selectedId} />
+            <DeleteCustomModelButton customModelId={selectedId} />
+            <HardwareOptimizationButton customModelId={selectedId} />
+            <ModelCompressionButton customModelId={selectedId} />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />

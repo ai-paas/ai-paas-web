@@ -24,8 +24,6 @@ const sortOptions: { value: KaggleSort; label: string }[] = [
   { value: 'trending', label: '트렌딩' },
 ];
 
-const pageSizeOption = [10, 15, 20, 30, 50, 100];
-
 // 로딩 중 모델 카드(descInfoBox2) 레이아웃에 맞춘 스켈레톤
 const SKELETON_COUNT = 10;
 function ModelCardSkeleton() {
@@ -72,7 +70,6 @@ export default function CustomModelCreateKagglePage() {
   const {
     hubModels,
     page: pageInfo,
-    hasMore,
     isFetching,
     isError,
   } = useGetHubModels({
@@ -180,14 +177,10 @@ export default function CustomModelCreateKagglePage() {
               )}
             </div>
             <Pagination
+              pageSizeOption={[10, 15, 20, 30, 50, 100]}
               page={page}
-              pageSizeOption={pageSizeOption}
               size={size}
               totalCount={pageInfo.total}
-              // Kaggle total 은 하한값이라 has_more 로 다음 페이지 존재를 판단
-              totalPageCount={hasMore ? page + 1 : page}
-              disabledPrevButton={page <= 1}
-              disabledNextButton={!hasMore}
               onChangePageInput={(event) => setPage(+event.target.value)}
               onChangePageSize={(event) => setSize(+event.target.value)}
               onClickNext={() => setPage(page + 1)}
@@ -198,11 +191,7 @@ export default function CustomModelCreateKagglePage() {
       </div>
       <div className={`page-footer ${styles.footer}`}>
         <div className="page-footer_btn-box">
-          <Button
-            size="large"
-            color="secondary"
-            onClick={() => navigate('/model/custom-model')}
-          >
+          <Button size="large" color="secondary" onClick={() => navigate('/model/custom-model')}>
             취소
           </Button>
           <Button

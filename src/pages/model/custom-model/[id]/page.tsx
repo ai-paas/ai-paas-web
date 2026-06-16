@@ -20,12 +20,83 @@ import { useNavigate, useParams } from 'react-router';
 import { useGetModel } from '@/hooks/service/models';
 import { formatDateTime } from '@/util/date';
 import { DeleteCustomModelButton } from '@/components/features/model/delete-custom-model-button';
+import type { Model, ModelReadChild, ModelVisibility } from '@/types/model';
 
 interface ModelFile {
   name: string;
   fileSize: string;
   date: string;
   download: string;
+}
+
+type ModelTreeRelation = 'ancestor' | 'current' | 'descendant';
+
+interface ModelTreeNode {
+  id: number;
+  name: string;
+  depth: number;
+  relation: ModelTreeRelation;
+  /** 게이트웨이가 보강한 모델 분류. 보강 실패 시 null. */
+  visibility: ModelVisibility | null;
+}
+
+/**
+ * 모델 상세 응답의 parent_model(재귀)·child_models(재귀)를 평탄화해
+ * 루트 부모 → 현재 모델 → 자식 순서의 트리 노드 목록으로 변환한다.
+ */
+function buildModelTree(model: Model): ModelTreeNode[] {
+  const nodes: ModelTreeNode[] = [];
+
+  // 부모 계보: 위로 거슬러 올라간 뒤 루트가 맨 위에 오도록 뒤집는다.
+  const ancestors: { id: number; name: string; visibility: ModelVisibility | null }[] = [];
+  let parent = model.parent_model;
+  while (parent) {
+    ancestors.unshift({ id: parent.id, name: parent.name, visibility: parent.visibility ?? null });
+    parent = parent.parent_model ?? null;
+  }
+
+  let depth = 0;
+  ancestors.forEach((a) => nodes.push({ ...a, depth: depth++, relation: 'ancestor' }));
+
+  const currentDepth = depth;
+  nodes.push({
+    id: model.id,
+    name: model.name,
+    depth: currentDepth,
+    relation: 'current',
+    visibility: (model.visibility as ModelVisibility) ?? null,
+  });
+
+  // 자식 계보: 아래로 재귀적으로 펼친다.
+  const addChildren = (children: ModelReadChild[] | null | undefined, d: number) => {
+    children?.forEach((c) => {
+      nodes.push({
+        id: c.id,
+        name: c.name,
+        depth: d,
+        relation: 'descendant',
+        visibility: c.visibility ?? null,
+      });
+      addChildren(c.child_models, d + 1);
+    });
+  };
+  addChildren(model.child_models, currentDepth + 1);
+
+  return nodes;
+}
+
+/**
+ * 트리 노드의 이동 경로를 분기한다.
+ * 게이트웨이가 보강한 visibility(CATALOG/CUSTOM)를 우선 사용하고,
+ * 보강 실패(null)인 경우 계보 위치로 추정한다(부모=카탈로그, 자식=커스텀).
+ */
+function getModelTreeRoute(node: ModelTreeNode): string {
+  const isCatalog =
+    node.visibility === 'CATALOG' ||
+    (node.visibility === null && node.relation === 'ancestor');
+  return isCatalog
+    ? `/model/model-catalog/${node.id}`
+    : `/model/custom-model/${node.id}`;
 }
 
 const columns: ColDef<ModelFile>[] = [
@@ -65,6 +136,8 @@ export default function CustomModelDetailPage() {
   const { id } = useParams();
   const { model } = useGetModel(Number(id));
   const navigate = useNavigate();
+
+  const treeNodes = model ? buildModelTree(model) : [];
 
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
@@ -174,43 +247,47 @@ export default function CustomModelDetailPage() {
             <li>
               <div className="page-detail_item-name">모델 트리</div>
               <div className="page-detail_item-data">
-                <div className={styles.modelTree}>
-                  <div>Basemodel</div>
-                  <div>
-                    <IconArrowModelTree />
-                    Basemodel
-                  </div>
-                  <div>
-                    <IconArrowModelTree />
-                    Basemodel
-                  </div>
-                  <div>
-                    <IconArrowModelTree />
-                    Basemodel
-                  </div>
-                </div>
-                <div className={styles.modelTreeLink}>
-                  <div>
-                    <a href={'/'} className="page-detail_item-data-link">
-                      모델명 링크
-                    </a>
-                  </div>
-                  <div>
-                    <a href={'/'} className="page-detail_item-data-link">
-                      모델명 링크
-                    </a>
-                  </div>
-                  <div>
-                    <a href={'/'} className="page-detail_item-data-link">
-                      모델명 링크
-                    </a>
-                  </div>
-                  <div>
-                    <a href={'/'} className="page-detail_item-data-link">
-                      모델명 링크
-                    </a>
-                  </div>
-                </div>
+                {treeNodes.length > 0 ? (
+                  <>
+                    <div className={styles.modelTree}>
+                      {treeNodes.map((node) => (
+                        <div
+                          key={node.id}
+                          style={{ paddingLeft: node.depth === 0 ? 0 : 4 + (node.depth - 1) * 24 }}
+                          className={node.relation === 'current' ? styles.modelTreeCurrent : undefined}
+                        >
+                          {node.depth > 0 && <IconArrowModelTree />}
+                          {node.name}
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.modelTreeLink}>
+                      {treeNodes.map((node) => {
+                        const route = getModelTreeRoute(node);
+                        return (
+                          <div key={node.id}>
+                            {node.relation === 'current' ? (
+                              <span>{node.name}</span>
+                            ) : (
+                              <a
+                                href={route}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  navigate(route);
+                                }}
+                                className="page-detail_item-data-link"
+                              >
+                                {node.name}
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  '-'
+                )}
               </div>
             </li>
           </ul>
