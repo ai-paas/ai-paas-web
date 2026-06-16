@@ -23,7 +23,7 @@ export default function PromptDetailPage() {
         <h2 className="page-title">프롬프트 테스트</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditPromptButton />
+            <EditPromptButton promptId={promptId} />
             <DeletePromptButton promptId={promptId} />
           </div>
         </div>

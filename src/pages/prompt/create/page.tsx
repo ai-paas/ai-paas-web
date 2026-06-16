@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 import { useCreatePrompt, useGetPromptVariableTypes } from '@/hooks/service/prompts';
@@ -12,6 +12,11 @@ interface PromptBody {
   };
   prompt_variable: string[];
 }
+
+const extractVariables = (content: string): string[] => {
+  const matches = content.matchAll(/\{\{#\s*([^{}#]+?)\s*#\}\}/g);
+  return [...new Set([...matches].map((match) => match[1]))];
+};
 
 export default function PromptCreatePage() {
   const { createPrompt, isPending } = useCreatePrompt();
@@ -29,10 +34,13 @@ export default function PromptCreatePage() {
     });
   };
 
-  const extractVariables = (content: string): string[] => {
-    const matches = content.matchAll(/\{\{#\s*([^{}#]+?)\s*#\}\}/g);
-    return [...new Set([...matches].map((match) => match[1]))];
-  };
+  const variables = useMemo(() => extractVariables(prompt.prompt?.content ?? ''), [
+    prompt.prompt?.content,
+  ]);
+  const invalidVariables = useMemo(
+    () => variables.filter((v) => !availableTypes.includes(v)),
+    [variables, availableTypes]
+  );
 
   const handleSubmit = async () => {
     if (!prompt.prompt.name || !prompt.prompt.content) {
@@ -40,8 +48,6 @@ export default function PromptCreatePage() {
       return;
     }
 
-    const variables = extractVariables(prompt.prompt.content);
-    const invalidVariables = variables.filter((v) => !availableTypes.includes(v));
     if (invalidVariables.length > 0) {
       alert(
         `사용할 수 없는 변수입니다: ${invalidVariables.join(', ')}\n사용 가능한 변수: ${availableTypes.join(', ')}`
@@ -109,6 +115,11 @@ export default function PromptCreatePage() {
                 height={320}
                 allowedVariables={availableTypes}
               />
+              {invalidVariables.length > 0 && (
+                <p className="page-input_item-input-desc" style={{ color: '#d92d20' }}>
+                  사용할 수 없는 변수입니다: {invalidVariables.map((v) => `{{#${v}#}}`).join(', ')}
+                </p>
+              )}
               <p className="page-input_item-input-desc">
                 {'{{#변수명#}}'} 형식으로 변수를 지정할 수 있습니다. 사용 가능한 변수:{' '}
                 {availableTypes.length > 0
@@ -126,7 +137,12 @@ export default function PromptCreatePage() {
             <Button size="large" color="secondary" onClick={() => navigate('/prompt')}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={handleSubmit} disabled={isPending}>
+            <Button
+              size="large"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={isPending || invalidVariables.length > 0}
+            >
               생성
             </Button>
           </div>
