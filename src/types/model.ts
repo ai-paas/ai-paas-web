@@ -1,3 +1,19 @@
+/** 부모 모델 정보 (재귀적). 파인튜닝된 모델의 원본 계보를 거슬러 올라간다. */
+export interface ModelReadParent {
+  id: number;
+  name: string;
+  description: string | null;
+  parent_model?: ModelReadParent | null;
+}
+
+/** 자식 모델 정보 (재귀적). 해당 모델을 기반으로 파생된 모델 트리. */
+export interface ModelReadChild {
+  id: number;
+  name: string;
+  description: string | null;
+  child_models?: ModelReadChild[] | null;
+}
+
 export interface Model {
   id: number;
   name: string;
@@ -19,10 +35,14 @@ export interface Model {
     description: string;
   };
   parent_model_id: number | null;
+  task: string | null;
+  parameter: string | null;
+  sample_code: string | null;
   registry: {
     id: number;
     artifact_path: string;
     uri: string;
+    run_id: string | null;
     reference_model_id: number;
     created_at: Date;
     updated_at: Date;
@@ -35,6 +55,11 @@ export interface Model {
   created_by: string;
   updated_by: string;
   deleted_by: string;
+  learning_enable_yn: boolean;
+  opt_enable_yn: boolean;
+  visibility: string;
+  parent_model?: ModelReadParent | null;
+  child_models?: ModelReadChild[] | null;
   member_info?: {
     member_id: string;
     role: string;
@@ -76,12 +101,18 @@ export interface CustomModel {
     id: number;
     uri: string;
     artifact_path: string;
+    run_id: string | null;
     reference_model_id: number;
     created_at: string;
     created_by: string;
     updated_at: string;
     updated_by: string;
   };
+  learning_enable_yn: boolean;
+  opt_enable_yn: boolean;
+  visibility: string;
+  parent_model?: ModelReadParent | null;
+  child_models?: ModelReadChild[] | null;
 }
 
 export interface ModelCatalog {
@@ -118,12 +149,18 @@ export interface ModelCatalog {
     id: number;
     uri: string;
     artifact_path: string;
+    run_id: string | null;
     reference_model_id: number;
     created_at: string;
     created_by: string;
     updated_at: string;
     updated_by: string;
   };
+  learning_enable_yn: boolean;
+  opt_enable_yn: boolean;
+  visibility: string;
+  parent_model?: ModelReadParent | null;
+  child_models?: ModelReadChild[] | null;
 }
 
 export interface ModelProvider {
