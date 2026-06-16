@@ -9,6 +9,7 @@ import {
   Slider,
   Stepper,
   Textarea,
+  useToast,
 } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 import { IconArrCount, IconDocument } from '../../../assets/img/icon';
@@ -175,6 +176,8 @@ interface Step1Props {
 }
 
 const Step1 = ({ formData, setFormData }: Step1Props) => {
+  const toast = useToast();
+
   const handleAddFile = (files: File[]) => {
     setFormData((prev) => ({ ...prev, files: [...(prev?.files || []), ...files] }));
   };
@@ -218,16 +221,24 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
               <FileDrop
                 id="knowledge-base-file"
                 multiple
+                extensions={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv']}
                 description={
                   <>
                     파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
                     <br />
-                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
+                    허용되는 파일 형식: pdf, doc, docx, xls, xlsx, ppt, pptx, csv
                   </>
                 }
                 files={formData?.files ?? []}
                 onAddFile={handleAddFile}
                 onDeleteFile={handleDeleteFile}
+                onError={({ errorMessage }) =>
+                  toast.open({
+                    status: 'negative',
+                    title: '파일 업로드 실패',
+                    children: errorMessage,
+                  })
+                }
               />
             </div>
           </div>
@@ -294,7 +305,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               options={chunkTypes}
               getOptionLabel={(option: ChunkType) => option.name}
               getOptionValue={(option: ChunkType) => option.id.toString()}
-              value={chunkTypes.find((type: ChunkType) => type.id === formData?.chunk_type?.id)}
+              value={chunkTypes.find((type: ChunkType) => type.id === formData?.chunk_type?.id) ?? null}
               onChange={(option: ChunkType | null) => {
                 if (option) setFormData((prev) => ({ ...prev, chunk_type: option }));
               }}
@@ -331,7 +342,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               options={models}
               getOptionLabel={(option: Model) => option.name}
               getOptionValue={(option: Model) => option.id.toString()}
-              value={models.find((model: Model) => model.id === formData?.embedding_model?.id)}
+              value={models.find((model: Model) => model.id === formData?.embedding_model?.id) ?? null}
               onChange={(option: Model | null) => {
                 if (option) setFormData((prev) => ({ ...prev, embedding_model: option }));
               }}
@@ -349,7 +360,7 @@ const Step2 = ({ formData, setFormData }: Step2Props) => {
               options={searchMethods}
               getOptionLabel={(option: SearchMethod) => option.name}
               getOptionValue={(option: SearchMethod) => option.id.toString()}
-              value={searchMethods?.find((method: SearchMethod) => method.id === formData?.search_method.id)}
+              value={searchMethods?.find((method: SearchMethod) => method.id === formData?.search_method.id) ?? null}
               onChange={(option: SearchMethod | null) => {
                 if (option) setFormData((prev) => ({ ...prev, search_method: option }));
               }}

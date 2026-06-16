@@ -7,6 +7,7 @@ import type {
   GetKnowledgeBasesParams,
   GetSearchRecordsParams,
   KnowledgeBase,
+  KnowledgeBaseBrief,
   Language,
   SearchKnowledgeBaseRequest,
   SearchKnowledgeBaseResponse,
@@ -79,7 +80,7 @@ export const useGetKnowledgeBases = (params: GetKnowledgeBasesParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.knowledgeBases.list(params),
     queryFn: () =>
-      api.get('knowledge-bases', { searchParams: { ...params } }).json<Page<KnowledgeBase>>(),
+      api.get('knowledge-bases', { searchParams: { ...params } }).json<Page<KnowledgeBaseBrief>>(),
   });
 
   return {

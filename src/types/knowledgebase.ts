@@ -16,16 +16,29 @@ export interface SearchMethod {
   description?: string;
 }
 
-export interface KnowledgeBase {
+/** 목록 조회 응답 항목 (KnowledgeBaseBriefReadSchema) */
+export interface KnowledgeBaseBrief {
+  id: number;
   surro_knowledge_id: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
   name: string;
   description?: string;
-  chunk_type?: string;
-  language?: string;
-  search_method?: string;
-  created_at?: string;
-  updated_at?: string;
-  files?: KnowledgeBaseFile[];
+  collection_name: string;
+  chunk_size: number;
+  chunk_overlap: number;
+  top_k: number;
+  threshold: number;
+}
+
+/** 상세 조회 응답 (KnowledgeBaseReadSchema) */
+export interface KnowledgeBase extends KnowledgeBaseBrief {
+  embedding_model_id: number;
+  language_id: number;
+  chunk_type_id: number;
+  search_method_id: number;
+  files: KnowledgeBaseFile[];
 }
 
 export interface CreateKnowledgeBaseRequest {
@@ -46,15 +59,14 @@ export interface UpdateKnowledgeBaseRequest {
   surro_knowledge_id: number;
   name?: string;
   description?: string;
-  chunk_type?: string;
-  language?: string;
-  search_method?: string;
 }
 
 export interface GetKnowledgeBasesParams {
   page?: number;
   size?: number;
   search?: string;
+  /** 정렬 기준. `,`로 다중 정렬, `-` 접두어는 내림차순. 미지정 시 -created_at */
+  sort?: string;
 }
 
 export interface KnowledgeBaseFile {
