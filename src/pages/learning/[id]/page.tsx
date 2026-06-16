@@ -100,6 +100,32 @@ export default function LearningDetailPage() {
                 </div>
               </li>
             )}
+            {learning ? (
+              <li>
+                <div className="page-detail_item-name">Epoch</div>
+                <div className="page-detail_item-data">
+                  <div className={styles.progressBox}>
+                    <div>
+                      {learning.current_epoch ?? 0} / {learning.max_epoch ?? 0}
+                    </div>
+                    <div className={styles.progress}>
+                      <div
+                        className={styles.progressActionBar}
+                        style={{
+                          width: learning.max_epoch
+                            ? `${Math.min(
+                                100,
+                                ((learning.current_epoch ?? 0) / learning.max_epoch) * 100,
+                              )}%`
+                            : '0%',
+                        }}
+                      ></div>
+                      <div className={styles.progressBar}></div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ) : null}
             <li>
               <div className="page-detail_item-name">이름</div>
               <div className="page-detail_item-data">{learning?.name ?? '-'}</div>
@@ -157,16 +183,6 @@ export default function LearningDetailPage() {
               <div className="page-detail-round-name">Loss</div>
               <div className="page-detail-round-data page-h-75">
                 <em>{formatMetric(learning?.loss)}</em>
-              </div>
-            </div>
-            <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-name">Epochs</div>
-              <div className="page-detail-round-data page-h-75">
-                <em>
-                  {learning?.max_epoch
-                    ? `${learning.current_epoch ?? 0} / ${learning.max_epoch}`
-                    : '-'}
-                </em>
               </div>
             </div>
           </div>
