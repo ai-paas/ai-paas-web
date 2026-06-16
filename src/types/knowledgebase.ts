@@ -89,32 +89,42 @@ export interface AddFileRequest {
 }
 
 export interface SearchKnowledgeBaseRequest {
-  query: string;
-  top_k?: number;
-  threshold?: number;
+  /** 검색할 쿼리 텍스트. top_k/threshold/search_method 는 KB에 설정된 값을 사용 */
+  text: string;
 }
 
+/** SearchResultItemSchema */
 export interface SearchResult {
-  content: string;
+  text: string;
   score: number;
-  metadata?: Record<string, unknown>;
-  file_id?: string;
+  chunk_id?: string;
+  partition_name?: string;
   file_name?: string;
+  distance?: number;
+  /** 청크 키워드. 백엔드가 제공하는 경우에만 표시 */
+  keywords?: string[];
 }
 
+/** KnowledgeBaseSearchResponseSchema */
 export interface SearchKnowledgeBaseResponse {
   results: SearchResult[];
   total: number;
+  /** 사용된 검색 방법 (dense/sparse/hybrid) */
+  search_method: string;
 }
 
+/** KnowledgeBaseSearchRecordReadSchema */
 export interface SearchRecord {
-  id: string;
-  query: string;
-  results_count: number;
+  id: number;
+  knowledge_base_id: number;
+  /** Collection 이름 */
+  source: string;
+  /** 검색 쿼리 텍스트 */
+  text: string;
   created_at: string;
-}
-
-export interface GetSearchRecordsParams {
-  page?: number;
-  size?: number;
+  updated_at?: string;
+  deleted_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  deleted_by?: string;
 }

@@ -10,7 +10,7 @@ import type {
   GetTrendsParams,
 } from '@/types/dashboard';
 import type { GetDatasetsParams } from '@/types/dataset';
-import type { GetKnowledgeBasesParams, GetSearchRecordsParams } from '@/types/knowledgebase';
+import type { GetKnowledgeBasesParams } from '@/types/knowledgebase';
 import type { GetLearningParams } from '@/types/learning';
 import type { GetMembersParams } from '@/types/member';
 import type {
@@ -81,8 +81,8 @@ export const queryKeys = {
       [...queryKeys.knowledgeBases.all, knowledgeBaseId] as const,
     files: (knowledgeBaseId: number) =>
       [...queryKeys.knowledgeBases.detail(knowledgeBaseId), 'files'] as const,
-    searchRecords: (knowledgeBaseId: number, params: GetSearchRecordsParams = {}) =>
-      [...queryKeys.knowledgeBases.detail(knowledgeBaseId), 'search-records', params] as const,
+    searchRecords: (knowledgeBaseId: number) =>
+      [...queryKeys.knowledgeBases.detail(knowledgeBaseId), 'search-records'] as const,
   },
   knowledgeBaseMeta: {
     chunkTypes: ['chunk-types'] as const,

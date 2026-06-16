@@ -5,7 +5,6 @@ import type {
   AddFileRequest,
   ChunkType,
   GetKnowledgeBasesParams,
-  GetSearchRecordsParams,
   KnowledgeBase,
   KnowledgeBaseBrief,
   Language,
@@ -224,28 +223,16 @@ export const useSearchKnowledgeBase = (surro_knowledge_id: number) => {
   };
 };
 
-export const useGetSearchRecords = (
-  surro_knowledge_id: number,
-  params: GetSearchRecordsParams = {}
-) => {
+export const useGetSearchRecords = (surro_knowledge_id: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.knowledgeBases.searchRecords(surro_knowledge_id, params),
+    queryKey: queryKeys.knowledgeBases.searchRecords(surro_knowledge_id),
     queryFn: () =>
-      api
-        .get(`knowledge-bases/${surro_knowledge_id}/search-records`, {
-          searchParams: { ...params },
-        })
-        .json<Page<SearchRecord>>(),
+      api.get(`knowledge-bases/${surro_knowledge_id}/search-records`).json<SearchRecord[]>(),
     enabled: !!surro_knowledge_id,
   });
 
   return {
-    searchRecords: data?.data ?? [],
-    page: {
-      number: data?.page ?? 1,
-      size: data?.size ?? 1,
-      total: data?.total ?? 1,
-    },
+    searchRecords: data ?? [],
     isPending,
     isError,
   };
