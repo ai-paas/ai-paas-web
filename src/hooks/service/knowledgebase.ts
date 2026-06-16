@@ -160,7 +160,7 @@ export const useAddFileToKnowledgeBase = (surro_knowledge_id: number) => {
       formData.append('file', data.file);
       return api
         .post(`knowledge-bases/${surro_knowledge_id}/files`, { body: formData })
-        .json<{ file_id: string }>();
+        .json<KnowledgeBase>();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -185,8 +185,8 @@ export const useDeleteFileFromKnowledgeBase = (surro_knowledge_id: number) => {
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (file_id: string) =>
-      api.delete(`knowledge-bases/${surro_knowledge_id}/files/${file_id}`).json<string>(),
+    mutationFn: (file_id: number) =>
+      api.delete(`knowledge-bases/${surro_knowledge_id}/files/${file_id}`).json<KnowledgeBase>(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.knowledgeBases.files(surro_knowledge_id),

@@ -1,15 +1,20 @@
 import {
   BreadCrumb,
+  CellCheckbox,
+  HeaderCheckbox,
   Table,
   Tabs,
   useTablePagination,
   useTableSelection,
   type ColDef,
   type Sorting,
+  type TableRow,
 } from '@innogrid/ui';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { CreateKnowledgeBaseFileButton } from '../../../components/features/knowledge-base/create-knowledge-base-file-button';
 import { DeleteKnowledgeBaseButton } from '../../../components/features/knowledge-base/delete-knowledge-base-button';
+import { DeleteKnowledgeBaseFileButton } from '../../../components/features/knowledge-base/delete-knowledge-base-file-button';
 import { EditKnowledgeBaseButton } from '../../../components/features/knowledge-base/edit-knowledge-base-button';
 import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
 import { formatDateTime } from '@/util/date';
@@ -17,16 +22,33 @@ import type { KnowledgeBaseFile } from '@/types/knowledgebase';
 
 const columns: ColDef<KnowledgeBaseFile>[] = [
   {
+    id: 'select',
+    size: 30,
+    header: ({
+      table,
+    }: {
+      table: Parameters<typeof HeaderCheckbox<KnowledgeBaseFile>>[0]['table'];
+    }) => <HeaderCheckbox table={table} />,
+    cell: ({ row }: { row: TableRow<KnowledgeBaseFile> }) => <CellCheckbox row={row} />,
+    enableSorting: false,
+  },
+  {
     id: 'name',
     header: '이름',
     accessorFn: (row: KnowledgeBaseFile) => row.name,
-    size: 320,
+    size: 280,
+  },
+  {
+    id: 'partition_name',
+    header: '파티션명',
+    accessorFn: (row: KnowledgeBaseFile) => row.partition_name ?? '-',
+    size: 231,
   },
   {
     id: 'chunk_number',
     header: '청크 수',
     accessorFn: (row: KnowledgeBaseFile) => row.chunk_number ?? '-',
-    size: 231,
+    size: 160,
   },
   {
     id: 'created_by',
@@ -57,6 +79,14 @@ export default function KnowledgeBaseDetailPage() {
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const files = knowledgeBase?.files ?? [];
+
+  const selectedFileIds = useMemo(
+    () =>
+      Object.keys(rowSelection)
+        .map((key) => files[parseInt(key)]?.id)
+        .filter((fileId): fileId is number => fileId != null),
+    [rowSelection, files]
+  );
 
   return (
     <main>
@@ -117,6 +147,16 @@ export default function KnowledgeBaseDetailPage() {
             labels={['파일', '검색 테스트']}
             components={[
               <div className="tabs-Content">
+                <div className="page-toolBox">
+                  <div className="page-toolBox-btns">
+                    <CreateKnowledgeBaseFileButton knowledgeBaseId={Number(id)} />
+                    <DeleteKnowledgeBaseFileButton
+                      knowledgeBaseId={Number(id)}
+                      fileIds={selectedFileIds}
+                      onDeleted={() => setRowSelection({})}
+                    />
+                  </div>
+                </div>
                 <div>
                   <Table
                     useClientPagination
