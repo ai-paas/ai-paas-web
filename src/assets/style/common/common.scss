@@ -743,3 +743,281 @@ input {
 .page-mt-16 {
   margin-top: 16px !important;
 }
+
+//// 지식 베이스 검색 테스트
+.kb-retrieval {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+
+  .kb-retrieval_panel {
+    flex: 0 0 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .kb-retrieval_result {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .kb-retrieval_section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .kb-retrieval_title {
+    @include font-style;
+    font-size: $page-font-13;
+    font-weight: 600;
+    color: $page-font-color-900;
+  }
+
+  .kb-retrieval_section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .kb-retrieval_setting {
+    position: relative;
+  }
+
+  .kb-retrieval_setting-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .kb-retrieval_setting-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 10;
+    width: 320px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid $color-gray-50;
+    background: $color-white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .kb-retrieval_setting-title {
+    @include font-style;
+    font-size: $page-font-root;
+    font-weight: 600;
+    color: $page-font-color-900;
+    margin-bottom: 12px;
+  }
+
+  .kb-retrieval_setting-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .kb-retrieval_setting-label {
+    @include font-style;
+    font-size: $page-font-root;
+    color: $page-font-color-600;
+    white-space: nowrap;
+  }
+
+  .kb-retrieval_source {
+    position: relative;
+
+    textarea {
+      width: 100%;
+      padding-bottom: 52px;
+    }
+  }
+
+  .kb-retrieval_source-action {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 1;
+  }
+
+  .kb-retrieval_records {
+    min-height: 360px;
+  }
+
+  .kb-retrieval_result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .kb-retrieval_result-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    border: 1px solid $color-gray-50;
+    border-radius: 8px;
+    @include font-style;
+    font-size: $page-font-root;
+    color: $page-font-color-300;
+  }
+}
+
+//// 검색 결과 단락 카드
+.kb-chunk-card {
+  padding: 16px 20px;
+  border: 1px solid $color-gray-50;
+  border-radius: 8px;
+  background: $color-white;
+
+  .kb-chunk-card_head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+
+  .kb-chunk-card_id {
+    @include font-style;
+    font-size: $page-font-root;
+    font-weight: 600;
+    color: $page-font-color-900;
+  }
+
+  .kb-chunk-card_count {
+    @include font-style;
+    font-size: $page-font-11;
+    color: $page-font-color-300;
+  }
+
+  .kb-chunk-card_file {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    @include font-style;
+    font-size: $page-font-11;
+    color: $page-font-color-600;
+
+    svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+    }
+  }
+
+  .kb-chunk-card_text {
+    @include font-style;
+    font-size: $page-font-root;
+    line-height: 1.6;
+    color: $page-font-color-600;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .kb-chunk-card_foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .kb-chunk-card_more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    @include font-style;
+    font-size: $page-font-root;
+    color: $color-point-blue;
+
+    .kb-chunk-card_more-arr {
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid $color-point-blue;
+      border-bottom: 1px solid $color-point-blue;
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+//// 청크 키워드
+.kb-chunk-keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kb-chunk-keyword {
+  @include font-style;
+  font-size: $page-font-11;
+  color: $color-point-blue;
+}
+
+//// 청크 디테일 팝업
+.kb-chunk-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .kb-chunk-detail_head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .kb-chunk-detail_id {
+    @include font-style;
+    font-size: $page-font-13;
+    font-weight: 600;
+    color: $page-font-color-900;
+  }
+
+  .kb-chunk-detail_file {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    @include font-style;
+    font-size: $page-font-root;
+    color: $page-font-color-600;
+
+    svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+    }
+  }
+
+  .kb-chunk-detail_content {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid $color-gray-50;
+    border-radius: 8px;
+    @include font-style;
+    font-size: $page-font-root;
+    line-height: 1.6;
+    color: $page-font-color-600;
+    white-space: pre-wrap;
+  }
+
+  .kb-chunk-detail_keywords-title {
+    @include font-style;
+    font-size: $page-font-root;
+    font-weight: 600;
+    color: $page-font-color-900;
+    margin-bottom: 8px;
+  }
+}

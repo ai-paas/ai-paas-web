@@ -16,6 +16,7 @@ import { CreateKnowledgeBaseFileButton } from '../../../components/features/know
 import { DeleteKnowledgeBaseButton } from '../../../components/features/knowledge-base/delete-knowledge-base-button';
 import { DeleteKnowledgeBaseFileButton } from '../../../components/features/knowledge-base/delete-knowledge-base-file-button';
 import { EditKnowledgeBaseButton } from '../../../components/features/knowledge-base/edit-knowledge-base-button';
+import { RetrievalTestTab } from '../../../components/features/knowledge-base/retrieval-test/retrieval-test-tab';
 import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
 import { formatDateTime } from '@/util/date';
 import type { KnowledgeBaseFile } from '@/types/knowledgebase';
@@ -179,7 +180,10 @@ export default function KnowledgeBaseDetailPage() {
                 </div>
               </div>,
               <div className="tabs-Content">
-                <div>검색테스트</div>
+                <RetrievalTestTab
+                  knowledgeBaseId={Number(id)}
+                  defaultTopK={knowledgeBase?.top_k}
+                />
               </div>,
             ]}
           />
