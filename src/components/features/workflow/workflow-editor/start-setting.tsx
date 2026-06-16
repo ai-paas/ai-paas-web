@@ -435,7 +435,7 @@ export const StartSetting = () => {
             className={`${styles.addItemField} ${selectedFieldIdx === idx ? styles.active : ''}`}
           >
             <div>
-              <span>{'{X}'}</span>
+              <span className="font-semibold text-blue-500">{'{X}'}</span>
               <span className={styles.addItemFieldId}>{field.variable || '미지정'}</span>
             </div>
             <span className={styles.addItemFieldText}>{FIELD_TYPE_LABELS[field.type]}</span>

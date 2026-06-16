@@ -1,4 +1,3 @@
-import { IconFileUp } from '@/assets/img/icon';
 import {
   useCreateModel,
   useGetModelFormats,
@@ -6,7 +5,7 @@ import {
   useGetModelTypes,
 } from '@/hooks/service/models';
 import type { HubModel, ModelFormat, ModelProvider, ModelType } from '@/types/model';
-import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
+import { BreadCrumb, Button, FileDrop, Input, Select, Textarea } from '@innogrid/ui';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -50,22 +49,14 @@ export default function CustomModelCreatePage() {
     });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const allowedExtensions = ['safetensors', 'onnx'];
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  const handleAddFile = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+    setCustomModel((prev) => ({ ...prev, file }));
+  };
 
-      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-        alert('허용되지 않는 파일 형식입니다.');
-        return;
-      }
-
-      setCustomModel((prev) => ({
-        ...prev,
-        file,
-      }));
-    }
+  const handleDeleteFile = () => {
+    setCustomModel((prev) => ({ ...prev, file: undefined }));
   };
 
   const handleSubmit = async () => {
@@ -130,7 +121,9 @@ export default function CustomModelCreatePage() {
                 value={customModel.name ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                화면에 표시될 커스텀 모델의 이름을 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -143,7 +136,9 @@ export default function CustomModelCreatePage() {
                 value={customModel.repo_id ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                모델 저장소(Repository)의 고유 ID를 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -154,7 +149,10 @@ export default function CustomModelCreatePage() {
                 options={modelProviders}
                 getOptionLabel={(option: ModelProvider) => option.name}
                 getOptionValue={(option: ModelProvider) => String(option.id)}
-                value={modelProviders.find((provider) => provider.id === customModel.provider_id)}
+                value={
+                  modelProviders.find((provider) => provider.id === customModel.provider_id) ??
+                  null
+                }
                 onChange={(option: ModelProvider | null) =>
                   setCustomModel((prev) => ({
                     ...prev,
@@ -162,7 +160,7 @@ export default function CustomModelCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델을 제공하는 공급자를 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -172,7 +170,7 @@ export default function CustomModelCreatePage() {
                 options={modelTypes}
                 getOptionLabel={(option: ModelType) => option.name}
                 getOptionValue={(option: ModelType) => String(option.id)}
-                value={modelTypes.find((type) => type.id === customModel.type_id)}
+                value={modelTypes.find((type) => type.id === customModel.type_id) ?? null}
                 onChange={(option: ModelType | null) =>
                   setCustomModel((prev) => ({
                     ...prev,
@@ -180,7 +178,7 @@ export default function CustomModelCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델의 용도에 맞는 타입을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -190,7 +188,7 @@ export default function CustomModelCreatePage() {
                 options={modelFormats}
                 getOptionLabel={(option: ModelFormat) => option.name}
                 getOptionValue={(option: ModelFormat) => String(option.id)}
-                value={modelFormats.find((format) => format.id === customModel.format_id)}
+                value={modelFormats.find((format) => format.id === customModel.format_id) ?? null}
                 onChange={(option: ModelFormat | null) =>
                   setCustomModel((prev) => ({
                     ...prev,
@@ -198,36 +196,24 @@ export default function CustomModelCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델 가중치 파일의 포맷을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label
-                  className={`fileUpload-preview ${selectedModel ? '!cursor-not-allowed' : ''}`}
-                >
-                  <input
-                    disabled={!!selectedModel}
-                    type="file"
-                    className="fileUpload-file"
-                    onChange={handleFileChange}
-                  />
-                  <IconFileUp />
-                  {selectedModel ? (
-                    <p>{selectedModel.id}</p>
-                  ) : (
-                    (customModel.file?.name ?? (
-                      <p className="fileUpload-preview_msg">
-                        파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                        <br />
-                        허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx,
-                        csv,md,htm
-                      </p>
-                    ))
-                  )}
-                </label>
+                <FileDrop
+                  id="custom-model-file"
+                  description={
+                    selectedModel
+                      ? selectedModel.id
+                      : '파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)'
+                  }
+                  files={!selectedModel && customModel.file ? [customModel.file] : []}
+                  onAddFile={selectedModel ? () => {} : handleAddFile}
+                  onDeleteFile={handleDeleteFile}
+                />
               </div>
             </div>
           </div>

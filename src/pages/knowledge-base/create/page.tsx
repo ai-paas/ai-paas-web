@@ -2,6 +2,7 @@ import {
   Accordion,
   BreadCrumb,
   Button,
+  FileDrop,
   Input,
   RadioGroupButton,
   Select,
@@ -10,7 +11,7 @@ import {
   Textarea,
 } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
-import { IconArrCount, IconDocument, IconFileUp } from '../../../assets/img/icon';
+import { IconArrCount, IconDocument } from '../../../assets/img/icon';
 import { useEffect, useState } from 'react';
 import {
   useCreateKnowledgeBase,
@@ -174,11 +175,15 @@ interface Step1Props {
 }
 
 const Step1 = ({ formData, setFormData }: Step1Props) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setFormData((prev) => ({ ...prev, files: [...(prev?.files || []), ...filesArray] }));
-    }
+  const handleAddFile = (files: File[]) => {
+    setFormData((prev) => ({ ...prev, files: [...(prev?.files || []), ...files] }));
+  };
+
+  const handleDeleteFile = ({ fileIndex }: { file: File; fileIndex: number }) => {
+    setFormData((prev) => ({
+      ...prev,
+      files: (prev?.files || []).filter((_, index) => index !== fileIndex),
+    }));
   };
 
   return (
@@ -210,32 +215,20 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
           <div className="page-input_item-name page-icon-requisite">파일</div>
           <div className="page-input_item-data">
             <div className="page-input_item-data_fileUpload">
-              <label className="fileUpload-preview">
-                <input
-                  type="file"
-                  className="fileUpload-file"
-                  onChange={handleFileChange}
-                  multiple
-                />
-                <IconFileUp />
-                <p className="fileUpload-preview_msg">
-                  파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                  <br />
-                  허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
-                </p>
-              </label>
-              {!!formData?.files && (
-                <div className="mt-2">
-                  {formData?.files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <span className="page-icon-document">
-                        <IconDocument />
-                      </span>
-                      <span>{file.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <FileDrop
+                id="knowledge-base-file"
+                multiple
+                description={
+                  <>
+                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                    <br />
+                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
+                  </>
+                }
+                files={formData?.files ?? []}
+                onAddFile={handleAddFile}
+                onDeleteFile={handleDeleteFile}
+              />
             </div>
           </div>
         </div>

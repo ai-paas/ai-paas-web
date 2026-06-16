@@ -13,7 +13,7 @@ export const WorkflowSettingPanel = () => {
 
   const clearSelection = () => selectNode(null);
 
-  if (!selectedNode) return null;
+  if (!selectedNode || selectedNode.type === 'NOTE') return null;
 
   return (
     <div className="absolute top-[70px] right-5 bottom-8 w-[340px] rounded-lg bg-white py-[30px] shadow-[4px_8px_18px_0px_rgba(0,0,0,0.2)]">

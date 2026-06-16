@@ -7,6 +7,7 @@ import { SubmitWorkflowButton } from './submit-workflow-button';
 import { UpdateWorkflowButton } from './update-workflow-button';
 import { UpdateWorkflowTemplateButton } from './update-workflow-template-button';
 import { WorkflowSettingPanel } from './workflow-setting-panel';
+import { WorkflowPlacementGhost } from './workflow-placement-ghost';
 import styles from '@/pages/workflow/workflow.module.scss';
 import type { WorkflowNode } from '@/store/useWorkflowStore';
 import type { WorkflowStatus } from '@/types/workflow';
@@ -65,6 +66,8 @@ export const WorkflowEditor = ({
 
         <WorkflowSettingPanel />
       </div>
+
+      <WorkflowPlacementGhost />
     </ReactFlowProvider>
   );
 };

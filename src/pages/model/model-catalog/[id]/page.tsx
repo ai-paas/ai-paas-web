@@ -1,3 +1,4 @@
+import { CodeBlock } from '@/components/ui/code-block';
 import { useGetModel } from '@/hooks/service/models';
 import type { ModelCatalog } from '@/types/model';
 import { formatDateTime } from '@/util/date';
@@ -50,8 +51,7 @@ const columns = [
 
 export default function ModelCatalogDetailPage() {
   const { id } = useParams();
-  const { model: modelRaw } = useGetModel(Number(id));
-  const model = modelRaw as ModelCatalog | undefined;
+  const { model } = useGetModel<ModelCatalog>(Number(id));
   const navigate = useNavigate();
 
   const { setRowSelection, rowSelection } = useTableSelection();
@@ -98,7 +98,7 @@ export default function ModelCatalogDetailPage() {
             </li>
             <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">{model?.created_by ?? '-'}</div>
+              <div className="page-detail_item-data">{model?.created_by || '-'}</div>
             </li>
             <li>
               <div className="page-detail_item-name">task</div>
@@ -108,7 +108,9 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.created_at?.toString())}</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(model?.created_at?.toString())}
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
@@ -122,7 +124,9 @@ export default function ModelCatalogDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">{formatDateTime(model?.updated_at?.toString())}</div>
+              <div className="page-detail_item-data">
+                {formatDateTime(model?.updated_at?.toString())}
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">버전 정보</div>
@@ -154,16 +158,7 @@ export default function ModelCatalogDetailPage() {
                 </div>
               </div>,
               <div className="tabs-Content">
-                <div className="rounded-md border border-[#DEDEDE] px-6 py-5">
-                  import torch from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor,
-                  pipeline from datasets import load_dataset device = "cuda:0" if
-                  torch.cuda.is_available() else "cpu" torch_dtype = torch.float16 if
-                  torch.cuda.is_available() else torch.float32 model_id = "openai/whisper-large-v3"
-                  model = AutoModelForSpeechSeq2Seq.from_pretrained( model_id,
-                  torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True )
-                  model.to(device) processor = AutoProcessor.from_pretrained(model_id) pipe =
-                  pipeline "automatic-speech-recognition",
-                </div>
+                <CodeBlock code={model?.sample_code ?? ''} />
               </div>,
             ]}
           />

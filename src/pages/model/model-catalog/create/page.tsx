@@ -1,4 +1,3 @@
-import { IconFileUp } from '@/assets/img/icon';
 import {
   useCreateModel,
   useGetModelFormats,
@@ -6,7 +5,7 @@ import {
   useGetModelTypes,
 } from '@/hooks/service/models';
 import type { ModelFormat, ModelProvider, ModelType } from '@/types/model';
-import { BreadCrumb, Button, Input, Select, Textarea } from '@innogrid/ui';
+import { BreadCrumb, Button, FileDrop, Input, Select, Textarea } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -22,7 +21,7 @@ interface ModelCatalog {
   parameter?: string;
   sample_code?: string;
   model_registry_schema?: string;
-  file?: string;
+  file?: File;
 }
 
 const INITIAL_MODEL_CATALOG: ModelCatalog = {
@@ -48,6 +47,16 @@ export default function ModelCatalogCreatePage() {
     });
   };
 
+  const handleAddFile = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+    setModelCatalog((prev) => ({ ...prev, file }));
+  };
+
+  const handleDeleteFile = () => {
+    setModelCatalog((prev) => ({ ...prev, file: undefined }));
+  };
+
   const handleSubmit = async () => {
     console.log('modelCatalog:', modelCatalog);
     if (
@@ -67,6 +76,7 @@ export default function ModelCatalogCreatePage() {
     formData.append('provider_id', String(modelCatalog.provider_id));
     formData.append('type_id', String(modelCatalog.type_id));
     formData.append('format_id', String(modelCatalog.format_id));
+    if (modelCatalog.file) formData.append('file', modelCatalog.file);
 
     await createModel(formData);
     navigate('/model/model-catalog');
@@ -98,7 +108,9 @@ export default function ModelCatalogCreatePage() {
                 value={modelCatalog.name ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                화면에 표시될 모델의 이름을 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -110,7 +122,9 @@ export default function ModelCatalogCreatePage() {
                 value={modelCatalog.repo_id ?? ''}
                 onChange={handleChange}
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">
+                모델 저장소(Repository)의 고유 ID를 입력해주세요.
+              </p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -120,7 +134,10 @@ export default function ModelCatalogCreatePage() {
                 options={modelProviders}
                 getOptionLabel={(option: ModelProvider) => option.name}
                 getOptionValue={(option: ModelProvider) => String(option.id)}
-                value={modelProviders.find((provider) => provider.id === modelCatalog.provider_id)}
+                value={
+                  modelProviders.find((provider) => provider.id === modelCatalog.provider_id) ??
+                  null
+                }
                 onChange={(option: ModelProvider | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -128,7 +145,7 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델을 제공하는 공급자를 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -138,7 +155,7 @@ export default function ModelCatalogCreatePage() {
                 options={modelTypes}
                 getOptionLabel={(option: ModelType) => option.name}
                 getOptionValue={(option: ModelType) => String(option.id)}
-                value={modelTypes.find((type) => type.id === modelCatalog.type_id)}
+                value={modelTypes.find((type) => type.id === modelCatalog.type_id) ?? null}
                 onChange={(option: ModelType | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -146,7 +163,7 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델의 용도에 맞는 타입을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
@@ -156,7 +173,7 @@ export default function ModelCatalogCreatePage() {
                 options={modelFormats}
                 getOptionLabel={(option: ModelFormat) => option.name}
                 getOptionValue={(option: ModelFormat) => String(option.id)}
-                value={modelFormats.find((format) => format.id === modelCatalog.format_id)}
+                value={modelFormats.find((format) => format.id === modelCatalog.format_id) ?? null}
                 onChange={(option: ModelFormat | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -164,22 +181,20 @@ export default function ModelCatalogCreatePage() {
                   }))
                 }
               />
-              <p className="page-input_item-input-desc">설명글이 들어갑니다.</p>
+              <p className="page-input_item-input-desc">모델 가중치 파일의 포맷을 선택해주세요.</p>
             </div>
           </div>
           <div className="page-input_item-box">
             <div className="page-input_item-name">파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
-                <label className="fileUpload-preview">
-                  <input type="file" className="fileUpload-file" />
-                  <IconFileUp />
-                  <p className="fileUpload-preview_msg">
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
-                    <br />
-                    허용되는 파일 형식: txt, markdown, mdx, pdf, html, xlsx, xls, docx, csv,md,htm
-                  </p>
-                </label>
+                <FileDrop
+                  id="model-catalog-file"
+                  description="파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)"
+                  files={modelCatalog.file ? [modelCatalog.file] : []}
+                  onAddFile={handleAddFile}
+                  onDeleteFile={handleDeleteFile}
+                />
               </div>
             </div>
           </div>

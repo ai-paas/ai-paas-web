@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent } from 'react';
 import { BreadCrumb, Button, Input, Textarea } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
-import { useCreatePrompt } from '@/hooks/service/prompts';
+import { useCreatePrompt, useGetPromptVariableTypes } from '@/hooks/service/prompts';
+import { PromptEditor } from '@/components/ui/prompt-editor';
 
 interface PromptBody {
   prompt: {
@@ -14,6 +15,7 @@ interface PromptBody {
 
 export default function PromptCreatePage() {
   const { createPrompt, isPending } = useCreatePrompt();
+  const { availableTypes } = useGetPromptVariableTypes();
   const [prompt, setPrompt] = useState<PromptBody>({} as PromptBody);
   const navigate = useNavigate();
 
@@ -27,10 +29,23 @@ export default function PromptCreatePage() {
     });
   };
 
+  const extractVariables = (content: string): string[] => {
+    const matches = content.matchAll(/\{\{#\s*([^{}#]+?)\s*#\}\}/g);
+    return [...new Set([...matches].map((match) => match[1]))];
+  };
+
   const handleSubmit = async () => {
-    console.log('prompt:', prompt);
-    if (!prompt.prompt.name || !prompt.prompt.description || !prompt.prompt.content) {
+    if (!prompt.prompt.name || !prompt.prompt.content) {
       alert('필수 항목을 모두 입력해주세요.');
+      return;
+    }
+
+    const variables = extractVariables(prompt.prompt.content);
+    const invalidVariables = variables.filter((v) => !availableTypes.includes(v));
+    if (invalidVariables.length > 0) {
+      alert(
+        `사용할 수 없는 변수입니다: ${invalidVariables.join(', ')}\n사용 가능한 변수: ${availableTypes.join(', ')}`
+      );
       return;
     }
 
@@ -40,7 +55,7 @@ export default function PromptCreatePage() {
         description: prompt.prompt.description,
         content: prompt.prompt.content,
       },
-      prompt_variable: [],
+      prompt_variable: variables,
     });
     navigate('/prompt');
   };
@@ -84,17 +99,22 @@ export default function PromptCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">프롬프트 입력</div>
             <div className="page-input_item-data">
-              <pre className="page-input_item-code">
-                <code>
-                  <textarea
-                    value={prompt.prompt?.content ?? 'function myFunction(){ }'}
-                    onChange={handleChange}
-                    placeholder="프롬프트를 입력해주세요."
-                    name="content"
-                    className="size-full"
-                  />
-                </code>
-              </pre>
+              <PromptEditor
+                value={prompt.prompt?.content ?? ''}
+                onChange={handleChange}
+                placeholder={
+                  '예) 당신은 친절한 고객 상담원입니다. 다음 질문에 정중하게 답변해주세요: {{#context#}}'
+                }
+                name="content"
+                height={320}
+                allowedVariables={availableTypes}
+              />
+              <p className="page-input_item-input-desc">
+                {'{{#변수명#}}'} 형식으로 변수를 지정할 수 있습니다. 사용 가능한 변수:{' '}
+                {availableTypes.length > 0
+                  ? availableTypes.map((type) => `{{#${type}#}}`).join(', ')
+                  : '없음'}
+              </p>
             </div>
           </div>
         </div>

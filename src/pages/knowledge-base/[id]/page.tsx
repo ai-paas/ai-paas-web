@@ -4,6 +4,7 @@ import {
   Tabs,
   useTablePagination,
   useTableSelection,
+  type ColDef,
   type Sorting,
 } from '@innogrid/ui';
 import { useState } from 'react';
@@ -12,85 +13,50 @@ import { DeleteKnowledgeBaseButton } from '../../../components/features/knowledg
 import { EditKnowledgeBaseButton } from '../../../components/features/knowledge-base/edit-knowledge-base-button';
 import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
 import { formatDateTime } from '@/util/date';
+import type { KnowledgeBaseFile } from '@/types/knowledgebase';
 
-type FileRow = {
-  name: string;
-  status: string;
-  chunk: string;
-  word: string;
-  search: string;
-  desc: string;
-  date: string;
-};
-
-const columns = [
+const columns: ColDef<KnowledgeBaseFile>[] = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: FileRow) => row.name,
-    size: 250,
+    accessorFn: (row: KnowledgeBaseFile) => row.name,
+    size: 320,
   },
   {
-    id: 'status',
-    header: '상태',
-    accessorFn: (row: FileRow) => row.status,
+    id: 'chunk_number',
+    header: '청크 수',
+    accessorFn: (row: KnowledgeBaseFile) => row.chunk_number ?? '-',
     size: 231,
-    cell: ({ row }: { row: { original: FileRow } }) => (
-      <span className="table-td-state table-td-state-run">{row.original.status}</span>
-    ),
   },
   {
-    id: 'chunk',
-    header: '청크',
-    accessorFn: (row: FileRow) => row.chunk,
+    id: 'created_by',
+    header: '생성자',
+    accessorFn: (row: KnowledgeBaseFile) => row.created_by ?? '-',
     size: 291,
   },
   {
-    id: 'word',
-    header: '단어수',
-    accessorFn: (row: FileRow) => row.word,
-    size: 231,
-  },
-  {
-    id: 'search',
-    header: '검색횟수',
-    accessorFn: (row: FileRow) => row.search,
-    size: 231,
-  },
-  {
-    id: 'desc',
-    header: '설명',
-    accessorFn: (row: FileRow) => row.desc,
-    size: 291,
-  },
-
-  {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
-    accessorFn: (row: FileRow) => row.date,
+    accessorFn: (row: KnowledgeBaseFile) => formatDateTime(row.created_at),
+    size: 231,
+  },
+  {
+    id: 'updated_at',
+    header: '최근 업데이트',
+    accessorFn: (row: KnowledgeBaseFile) => formatDateTime(row.updated_at),
     size: 231,
   },
 ];
 
 export default function KnowledgeBaseDetailPage() {
   const { id } = useParams();
-  const { knowledgeBase } = useGetKnowledgeBase(Number(id));
+  const { knowledgeBase, isError } = useGetKnowledgeBase(Number(id));
   const navigate = useNavigate();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
   const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
-  const [rowData] = useState<FileRow[]>([
-    {
-      name: 'sample-test.txt',
-      status: 'Success',
-      chunk: 'openchat/openchat-3.6-8b-20240522',
-      word: '21.6k',
-      search: '2',
-      desc: '설명이 들어갑니다. 설명이 들어갑니다.',
-      date: '2025-12-31 10:12',
-    },
-  ]);
+  const files = knowledgeBase?.files ?? [];
 
   return (
     <main>
@@ -156,14 +122,19 @@ export default function KnowledgeBaseDetailPage() {
                     useClientPagination
                     useMultiSelect
                     columns={columns}
-                    data={rowData}
-                    totalCount={rowData.length}
+                    data={files}
+                    totalCount={files.length}
                     pagination={pagination}
                     setPagination={setPagination}
                     rowSelection={rowSelection}
                     setRowSelection={setRowSelection}
                     setSorting={setSorting}
                     sorting={sorting}
+                    emptyMessage={
+                      isError
+                        ? '파일 목록을 불러오는 데 실패했습니다.'
+                        : '등록된 파일이 없습니다.'
+                    }
                   />
                 </div>
               </div>,

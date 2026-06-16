@@ -134,7 +134,7 @@ export default function CustomModelPage() {
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div>
+        <div className="h-120.25">
           <Table
             columns={columns}
             data={customModels}
@@ -148,11 +148,11 @@ export default function CustomModelPage() {
             }
             emptyMessage={
               isError ? (
-                '서비스 목록을 불러오는 데 실패했습니다.'
+                '커스텀 모델 목록을 불러오는 데 실패했습니다.'
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div>서비스가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 서비스를 생성해 보세요.</div>
+                  <div>커스텀 모델이 없습니다.</div>
+                  <div>생성 버튼을 클릭해 커스텀 모델을 생성해 보세요.</div>
                 </div>
               )
             }

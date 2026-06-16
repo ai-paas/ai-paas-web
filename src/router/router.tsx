@@ -9,12 +9,13 @@ import WorkflowDetailPage from '../pages/workflow/workflow/[id]/page';
 import WorkflowEditPage from '../pages/workflow/workflow/[id]/edit/page';
 import WorkflowTemplatePage from '../pages/workflow/templates/page';
 import WorkflowTemplateCreatePage from '../pages/workflow/templates/create/page';
+import WorkflowTemplateDetailPage from '../pages/workflow/templates/[id]/page';
 import WorkflowTemplateEditPage from '../pages/workflow/templates/[id]/edit/page';
 import ModelCatalogPage from '../pages/model/model-catalog/page';
 import ModelCatalogCreatePage from '../pages/model/model-catalog/create/page';
 import ModelCatalogDetailPage from '../pages/model/model-catalog/[id]/page';
 import CustomModelCreateHuggingfacePage from '@/pages/model/custom-model/create/huggingface/page';
-import CustomModelCreateEtriPage from '@/pages/model/custom-model/create/etri/page';
+import CustomModelCreateKagglePage from '@/pages/model/custom-model/create/kaggle/page';
 import CustomModelPage from '../pages/model/custom-model/page';
 import CustomModelCreatePage from '../pages/model/custom-model/create/page';
 import CustomModelDetailPage from '../pages/model/custom-model/[id]/page';
@@ -122,6 +123,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'templates/:id',
+            element: (
+              <Suspense fallback={<></>}>
+                <WorkflowTemplateDetailPage />
+              </Suspense>
+            ),
+          },
+          {
             path: 'templates/:id/edit',
             element: (
               <Suspense fallback={<></>}>
@@ -209,10 +218,10 @@ export const router = createBrowserRouter([
             ),
           },
           {
-            path: 'custom-model/create/etri',
+            path: 'custom-model/create/kaggle',
             element: (
               <Suspense fallback={<></>}>
-                <CustomModelCreateEtriPage />
+                <CustomModelCreateKagglePage />
               </Suspense>
             ),
           },

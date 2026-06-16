@@ -43,3 +43,49 @@
     height: 515px;
   }
 }
+
+////모니터링 지표 카드
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid $color-gray-25;
+  border-radius: 8px;
+  @include font-style;
+
+  .metricLabel {
+    color: $page-font-color-300;
+    font-size: $page-font-root;
+    font-weight: 500;
+  }
+
+  .metricValue {
+    color: $page-font-color-900;
+    font-size: 24px;
+    font-weight: 700;
+  }
+}
+
+.metricAggregatedAt {
+  margin-top: 16px;
+  color: $page-font-color-300;
+  font-size: 12px;
+  @include font-style;
+}
+
+.metricEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: $page-font-color-300;
+  font-size: $page-font-root;
+  @include font-style;
+}

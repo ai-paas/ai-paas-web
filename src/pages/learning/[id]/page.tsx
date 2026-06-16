@@ -1,5 +1,7 @@
+import Lottie from 'react-lottie';
 import { BreadCrumb } from '@innogrid/ui';
 import { IconChkGreen, IconErrRed } from '../../../assets/img/icon';
+import LoadingWhite from '../../../assets/lottie/loding_white.json';
 import styles from '../learning.module.scss';
 import { useNavigate, useParams } from 'react-router';
 import { EditLearningButton } from '../../../components/features/learning/edit-learning-button';
@@ -37,6 +39,7 @@ export default function LearningDetailPage() {
 
   const failed = isLearningFailed(learning?.status);
   const finished = isLearningFinished(learning?.status);
+  const inProgress = !!learning && !failed && !finished;
 
   return (
     <main>
@@ -60,9 +63,28 @@ export default function LearningDetailPage() {
         <h3 className="page-detail-title">상세 정보</h3>
         <div className="page-detail-list-box">
           <ul className="page-detail-list">
-            {(finished || failed) && (
+            {(finished || failed || inProgress) && (
               <li>
                 <div className="page-detail_item-data">
+                  {inProgress && (
+                    <div className={styles.conditionBox}>
+                      <Lottie
+                        width="16px"
+                        height="16px"
+                        style={{ margin: '0' }}
+                        isClickToPauseDisabled={true}
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData: LoadingWhite,
+                          rendererSettings: {
+                            preserveAspectRatio: 'xMidYMid slice',
+                          },
+                        }}
+                      />
+                      <span>학습 진행중...</span>
+                    </div>
+                  )}
                   {finished && (
                     <div className={`${styles.conditionBox} ${styles.finish}`}>
                       <IconChkGreen />

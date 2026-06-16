@@ -73,7 +73,7 @@ export default function WorkflowEditPage() {
           mode="edit"
           workflowId={workflowId}
           status={workflow.status}
-          serviceId={workflow.service_id}
+          serviceId={workflow.service_id ?? undefined}
         />
       </div>
     </main>

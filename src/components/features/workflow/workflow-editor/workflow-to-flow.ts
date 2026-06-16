@@ -1,14 +1,14 @@
 import type { Edge } from '@xyflow/react';
 import type { WorkflowNode } from '@/store/useWorkflowStore';
-import type { WorkflowComponent, WorkflowComponentType } from '@/types/workflow';
+import type {
+  WorkflowComponent,
+  WorkflowComponentConnection,
+  WorkflowComponentType,
+} from '@/types/workflow';
 
 interface WorkflowFlowSource {
   components?: WorkflowComponent[];
-  component_connections?: {
-    id?: string;
-    source_component_id: string;
-    target_component_id: string;
-  }[];
+  component_connections?: WorkflowComponentConnection[];
 }
 
 const DEFAULT_LABEL: Record<WorkflowComponentType, string> = {
@@ -61,6 +61,17 @@ const createNodeData = (component: WorkflowComponent): WorkflowNode['data'] => {
   };
 };
 
+const getNodePosition = (component: WorkflowComponent, index: number) => {
+  if (typeof component.x === 'number' && typeof component.y === 'number') {
+    return { x: component.x, y: component.y };
+  }
+
+  return {
+    x: index * 300,
+    y: component.type === 'START' || component.type === 'END' ? 120 : 220,
+  };
+};
+
 export const workflowToFlow = (workflow?: WorkflowFlowSource) => {
   const components = workflow?.components ?? [];
   const componentIds = new Set(components.map((component) => component.id));
@@ -68,10 +79,7 @@ export const workflowToFlow = (workflow?: WorkflowFlowSource) => {
   const nodes = components.map<WorkflowNode>((component, index) => ({
     id: component.id,
     type: component.type,
-    position: {
-      x: index * 300,
-      y: component.type === 'START' || component.type === 'END' ? 120 : 220,
-    },
+    position: getNodePosition(component, index),
     data: createNodeData(component),
   }));
 

@@ -14,6 +14,11 @@ export interface Prompt {
   }[];
 }
 
+export interface PromptVariableTypeList {
+  /** 프롬프트에서 사용할 수 있는 변수 타입 목록 */
+  available_types: string[];
+}
+
 export interface CreatePromptRequest {
   prompt: {
     name: string;

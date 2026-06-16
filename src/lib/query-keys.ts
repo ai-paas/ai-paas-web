@@ -1,3 +1,14 @@
+import type {
+  GetApiMetricsParams,
+  GetEventsParams,
+  GetInfraNodesParams,
+  GetInfraResourcesParams,
+  GetMeActivitiesParams,
+  GetMeMonitoringParams,
+  GetProvidersHealthParams,
+  GetTopUsersParams,
+  GetTrendsParams,
+} from '@/types/dashboard';
 import type { GetDatasetsParams } from '@/types/dataset';
 import type { GetKnowledgeBasesParams, GetSearchRecordsParams } from '@/types/knowledgebase';
 import type { GetLearningParams } from '@/types/learning';
@@ -27,9 +38,36 @@ export type WorkflowListParams = {
   creator_id?: string;
   service_id?: string;
   status?: 'DRAFT' | 'ACTIVE' | 'ERROR';
+  /** 정렬 기준. `,`로 다중 키, `-` 접두사는 DESC. 기본 -created_at. 허용: id, name, created_at, updated_at, created_by, status */
+  sort?: string;
 };
 
 export const queryKeys = {
+  dashboard: {
+    all: ['dashboard'] as const,
+    summary: () => [...queryKeys.dashboard.all, 'summary'] as const,
+    meSummary: () => [...queryKeys.dashboard.all, 'me', 'summary'] as const,
+    meServices: () => [...queryKeys.dashboard.all, 'me', 'services'] as const,
+    meMonitoring: (params: GetMeMonitoringParams = {}) =>
+      [...queryKeys.dashboard.all, 'me', 'monitoring', params] as const,
+    meActivities: (params: GetMeActivitiesParams = {}) =>
+      [...queryKeys.dashboard.all, 'me', 'activities', params] as const,
+    topUsers: (params: GetTopUsersParams) =>
+      [...queryKeys.dashboard.all, 'users', 'top', params] as const,
+    infraStatus: () => [...queryKeys.dashboard.all, 'infra', 'status'] as const,
+    infraNodes: (params: GetInfraNodesParams) =>
+      [...queryKeys.dashboard.all, 'infra', 'nodes', params] as const,
+    infraResources: (params: GetInfraResourcesParams) =>
+      [...queryKeys.dashboard.all, 'infra', 'resources', params] as const,
+    events: (params: GetEventsParams = {}) =>
+      [...queryKeys.dashboard.all, 'events', params] as const,
+    trends: (params: GetTrendsParams = {}) =>
+      [...queryKeys.dashboard.all, 'trends', params] as const,
+    apiMetrics: (params: GetApiMetricsParams = {}) =>
+      [...queryKeys.dashboard.all, 'api-metrics', params] as const,
+    providersHealth: (params: GetProvidersHealthParams = {}) =>
+      [...queryKeys.dashboard.all, 'providers', 'health', params] as const,
+  },
   datasets: {
     all: ['datasets'] as const,
     list: (params: GetDatasetsParams = {}) => [...queryKeys.datasets.all, params] as const,
@@ -102,6 +140,7 @@ export const queryKeys = {
   prompts: {
     all: ['prompts'] as const,
     detail: (promptId: number) => ['prompt', promptId] as const,
+    variableTypes: () => [...queryKeys.prompts.all, 'variable-types'] as const,
   },
   services: {
     all: ['services'] as const,
@@ -123,5 +162,7 @@ export const queryKeys = {
       [...queryKeys.workflows.all, 'templates', params] as const,
     status: (workflowId?: string) => [...queryKeys.workflows.all, 'status', workflowId] as const,
     models: (workflowId?: string) => [...queryKeys.workflows.all, 'models', workflowId] as const,
+    finalizeCleanup: (workflowId?: string, runId?: string) =>
+      [...queryKeys.workflows.all, 'finalize-cleanup', workflowId, runId] as const,
   },
 };

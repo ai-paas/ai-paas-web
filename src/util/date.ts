@@ -1,6 +1,9 @@
 export function formatDateTime(dateString?: string): string {
   if (!dateString) return '';
-  const date = new Date(dateString + 'Z');
+  // 이미 타임존 표기(Z 또는 +09:00 등)가 있으면 그대로, 없으면 UTC(naive)로 간주해 'Z' 부여
+  const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(dateString);
+  const date = new Date(hasTimezone ? dateString : dateString + 'Z');
+  if (Number.isNaN(date.getTime())) return '';
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');

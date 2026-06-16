@@ -31,15 +31,22 @@ export interface ServiceWorkflowBrief {
   updated_at: string;
 }
 
-export interface MonitoringMetrics {
+/** 단일 기간(1h/1d/1w)의 7개 메트릭. 데이터 없으면 평균/비율은 null. */
+export interface PeriodMetrics {
   message_count: number;
   active_users: number;
   token_usage: number;
   avg_interaction_count: number;
-  response_time_ms: number;
+  response_time_ms: number | null;
   error_count: number;
-  success_rate: number;
+  success_rate: number | null;
 }
+
+/** 메트릭 집계 기간. 동일 끝점(aggregated_at)을 공유하는 누적 윈도우. */
+export type MetricsPeriod = '1h' | '1d' | '1w';
+
+/** 기간 키별 메트릭. 1h/1d/1w 키는 항상 존재. */
+export type MonitoringMetrics = Record<MetricsPeriod, PeriodMetrics>;
 
 export interface WorkflowMonitoringMetrics {
   workflow_id: string;
@@ -51,8 +58,8 @@ export interface WorkflowMonitoringMetrics {
 export interface ServiceMonitoringData {
   total_metrics: MonitoringMetrics;
   workflow_metrics: WorkflowMonitoringMetrics[];
-  period_start: string;
-  period_end: string;
+  /** 집계 기준 시각(UTC). 모든 기간이 이 시각을 끝점으로 역산. */
+  aggregated_at: string;
 }
 
 export interface KnowledgeBaseSummary {

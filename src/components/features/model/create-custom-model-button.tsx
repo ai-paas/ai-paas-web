@@ -13,8 +13,8 @@ export const CreateCustomModelButton = () => {
         <SelectButtonItem onClick={() => navigate('/model/custom-model/create/huggingface')}>
           허깅페이스 연동
         </SelectButtonItem>
-        <SelectButtonItem onClick={() => navigate('/model/custom-model/create/etri')}>
-          etri 연동
+        <SelectButtonItem onClick={() => navigate('/model/custom-model/create/kaggle')}>
+          kaggle 연동
         </SelectButtonItem>
       </SelectButton>
     </>

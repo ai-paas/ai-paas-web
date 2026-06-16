@@ -25,6 +25,7 @@ export interface KnowledgeBase {
   search_method?: string;
   created_at?: string;
   updated_at?: string;
+  files?: KnowledgeBaseFile[];
 }
 
 export interface CreateKnowledgeBaseRequest {
@@ -57,11 +58,18 @@ export interface GetKnowledgeBasesParams {
 }
 
 export interface KnowledgeBaseFile {
-  file_id: string;
-  file_name: string;
-  file_size?: number;
-  file_type?: string;
-  uploaded_at?: string;
+  id: number;
+  knowledge_base_id: number;
+  name: string;
+  partition_name?: string;
+  chunk_number?: number;
+  object_storage_uri?: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  deleted_by?: string;
 }
 
 export interface AddFileRequest {

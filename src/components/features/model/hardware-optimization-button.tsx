@@ -13,8 +13,8 @@ const INITIAL_HARDWARE_OPTIMIZATION = {
 
 export const HardwareOptimizationButton = ({ customModelId }: { customModelId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { modelForOptimizer } = useGetModelForOptimizer(customModelId);
-  const { optimizers } = useGetOptimizers({ model_id: customModelId });
+  const { modelForOptimizer } = useGetModelForOptimizer(customModelId, { enabled: isModalOpen });
+  const { optimizers } = useGetOptimizers({ model_id: customModelId }, { enabled: isModalOpen });
   const [hardwareOptimization, setHardwareOptimization] = useState<OptimizeRequest>(
     INITIAL_HARDWARE_OPTIMIZATION
   );

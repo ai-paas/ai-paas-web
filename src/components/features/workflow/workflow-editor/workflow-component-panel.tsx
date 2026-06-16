@@ -4,42 +4,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useReactFlow } from '@xyflow/react';
 import { SearchInput, useSearchInputState } from '@innogrid/ui';
 import { useEffect } from 'react';
 import { useGetWorkflowComponentTypes } from '@/hooks/service/workflows';
 import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { DEFAULT_LABEL } from './workflow-node-defaults';
 import type { WorkflowComponentType } from '@/types/workflow';
-
-const DEFAULT_LABEL = {
-  START: '시작',
-  MODEL: '모델',
-  KNOWLEDGE_BASE: '지식베이스',
-  END: '끝',
-} as const;
-
-const createNodeId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-
-  return `n${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-};
-
-const NODE_X_GAP = 300;
-const TOP_ROW_Y = 120;
-const DEFAULT_ROW_Y = 220;
-
-const getNextNodePosition = (
-  nodes: ReturnType<typeof useWorkflowStore.getState>['nodes'],
-  type: WorkflowComponentType
-) => {
-  const nextX =
-    nodes.length === 0 ? 0 : Math.max(...nodes.map((node) => node.position.x)) + NODE_X_GAP;
-  const y = type === 'START' || type === 'END' ? TOP_ROW_Y : DEFAULT_ROW_Y;
-
-  return { x: nextX, y };
-};
 
 interface WorkflowComponentPanelProps {
   initialName?: string;
@@ -51,72 +21,18 @@ export const WorkflowComponentPanel = ({ initialName }: WorkflowComponentPanelPr
   const nodes = useWorkflowStore((s) => s.nodes);
   const name = useWorkflowStore((s) => s.name);
   const setName = useWorkflowStore((s) => s.setName);
-  const { addNodes } = useReactFlow();
+  const pendingNodeType = useWorkflowStore((s) => s.pendingNodeType);
+  const setPendingNodeType = useWorkflowStore((s) => s.setPendingNodeType);
 
   useEffect(() => {
-    if (initialName) {
-      setName(initialName);
-    }
+    // 전역 store 에 남은 이전 이름을 비우고, 템플릿이면 그 이름으로 시작한다.
+    setName(initialName ?? '');
   }, [initialName, setName]);
 
   const handleClick = (type: WorkflowComponentType) => (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-
-    const generateNodeData = () => {
-      let newNodeData = {};
-
-      switch (type) {
-        case 'START':
-          newNodeData = {
-            label: DEFAULT_LABEL[type],
-            name: DEFAULT_LABEL[type],
-            inputFields: [],
-          };
-          break;
-        case 'KNOWLEDGE_BASE':
-          newNodeData = {
-            label: DEFAULT_LABEL[type],
-            name: DEFAULT_LABEL[type],
-            query_variable: '',
-            knowledgebase_id: '',
-            top_k: 3,
-          };
-          break;
-        case 'MODEL':
-          newNodeData = {
-            label: DEFAULT_LABEL[type],
-            name: DEFAULT_LABEL[type],
-            type: 'custom',
-            model_id: '',
-            context: '',
-            prompt_id: '',
-            temperature: 0.7,
-            top_p: 0.9,
-            max_tokens: 2048,
-          };
-          break;
-        case 'END':
-          newNodeData = {
-            label: DEFAULT_LABEL[type],
-            name: DEFAULT_LABEL[type],
-            output_variable: [],
-          };
-          break;
-        default:
-          break;
-      }
-
-      return newNodeData;
-    };
-
-    addNodes([
-      {
-        id: createNodeId(),
-        position: getNextNodePosition(nodes, type),
-        data: generateNodeData(),
-        type,
-      },
-    ]);
+    // 다시 클릭하면 배치 모드 해제, 아니면 캔버스 클릭으로 배치하도록 대기 상태 진입
+    setPendingNodeType(pendingNodeType === type ? null : type);
   };
 
   return (
@@ -149,7 +65,12 @@ export const WorkflowComponentPanel = ({ initialName }: WorkflowComponentPanelPr
                   <button
                     type="button"
                     onClick={handleClick(component.type)}
-                    className="relative size-7 rounded border-transparent transition-all duration-300 ease-in-out after:absolute after:top-[48%] after:left-[52%] after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:text-xl after:font-extralight after:text-[#666] after:content-['×'] hover:border hover:bg-[#f2f2f2] hover:after:text-[#1a1a1a]"
+                    aria-pressed={pendingNodeType === component.type}
+                    className={`relative size-7 rounded border-transparent transition-all duration-300 ease-in-out after:absolute after:top-[48%] after:left-[52%] after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:text-xl after:font-extralight after:content-['×'] hover:border hover:bg-[#f2f2f2] hover:after:text-[#1a1a1a] ${
+                      pendingNodeType === component.type
+                        ? 'bg-[#f2f2f2] after:text-[#1a1a1a]'
+                        : 'after:text-[#666]'
+                    }`}
                   >
                     <span className="sr-only">생성</span>
                   </button>

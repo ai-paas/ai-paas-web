@@ -1,6 +1,7 @@
 export type WorkflowStatus = 'DRAFT' | 'ACTIVE' | 'ERROR';
 export type WorkflowComponentType = 'START' | 'END' | 'MODEL' | 'KNOWLEDGE_BASE';
 
+/** WorkflowResponse — 목록 조회(GET /workflows) 및 생성(POST /workflows) 응답 */
 export interface Workflow {
   id: number;
   surro_workflow_id: string;
@@ -11,33 +12,66 @@ export interface Workflow {
   description: string;
   category: string;
   status: WorkflowStatus;
-  service_id: string;
+  service_id: string | null;
   is_template: boolean;
-  template_id: string;
+  template_id: string | null;
+}
+
+export interface WorkflowComponentInfo {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface WorkflowModelBrief {
+  id: number;
+  name: string;
+  description: string;
+  provider_info?: WorkflowComponentInfo | null;
+  type_info?: WorkflowComponentInfo | null;
+  format_info?: WorkflowComponentInfo | null;
+  parent_model_id?: number | null;
+  registry?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface WorkflowComponent {
   id: string;
   workflow_id: string;
+  component_id: string;
   name: string;
   type: WorkflowComponentType;
   description?: string | null;
   model_id?: number | null;
-  model?: unknown;
   knowledge_base_id?: number | null;
   prompt_id?: number | null;
   config?: Record<string, unknown> | null;
+  x?: number | null;
+  y?: number | null;
+  model?: WorkflowModelBrief | null;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface WorkflowComponentConnection {
   id?: string;
+  workflow_id?: string;
   source_component_id: string;
   target_component_id: string;
+  source_component?: WorkflowComponent;
+  target_component?: WorkflowComponent;
+  created_at?: string;
 }
 
+/** WorkflowDetailResponse — 상세 조회(GET /workflows/{id}) 응답 */
 export interface WorkflowRead extends Workflow {
+  service_name: string | null;
+  creator_id: number;
+  template_name: string | null;
+  kubeflow_run_id: string | null;
+  public_url: string | null;
+  backend_api_url: string | null;
   components?: WorkflowComponent[];
   component_connections?: WorkflowComponentConnection[];
 }
@@ -46,7 +80,6 @@ export interface WorkflowTemplateCreator {
   id: number;
   username: string;
   name: string;
-  password: string;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -76,14 +109,24 @@ export interface WorkflowTemplateListResponse {
   items: WorkflowTemplateBrief[];
 }
 
-export type WorkflowTemplate = Omit<WorkflowRead, 'id' | 'service_id' | 'template_id'> & {
+/** WorkflowTemplateReadSchema — 템플릿 상세 조회(GET /workflows/templates/{id}) 응답 */
+export interface WorkflowTemplate {
   id: string;
+  name: string;
+  description: string;
+  category: string;
+  status: WorkflowStatus;
   service_id: string | null;
+  creator_id: number;
+  creator: WorkflowTemplateCreator;
+  is_template: true;
   template_id: string | null;
-  creator_id?: number;
-  creator?: WorkflowTemplateCreator;
-  usage_count?: number;
-};
+  components?: WorkflowComponent[];
+  component_connections?: WorkflowComponentConnection[];
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface WorkflowTemplateListParams {
   page?: number;
@@ -109,6 +152,8 @@ export interface WorkflowComponentDefinition {
   knowledge_base_id?: number;
   prompt_id?: number;
   config?: Record<string, unknown>;
+  x?: number;
+  y?: number;
 }
 
 export interface WorkflowConnectionDefinition {
@@ -143,6 +188,26 @@ export interface CloneWorkflowTemplateRequest {
   service_id?: number;
 }
 
+export interface ClonedWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  status: WorkflowStatus;
+  service_id: string | null;
+  service_name: string | null;
+  creator_id: number;
+  creator: WorkflowTemplateCreator;
+  is_template: false;
+  template_id: string | null;
+  template_name: string | null;
+  kubeflow_run_id: string | null;
+  components?: WorkflowComponent[];
+  component_connections?: WorkflowComponentConnection[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CleanupWorkflowResponse {
   message: string;
   workflow_id: string;
@@ -168,7 +233,8 @@ export interface FinalizeWorkflowDeletionResponse {
 export interface FinalizeWorkflowCleanupResponse {
   message?: string;
   workflow_id?: string;
-  status?: string;
+  status?: 'completed' | 'in_progress' | 'failed' | string;
+  workflow_updated?: boolean;
 }
 
 export interface ExecuteWorkflowResponse {
@@ -223,7 +289,7 @@ export interface UpdateWorkflowRequest {
   description?: string;
   category?: string;
   status?: WorkflowStatus;
-  service_id?: string;
+  service_id?: string | null;
   workflow_definition?: WorkflowDefinition;
 }
 
