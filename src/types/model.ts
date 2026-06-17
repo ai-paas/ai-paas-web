@@ -235,39 +235,56 @@ export interface HubModelTag {
   remaining_count: number;
 }
 
-export interface ModelForOptimizer {
-  id: number;
-  model_name: string;
-  model_task: string;
-  run_id: string;
-  path: string;
+/** 모델 최적화/경량화 task 분류. */
+export type ModelImprovementCategory = 'optimization' | 'lightweight';
+
+/** 최적화/경량화 task 진행 상태. */
+export type ModelImprovementStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+
+/** 사용 가능한 최적화/경량화 기법. */
+export interface ModelImprovementTaskType {
+  /** 기법 식별자 (tensorrt, openvino, pruning, ptq 등) */
+  name: string;
+  category: ModelImprovementCategory;
+  /** 표시용 설명 */
+  description: string | null;
 }
 
-export interface Optimizer {
-  id: number;
-  optimizer_name: string;
-  accelerator: string;
-  argument: Record<string, string>;
+export interface GetImprovementTaskTypesParams {
+  /** 카테고리 필터 (optimization, lightweight) */
+  category?: ModelImprovementCategory;
+  /** 지정 시 본인 소유 모델에 한해 repo_id 기반 허용 기법만 반환 */
+  source_model_id?: number;
 }
 
-export interface Optimizers {
-  data: {
-    items: Optimizer[];
-    current_page: number;
-    page_size: number;
-    total_count: number;
-    total_page: number;
-    next_page?: number;
-    prev_page?: number;
-  };
+export interface CreateImprovementRequest {
+  /** 대상 모델 ID */
+  source_model_id: number;
+  /** 최적화 기법 (tensorrt, openvino, pruning, ptq 등) */
+  task_type: string;
 }
 
-export interface OptimizeRequest {
-  optimizer_id: number;
-  saved_model_run_id: string;
-  saved_model_path: string;
-  model_name: string;
-  args?: Record<string, string>;
+export interface CreateImprovementResponse {
+  /** task 추적 UUID */
+  task_id: string;
+  /** 초기값 PENDING */
+  status: ModelImprovementStatus;
+  source_model_id: number;
+  created_at: string;
+}
+
+export interface ImprovementStatusResponse {
+  task_id: string;
+  status: ModelImprovementStatus;
+  source_model_id: number;
+  created_at: string;
+  updated_at: string;
+  /** 상태 메시지 */
+  message: string | null;
+  /** 결과 모델 ID (SUCCEEDED 시) */
+  result_model_id: number | null;
+  /** 에러 메시지 (FAILED 시) */
+  error: string | null;
 }
 
 export interface GetModelsParams {
@@ -333,9 +350,3 @@ export interface GetHubModelsParams {
   other?: string[];
 }
 
-export interface GetOptimizersParams {
-  page?: number;
-  size?: number;
-  name?: string;
-  model_id?: number;
-}

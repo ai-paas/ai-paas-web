@@ -16,12 +16,12 @@ import type { GetMembersParams } from '@/types/member';
 import type {
   GetCustomModelsParams,
   GetHubModelsParams,
+  GetImprovementTaskTypesParams,
   GetModelCatalogsParams,
   GetModelFormatsParams,
   GetModelProvidersParams,
   GetModelsParams,
   GetModelTypesParams,
-  GetOptimizersParams,
 } from '@/types/model';
 import type { GetServicesParams } from '@/types/service';
 import type { WorkflowTemplateListParams } from '@/types/workflow';
@@ -129,13 +129,11 @@ export const queryKeys = {
     all: ['hub-connect-tags'] as const,
     list: (params: HubModelTagParams) => [...queryKeys.hubModelTags.all, params] as const,
   },
-  modelForOptimizer: {
-    all: ['modelForOptimizer'] as const,
-    detail: (modelId?: number) => [...queryKeys.modelForOptimizer.all, modelId] as const,
-  },
-  optimizers: {
-    all: ['optimizers'] as const,
-    list: (params: GetOptimizersParams) => [...queryKeys.optimizers.all, params] as const,
+  modelImprovements: {
+    all: ['model-improvements'] as const,
+    taskTypes: (params: GetImprovementTaskTypesParams = {}) =>
+      [...queryKeys.modelImprovements.all, 'task-types', params] as const,
+    status: (taskId?: string) => [...queryKeys.modelImprovements.all, 'status', taskId] as const,
   },
   prompts: {
     all: ['prompts'] as const,

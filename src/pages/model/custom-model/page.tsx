@@ -12,8 +12,7 @@ import { CreateCustomModelButton } from '../../../components/features/model/crea
 import { Link } from 'react-router';
 import { EditCustomModelButton } from '../../../components/features/model/edit-custom-model-button';
 import { DeleteCustomModelButton } from '../../../components/features/model/delete-custom-model-button';
-import { HardwareOptimizationButton } from '../../../components/features/model/hardware-optimization-button';
-import { ModelCompressionButton } from '../../../components/features/model/model-compression-button';
+import { ModelImprovementButton } from '../../../components/features/model/model-improvement-button';
 import { useGetCustomModels } from '@/hooks/service/models';
 import { useEffect, useMemo } from 'react';
 import type { CustomModel } from '@/types/model';
@@ -121,8 +120,19 @@ export default function CustomModelPage() {
             <CreateCustomModelButton />
             <EditCustomModelButton customModelId={selectedId} />
             <DeleteCustomModelButton customModelId={selectedId} />
-            <HardwareOptimizationButton customModelId={selectedId} />
-            <ModelCompressionButton customModelId={selectedId} />
+            <ModelImprovementButton
+              customModelId={selectedId}
+              category="optimization"
+              title="하드웨어 최적화"
+              selectLabel="최적화 방식"
+              wrapperStyle={{ marginLeft: '20px' }}
+            />
+            <ModelImprovementButton
+              customModelId={selectedId}
+              category="lightweight"
+              title="모델 경량화"
+              selectLabel="경량화 방식"
+            />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
