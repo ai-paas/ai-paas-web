@@ -11,7 +11,7 @@ import {
 
 import {
   IconArrowModelTree,
-  IconLogoEpertx,
+  IconLogoKaggle,
   IconLogoHuggingface,
   IconDownload,
 } from '../../../../assets/img/icon';
@@ -20,6 +20,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useGetModel } from '@/hooks/service/models';
 import { formatDateTime } from '@/util/date';
 import { DeleteCustomModelButton } from '@/components/features/model/delete-custom-model-button';
+import { ModelImprovementButton } from '@/components/features/model/model-improvement-button';
 import type { Model, ModelReadChild, ModelVisibility } from '@/types/model';
 
 interface ModelFile {
@@ -92,11 +93,8 @@ function buildModelTree(model: Model): ModelTreeNode[] {
  */
 function getModelTreeRoute(node: ModelTreeNode): string {
   const isCatalog =
-    node.visibility === 'CATALOG' ||
-    (node.visibility === null && node.relation === 'ancestor');
-  return isCatalog
-    ? `/model/model-catalog/${node.id}`
-    : `/model/custom-model/${node.id}`;
+    node.visibility === 'CATALOG' || (node.visibility === null && node.relation === 'ancestor');
+  return isCatalog ? `/model/model-catalog/${node.id}` : `/model/custom-model/${node.id}`;
 }
 
 const columns: ColDef<ModelFile>[] = [
@@ -167,12 +165,18 @@ export default function CustomModelDetailPage() {
         <h2 className="page-title">모델 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
-              하드웨어 최적화
-            </Button>
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
-              모델 경량화
-            </Button>
+            <ModelImprovementButton
+              customModelId={model?.id}
+              category="optimization"
+              title="하드웨어 최적화"
+              selectLabel="최적화 방식"
+            />
+            <ModelImprovementButton
+              customModelId={model?.id}
+              category="lightweight"
+              title="모델 경량화"
+              selectLabel="경량화 방식"
+            />
             <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
               편집
             </Button>
@@ -191,21 +195,23 @@ export default function CustomModelDetailPage() {
                 {model?.provider_info.name === 'huggingface' && (
                   <a
                     href={`https://huggingface.co/${model?.repo_id}`}
-                    target={'_blank'}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`page-detail_item-data-link ${styles.itemLink}`}
                   >
                     <IconLogoHuggingface />
                     허깅페이스 바로가기
                   </a>
                 )}
-                {model?.provider_info.name === 'epretx' && (
+                {model?.provider_info.name === 'kaggle' && (
                   <a
-                    href={'https://epretx.etri.re.kr/'}
-                    target={'_blank'}
+                    href={`https://www.kaggle.com/models/${model?.repo_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`page-detail_item-data-link ${styles.itemLink}`}
                   >
-                    <IconLogoEpertx />
-                    e-PreTX 바로가기
+                    <IconLogoKaggle />
+                    Kaggle 바로가기
                   </a>
                 )}
               </div>
@@ -254,7 +260,9 @@ export default function CustomModelDetailPage() {
                         <div
                           key={node.id}
                           style={{ paddingLeft: node.depth === 0 ? 0 : 4 + (node.depth - 1) * 24 }}
-                          className={node.relation === 'current' ? styles.modelTreeCurrent : undefined}
+                          className={
+                            node.relation === 'current' ? styles.modelTreeCurrent : undefined
+                          }
                         >
                           {node.depth > 0 && <IconArrowModelTree />}
                           {node.name}
