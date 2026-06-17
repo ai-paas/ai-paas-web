@@ -100,6 +100,32 @@ export default function LearningDetailPage() {
                 </div>
               </li>
             )}
+            {learning ? (
+              <li>
+                <div className="page-detail_item-name">Epoch</div>
+                <div className="page-detail_item-data">
+                  <div className={styles.progressBox}>
+                    <div>
+                      {learning.current_epoch ?? 0} / {learning.max_epoch ?? 0}
+                    </div>
+                    <div className={styles.progress}>
+                      <div
+                        className={styles.progressActionBar}
+                        style={{
+                          width: learning.max_epoch
+                            ? `${Math.min(
+                                100,
+                                ((learning.current_epoch ?? 0) / learning.max_epoch) * 100,
+                              )}%`
+                            : '0%',
+                        }}
+                      ></div>
+                      <div className={styles.progressBar}></div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ) : null}
             <li>
               <div className="page-detail_item-name">이름</div>
               <div className="page-detail_item-data">{learning?.name ?? '-'}</div>
@@ -159,16 +185,6 @@ export default function LearningDetailPage() {
                 <em>{formatMetric(learning?.loss)}</em>
               </div>
             </div>
-            <div className="page-detail-round-box page-flex-1">
-              <div className="page-detail-round-name">Epochs</div>
-              <div className="page-detail-round-data page-h-75">
-                <em>
-                  {learning?.max_epoch
-                    ? `${learning.current_epoch ?? 0} / ${learning.max_epoch}`
-                    : '-'}
-                </em>
-              </div>
-            </div>
           </div>
           <div className="page-content-detail-row2">
             <div className="page-detail-round-box page-flex-1">
@@ -178,15 +194,15 @@ export default function LearningDetailPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={learning.loss_history}
-                      margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                      margin={{ top: 20, right: 20, bottom: 30, left: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                       <XAxis
                         dataKey="epoch"
-                        label={{ value: 'Epoch', position: 'insideBottom', offset: -5 }}
+                        label={{ value: 'Epoch', position: 'bottom', offset: 0 }}
                       />
                       <YAxis label={{ value: 'Loss', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
+                      <Tooltip labelFormatter={(label) => `Epoch ${label}`} />
                       <Line
                         type="monotone"
                         dataKey="loss"

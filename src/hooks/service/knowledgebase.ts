@@ -5,8 +5,8 @@ import type {
   AddFileRequest,
   ChunkType,
   GetKnowledgeBasesParams,
-  GetSearchRecordsParams,
   KnowledgeBase,
+  KnowledgeBaseBrief,
   Language,
   SearchKnowledgeBaseRequest,
   SearchKnowledgeBaseResponse,
@@ -79,7 +79,7 @@ export const useGetKnowledgeBases = (params: GetKnowledgeBasesParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.knowledgeBases.list(params),
     queryFn: () =>
-      api.get('knowledge-bases', { searchParams: { ...params } }).json<Page<KnowledgeBase>>(),
+      api.get('knowledge-bases', { searchParams: { ...params } }).json<Page<KnowledgeBaseBrief>>(),
   });
 
   return {
@@ -159,7 +159,7 @@ export const useAddFileToKnowledgeBase = (surro_knowledge_id: number) => {
       formData.append('file', data.file);
       return api
         .post(`knowledge-bases/${surro_knowledge_id}/files`, { body: formData })
-        .json<{ file_id: string }>();
+        .json<KnowledgeBase>();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -184,8 +184,8 @@ export const useDeleteFileFromKnowledgeBase = (surro_knowledge_id: number) => {
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (file_id: string) =>
-      api.delete(`knowledge-bases/${surro_knowledge_id}/files/${file_id}`).json<string>(),
+    mutationFn: (file_id: number) =>
+      api.delete(`knowledge-bases/${surro_knowledge_id}/files/${file_id}`).json<KnowledgeBase>(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.knowledgeBases.files(surro_knowledge_id),
@@ -223,28 +223,16 @@ export const useSearchKnowledgeBase = (surro_knowledge_id: number) => {
   };
 };
 
-export const useGetSearchRecords = (
-  surro_knowledge_id: number,
-  params: GetSearchRecordsParams = {}
-) => {
+export const useGetSearchRecords = (surro_knowledge_id: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.knowledgeBases.searchRecords(surro_knowledge_id, params),
+    queryKey: queryKeys.knowledgeBases.searchRecords(surro_knowledge_id),
     queryFn: () =>
-      api
-        .get(`knowledge-bases/${surro_knowledge_id}/search-records`, {
-          searchParams: { ...params },
-        })
-        .json<Page<SearchRecord>>(),
+      api.get(`knowledge-bases/${surro_knowledge_id}/search-records`).json<SearchRecord[]>(),
     enabled: !!surro_knowledge_id,
   });
 
   return {
-    searchRecords: data?.data ?? [],
-    page: {
-      number: data?.page ?? 1,
-      size: data?.size ?? 1,
-      total: data?.total ?? 1,
-    },
+    searchRecords: data ?? [],
     isPending,
     isError,
   };

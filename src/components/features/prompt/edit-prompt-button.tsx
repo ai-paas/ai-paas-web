@@ -1,9 +1,10 @@
 import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useGetPrompt, useUpdatePrompt } from '@/hooks/service/prompts';
+import { useGetPrompt, useGetPromptVariableTypes, useUpdatePrompt } from '@/hooks/service/prompts';
+import { PromptEditor } from '@/components/ui/prompt-editor';
 
 const schema = z.object({
   name: z.string().min(1, '이름은 필수입니다.'),
@@ -13,10 +14,16 @@ const schema = z.object({
 
 type Schema = z.infer<typeof schema>;
 
+const extractVariables = (content: string): string[] => {
+  const matches = content.matchAll(/\{\{#\s*([^{}#]+?)\s*#\}\}/g);
+  return [...new Set([...matches].map((match) => match[1]))];
+};
+
 export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { prompt } = useGetPrompt(isModalOpen ? promptId : undefined);
   const { updatePrompt, isPending } = useUpdatePrompt();
+  const { availableTypes } = useGetPromptVariableTypes();
   const toast = useToast();
 
   const {
@@ -24,11 +31,19 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', description: '', content: '' },
   });
+
+  const content = watch('content');
+  const variables = useMemo(() => extractVariables(content ?? ''), [content]);
+  const invalidVariables = useMemo(
+    () => variables.filter((v) => !availableTypes.includes(v)),
+    [variables, availableTypes]
+  );
 
   const openModal = useCallback(() => {
     if (!promptId) return;
@@ -42,15 +57,21 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
 
   const onSubmit = (data: Schema) => {
     if (!promptId) return;
+    if (invalidVariables.length > 0) {
+      toast.open({
+        status: 'negative',
+        title: '사용할 수 없는 변수',
+        children: `사용할 수 없는 변수입니다: ${invalidVariables.map((v) => `{{#${v}#}}`).join(', ')}`,
+      });
+      return;
+    }
     updatePrompt(
       {
         surro_prompt_id: promptId,
         name: data.name,
         description: data.description ?? '',
         content: data.content,
-        ...(prompt
-          ? { prompt_variable: prompt.prompt_variable?.map((v) => v.name) ?? [] }
-          : {}),
+        prompt_variable: variables,
       },
       {
         onSuccess: () => {
@@ -91,7 +112,7 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
         allowOutsideInteraction
         isOpen={isModalOpen}
         isButtonLoading={isPending}
-        buttonDisabled={isPending}
+        buttonDisabled={isPending || invalidVariables.length > 0}
         size="small"
         title="프롬프트 편집"
         buttonTitle="확인"
@@ -138,14 +159,27 @@ export const EditPromptButton = ({ promptId }: { promptId?: number }) => {
                 name="content"
                 control={control}
                 render={({ field }) => (
-                  <Textarea
+                  <PromptEditor
                     placeholder="프롬프트를 입력해주세요."
-                    errMessage={errors.content?.message}
                     value={field.value ?? ''}
                     onChange={field.onChange}
+                    height={240}
+                    allowedVariables={availableTypes}
                   />
                 )}
               />
+              {invalidVariables.length > 0 ? (
+                <p className="page-input_item-input-desc" style={{ color: '#d92d20' }}>
+                  사용할 수 없는 변수입니다: {invalidVariables.map((v) => `{{#${v}#}}`).join(', ')}
+                </p>
+              ) : (
+                <p className="page-input_item-input-desc">
+                  {'{{#변수명#}}'} 형식으로 변수를 지정할 수 있습니다. 사용 가능한 변수:{' '}
+                  {availableTypes.length > 0
+                    ? availableTypes.map((type) => `{{#${type}#}}`).join(', ')
+                    : '없음'}
+                </p>
+              )}
             </div>
           </div>
         </div>

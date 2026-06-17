@@ -1,5 +1,13 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
-import { BreadCrumb, Input, Button, Pagination, Skeleton, DropdownMenu } from '@innogrid/ui';
+import { useEffect, useState } from 'react';
+import {
+  BreadCrumb,
+  Button,
+  Pagination,
+  Skeleton,
+  DropdownMenu,
+  SearchInput,
+  useSearchInputState,
+} from '@innogrid/ui';
 
 import { IconAlign } from '../../../../../assets/img/icon';
 import { useGetHubModels } from '@/hooks/service/models';
@@ -15,8 +23,6 @@ const sortOptions: { value: KaggleSort; label: string }[] = [
   { value: 'downloads', label: '다운로드 수' },
   { value: 'trending', label: '트렌딩' },
 ];
-
-const pageSizeOption = [10, 15, 20, 30, 50, 100];
 
 // 로딩 중 모델 카드(descInfoBox2) 레이아웃에 맞춘 스켈레톤
 const SKELETON_COUNT = 10;
@@ -41,11 +47,7 @@ function ModelCardSkeleton() {
 export default function CustomModelCreateKagglePage() {
   const navigate = useNavigate();
   //input
-  const [value, setValue] = useState<string>('');
-
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  };
+  const { searchValue, ...restProps } = useSearchInputState();
 
   //sort
   const [sort, setSort] = useState<KaggleSort>('downloads');
@@ -68,12 +70,11 @@ export default function CustomModelCreateKagglePage() {
   const {
     hubModels,
     page: pageInfo,
-    hasMore,
     isFetching,
     isError,
   } = useGetHubModels({
     market: 'kaggle',
-    search: value,
+    search: searchValue,
     sort,
     page,
     limit: size,
@@ -82,7 +83,7 @@ export default function CustomModelCreateKagglePage() {
   // 검색어 변경 시 첫 페이지로
   useEffect(() => {
     setPage(1);
-  }, [value]);
+  }, [searchValue]);
 
   return (
     <main>
@@ -108,11 +109,11 @@ export default function CustomModelCreateKagglePage() {
             <div className={styles.descSearch}>
               <span>모델 검색</span>
               <div className={styles.searchInputBox}>
-                <Input
+                <SearchInput
                   size="large"
-                  placeholder="검색어를 입력해주세요."
-                  value={value}
-                  onChange={onChange}
+                  variant="default"
+                  placeholder="검색어를 입력해주세요"
+                  {...restProps}
                 />
                 <div className={styles.selectBtnBox}>
                   <DropdownMenu menus={sortMenus}>
@@ -127,7 +128,7 @@ export default function CustomModelCreateKagglePage() {
               </div>
             </div>
           </div>
-          <div className={styles.descBodyBox2}>
+          <div className={`${styles.descBodyBox2} pb-6`}>
             <div className={styles.descContent}>
               {isFetching ? (
                 Array.from({ length: SKELETON_COUNT }).map((_, i) => <ModelCardSkeleton key={i} />)
@@ -176,14 +177,10 @@ export default function CustomModelCreateKagglePage() {
               )}
             </div>
             <Pagination
+              pageSizeOption={[10, 15, 20, 30, 50, 100]}
               page={page}
-              pageSizeOption={pageSizeOption}
               size={size}
               totalCount={pageInfo.total}
-              // Kaggle total 은 하한값이라 has_more 로 다음 페이지 존재를 판단
-              totalPageCount={hasMore ? page + 1 : page}
-              disabledPrevButton={page <= 1}
-              disabledNextButton={!hasMore}
               onChangePageInput={(event) => setPage(+event.target.value)}
               onChangePageSize={(event) => setSize(+event.target.value)}
               onClickNext={() => setPage(page + 1)}
@@ -194,14 +191,18 @@ export default function CustomModelCreateKagglePage() {
       </div>
       <div className={`page-footer ${styles.footer}`}>
         <div className="page-footer_btn-box">
-          <Button size="large" color="secondary" onClick={() => alert('Button clicked!')}>
+          <Button size="large" color="secondary" onClick={() => navigate('/model/custom-model')}>
             취소
           </Button>
           <Button
             size="large"
             color="primary"
             disabled={!selectedModel}
-            onClick={() => alert('Button clicked!')}
+            onClick={() => {
+              if (selectedModel) {
+                navigate('/model/custom-model/create', { state: { selectedModel } });
+              }
+            }}
           >
             생성
           </Button>

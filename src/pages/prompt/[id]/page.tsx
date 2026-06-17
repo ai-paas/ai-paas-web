@@ -1,9 +1,50 @@
 import { BreadCrumb } from '@innogrid/ui';
+import { Fragment, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { EditPromptButton } from '../../../components/features/prompt/edit-prompt-button';
 import { DeletePromptButton } from '../../../components/features/prompt/delete-prompt-button';
 import { useGetPrompt } from '@/hooks/service/prompts';
 import { formatDateTime } from '@/util/date';
+
+/** 본문에서 `{{#변수#}}`를 찾아 인디고 칩으로 강조한다 (에디터 하이라이트와 동일 색). */
+const VARIABLE_RE = /\{\{#\s*([^{}#]+?)\s*#\}\}/g;
+
+const highlightVariables = (content: string): ReactNode[] => {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+
+  for (let m = VARIABLE_RE.exec(content); m !== null; m = VARIABLE_RE.exec(content)) {
+    if (m.index > lastIndex) {
+      nodes.push(<Fragment key={key++}>{content.slice(lastIndex, m.index)}</Fragment>);
+    }
+    nodes.push(
+      <span
+        key={key++}
+        className="rounded-sm bg-[#eef2ff] py-px text-[#4f46e5] box-decoration-clone"
+      >
+        {m[0]}
+      </span>
+    );
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < content.length) {
+    nodes.push(<Fragment key={key++}>{content.slice(lastIndex)}</Fragment>);
+  }
+  return nodes;
+};
+
+const VariableChip = ({ name }: { name: string }) => (
+  <div className="flex items-center gap-2.5 rounded-md border border-[#E5E7EB] bg-white px-3 py-2">
+    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-[#eef2ff] text-sm font-semibold text-[#4f46e5]">
+      #
+    </span>
+    <span className="flex min-w-0 flex-col">
+      <span className="truncate text-[13px] font-medium text-[#24292f]">{name}</span>
+      <span className="truncate text-xs text-[#999]">{`{{#${name}#}}`}</span>
+    </span>
+  </div>
+);
 
 export default function PromptDetailPage() {
   const { id } = useParams();
@@ -23,7 +64,7 @@ export default function PromptDetailPage() {
         <h2 className="page-title">프롬프트 테스트</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            <EditPromptButton />
+            <EditPromptButton promptId={promptId} />
             <DeletePromptButton promptId={promptId} />
           </div>
         </div>
@@ -61,17 +102,36 @@ export default function PromptDetailPage() {
           <div className="page-detail-round-box page-flex-1">
             <div className="page-detail-round-name">프롬프트</div>
             <div className="page-detail-round-data page-h-430">
-              <pre className="page-input_item-code">
-                <code>{prompt?.content}</code>
-              </pre>
+              {prompt?.content ? (
+                <p className="text-[14px] leading-[1.7] whitespace-pre-wrap wrap-break-word text-[#24292f]">
+                  {highlightVariables(prompt.content)}
+                </p>
+              ) : (
+                <div className="flex h-full items-center justify-center text-[13px] text-[#999]">
+                  내용이 없습니다.
+                </div>
+              )}
             </div>
           </div>
           <div className="page-detail-round-box page-w-536">
-            <div className="page-detail-round-name">변수</div>
+            <div className="page-detail-round-name">
+              변수
+              {prompt?.prompt_variable?.length ? (
+                <span className="ml-1.5 text-[#999]">{prompt.prompt_variable.length}</span>
+              ) : null}
+            </div>
             <div className="page-detail-round-data page-h-430">
-              {prompt?.prompt_variable?.map((variable) => (
-                <div key={variable.id}>{variable.name}</div>
-              ))}
+              {prompt?.prompt_variable?.length ? (
+                <div className="flex flex-col gap-2">
+                  {prompt.prompt_variable.map((variable) => (
+                    <VariableChip key={variable.id} name={variable.name} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-[13px] text-[#999]">
+                  사용 중인 변수가 없습니다.
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -16,16 +16,29 @@ export interface SearchMethod {
   description?: string;
 }
 
-export interface KnowledgeBase {
+/** 목록 조회 응답 항목 (KnowledgeBaseBriefReadSchema) */
+export interface KnowledgeBaseBrief {
+  id: number;
   surro_knowledge_id: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
   name: string;
   description?: string;
-  chunk_type?: string;
-  language?: string;
-  search_method?: string;
-  created_at?: string;
-  updated_at?: string;
-  files?: KnowledgeBaseFile[];
+  collection_name: string;
+  chunk_size: number;
+  chunk_overlap: number;
+  top_k: number;
+  threshold: number;
+}
+
+/** 상세 조회 응답 (KnowledgeBaseReadSchema) */
+export interface KnowledgeBase extends KnowledgeBaseBrief {
+  embedding_model_id: number;
+  language_id: number;
+  chunk_type_id: number;
+  search_method_id: number;
+  files: KnowledgeBaseFile[];
 }
 
 export interface CreateKnowledgeBaseRequest {
@@ -46,15 +59,14 @@ export interface UpdateKnowledgeBaseRequest {
   surro_knowledge_id: number;
   name?: string;
   description?: string;
-  chunk_type?: string;
-  language?: string;
-  search_method?: string;
 }
 
 export interface GetKnowledgeBasesParams {
   page?: number;
   size?: number;
   search?: string;
+  /** 정렬 기준. `,`로 다중 정렬, `-` 접두어는 내림차순. 미지정 시 -created_at */
+  sort?: string;
 }
 
 export interface KnowledgeBaseFile {
@@ -77,32 +89,42 @@ export interface AddFileRequest {
 }
 
 export interface SearchKnowledgeBaseRequest {
-  query: string;
-  top_k?: number;
-  threshold?: number;
+  /** 검색할 쿼리 텍스트. top_k/threshold/search_method 는 KB에 설정된 값을 사용 */
+  text: string;
 }
 
+/** SearchResultItemSchema */
 export interface SearchResult {
-  content: string;
+  text: string;
   score: number;
-  metadata?: Record<string, unknown>;
-  file_id?: string;
+  chunk_id?: string;
+  partition_name?: string;
   file_name?: string;
+  distance?: number;
+  /** 청크 키워드. 백엔드가 제공하는 경우에만 표시 */
+  keywords?: string[];
 }
 
+/** KnowledgeBaseSearchResponseSchema */
 export interface SearchKnowledgeBaseResponse {
   results: SearchResult[];
   total: number;
+  /** 사용된 검색 방법 (dense/sparse/hybrid) */
+  search_method: string;
 }
 
+/** KnowledgeBaseSearchRecordReadSchema */
 export interface SearchRecord {
-  id: string;
-  query: string;
-  results_count: number;
+  id: number;
+  knowledge_base_id: number;
+  /** Collection 이름 */
+  source: string;
+  /** 검색 쿼리 텍스트 */
+  text: string;
   created_at: string;
-}
-
-export interface GetSearchRecordsParams {
-  page?: number;
-  size?: number;
+  updated_at?: string;
+  deleted_at?: string;
+  created_by?: string;
+  updated_by?: string;
+  deleted_by?: string;
 }
