@@ -247,7 +247,9 @@ export default function CustomModelCreateHuggingfacePage() {
 
   const handleCreateModel = useCallback(() => {
     if (selectedModel) {
-      navigate('/model/custom-model/create', { state: { selectedModel } });
+      navigate('/model/custom-model/create', {
+        state: { selectedModel, market: 'huggingface' },
+      });
     }
   }, [selectedModel]);
 

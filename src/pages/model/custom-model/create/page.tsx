@@ -35,6 +35,7 @@ const INITIAL_CUSTOM_MODEL = {
 export default function CustomModelCreatePage() {
   const location = useLocation();
   const selectedModel = location.state?.selectedModel as HubModel;
+  const market = location.state?.market as 'huggingface' | 'kaggle' | undefined;
   const { modelProviders } = useGetModelProviders();
   const { modelTypes } = useGetModelTypes();
   const { modelFormats } = useGetModelFormats();
@@ -87,13 +88,17 @@ export default function CustomModelCreatePage() {
 
   useEffect(() => {
     if (!selectedModel) return;
-    console.log(selectedModel);
+    // 연동된 마켓(huggingface/kaggle)과 이름이 일치하는 공급자를 찾아 자동 선택
+    const normalize = (value: string) => value.toLowerCase().replace(/[\s-]/g, '');
+    const matchedProvider = market
+      ? modelProviders.find((provider) => normalize(provider.name).includes(normalize(market)))
+      : undefined;
     setCustomModel((prev) => ({
       ...prev,
       repo_id: selectedModel.id,
-      provider_id: 1,
+      provider_id: matchedProvider?.id ?? prev.provider_id,
     }));
-  }, [location]);
+  }, [location, market, modelProviders, selectedModel]);
 
   return (
     <main>
