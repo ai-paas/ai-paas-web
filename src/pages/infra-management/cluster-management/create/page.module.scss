@@ -76,3 +76,36 @@
   margin: 0;
   padding: 0;
 }
+
+// GPU 체크박스 카드형 — 글로벌 page-input_item-data 안에 자연스럽게 배치되는 inline 토글.
+.gpuToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  user-select: none;
+  transition: border-color 120ms, background 120ms, color 120ms;
+
+  &:hover {
+    border-color: #9ca3af;
+  }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: #007bff;
+    margin: 0;
+  }
+
+  &.checked {
+    border-color: #007bff;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

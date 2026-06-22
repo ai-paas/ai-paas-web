@@ -48,11 +48,18 @@ export interface HelmReleaseListResult {
 
 export interface HelmRepository {
   name?: string;
-  status?: string;
   url?: string;
+  source?: 'INTERNAL' | 'EXTERNAL' | string;
+  tags?: string;
+  username?: string;
+  insecureSkipTLSVerify?: boolean;
+  caFile?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // 옛 호환
+  status?: string;
   insecure?: boolean;
   created?: string;
-  createdAt?: string;
 }
 
 export interface HelmRepositoryListMeta {

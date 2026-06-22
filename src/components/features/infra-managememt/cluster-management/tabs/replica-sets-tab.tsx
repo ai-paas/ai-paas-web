@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,23 +7,39 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesReplicaSets } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+
+const WORKLOAD_DRAWER_TABS: DrawerTab[] = ['overview', 'yaml', 'events', 'logs'];
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesReplicaSet } from '@/types/cluster';
 
 interface ReplicaSetsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const ReplicaSetsTab = ({ clusterName }: ReplicaSetsTabProps) => {
+export const ReplicaSetsTab = ({ clusterName, namespace }: ReplicaSetsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 레플리카셋 데이터 가져오기
-  const { replicaSets, isPending, isError } = useGetKubernetesReplicaSets(clusterName || undefined);
+  const { replicaSets, isPending, isError } = useGetKubernetesReplicaSets(
+    clusterName || undefined,
+    namespace
+  );
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  const selectedItems = useMemo<KubernetesReplicaSet[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => replicaSets[parseInt(k, 10)])
+      .filter((r): r is KubernetesReplicaSet => Boolean(r));
+  }, [replicaSets, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesReplicaSet | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesReplicaSet, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -38,12 +55,19 @@ export const ReplicaSetsTab = ({ clusterName }: ReplicaSetsTabProps) => {
       header: '이름',
       accessorFn: (row: KubernetesReplicaSet) => row.metadata.name,
       size: 200,
+      cell: ({ row }: { row: { original: KubernetesReplicaSet } }) => (
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+        >
+          {row.original.metadata.name}
+        </span>
+      ),
     },
     {
       id: 'namespace',
       header: '네임스페이스',
-      accessorFn: (row: KubernetesReplicaSet) =>
-        row.metadata.namespace,
+      accessorFn: (row: KubernetesReplicaSet) => row.metadata.namespace,
       size: 200,
     },
     {
@@ -75,19 +99,37 @@ export const ReplicaSetsTab = ({ clusterName }: ReplicaSetsTabProps) => {
       accessorFn: (row: KubernetesReplicaSet) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesReplicaSet } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="replicasets"
+          resourceLabel="레플리카셋"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="replicaset"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="replicasets"
+        resourceLabel="레플리카셋"
+        clusterName={clusterName ?? undefined}
+        getName={(r) => r.metadata.name}
+        getNamespace={(r) => r.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -106,10 +148,24 @@ export const ReplicaSetsTab = ({ clusterName }: ReplicaSetsTabProps) => {
           totalCount={replicaSets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="replicasets"
+        resourceLabel="레플리카셋"
+        resourceName={drawerItem?.metadata.name}
+        namespace={drawerItem?.metadata.namespace}
+        initialTab={drawerTab}
+        availableTabs={WORKLOAD_DRAWER_TABS}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

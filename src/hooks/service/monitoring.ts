@@ -120,9 +120,19 @@ const normalizeKubernetesPodPageResponse = (
   };
 };
 
+// page.tsx 가 30s 주기로 anchor 갱신 — 그 사이 focus/mount/reconnect refetch 는 차단.
+const MONITOR_QUERY_DEFAULTS = {
+  staleTime: 25_000,
+  gcTime: 5 * 60_000,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+} as const;
+
 export const createInstantQueryOptions = <TLabel = Record<string, string>>(
   query?: string,
-  clusterName?: string
+  clusterName?: string,
+  options?: { enabled?: boolean }
 ) =>
   queryOptions({
     queryKey: ['monitoring-instant-query', query, clusterName],
@@ -134,7 +144,8 @@ export const createInstantQueryOptions = <TLabel = Record<string, string>>(
           },
         })
         .json<PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]>>(),
-    enabled: !!query && !!clusterName,
+    enabled: (options?.enabled ?? true) && !!query && !!clusterName,
+    ...MONITOR_QUERY_DEFAULTS,
   });
 
 export const createRangeQueryOptions = <TLabel = Record<string, string>>(
@@ -161,10 +172,63 @@ export const createRangeQueryOptions = <TLabel = Record<string, string>>(
       start !== undefined &&
       end !== undefined &&
       step !== undefined,
+    ...MONITOR_QUERY_DEFAULTS,
   });
 
-export const useInstantQuery = <TLabel = Record<string, string>>(query?: string, clusterName?: string) =>
-  useQuery(createInstantQueryOptions<TLabel>(query, clusterName));
+export const useInstantQuery = <TLabel = Record<string, string>>(
+  query?: string,
+  clusterName?: string,
+  options?: { enabled?: boolean }
+) => useQuery(createInstantQueryOptions<TLabel>(query, clusterName, options));
+
+export interface MultiQuerySpec {
+  name: string;
+  type: 'instant' | 'range';
+  query: string;
+  time?: string;
+  start?: number;
+  end?: number;
+  step?: number;
+}
+
+// N개 PromQL 을 backend 가 병렬 실행. 모니터링 페이지 27 요청 → 1 요청.
+export const useMultiPromQuery = (
+  clusterName: string | undefined,
+  queries: MultiQuerySpec[],
+  options?: { enabled?: boolean }
+) => {
+  const queryKey = useMemoizedQueryKey(clusterName, queries);
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      const body = {
+        queries: queries.map((q) => ({
+          name: q.name,
+          type: q.type,
+          query: q.query,
+          ...(q.time !== undefined ? { time: q.time } : {}),
+          ...(q.start !== undefined ? { start: String(q.start) } : {}),
+          ...(q.end !== undefined ? { end: String(q.end) } : {}),
+          ...(q.step !== undefined ? { step: String(q.step) } : {}),
+        })),
+      };
+      const raw = await api
+        .post(`any-cloud/monit/${clusterName}/multi-query`, { json: body })
+        .json<Record<string, PrometheusQueryResponse>>();
+      return raw;
+    },
+    enabled: (options?.enabled ?? true) && !!clusterName && queries.length > 0,
+    ...MONITOR_QUERY_DEFAULTS,
+  });
+};
+
+// queryKey 안정화 — queries 배열 ref 가 매 렌더 새로 만들어져도 동일 spec 이면 같은 key.
+const useMemoizedQueryKey = (clusterName: string | undefined, queries: MultiQuerySpec[]) => {
+  const signature = queries
+    .map((q) => `${q.name}:${q.type}:${q.query}:${q.start ?? ''}:${q.end ?? ''}:${q.step ?? ''}:${q.time ?? ''}`)
+    .join('|');
+  return ['monitoring-multi-query', clusterName, signature];
+};
 
 export const useRangeQuery = <TLabel = Record<string, string>>(
   { query, clusterName, start, end, step }: RangeQueryParams,

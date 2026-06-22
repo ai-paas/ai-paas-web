@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api';
 import type {
@@ -8,6 +8,16 @@ import type {
   HelmRepositoryListMeta,
   HelmReleaseResource,
 } from '../../types/helm';
+import type { Operation } from '../../types/cluster';
+
+export interface InstallHelmReleaseRequest {
+  releaseName: string;
+  chart: string; // "<repo>/<chart>"
+  version?: string;
+  namespace?: string;
+  values?: Record<string, unknown>;
+  valuesYaml?: string;
+}
 
 export interface GetHelmReleasesParams {
   clusterId?: string;
@@ -133,6 +143,29 @@ export const useGetHelmReleaseResources = (releaseName: string) => {
     isError,
     error,
   };
+};
+
+// Helm 릴리즈 설치 (JSON body)
+export const useInstallHelmRelease = (
+  clusterName?: string,
+  options?: { onSuccess?: (op: Operation) => void; onError?: (error: unknown) => void }
+) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess, error } = useMutation({
+    mutationKey: ['installHelmRelease', clusterName],
+    mutationFn: (body: InstallHelmReleaseRequest) =>
+      api
+        .post(`any-cloud/clusters/${clusterName}/helm-releases`, { json: body })
+        .json<Operation>(),
+    onSuccess: (op) => {
+      queryClient.invalidateQueries({ queryKey: ['helm-releases'] });
+      options?.onSuccess?.(op);
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { installHelmRelease: mutate, isPending, isError, isSuccess, error };
 };
 
 export const useGetHelmReleaseValues = (releaseName: string) => {

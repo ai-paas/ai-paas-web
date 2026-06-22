@@ -19,10 +19,12 @@ type SelectOption = {
 };
 
 const buildClusterOptions = (clusters: Cluster[]): SelectOption[] =>
-  clusters.map((cluster) => ({
-    text: cluster.id,
-    value: cluster.id,
-  }));
+  clusters
+    .filter((cluster) => !!cluster.clusterName)
+    .map((cluster) => ({
+      text: cluster.clusterName ?? '',
+      value: cluster.clusterName ?? '',
+    }));
 
 const getLatestClusterOption = (clusters: Cluster[]) => buildClusterOptions(clusters)[0];
 
@@ -161,6 +163,18 @@ const WorkloadPage = () => {
     isError,
   } = useGetKubernetesPodsResource(selectedCluster?.value, selectedNamespace.value);
 
+  // GPU 자원을 요청한 파드만 필터 (nvidia.com/gpu / amd.com/gpu / 일반 gpu 요청)
+  const gpuPods = useMemo(() => {
+    return allPods.filter((pod) => {
+      const containers = pod.spec?.containers ?? [];
+      return containers.some((c) => {
+        const req = c.resources?.requests ?? {};
+        const lim = c.resources?.limits ?? {};
+        return Object.keys({ ...req, ...lim }).some((key) => /gpu/i.test(key));
+      });
+    });
+  }, [allPods]);
+
   const namespaceOptions = useMemo<SelectOption[]>(() => {
     return [
       { text: '전체', value: '' },
@@ -191,11 +205,13 @@ const WorkloadPage = () => {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 관리' }, { label: '워크로드' }]}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb
+          items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: 'GPU 워크로드' }]}
+        />
+      </div>
       <div className="page-title-box">
-        <h2 className="page-title">워크로드</h2>
+        <h2 className="page-title">GPU 워크로드</h2>
       </div>
       <div className="page-content">
         <div className="page-toolBox">
@@ -207,7 +223,7 @@ const WorkloadPage = () => {
                   options={clusterOptions}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => option.value}
-                  value={selectedCluster}
+                  value={selectedCluster ?? null}
                   onChange={handleClusterChange}
                   placeholder="클러스터를 선택해 주세요."
                   isLoading={isClustersPending}
@@ -221,7 +237,7 @@ const WorkloadPage = () => {
                   options={namespaceOptions}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => option.value}
-                  value={selectedNamespace}
+                  value={selectedNamespace ?? null}
                   onChange={handleNamespaceChange}
                   placeholder="네임스페이스를 선택해 주세요."
                   isDisabled={!selectedCluster}
@@ -245,7 +261,7 @@ const WorkloadPage = () => {
           <Table
             useClientPagination
             columns={columns}
-            data={allPods}
+            data={gpuPods}
             isLoading={isPodsPending}
             globalFilter={searchValue}
             emptyMessage={
@@ -259,7 +275,7 @@ const WorkloadPage = () => {
               )
             }
             emptySearchMessage="파드 이름과 일치하는 검색 결과가 없습니다."
-            totalCount={allPods.length}
+            totalCount={gpuPods.length}
             pagination={pagination}
             setPagination={setPagination}
           />

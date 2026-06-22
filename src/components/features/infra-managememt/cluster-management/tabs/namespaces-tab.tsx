@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,7 +7,9 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesNamespaces } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesNamespace } from '@/types/cluster';
 
 interface NamespacesTabProps {
@@ -17,8 +20,21 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 네임스페이스 데이터 가져오기
   const { namespaces, isPending, isError } = useGetKubernetesNamespaces(clusterName || undefined);
+
+  const selectedItems = useMemo<KubernetesNamespace[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => namespaces[parseInt(k, 10)])
+      .filter((n): n is KubernetesNamespace => Boolean(n));
+  }, [namespaces, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesNamespace | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesNamespace, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
+  };
 
   const columns = [
     {
@@ -34,13 +50,12 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
       accessorFn: (row: KubernetesNamespace) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesNamespace } }) => (
-        <a
-          href="#"
-          style={{ color: '#0066cc', textDecoration: 'underline' }}
-          onClick={(e) => e.preventDefault()}
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {row.original.metadata.name}
-        </a>
+        </span>
       ),
     },
     {
@@ -65,7 +80,6 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
       id: 'workspace',
       header: '작업공간',
       accessorFn: (row: KubernetesNamespace) => {
-        // 라벨에서 작업공간 정보 추출 또는 기본값
         const labels = row.metadata.labels || {};
         return labels['workspace'] || 'False';
       },
@@ -77,23 +91,35 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
       accessorFn: (row: KubernetesNamespace) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesNamespace } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="namespaces"
+          resourceLabel="네임스페이스"
+          resourceName={row.original.metadata.name}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
-
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
-  };
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="namespace"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="namespaces"
+        resourceLabel="네임스페이스"
+        clusterName={clusterName ?? undefined}
+        getName={(n) => n.metadata.name}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -112,10 +138,22 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
           totalCount={namespaces.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="namespaces"
+        resourceLabel="네임스페이스"
+        resourceName={drawerItem?.metadata.name}
+        initialTab={drawerTab}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

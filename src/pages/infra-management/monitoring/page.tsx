@@ -1,10 +1,14 @@
 import { useGetClusters } from '@/hooks/service/clusters';
 import {
-  useInstantQuery,
-  useRangeQuery,
+  useMultiPromQuery,
+  type MultiQuerySpec,
+  type PrometheusMatrixResult,
+  type PrometheusQueryResponse,
+  type PrometheusVectorResult,
 } from '@/hooks/service/monitoring';
+import { useGetObservabilityAlerts } from '@/hooks/service/observability';
 import { BreadCrumb, Select, type SelectSingleValue } from '@innogrid/ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MetricLineChart } from './metric-line-chart';
 import { ResourceGaugeCard } from './resource-gauge-card';
 import styles from './monitoring.module.scss';
@@ -30,8 +34,20 @@ type SelectOption = {
 
 const MonitoringPage = () => {
   const { clusters, isPending: isClustersPending } = useGetClusters();
-  const clusterOptions = clusters.map((cluster) => ({ label: cluster.id, value: cluster.id }));
+  const clusterOptions = clusters
+    .filter((cluster) => !!cluster.clusterName)
+    .map((cluster) => ({
+      label: cluster.clusterName ?? '',
+      value: cluster.clusterName ?? '',
+    }));
   const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
+
+  // 비-가속기 cluster 에서 GPU query 6개 skip.
+  const selectedClusterEntity = useMemo(
+    () => clusters.find((c) => c.clusterName === selectedCluster?.value),
+    [clusters, selectedCluster]
+  );
+  const hasGpu = selectedClusterEntity?.hasGpuNodes ?? false;
 
   useEffect(() => {
     if (!clusters.length) {
@@ -42,178 +58,135 @@ const MonitoringPage = () => {
       return;
     }
 
-    if (!selectedCluster || !clusters.some((cluster) => cluster.id === selectedCluster.value)) {
-      setSelectedCluster({ label: clusters[0].id, value: clusters[0].id });
+    const firstName = clusters[0].clusterName;
+    if (
+      !selectedCluster ||
+      !clusters.some((cluster) => cluster.clusterName === selectedCluster.value)
+    ) {
+      if (firstName) {
+        setSelectedCluster({ label: firstName, value: firstName });
+      }
     }
   }, [clusters, selectedCluster]);
 
-  const { data: cpuTotal } = useInstantQuery(
-    'sum(kube_node_status_capacity{resource="cpu"})',
-    selectedCluster?.value
-  );
-  const { data: cpuUsage } = useInstantQuery(
-    'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))',
-    selectedCluster?.value
-  );
-  const { data: memoryTotal } = useInstantQuery(
-    'sum(kube_node_status_capacity{resource="memory"})',
-    selectedCluster?.value
-  );
-  const { data: memoryUsage } = useInstantQuery(
-    'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})',
-    selectedCluster?.value
-  );
-  const { data: fileSystemTotal } = useInstantQuery(
-    'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})',
-    selectedCluster?.value
-  );
-  const { data: fileSystemUsage } = useInstantQuery(
-    'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})',
-    selectedCluster?.value
-  );
-  const { data: networkIo } = useInstantQuery(
-    'sum(rate(node_network_receive_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m]))',
-    selectedCluster?.value
-  );
-  const { data: networkPacket } = useInstantQuery(
-    'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))',
-    selectedCluster?.value
-  );
-  const { data: gpuTotal } = useInstantQuery(
-    'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})',
-    selectedCluster?.value
-  );
-  const { data: gpuRequest } = useInstantQuery(
-    'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})',
-    selectedCluster?.value
-  );
-  const { data: npuTotal } = useInstantQuery(
-    'sum(kube_node_status_capacity{resource=~".*npu.*"})',
-    selectedCluster?.value
-  );
-  const { data: npuRequest } = useInstantQuery(
-    'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})',
-    selectedCluster?.value
-  );
-  const { data: tpuTotal } = useInstantQuery('gke_tpu_node_total', selectedCluster?.value);
-  const { data: tpuAllocated } = useInstantQuery(
-    'gke_cluster_tpu_allocated',
-    selectedCluster?.value
+  const [windowAnchor, setWindowAnchor] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const id = window.setInterval(() => setWindowAnchor(Math.floor(Date.now() / 1000)), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const { start, end, step } = useMemo(() => {
+    const e = windowAnchor;
+    const s = e - 180 * 60;
+    return { start: s, end: e, step: 300 };
+  }, [windowAnchor]);
+
+  const queries = useMemo<MultiQuerySpec[]>(() => {
+    const range = (name: string, query: string): MultiQuerySpec => ({
+      name,
+      type: 'range',
+      query,
+      start,
+      end,
+      step,
+    });
+    const instant = (name: string, query: string): MultiQuerySpec => ({
+      name,
+      type: 'instant',
+      query,
+    });
+    const list: MultiQuerySpec[] = [
+      instant('cpuTotal', 'sum(kube_node_status_capacity{resource="cpu"})'),
+      instant('cpuUsage', 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))'),
+      instant('memoryTotal', 'sum(kube_node_status_capacity{resource="memory"})'),
+      instant('memoryUsage', 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'),
+      instant(
+        'fileSystemTotal',
+        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+      ),
+      instant(
+        'fileSystemUsage',
+        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+      ),
+      instant(
+        'networkIo',
+        'sum(rate(node_network_receive_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
+      ),
+      instant(
+        'networkPacket',
+        'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
+      ),
+      instant('npuTotal', 'sum(kube_node_status_capacity{resource=~".*npu.*"})'),
+      instant('npuRequest', 'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})'),
+      instant('tpuTotal', 'gke_tpu_node_total'),
+      instant('tpuAllocated', 'gke_cluster_tpu_allocated'),
+      range('cpuRange', 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))'),
+      range('memoryRange', 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'),
+      range(
+        'filesystemRange',
+        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+      ),
+      range(
+        'networkIoRange',
+        'sum(rate(node_network_receive_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
+      ),
+      range(
+        'networkPacketRange',
+        'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
+      ),
+      range('npuTempRange', 'furiosa_npu_hw_temperature{label="Average"}'),
+      range('npuPowerRange', 'furiosa_npu_hw_power{label="PCI Total RMS PWR"}'),
+      range('tpuTensorRange', 'gke_tpu_node_usage{resource_type="tpu"}'),
+    ];
+    if (hasGpu) {
+      list.push(
+        instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
+        instant(
+          'gpuRequest',
+          'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'
+        ),
+        range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
+        range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
+        range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
+        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE')
+      );
+    }
+    return list;
+  }, [start, end, step, hasGpu]);
+
+  const { data: results, isPending: isMetricsPending } = useMultiPromQuery(
+    selectedCluster?.value,
+    queries
   );
 
-  const end = Math.floor(Date.now() / 1000);
-  const start = end - 180 * 60;
-  const step = 300;
+  const instantOf = <TLabel = Record<string, string>,>(
+    name: string
+  ): PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]> | undefined =>
+    results?.[name] as
+      | PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]>
+      | undefined;
+  const rangeOf = <TLabel = Record<string, string>,>(
+    name: string
+  ): PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]> | undefined =>
+    results?.[name] as
+      | PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]>
+      | undefined;
+  const scalar = (name: string): number =>
+    Number.parseFloat(instantOf(name)?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
 
-  const cpuRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query: 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))',
-    start,
-    end,
-    step,
-  });
-  const memoryRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query: 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})',
-    start,
-    end,
-    step,
-  });
-  const filesystemRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query:
-      'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})',
-    start,
-    end,
-    step,
-  });
-  const networkIoRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query:
-      'sum(rate(node_network_receive_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_bytes_total{device=~"eth.*|ens.*|bond.*"}[1m]))',
-    start,
-    end,
-    step,
-  });
-  const networkPacketRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query:
-      'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))',
-    start,
-    end,
-    step,
-  });
-  const gpuUtilRange = useRangeQuery<DCGMLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'DCGM_FI_DEV_GPU_UTIL',
-    start,
-    end,
-    step,
-  });
-  const gpuMemoryRange = useRangeQuery<DCGMLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'DCGM_FI_DEV_FB_USED',
-    start,
-    end,
-    step,
-  });
-  const gpuTempRange = useRangeQuery<DCGMLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'DCGM_FI_DEV_GPU_TEMP',
-    start,
-    end,
-    step,
-  });
-  const gpuPowerRange = useRangeQuery<DCGMLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'DCGM_FI_DEV_POWER_USAGE',
-    start,
-    end,
-    step,
-  });
-  const npuTempRange = useRangeQuery<FuriosaLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'furiosa_npu_hw_temperature{label="Average"}',
-    start,
-    end,
-    step,
-  });
-  const npuPowerRange = useRangeQuery<FuriosaLabel>({
-    clusterName: selectedCluster?.value,
-    query: 'furiosa_npu_hw_power{label="PCI Total RMS PWR"}',
-    start,
-    end,
-    step,
-  });
-  const tpuTensorRange = useRangeQuery({
-    clusterName: selectedCluster?.value,
-    query: 'gke_tpu_node_usage{resource_type="tpu"}',
-    start,
-    end,
-    step,
-  });
-
-  const cpuTotalValue = Number.parseFloat(cpuTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const cpuUsageValue = Number.parseFloat(cpuUsage?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const memoryTotalValue =
-    (Number.parseFloat(memoryTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0) / 1024 ** 3;
-  const memoryUsageValue =
-    (Number.parseFloat(memoryUsage?.data?.result?.[0]?.value?.[1] ?? '0') || 0) / 1024 ** 3;
-  const fileSystemTotalValue =
-    (Number.parseFloat(fileSystemTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0) / 1024 ** 3;
-  const fileSystemUsageValue =
-    (Number.parseFloat(fileSystemUsage?.data?.result?.[0]?.value?.[1] ?? '0') || 0) / 1024 ** 3;
-  const networkIoValue =
-    (Number.parseFloat(networkIo?.data?.result?.[0]?.value?.[1] ?? '0') || 0) / 1024 ** 2;
-  const networkPacketValue =
-    Number.parseFloat(networkPacket?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const gpuTotalValue = Number.parseFloat(gpuTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const gpuRequestValue = Number.parseFloat(gpuRequest?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const npuTotalValue = Number.parseFloat(npuTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const npuRequestValue = Number.parseFloat(npuRequest?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const tpuTotalValue = Number.parseFloat(tpuTotal?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
-  const tpuAllocatedValue =
-    Number.parseFloat(tpuAllocated?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
+  const cpuTotalValue = scalar('cpuTotal');
+  const cpuUsageValue = scalar('cpuUsage');
+  const memoryTotalValue = scalar('memoryTotal') / 1024 ** 3;
+  const memoryUsageValue = scalar('memoryUsage') / 1024 ** 3;
+  const fileSystemTotalValue = scalar('fileSystemTotal') / 1024 ** 3;
+  const fileSystemUsageValue = scalar('fileSystemUsage') / 1024 ** 3;
+  const networkIoValue = scalar('networkIo') / 1024 ** 2;
+  const networkPacketValue = scalar('networkPacket');
+  const gpuTotalValue = scalar('gpuTotal');
+  const gpuRequestValue = scalar('gpuRequest');
+  const npuTotalValue = scalar('npuTotal');
+  const npuRequestValue = scalar('npuRequest');
+  const tpuTotalValue = scalar('tpuTotal');
+  const tpuAllocatedValue = scalar('tpuAllocated');
 
   const cpuGaugeValue = Math.max(
     0,
@@ -242,9 +215,9 @@ const MonitoringPage = () => {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 관리' }, { label: '모니터링' }]}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 관리' }, { label: '모니터링' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">모니터링</h2>
       </div>
@@ -252,7 +225,7 @@ const MonitoringPage = () => {
         <div>클러스터 선택</div>
         <Select
           options={clusterOptions}
-          value={selectedCluster}
+          value={selectedCluster ?? null}
           onChange={(option: SelectSingleValue<SelectOption>) => {
             if (option) {
               setSelectedCluster(option);
@@ -325,41 +298,52 @@ const MonitoringPage = () => {
               <MetricLineChart
                 title="CPU"
                 unit="core"
-                response={cpuRange.data}
+                response={rangeOf('cpuRange')}
+                isPending={isMetricsPending}
                 domain={[0, cpuTotalValue]}
               />
               <MetricLineChart
                 title="MEMORY"
                 unit="GiB"
-                response={memoryRange.data}
+                response={rangeOf('memoryRange')}
+                isPending={isMetricsPending}
                 domain={[0, memoryTotalValue]}
                 convertValue={(value) => value / 1024 ** 3}
               />
               <MetricLineChart
                 title="FILESYSTEM"
                 unit="GiB"
-                response={filesystemRange.data}
+                response={rangeOf('filesystemRange')}
+                isPending={isMetricsPending}
                 domain={[0, fileSystemTotalValue]}
                 convertValue={(value) => value / 1024 ** 3}
               />
               <MetricLineChart
                 title="NETWORK IO"
                 unit="MB/s"
-                response={networkIoRange.data}
+                response={rangeOf('networkIoRange')}
+                isPending={isMetricsPending}
                 convertValue={(value) => value / 1024 ** 2}
               />
-              <MetricLineChart title="NETWORK PACKET" unit="pkt/s" response={networkPacketRange.data} />
+              <MetricLineChart
+                title="NETWORK PACKET"
+                unit="pkt/s"
+                response={rangeOf('networkPacketRange')}
+                isPending={isMetricsPending}
+              />
               <MetricLineChart
                 title="GPU UTILIZATION"
                 unit="%"
-                response={gpuUtilRange.data}
+                response={rangeOf<DCGMLabel>('gpuUtilRange')}
+                isPending={hasGpu && isMetricsPending}
                 domain={[0, 100]}
                 makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
               <MetricLineChart
                 title="GPU MEMORY USAGE"
                 unit="GiB"
-                response={gpuMemoryRange.data}
+                response={rangeOf<DCGMLabel>('gpuMemoryRange')}
+                isPending={hasGpu && isMetricsPending}
                 convertValue={(value) => value / 1024}
                 makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
@@ -367,19 +351,22 @@ const MonitoringPage = () => {
                 title="GPU TEMPERATURE"
                 unit="°C"
                 domain={[0, 100]}
-                response={gpuTempRange.data}
+                response={rangeOf<DCGMLabel>('gpuTempRange')}
+                isPending={hasGpu && isMetricsPending}
                 makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
               <MetricLineChart
                 title="GPU POWER USAGE"
                 unit="W"
-                response={gpuPowerRange.data}
+                response={rangeOf<DCGMLabel>('gpuPowerRange')}
+                isPending={hasGpu && isMetricsPending}
                 makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
               <MetricLineChart
                 title="NPU TEMPERATURE"
                 unit="°C"
-                response={npuTempRange.data}
+                response={rangeOf<FuriosaLabel>('npuTempRange')}
+                isPending={isMetricsPending}
                 domain={[0, 100]}
                 convertValue={(value) => value / 1000}
                 makeLabel={(value) => `${value.node} ${value.device}`}
@@ -387,21 +374,77 @@ const MonitoringPage = () => {
               <MetricLineChart
                 title="NPU POWER USAGE"
                 unit="W"
-                response={npuPowerRange.data}
+                response={rangeOf<FuriosaLabel>('npuPowerRange')}
+                isPending={isMetricsPending}
                 convertValue={(value) => value / 1000000}
                 makeLabel={(value) => `${value.node} ${value.device}`}
               />
               <MetricLineChart
                 title="TPU TENSOR UTILIZATION"
                 unit="%"
-                response={tpuTensorRange.data}
+                response={rangeOf('tpuTensorRange')}
+                isPending={isMetricsPending}
                 domain={[0, 100]}
               />
             </div>
           </div>
         </div>
+
+        {/* alerts 섹션 */}
+        {selectedCluster?.value && (
+          <ObservabilityAlertsSection clusterName={selectedCluster.value} />
+        )}
       </div>
     </main>
+  );
+};
+
+// Alerts 섹션 — 발생 중인 alert 표시
+const ObservabilityAlertsSection = ({ clusterName }: { clusterName: string }) => {
+  const { alerts, isPending, isError } = useGetObservabilityAlerts(clusterName);
+  return (
+    <div className={styles.section}>
+      <h3 className="page-detail-title">발생 중인 알람 ({alerts.length})</h3>
+      {isPending && <div style={{ color: '#666' }}>불러오는 중...</div>}
+      {isError && (
+        <div style={{ color: '#666' }}>
+          알람 정보를 불러올 수 없습니다. 모니터링 애드온이 설치되어 있는지 확인해주세요.
+        </div>
+      )}
+      {!isPending && !isError && alerts.length === 0 && (
+        <div style={{ color: '#666' }}>현재 발생 중인 알람이 없습니다.</div>
+      )}
+      {alerts.length > 0 && (
+        <ul style={{ maxHeight: 320, overflowY: 'auto', listStyle: 'none', padding: 0 }}>
+          {alerts.map((alert, idx) => {
+            const name = alert.labels?.alertname ?? `alert-${idx}`;
+            const severity = alert.labels?.severity ?? 'unknown';
+            const summary = alert.annotations?.summary ?? alert.annotations?.description ?? '';
+            const variant = severity === 'critical' ? 'negative' : 'wait';
+            return (
+              <li
+                key={`${name}-${idx}`}
+                style={{
+                  padding: 10,
+                  marginBottom: 6,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 6,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span className={`table-td-state table-td-state-${variant}`}>{severity}</span>
+                  <strong>{name}</strong>
+                  {alert.state && (
+                    <span style={{ fontSize: 12, color: '#666' }}>{alert.state}</span>
+                  )}
+                </div>
+                {summary && <div style={{ fontSize: 13, color: '#444' }}>{summary}</div>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 };
 

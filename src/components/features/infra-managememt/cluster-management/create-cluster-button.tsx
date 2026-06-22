@@ -10,7 +10,7 @@ export const CreateClusterButton = () => {
       size="medium"
       color="primary"
     >
-      생성
+      등록
     </Button>
   );
 };

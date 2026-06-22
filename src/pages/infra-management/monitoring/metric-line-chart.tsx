@@ -10,6 +10,8 @@ type MetricLineChartProps<TLabel = Record<string, string>> = {
   title: string;
   unit: string;
   response?: PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]>;
+  /** 첫 응답 도착 전 — "데이터 없음" 과 분리해 사용자에게 로딩 중임을 명시. */
+  isPending?: boolean;
   domain?: [number, number];
   convertValue?: (value: number) => number;
   makeLabel?: (metric: TLabel) => string;
@@ -19,6 +21,7 @@ const MetricLineChartComponent = <TLabel = Record<string, string>,>({
   title,
   unit,
   response,
+  isPending,
   domain,
   convertValue,
   makeLabel,
@@ -57,7 +60,9 @@ const MetricLineChartComponent = <TLabel = Record<string, string>,>({
       </div>
       <div className={`page-detail-round-data ${styles.metricChartBody}`}>
         {!series.length ? (
-          <div className={styles.metricEmptyState}>데이터가 없습니다.</div>
+          <div className={styles.metricEmptyState}>
+            {isPending && !response ? '불러오는 중...' : '데이터가 없습니다.'}
+          </div>
         ) : (
           <UplotLineChart
             className={styles.monitoringLineChart}

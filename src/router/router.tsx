@@ -35,6 +35,15 @@ import ClusterManagementPage from '../pages/infra-management/cluster-management/
 import ClusterCreatePage from '../pages/infra-management/cluster-management/create/page';
 import ClusterEditPage from '../pages/infra-management/cluster-management/edit/page';
 import ClusterDetailPage from '../pages/infra-management/cluster-management/[id]/page';
+import ClusterAddonsPage from '../pages/infra-management/cluster-management/[id]/addons/page';
+import ClusterAgentFleetPage from '../pages/infra-management/cluster-agent/page';
+import CredentialsPage from '../pages/infra-management/credentials/page';
+import CredentialsCreatePage from '../pages/infra-management/credentials/create/page';
+import AuditLogsPage from '../pages/infra-management/audit-logs/page';
+import OperationsPage from '../pages/infra-management/operations/page';
+import ProvisioningPage from '../pages/infra-management/provisioning/page';
+import ProvisioningCreatePage from '../pages/infra-management/provisioning/create/page';
+import VmDetailPage from '../pages/infra-management/provisioning/[id]/page';
 import MonitoringPage from '../pages/infra-management/monitoring/page';
 import WorkloadPage from '../pages/infra-management/workload/page';
 import AcceleratorPage from '../pages/infra-management/accelerator/page';
@@ -392,7 +401,43 @@ export const router = createBrowserRouter([
                 path: ':id',
                 element: <ClusterDetailPage />,
               },
+              {
+                path: ':id/addons',
+                element: <ClusterAddonsPage />,
+              },
             ],
+          },
+          {
+            path: 'credentials',
+            element: <CredentialsPage />,
+          },
+          {
+            path: 'credentials/create',
+            element: <CredentialsCreatePage />,
+          },
+          {
+            path: 'audit-logs',
+            element: <AuditLogsPage />,
+          },
+          {
+            path: 'operations',
+            element: <OperationsPage />,
+          },
+          {
+            path: 'cluster-agent',
+            element: <ClusterAgentFleetPage />,
+          },
+          {
+            path: 'provisioning',
+            element: <ProvisioningPage />,
+          },
+          {
+            path: 'provisioning/create',
+            element: <ProvisioningCreatePage />,
+          },
+          {
+            path: 'provisioning/:id',
+            element: <VmDetailPage />,
           },
           {
             path: 'monitoring',

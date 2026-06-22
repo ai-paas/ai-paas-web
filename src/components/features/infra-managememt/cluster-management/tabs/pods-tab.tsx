@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,23 +7,38 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesPods } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesPod } from '@/types/cluster';
 
 interface PodsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const PodsTab = ({ clusterName }: PodsTabProps) => {
+const POD_DRAWER_TABS: DrawerTab[] = ['overview', 'yaml', 'events', 'logs', 'shell'];
+
+export const PodsTab = ({ clusterName, namespace }: PodsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 파드 데이터 가져오기
-  const { pods, isPending, isError } = useGetKubernetesPods(clusterName || undefined);
+  const { pods, isPending, isError } = useGetKubernetesPods(clusterName || undefined, namespace);
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  // 선택된 행 → bulk toolbar 가 사용할 raw 객체 배열
+  const selectedPods = useMemo<KubernetesPod[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => pods[parseInt(k, 10)])
+      .filter((p): p is KubernetesPod => Boolean(p));
+  }, [pods, rowSelection]);
+
+  // drawer state — 단일 pod + 진입 탭
+  const [drawerPod, setDrawerPod] = useState<KubernetesPod | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (pod: KubernetesPod, tab: DrawerTab = 'overview') => {
+    setDrawerPod(pod);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -39,7 +55,14 @@ export const PodsTab = ({ clusterName }: PodsTabProps) => {
       accessorFn: (row: KubernetesPod) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesPod } }) => (
-        <span style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{
+            color: '#0066cc',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+          }}
+        >
           {row.original.metadata.name}
         </span>
       ),
@@ -104,19 +127,38 @@ export const PodsTab = ({ clusterName }: PodsTabProps) => {
       accessorFn: (row: KubernetesPod) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 110,
+      cell: ({ row }: { row: { original: KubernetesPod } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="pods"
+          resourceLabel="파드"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          showLogs
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="pod"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedPods}
+        resourceType="pods"
+        resourceLabel="파드"
+        clusterName={clusterName ?? undefined}
+        getName={(p) => p.metadata.name}
+        getNamespace={(p) => p.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -135,10 +177,24 @@ export const PodsTab = ({ clusterName }: PodsTabProps) => {
           totalCount={pods.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerPod}
+        clusterName={clusterName ?? undefined}
+        resourceType="pods"
+        resourceLabel="파드"
+        resourceName={drawerPod?.metadata.name}
+        namespace={drawerPod?.metadata.namespace}
+        initialTab={drawerTab}
+        availableTabs={POD_DRAWER_TABS}
+        onClose={() => setDrawerPod(undefined)}
+      />
     </div>
   );
 };
