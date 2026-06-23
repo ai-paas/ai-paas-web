@@ -145,6 +145,7 @@ const CatalogItem = ({ chart }: { chart: Chart }) => {
 };
 
 export default function ApplicationCatalogPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const repositoryParam = searchParams.get('repository');
   const [selectedValue, setSelectedValue] = useState<OptionType>();
@@ -227,10 +228,12 @@ export default function ApplicationCatalogPage() {
 
   const totalCount = filteredCharts.length;
 
-  if (isPending || isRepositoriesPending) {
+  if (isRepositoriesPending || (!!selectedRepoName && isPending)) {
     return (
       <main>
-        <BreadCrumb items={items} onNavigate={() => {}} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={items} onNavigate={() => {}} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">카탈로그</h2>
         </div>
@@ -241,10 +244,47 @@ export default function ApplicationCatalogPage() {
     );
   }
 
+  if (repositoryOptions.length === 0) {
+    return (
+      <main>
+        <div className="breadcrumbBox">
+          <BreadCrumb items={items} onNavigate={() => {}} />
+        </div>
+        <div className="page-title-box">
+          <h2 className="page-title">카탈로그</h2>
+        </div>
+        <div className="page-content">
+          <div
+            style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+            }}
+          >
+            <div style={{ color: '#666' }}>
+              등록된 헬름 저장소가 없습니다. 저장소를 먼저 추가해 주세요.
+            </div>
+            <Button
+              color="focus"
+              onClick={() => navigate('/infra-management/application/helm-repository')}
+            >
+              헬름 저장소 관리
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (isError) {
     return (
       <main>
-        <BreadCrumb items={items} onNavigate={() => {}} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={items} onNavigate={() => {}} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">카탈로그</h2>
         </div>
@@ -259,7 +299,9 @@ export default function ApplicationCatalogPage() {
 
   return (
     <main>
-      <BreadCrumb items={items} onNavigate={() => {}} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={items} onNavigate={() => {}} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">카탈로그</h2>
       </div>

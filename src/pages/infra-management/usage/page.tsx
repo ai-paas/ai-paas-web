@@ -135,9 +135,7 @@ const buildAcceleratorUsage = <TLabel,>({
             return null;
           }
 
-          return (
-            bucketSamples.reduce((sum, { value }) => sum + value, 0) / bucketSamples.length
-          );
+          return bucketSamples.reduce((sum, { value }) => sum + value, 0) / bucketSamples.length;
         }),
       };
     })
@@ -157,10 +155,12 @@ const UsagePage = () => {
   const { clusters, isPending: isClustersPending } = useGetClusters();
   const clusterOptions = useMemo<SelectOption[]>(
     () =>
-      clusters.map((cluster) => ({
-        text: cluster.id,
-        value: cluster.id,
-      })),
+      clusters
+        .filter((cluster) => !!cluster.clusterName)
+        .map((cluster) => ({
+          text: cluster.clusterName ?? '',
+          value: cluster.clusterName ?? '',
+        })),
     [clusters]
   );
   const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
@@ -203,70 +203,64 @@ const UsagePage = () => {
     ...rangeWindow,
   });
 
-  const timeBuckets = useMemo(
-    () => {
-      const bucketCount =
-        Math.floor((rangeWindow.end - rangeWindow.start) / rangeWindow.bucketSeconds) + 1;
+  const timeBuckets = useMemo(() => {
+    const bucketCount =
+      Math.floor((rangeWindow.end - rangeWindow.start) / rangeWindow.bucketSeconds) + 1;
 
-      return Array.from({ length: bucketCount }, (_, index) => {
-        const bucketStart = rangeWindow.start + index * rangeWindow.bucketSeconds;
-        const date = new Date(bucketStart * 1000);
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-
-        return {
-          label:
-            selectedRange === '24h'
-              ? `${String(date.getHours()).padStart(2, '0')}:00`
-              : `${month}/${day}`,
-          start: bucketStart,
-          end: index === bucketCount - 1 ? rangeWindow.end : bucketStart + rangeWindow.bucketSeconds,
-        };
-      });
-    },
-    [rangeWindow, selectedRange]
-  );
-
-  const acceleratorUsage = useMemo(
-    () => {
-      const gpuUsage = buildAcceleratorUsage<DCGMLabel>({
-        response: gpuUtilRange.data,
-        buckets: timeBuckets,
-        accelerator: 'GPU',
-        getNodeName: (metric) => metric.Hostname || 'unknown-node',
-        getDeviceName: (metric, index) => metric.device || metric.gpu || `GPU${index}`,
-      });
-      const npuUsage = buildAcceleratorUsage<KubernetesNpuLabel>({
-        response: npuCoreRange.data,
-        buckets: timeBuckets,
-        accelerator: 'NPU',
-        getNodeName: (metric) => metric.node || 'unknown-node',
-        getDeviceName: () => 'NPU',
-      });
-      const tpuUsage = buildAcceleratorUsage<TpuLabel>({
-        response: tpuUsageRange.data,
-        buckets: timeBuckets,
-        accelerator: 'TPU',
-        getNodeName: (metric) => metric.node || metric.instance || 'unknown-node',
-        getDeviceName: (metric, index) => metric.device || metric.resource_type || `TPU${index}`,
-      });
+    return Array.from({ length: bucketCount }, (_, index) => {
+      const bucketStart = rangeWindow.start + index * rangeWindow.bucketSeconds;
+      const date = new Date(bucketStart * 1000);
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
 
       return {
-        summaryCards: [gpuUsage.summary, npuUsage.summary, tpuUsage.summary],
-        heatmapRows: [...gpuUsage.rows, ...npuUsage.rows, ...tpuUsage.rows],
+        label:
+          selectedRange === '24h'
+            ? `${String(date.getHours()).padStart(2, '0')}:00`
+            : `${month}/${day}`,
+        start: bucketStart,
+        end: index === bucketCount - 1 ? rangeWindow.end : bucketStart + rangeWindow.bucketSeconds,
       };
-    },
-    [gpuUtilRange.data, npuCoreRange.data, timeBuckets, tpuUsageRange.data]
-  );
+    });
+  }, [rangeWindow, selectedRange]);
+
+  const acceleratorUsage = useMemo(() => {
+    const gpuUsage = buildAcceleratorUsage<DCGMLabel>({
+      response: gpuUtilRange.data,
+      buckets: timeBuckets,
+      accelerator: 'GPU',
+      getNodeName: (metric) => metric.Hostname || 'unknown-node',
+      getDeviceName: (metric, index) => metric.device || metric.gpu || `GPU${index}`,
+    });
+    const npuUsage = buildAcceleratorUsage<KubernetesNpuLabel>({
+      response: npuCoreRange.data,
+      buckets: timeBuckets,
+      accelerator: 'NPU',
+      getNodeName: (metric) => metric.node || 'unknown-node',
+      getDeviceName: () => 'NPU',
+    });
+    const tpuUsage = buildAcceleratorUsage<TpuLabel>({
+      response: tpuUsageRange.data,
+      buckets: timeBuckets,
+      accelerator: 'TPU',
+      getNodeName: (metric) => metric.node || metric.instance || 'unknown-node',
+      getDeviceName: (metric, index) => metric.device || metric.resource_type || `TPU${index}`,
+    });
+
+    return {
+      summaryCards: [gpuUsage.summary, npuUsage.summary, tpuUsage.summary],
+      heatmapRows: [...gpuUsage.rows, ...npuUsage.rows, ...tpuUsage.rows],
+    };
+  }, [gpuUtilRange.data, npuCoreRange.data, timeBuckets, tpuUsageRange.data]);
   const heatmapGridStyle = {
     '--heatmap-column-count': timeBuckets.length,
   } as CSSProperties;
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 관리' }, { label: '사용량' }]}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: '사용량' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">사용량</h2>
       </div>
@@ -279,7 +273,7 @@ const UsagePage = () => {
                 options={clusterOptions}
                 getOptionLabel={(option) => option.text}
                 getOptionValue={(option) => option.value}
-                value={selectedCluster}
+                value={selectedCluster ?? null}
                 onChange={(option) => {
                   if (!option) return;
                   setSelectedCluster(option);

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,23 +7,37 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesConfigMaps } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesConfigMap } from '@/types/cluster';
 
 interface ConfigMapsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const ConfigMapsTab = ({ clusterName }: ConfigMapsTabProps) => {
+export const ConfigMapsTab = ({ clusterName, namespace }: ConfigMapsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 컨피그맵 데이터 가져오기
-  const { configMaps, isPending, isError } = useGetKubernetesConfigMaps(clusterName || undefined);
+  const { configMaps, isPending, isError } = useGetKubernetesConfigMaps(
+    clusterName || undefined,
+    namespace
+  );
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  const selectedItems = useMemo<KubernetesConfigMap[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => configMaps[parseInt(k, 10)])
+      .filter((c): c is KubernetesConfigMap => Boolean(c));
+  }, [configMaps, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesConfigMap | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesConfigMap, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -39,7 +54,10 @@ export const ConfigMapsTab = ({ clusterName }: ConfigMapsTabProps) => {
       accessorFn: (row: KubernetesConfigMap) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesConfigMap } }) => (
-        <span style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+        >
           {row.original.metadata.name}
         </span>
       ),
@@ -47,8 +65,7 @@ export const ConfigMapsTab = ({ clusterName }: ConfigMapsTabProps) => {
     {
       id: 'namespace',
       header: '네임스페이스',
-      accessorFn: (row: KubernetesConfigMap) =>
-        row.metadata.namespace,
+      accessorFn: (row: KubernetesConfigMap) => row.metadata.namespace,
       size: 150,
     },
     {
@@ -66,19 +83,37 @@ export const ConfigMapsTab = ({ clusterName }: ConfigMapsTabProps) => {
       accessorFn: (row: KubernetesConfigMap) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesConfigMap } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="config-maps"
+          resourceLabel="컨피그맵"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="config-map"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="config-maps"
+        resourceLabel="컨피그맵"
+        clusterName={clusterName ?? undefined}
+        getName={(c) => c.metadata.name}
+        getNamespace={(c) => c.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -97,10 +132,23 @@ export const ConfigMapsTab = ({ clusterName }: ConfigMapsTabProps) => {
           totalCount={configMaps.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="config-maps"
+        resourceLabel="컨피그맵"
+        resourceName={drawerItem?.metadata.name}
+        namespace={drawerItem?.metadata.namespace}
+        initialTab={drawerTab}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

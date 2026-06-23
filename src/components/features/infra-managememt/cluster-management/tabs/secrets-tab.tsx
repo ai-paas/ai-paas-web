@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,23 +7,37 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesSecrets } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesSecret } from '@/types/cluster';
 
 interface SecretsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const SecretsTab = ({ clusterName }: SecretsTabProps) => {
+export const SecretsTab = ({ clusterName, namespace }: SecretsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 시크릿 데이터 가져오기
-  const { secrets, isPending, isError } = useGetKubernetesSecrets(clusterName || undefined);
+  const { secrets, isPending, isError } = useGetKubernetesSecrets(
+    clusterName || undefined,
+    namespace
+  );
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  const selectedItems = useMemo<KubernetesSecret[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => secrets[parseInt(k, 10)])
+      .filter((s): s is KubernetesSecret => Boolean(s));
+  }, [secrets, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesSecret | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesSecret, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -39,7 +54,10 @@ export const SecretsTab = ({ clusterName }: SecretsTabProps) => {
       accessorFn: (row: KubernetesSecret) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesSecret } }) => (
-        <span style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+        >
           {row.original.metadata.name}
         </span>
       ),
@@ -62,19 +80,37 @@ export const SecretsTab = ({ clusterName }: SecretsTabProps) => {
       accessorFn: (row: KubernetesSecret) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesSecret } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="secrets"
+          resourceLabel="시크릿"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="secret"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="secrets"
+        resourceLabel="시크릿"
+        clusterName={clusterName ?? undefined}
+        getName={(s) => s.metadata.name}
+        getNamespace={(s) => s.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -93,10 +129,23 @@ export const SecretsTab = ({ clusterName }: SecretsTabProps) => {
           totalCount={secrets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="secrets"
+        resourceLabel="시크릿"
+        resourceName={drawerItem?.metadata.name}
+        namespace={drawerItem?.metadata.namespace}
+        initialTab={drawerTab}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

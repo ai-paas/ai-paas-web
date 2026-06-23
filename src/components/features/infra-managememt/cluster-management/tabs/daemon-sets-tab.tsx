@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,23 +7,39 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesDaemonSets } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+
+const WORKLOAD_DRAWER_TABS: DrawerTab[] = ['overview', 'yaml', 'events', 'logs'];
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesDaemonSet } from '@/types/cluster';
 
 interface DaemonSetsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const DaemonSetsTab = ({ clusterName }: DaemonSetsTabProps) => {
+export const DaemonSetsTab = ({ clusterName, namespace }: DaemonSetsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 데몬셋 데이터 가져오기
-  const { daemonSets, isPending, isError } = useGetKubernetesDaemonSets(clusterName || undefined);
+  const { daemonSets, isPending, isError } = useGetKubernetesDaemonSets(
+    clusterName || undefined,
+    namespace
+  );
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  const selectedItems = useMemo<KubernetesDaemonSet[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => daemonSets[parseInt(k, 10)])
+      .filter((d): d is KubernetesDaemonSet => Boolean(d));
+  }, [daemonSets, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesDaemonSet | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesDaemonSet, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -39,7 +56,10 @@ export const DaemonSetsTab = ({ clusterName }: DaemonSetsTabProps) => {
       accessorFn: (row: KubernetesDaemonSet) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesDaemonSet } }) => (
-        <span style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+        >
           {row.original.metadata.name}
         </span>
       ),
@@ -47,8 +67,7 @@ export const DaemonSetsTab = ({ clusterName }: DaemonSetsTabProps) => {
     {
       id: 'namespace',
       header: '네임스페이스',
-      accessorFn: (row: KubernetesDaemonSet) =>
-        row.metadata.namespace,
+      accessorFn: (row: KubernetesDaemonSet) => row.metadata.namespace,
       size: 150,
     },
     {
@@ -67,19 +86,37 @@ export const DaemonSetsTab = ({ clusterName }: DaemonSetsTabProps) => {
       accessorFn: (row: KubernetesDaemonSet) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesDaemonSet } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="daemonsets"
+          resourceLabel="데몬셋"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="daemonset"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="daemonsets"
+        resourceLabel="데몬셋"
+        clusterName={clusterName ?? undefined}
+        getName={(d) => d.metadata.name}
+        getNamespace={(d) => d.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -98,10 +135,24 @@ export const DaemonSetsTab = ({ clusterName }: DaemonSetsTabProps) => {
           totalCount={daemonSets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="daemonsets"
+        resourceLabel="데몬셋"
+        resourceName={drawerItem?.metadata.name}
+        namespace={drawerItem?.metadata.namespace}
+        initialTab={drawerTab}
+        availableTabs={WORKLOAD_DRAWER_TABS}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

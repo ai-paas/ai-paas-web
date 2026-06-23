@@ -18,6 +18,23 @@ import { formatDateTime } from '@/util/date';
 import { useGetClusters } from '@/hooks/service/clusters';
 import type { Cluster } from '@/types/cluster';
 
+// 클러스터의 식별자 (라우팅 / 선택 / API 호출 등 모든 곳에서 사용)
+const clusterKey = (cluster: Cluster | undefined): string => cluster?.clusterName ?? '';
+
+// 상태 → 표시 색상
+const statusColor = (status?: string): 'run' | 'negative' | 'wait' => {
+  if (!status) return 'wait';
+  if (status === 'READY' || status === 'IMPORTED') return 'run';
+  if (status === 'FAILED' || status === 'BLOCKED' || status === 'DELETED') return 'negative';
+  return 'wait';
+};
+
+const connectivityColor = (connectivity?: string): 'run' | 'negative' | 'wait' => {
+  if (connectivity === 'CONNECTED') return 'run';
+  if (connectivity === 'DISCONNECTED' || connectivity === 'NOT_REGISTERED') return 'negative';
+  return 'wait';
+};
+
 // 테이블 컬럼 설정
 const columns = [
   {
@@ -30,62 +47,82 @@ const columns = [
   {
     id: 'name',
     header: '이름',
-    accessorFn: (row: Cluster) => row.id,
-    size: 200,
-    cell: ({ row }: { row: { original: Cluster } }) => (
-      <Link
-        to={`/infra-management/cluster-management/${row.original.id}`}
-        className="table-td-link"
-      >
-        {row.original.id}
-      </Link>
-    ),
-  },
-  {
-    id: 'connectionStatus',
-    header: '연동 상태',
-    accessorFn: (row: Cluster) => (row.monitServerUrl ? '연결됨' : '연결 안됨'),
-    size: 150,
+    accessorFn: (row: Cluster) => clusterKey(row),
+    size: 220,
     cell: ({ row }: { row: { original: Cluster } }) => {
-      const status = row.original.monitServerUrl ? '연결됨' : '연결 안됨';
+      const name = clusterKey(row.original);
       return (
-        <span
-          className={`table-td-state table-td-state-${status === '연결됨' ? 'run' : 'negative'}`}
+        <Link
+          to={`/infra-management/cluster-management/${encodeURIComponent(name)}`}
+          className="table-td-link"
         >
-          {status}
-        </span>
+          {name || '-'}
+        </Link>
       );
     },
   },
   {
-    id: 'type',
-    header: '유형',
-    accessorFn: (row: Cluster) => row.clusterType || '-',
+    id: 'source',
+    header: '소스',
+    accessorFn: (row: Cluster) => row.source ?? '-',
+    size: 140,
+    cell: ({ row }: { row: { original: Cluster } }) => {
+      const s = row.original.source;
+      const linked = row.original.linkedVmName;
+      if (linked) {
+        return (
+          <Link
+            to={`/infra-management/provisioning/${encodeURIComponent(linked)}`}
+            className="table-td-link"
+            title="VM 프로비저닝 자원으로 이동"
+          >
+            VM ({linked})
+          </Link>
+        );
+      }
+      if (s === 'vm') return 'VM 프로비저닝';
+      if (s === 'registered') return '수동 등록';
+      return s ?? '-';
+    },
+  },
+  {
+    id: 'status',
+    header: '상태',
+    accessorFn: (row: Cluster) => row.status ?? '-',
+    size: 140,
+    cell: ({ row }: { row: { original: Cluster } }) => {
+      const s = row.original.status;
+      return <span className={`table-td-state table-td-state-${statusColor(s)}`}>{s ?? '-'}</span>;
+    },
+  },
+  {
+    id: 'connectivity',
+    header: '연동 상태',
+    accessorFn: (row: Cluster) => row.agentConnectivity ?? '-',
     size: 150,
+    cell: ({ row }: { row: { original: Cluster } }) => {
+      const c = row.original.agentConnectivity;
+      if (!c) return '-';
+      return <span className={`table-td-state table-td-state-${connectivityColor(c)}`}>{c}</span>;
+    },
   },
   {
     id: 'provider',
     header: '프로바이더',
-    accessorFn: (row: Cluster) => row.clusterProvider || '-',
+    accessorFn: (row: Cluster) => row.provider ?? '-',
+    size: 130,
+  },
+  {
+    id: 'region',
+    header: '리전',
+    accessorFn: (row: Cluster) => row.region ?? '-',
     size: 150,
-  },
-  {
-    id: 'version',
-    header: '쿠버네티스 버전',
-    accessorFn: (row: Cluster) => row.version || '-',
-    size: 200,
-  },
-  {
-    id: 'apiServerUrl',
-    header: 'API 서버 URL',
-    accessorFn: (row: Cluster) => row.apiServerUrl,
-    size: 300,
   },
   {
     id: 'createdAt',
     header: '생성 일시',
     accessorFn: (row: Cluster) => formatDateTime(row.createdAt),
-    size: 200,
+    size: 180,
   },
 ];
 
@@ -94,19 +131,22 @@ export default function ClusterManagementPage() {
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
 
-  // API에서 클러스터 데이터 가져오기
   const { clusters: allClusters, isPending, isError } = useGetClusters();
 
-  // 클라이언트 사이드 검색 필터링
   const filteredClusters = useMemo(() => {
     if (!searchValue) return allClusters;
 
-    return allClusters.filter(
-      (cluster) =>
-        cluster.id.toLowerCase().includes(searchValue.toLowerCase()) ||
-        cluster.apiServerUrl.toLowerCase().includes(searchValue.toLowerCase()) ||
-        (cluster.version && cluster.version.toLowerCase().includes(searchValue.toLowerCase()))
-    );
+    const needle = searchValue.toLowerCase();
+    return allClusters.filter((cluster) => {
+      const fields = [
+        cluster.clusterName,
+        cluster.provider,
+        cluster.region,
+        cluster.status,
+        cluster.source,
+      ];
+      return fields.some((field) => field?.toLowerCase().includes(needle));
+    });
   }, [allClusters, searchValue]);
 
   // 클라이언트 사이드 페이지네이션
@@ -116,15 +156,14 @@ export default function ClusterManagementPage() {
     return filteredClusters.slice(startIndex, endIndex);
   }, [filteredClusters, pagination.pageIndex, pagination.pageSize]);
 
-  // 선택된 행의 ID를 추출
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    // 단일 선택만 허용
-    if (selectedRowKeys.length !== 1) return null;
-
-    return clusters[parseInt(selectedRowKeys[0])]?.id || null;
+  // 선택된 행 — 다중 선택 지원. 편집은 단일일 때만 활성, 삭제는 N개 일괄.
+  const selectedIds = useMemo<string[]>(() => {
+    return Object.keys(rowSelection)
+      .map((idx) => clusterKey(clusters[parseInt(idx)]))
+      .filter((id): id is string => !!id);
   }, [rowSelection, clusters]);
+
+  const singleSelectedId: string | null = selectedIds.length === 1 ? selectedIds[0] : null;
 
   // 검색어가 변경되면 페이지네이션 초기화
   useEffect(() => {
@@ -140,9 +179,9 @@ export default function ClusterManagementPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 관리' }, { label: '클러스터 관리' }]}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 관리' }, { label: '클러스터 관리' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">클러스터 관리</h2>
       </div>
@@ -150,8 +189,8 @@ export default function ClusterManagementPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateClusterButton />
-            <EditClusterButton clusterId={selectedId} />
-            <DeleteClusterButton clusterId={selectedId} onDeleteSuccess={handleDeleteSuccess} />
+            <EditClusterButton clusterId={singleSelectedId} />
+            <DeleteClusterButton clusterIds={selectedIds} onDeleteSuccess={handleDeleteSuccess} />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
@@ -175,7 +214,9 @@ export default function ClusterManagementPage() {
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <div>클러스터가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 클러스터를 생성해 보세요.</div>
+                  <div>
+                    수동 등록은 "등록" 버튼, VM 프로비저닝은 프로비저닝 메뉴에서 가능합니다.
+                  </div>
                 </div>
               )
             }

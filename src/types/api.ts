@@ -3,6 +3,9 @@ export interface Page<T> {
   total: number;
   page: number;
   size: number;
+  total_pages?: number;
+  // backend cursor pagination 응답 — k8s 등에서 사용
+  nextPageToken?: string | null;
 }
 
 export interface Pagination<T> {

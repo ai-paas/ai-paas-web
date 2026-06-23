@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Table,
   HeaderCheckbox,
@@ -6,25 +7,37 @@ import {
   useTablePagination,
 } from '@innogrid/ui';
 import { useGetKubernetesServiceAccounts } from '@/hooks/service/clusters';
-import { ResourceActionButtons } from '../resource-action-buttons';
+import { ResourceDetailDrawer, type DrawerTab } from '../resource-detail-drawer';
+import { ResourceRowActions } from '../resource-row-actions';
+import { BulkActionToolbar } from '../bulk-action-toolbar';
 import type { KubernetesServiceAccount } from '@/types/cluster';
 
 interface ServiceAccountsTabProps {
+  namespace?: string;
   clusterName?: string | null;
 }
 
-export const ServiceAccountsTab = ({ clusterName }: ServiceAccountsTabProps) => {
+export const ServiceAccountsTab = ({ clusterName, namespace }: ServiceAccountsTabProps) => {
   const { rowSelection, setRowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
 
-  // 실제 API에서 서비스 어카운트 데이터 가져오기
   const { serviceAccounts, isPending, isError } = useGetKubernetesServiceAccounts(
-    clusterName || undefined
+    clusterName || undefined,
+    namespace
   );
 
-  // 삭제 성공 시 선택 해제
-  const handleDeleteSuccess = () => {
-    setRowSelection({});
+  const selectedItems = useMemo<KubernetesServiceAccount[]>(() => {
+    return Object.keys(rowSelection)
+      .map((k) => serviceAccounts[parseInt(k, 10)])
+      .filter((s): s is KubernetesServiceAccount => Boolean(s));
+  }, [serviceAccounts, rowSelection]);
+
+  const [drawerItem, setDrawerItem] = useState<KubernetesServiceAccount | undefined>();
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>('overview');
+
+  const openDrawer = (item: KubernetesServiceAccount, tab: DrawerTab = 'overview') => {
+    setDrawerItem(item);
+    setDrawerTab(tab);
   };
 
   const columns = [
@@ -41,7 +54,10 @@ export const ServiceAccountsTab = ({ clusterName }: ServiceAccountsTabProps) => 
       accessorFn: (row: KubernetesServiceAccount) => row.metadata.name,
       size: 200,
       cell: ({ row }: { row: { original: KubernetesServiceAccount } }) => (
-        <span style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}>
+        <span
+          onClick={() => openDrawer(row.original, 'overview')}
+          style={{ color: '#0066cc', textDecoration: 'underline', cursor: 'pointer' }}
+        >
           {row.original.metadata.name}
         </span>
       ),
@@ -49,8 +65,7 @@ export const ServiceAccountsTab = ({ clusterName }: ServiceAccountsTabProps) => 
     {
       id: 'namespace',
       header: '네임스페이스',
-      accessorFn: (row: KubernetesServiceAccount) =>
-        row.metadata.namespace,
+      accessorFn: (row: KubernetesServiceAccount) => row.metadata.namespace,
       size: 150,
     },
     {
@@ -59,19 +74,37 @@ export const ServiceAccountsTab = ({ clusterName }: ServiceAccountsTabProps) => 
       accessorFn: (row: KubernetesServiceAccount) => row.metadata.creationTimestamp,
       size: 200,
     },
+    {
+      id: 'actions',
+      header: '작업',
+      enableSorting: false,
+      size: 90,
+      cell: ({ row }: { row: { original: KubernetesServiceAccount } }) => (
+        <ResourceRowActions
+          clusterName={clusterName ?? undefined}
+          resourceType="service-accounts"
+          resourceLabel="서비스 어카운트"
+          resourceName={row.original.metadata.name}
+          namespace={row.original.metadata.namespace}
+          rowData={row.original}
+          onOpenDrawer={(tab) => openDrawer(row.original, tab)}
+        />
+      ),
+    },
   ];
 
   return (
     <div>
-      {/* 버튼 영역 */}
-      <ResourceActionButtons
-        resourceType="service-account"
-        clusterName={clusterName}
-        onSuccess={handleDeleteSuccess}
-        rowSelection={rowSelection}
+      <BulkActionToolbar
+        selected={selectedItems}
+        resourceType="service-accounts"
+        resourceLabel="서비스 어카운트"
+        clusterName={clusterName ?? undefined}
+        getName={(s) => s.metadata.name}
+        getNamespace={(s) => s.metadata.namespace}
+        onClear={() => setRowSelection({})}
       />
 
-      {/* 테이블 */}
       <div className="h-[481px]">
         <Table
           columns={columns}
@@ -90,10 +123,23 @@ export const ServiceAccountsTab = ({ clusterName }: ServiceAccountsTabProps) => 
           totalCount={serviceAccounts.length}
           pagination={pagination}
           setPagination={setPagination}
+          useSelect
+          useMultiSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
         />
       </div>
+
+      <ResourceDetailDrawer
+        isOpen={!!drawerItem}
+        clusterName={clusterName ?? undefined}
+        resourceType="service-accounts"
+        resourceLabel="서비스 어카운트"
+        resourceName={drawerItem?.metadata.name}
+        namespace={drawerItem?.metadata.namespace}
+        initialTab={drawerTab}
+        onClose={() => setDrawerItem(undefined)}
+      />
     </div>
   );
 };

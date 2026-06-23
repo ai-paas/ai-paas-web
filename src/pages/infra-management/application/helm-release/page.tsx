@@ -89,11 +89,14 @@ export default function ApplicationHelmReleasePage() {
     const result: ClusterSelectOption[] = [];
 
     clusters.forEach((cluster) => {
-      const option = getClusterOption(cluster.id, cluster.description);
-      if (option && !result.some((existing) => existing.value === (cluster.id ?? option.value))) {
+      const name = cluster.clusterName;
+      if (!name) return;
+      const option = getClusterOption(name, cluster.description);
+      const value = name;
+      if (!result.some((existing) => existing.value === value)) {
         result.push({
-          text: option.text,
-          value: cluster.id ?? option.value,
+          text: option?.text ?? name,
+          value,
           createdAt: cluster.createdAt,
         });
       }
@@ -278,7 +281,9 @@ export default function ApplicationHelmReleasePage() {
 
   return (
     <main>
-      <BreadCrumb items={breadcrumbItems} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">헬름 릴리즈</h2>
       </div>

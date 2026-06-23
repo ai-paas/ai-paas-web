@@ -64,10 +64,12 @@ function AcceleratorPage() {
 
   const clusterOptions = useMemo<SelectOption[]>(
     () =>
-      clusters.map((cluster) => ({
-        text: cluster.id,
-        value: cluster.id,
-      })),
+      clusters
+        .filter((cluster) => !!cluster.clusterName)
+        .map((cluster) => ({
+          text: cluster.clusterName ?? '',
+          value: cluster.clusterName ?? '',
+        })),
     [clusters]
   );
   const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
@@ -297,9 +299,9 @@ function AcceleratorPage() {
 
   return (
     <main>
-      <BreadCrumb
-        items={[{ label: '인프라 관리' }, { label: '가속기' }]}
-      />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: '가속기' }]} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">가속기</h2>
       </div>
@@ -312,7 +314,7 @@ function AcceleratorPage() {
                 options={clusterOptions}
                 getOptionLabel={(option) => option.text}
                 getOptionValue={(option) => option.value}
-                value={selectedCluster}
+                value={selectedCluster ?? null}
                 onChange={(newValue) => setSelectedCluster(newValue ?? undefined)}
                 placeholder="클러스터를 선택해 주세요."
                 isLoading={isClustersPending}

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import {
   BreadCrumb,
   Button,
@@ -22,28 +22,6 @@ const breadcrumbItems = [
   { label: '애플리케이션' },
   { label: '헬름 저장소' },
 ];
-
-const normalizeStatus = (status?: string) => {
-  if (!status) {
-    return { label: '-', variant: 'temp' as const };
-  }
-
-  const normalized = status.trim().toLowerCase();
-
-  if (['deployed', 'deploy', 'success', 'succeeded', 'completed', 'active'].includes(normalized)) {
-    return { label: 'Deployed', variant: 'run' as const };
-  }
-
-  if (['failed', 'error', 'errored'].includes(normalized)) {
-    return { label: 'Failed', variant: 'negative' as const };
-  }
-
-  if (['pending', 'installing', 'progressing', 'upgrading'].includes(normalized)) {
-    return { label: 'Pending', variant: 'ing' as const };
-  }
-
-  return { label: status, variant: 'temp' as const };
-};
 
 export default function ApplicationHelmRepositoryPage() {
   const navigate = useNavigate();
@@ -86,15 +64,6 @@ export default function ApplicationHelmRepositoryPage() {
     return paginatedRepositories[index];
   }, [rowSelection, paginatedRepositories]);
 
-  const handleNameClick = useCallback(
-    (repo: HelmRepository) => {
-      if (repo.name) {
-        navigate(`/infra-management/application/catalog?repository=${repo.name}`);
-      }
-    },
-    [navigate]
-  );
-
   const columns = useMemo(
     () => [
       {
@@ -111,56 +80,70 @@ export default function ApplicationHelmRepositoryPage() {
         size: 325,
         cell: ({ row }: { row: { original: HelmRepository } }) => {
           const name = row.original.name;
+          if (!name) return '-';
           return (
-            <button
-              type="button"
-              onClick={() => handleNameClick(row.original)}
-              className="text-primary text-left hover:underline"
-              style={{ cursor: name ? 'pointer' : 'default' }}
+            <Link
+              to={`/infra-management/application/catalog?repository=${encodeURIComponent(name)}`}
+              className="table-td-link"
             >
-              {name ?? '-'}
-            </button>
+              {name}
+            </Link>
           );
         },
       },
       {
-        id: 'status',
-        header: '상태',
-        accessorFn: (row: HelmRepository) => row.status ?? '-',
-        size: 325,
+        id: 'source',
+        header: '종류',
+        accessorFn: (row: HelmRepository) => row.source ?? '-',
+        size: 140,
         cell: ({ row }: { row: { original: HelmRepository } }) => {
-          const meta = normalizeStatus(row.original.status);
-          return (
-            <span className={`table-td-state table-td-state-${meta.variant}`}>{meta.label}</span>
-          );
+          const s = row.original.source;
+          if (!s) return '-';
+          const variant = s === 'INTERNAL' ? 'wait' : 'run';
+          return <span className={`table-td-state table-td-state-${variant}`}>{s}</span>;
         },
       },
       {
         id: 'url',
         header: '저장소 URL',
         accessorFn: (row: HelmRepository) => row.url ?? '-',
-        size: 434,
+        size: 400,
+      },
+      {
+        id: 'tags',
+        header: '태그',
+        accessorFn: (row: HelmRepository) => row.tags ?? '-',
+        size: 220,
+      },
+      {
+        id: 'auth',
+        header: '인증',
+        accessorFn: (row: HelmRepository) => (row.username ? 'Basic Auth' : '-'),
+        size: 100,
       },
       {
         id: 'insecure',
-        header: 'Insecure',
-        accessorFn: (row: HelmRepository) => (row.insecure ? 'True' : 'False'),
-        size: 325,
+        header: 'TLS 우회',
+        accessorFn: (row: HelmRepository) =>
+          (row.insecureSkipTLSVerify ?? row.insecure) ? '예' : '아니오',
+        size: 100,
       },
       {
         id: 'createdAt',
         header: '생성 일시',
         accessorFn: (row: HelmRepository) =>
           row.created || row.createdAt ? formatDateTime(row.created || row.createdAt || '') : '-',
-        size: 325,
+        size: 180,
       },
     ],
-    [handleNameClick]
+    []
   );
 
   return (
     <main>
-      <BreadCrumb items={breadcrumbItems} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">헬름 저장소</h2>
       </div>

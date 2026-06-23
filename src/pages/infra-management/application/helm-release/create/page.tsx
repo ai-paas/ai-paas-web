@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { BreadCrumb, Button, Input, Select, type SelectSingleValue } from '@innogrid/ui';
+import { BreadCrumb, Button, Input, Select, type SelectSingleValue, useToast } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { configureMonacoYaml } from 'monaco-yaml';
 import { useGetClusters } from '@/hooks/service/clusters';
 import { useGetKubernetesNamespaces } from '@/hooks/service/clusters';
-import { useGetHelmRepositories } from '@/hooks/service/helm';
+import { useGetHelmRepositories, useInstallHelmRelease } from '@/hooks/service/helm';
 import { useGetCatalog } from '@/hooks/service/catalog';
 import { useGetCatalogDetail } from '@/hooks/service/catalog';
 import { useGetCatalogValues } from '@/hooks/service/catalog';
@@ -150,11 +150,10 @@ export default function HelmReleaseCreatePage() {
     setNamespace(undefined);
   }, [cluster]);
 
-  // 버전 유효성 검사 및 YAML 동기화를 하나의 useEffect로 통합
+  // 버전 ↔ catalogDetail / YAML 동기화. 별도 effect 로 분리하면 동시 setState 가 두 번 trigger.
   useEffect(() => {
     const currentVersion = version?.value;
 
-    // 1. 버전 유효성 검사 (catalogDetail 로딩 완료 후에만 실행)
     if (!isCatalogDetailPending && version) {
       if (versionOptions.length > 0) {
         const isValidVersion = versionOptions.some((opt) => opt.value === version.value);
@@ -164,22 +163,20 @@ export default function HelmReleaseCreatePage() {
           return;
         }
       } else {
-        // 버전 옵션이 비어있으면 버전 리셋 (카탈로그 이름이 변경된 경우)
+        // 카탈로그 이름 변경 등으로 옵션이 비면 버전 리셋
         setVersion(undefined);
         setYaml('');
         return;
       }
     }
 
-    // 2. YAML 동기화: 버전이 없으면 YAML 비우기
     if (!currentVersion) {
       setYaml('');
       return;
     }
 
-    // 3. YAML 로딩: API 응답 완료 후 YAML 설정
     if (isValuesPending) {
-      return; // 로딩 중이면 대기
+      return;
     }
 
     if (isValuesError) {
@@ -350,6 +347,24 @@ export default function HelmReleaseCreatePage() {
     navigate('/infra-management/application/helm-release');
   }, [navigate]);
 
+  const { open } = useToast();
+  const { installHelmRelease, isPending: isInstalling } = useInstallHelmRelease(cluster?.value, {
+    onSuccess: () => {
+      open({ title: '헬름 릴리즈 설치 요청이 접수되었습니다.' });
+      navigate('/infra-management/application/helm-release');
+    },
+    onError: (error) => {
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message?: unknown }).message ?? '')
+          : '';
+      open({
+        title: message || '헬름 릴리즈 설치 중 오류가 발생했습니다.',
+        status: 'negative',
+      });
+    },
+  });
+
   const handleCreate = useCallback(() => {
     // 필수 항목 체크
     const fieldValidations: Array<{
@@ -378,10 +393,14 @@ export default function HelmReleaseCreatePage() {
       return;
     }
 
-    // TODO: API 연동
-    // 생성 기능은 아직 구현 중입니다
-    alert('생성 기능은 아직 구현 중입니다.');
-  }, [cluster, namespace, releaseName, repository, catalogName, version, yaml]);
+    installHelmRelease({
+      releaseName,
+      chart: `${repository?.value}/${catalogName?.value}`,
+      version: version?.value,
+      namespace: namespace?.value,
+      valuesYaml: yaml,
+    });
+  }, [cluster, namespace, releaseName, repository, catalogName, version, yaml, installHelmRelease]);
 
   const isYamlEnabled = !!version && !!valuesData?.content;
 
@@ -418,7 +437,9 @@ export default function HelmReleaseCreatePage() {
 
   return (
     <main>
-      <BreadCrumb items={breadcrumbItems} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">헬름 릴리즈 생성</h2>
       </div>
@@ -432,7 +453,7 @@ export default function HelmReleaseCreatePage() {
                   options={clusterOptions}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => option.value}
-                  value={cluster}
+                  value={cluster ?? null}
                   onChange={handleClusterChange}
                   placeholder="클러스터를 선택하세요"
                   isLoading={isClustersPending}
@@ -453,7 +474,7 @@ export default function HelmReleaseCreatePage() {
                   options={namespaceOptions}
                   getOptionLabel={(option) => option.text}
                   getOptionValue={(option) => option.value}
-                  value={namespace}
+                  value={namespace ?? null}
                   onChange={handleNamespaceChange}
                   placeholder="네임스페이스를 선택하세요"
                   isLoading={isNamespacesPending}
@@ -493,7 +514,7 @@ export default function HelmReleaseCreatePage() {
                       options={repositoryOptions}
                       getOptionLabel={(option) => option.text}
                       getOptionValue={(option) => option.value}
-                      value={repository}
+                      value={repository ?? null}
                       onChange={handleRepositoryChange}
                       placeholder="저장소"
                       isLoading={isRepositoriesPending}
@@ -509,7 +530,7 @@ export default function HelmReleaseCreatePage() {
                       options={catalogNameOptions}
                       getOptionLabel={(option) => option.text}
                       getOptionValue={(option) => option.value}
-                      value={catalogName}
+                      value={catalogName ?? null}
                       onChange={handleCatalogNameChange}
                       placeholder="카탈로그 이름"
                       isLoading={isChartsPending}
@@ -526,7 +547,7 @@ export default function HelmReleaseCreatePage() {
                       options={versionOptions}
                       getOptionLabel={(option) => option.text}
                       getOptionValue={(option) => option.value}
-                      value={version}
+                      value={version ?? null}
                       onChange={handleVersionChange}
                       placeholder="버전"
                       isDisabled={!catalogName}
@@ -588,8 +609,8 @@ export default function HelmReleaseCreatePage() {
             <Button size="large" color="secondary" onClick={handleCancel}>
               취소
             </Button>
-            <Button size="large" color="primary" onClick={handleCreate}>
-              생성
+            <Button size="large" color="primary" onClick={handleCreate} disabled={isInstalling}>
+              {isInstalling ? '생성 중...' : '생성'}
             </Button>
           </div>
         </div>

@@ -311,7 +311,9 @@ export default function CatalogDetailPage() {
   if (isPending) {
     return (
       <main>
-        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">카탈로그 상세</h2>
         </div>
@@ -325,7 +327,9 @@ export default function CatalogDetailPage() {
   if (isError) {
     return (
       <main>
-        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">카탈로그 상세</h2>
         </div>
@@ -352,7 +356,9 @@ export default function CatalogDetailPage() {
   if (!catalogDetail) {
     return (
       <main>
-        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">카탈로그 상세</h2>
         </div>
@@ -365,7 +371,9 @@ export default function CatalogDetailPage() {
 
   return (
     <main>
-      <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">카탈로그 상세</h2>
         <div className="page-toolBox">

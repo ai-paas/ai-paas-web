@@ -196,7 +196,9 @@ export default function HelmReleaseDetailPage() {
   if (!release) {
     return (
       <main>
-        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        <div className="breadcrumbBox">
+          <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+        </div>
         <div className="page-title-box">
           <h2 className="page-title">헬름 릴리즈 상세</h2>
         </div>
@@ -211,7 +213,9 @@ export default function HelmReleaseDetailPage() {
 
   return (
     <main>
-      <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      <div className="breadcrumbBox">
+        <BreadCrumb items={breadcrumbItems} onNavigate={navigate} />
+      </div>
       <div className="page-title-box">
         <h2 className="page-title">헬름 릴리즈 상세</h2>
         <div className="page-toolBox">
