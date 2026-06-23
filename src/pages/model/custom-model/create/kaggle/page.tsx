@@ -200,7 +200,9 @@ export default function CustomModelCreateKagglePage() {
             disabled={!selectedModel}
             onClick={() => {
               if (selectedModel) {
-                navigate('/model/custom-model/create', { state: { selectedModel } });
+                navigate('/model/custom-model/create', {
+                  state: { selectedModel, market: 'kaggle' },
+                });
               }
             }}
           >
