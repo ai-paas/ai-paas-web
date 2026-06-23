@@ -32,11 +32,19 @@ import LearningPage from '../pages/learning/page';
 import LearningCreatePage from '../pages/learning/create/page';
 import LearningDetailPage from '../pages/learning/[id]/page';
 import DashboardPage from '../pages/dashboard/page';
-import EventPage from '../pages/infra-management/event/page';
 import ClusterManagementPage from '../pages/infra-management/cluster-management/page';
-import MonitoringDashboardPage from '../pages/infra-management/monitoring-dashboard/page';
+import ClusterCreatePage from '../pages/infra-management/cluster-management/create/page';
+import ClusterEditPage from '../pages/infra-management/cluster-management/edit/page';
+import ClusterDetailPage from '../pages/infra-management/cluster-management/[id]/page';
+import MonitoringPage from '../pages/infra-management/monitoring/page';
+import WorkloadPage from '../pages/infra-management/workload/page';
+import AcceleratorPage from '../pages/infra-management/accelerator/page';
+import UsagePage from '../pages/infra-management/usage/page';
 import ApplicationCatalogPage from '../pages/infra-management/application/catalog/page';
+import CatalogDetailPage from '../pages/infra-management/application/catalog/[chartName]/page';
 import ApplicationHelmReleasePage from '../pages/infra-management/application/helm-release/page';
+import HelmReleaseCreatePage from '../pages/infra-management/application/helm-release/create/page';
+import HelmReleaseDetailPage from '../pages/infra-management/application/helm-release/[namespace]/[name]/page';
 import ApplicationHelmRepositoryPage from '../pages/infra-management/application/helm-repository/page';
 import MemberManagementPage from '../pages/member-management/page';
 import LearningAssignmentStep2Page from '../pages/learning/assignment/step2/page';
@@ -376,24 +384,40 @@ export const router = createBrowserRouter([
         children: [
           {
             path: 'cluster-management',
-            index: true,
-            element: <ClusterManagementPage />,
+            children: [
+              {
+                index: true,
+                element: <ClusterManagementPage />,
+              },
+              {
+                path: 'create',
+                element: <ClusterCreatePage />,
+              },
+              {
+                path: 'edit/:clusterId',
+                element: <ClusterEditPage />,
+              },
+              {
+                path: ':id',
+                element: <ClusterDetailPage />,
+              },
+            ],
           },
           {
-            path: 'monitoring-dashboard',
-            element: (
-              <Suspense fallback={<></>}>
-                <MonitoringDashboardPage />
-              </Suspense>
-            ),
+            path: 'monitoring',
+            element: <MonitoringPage />,
           },
           {
-            path: 'event',
-            element: (
-              <Suspense fallback={<></>}>
-                <EventPage />
-              </Suspense>
-            ),
+            path: 'workload',
+            element: <WorkloadPage />,
+          },
+          {
+            path: 'accelerator',
+            element: <AcceleratorPage />,
+          },
+          {
+            path: 'usage',
+            element: <UsagePage />,
           },
           {
             path: 'application',
@@ -401,27 +425,27 @@ export const router = createBrowserRouter([
               {
                 path: 'catalog',
                 index: true,
-                element: (
-                  <Suspense fallback={<></>}>
-                    <ApplicationCatalogPage />
-                  </Suspense>
-                ),
+                element: <ApplicationCatalogPage />,
+              },
+              {
+                path: 'catalog/:chartName',
+                element: <CatalogDetailPage />,
               },
               {
                 path: 'helm-release',
-                element: (
-                  <Suspense fallback={<></>}>
-                    <ApplicationHelmReleasePage />
-                  </Suspense>
-                ),
+                element: <ApplicationHelmReleasePage />,
+              },
+              {
+                path: 'helm-release/create',
+                element: <HelmReleaseCreatePage />,
+              },
+              {
+                path: 'helm-release/:namespace/:name',
+                element: <HelmReleaseDetailPage />,
               },
               {
                 path: 'helm-repository',
-                element: (
-                  <Suspense fallback={<></>}>
-                    <ApplicationHelmRepositoryPage />
-                  </Suspense>
-                ),
+                element: <ApplicationHelmRepositoryPage />,
               },
             ],
           },

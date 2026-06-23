@@ -1,0 +1,69 @@
+.filterToolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filterField {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  color: $page-font-color-900;
+  font-size: $page-font-13;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clusterSelect {
+  width: 280px;
+}
+
+.rangeFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rangeChip {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid $color-gray-100;
+  border-radius: 999px;
+  background-color: $color-white;
+  color: $page-font-color-600;
+  font-size: $page-font-root;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    border-color: $color-point-blue;
+    color: $page-font-color-blue;
+    background-color: #f4f8ff;
+  }
+}
+
+.rangeChipActive {
+  border-color: $page-font-color-blue;
+  color: $color-white;
+  background-color: $page-font-color-blue;
+}
+
+.resourceGaugeList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metricChartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 12px;
+}

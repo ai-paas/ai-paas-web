@@ -1,11 +1,11 @@
-import { useMemo, type ChangeEvent } from 'react';
-import styles from '@/pages/workflow/workflow.module.scss';
-import { Accordion, Button, Input, RadioGroupButton, Select, Slider, Textarea } from '@innogrid/ui';
 import { IconArrCount } from '@/assets/img/icon';
-import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
-import { useWorkflowStore } from '@/store/useWorkflowStore';
-import { useGetModelCatalogs, useGetCustomModels } from '@/hooks/service/models';
+import { useGetCustomModels, useGetModelCatalogs } from '@/hooks/service/models';
 import { useGetPrompts } from '@/hooks/service/prompts';
+import styles from '@/pages/workflow/workflow.module.scss';
+import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { Accordion, Button, Input, RadioGroupButton, Select, Slider, Textarea } from '@innogrid/ui';
+import { Popover, PopoverContent, PopoverPortal, PopoverTrigger } from '@radix-ui/react-popover';
+import { useMemo, type ChangeEvent } from 'react';
 
 type SelectOption = { text: string; value: string };
 type ModelTypeValue = 'custom' | 'catalog';

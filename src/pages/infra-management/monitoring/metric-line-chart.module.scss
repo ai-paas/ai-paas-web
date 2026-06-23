@@ -1,0 +1,95 @@
+.metricCard {
+  width: 100%;
+  min-width: 390px;
+}
+
+.metricTitle,
+.metricValue {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metricValue {
+  color: #246beb;
+}
+
+.metricChartBody {
+  display: flex;
+  min-height: 240px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.metricEmptyState {
+  display: flex;
+  width: 390px;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #98a2b3;
+  font-size: 14px;
+}
+
+.metricTooltip {
+  border-radius: 10px;
+}
+
+.metricTooltipEmpty,
+.metricTooltipContent {
+  min-width: 160px;
+  padding: 12px;
+}
+
+.metricTooltipEmpty {
+  color: #5b6475;
+  font-size: 12px;
+}
+
+.metricTooltipTimestamp {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.metricTooltipList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metricTooltipRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.metricTooltipLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5b6475;
+}
+
+.metricTooltipDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+}
+
+.metricTooltipValue {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.monitoringLineChart {
+  :global(.u-axis.u-x > div) {
+    white-space: pre-line;
+    text-align: center;
+  }
+}
