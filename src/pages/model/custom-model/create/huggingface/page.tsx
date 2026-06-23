@@ -20,7 +20,7 @@ import styles from '../../../model.module.scss';
 import type { HubModel } from '@/types/model';
 
 // Types
-type SortType = 'downloads' | 'created' | 'relevance';
+type SortType = 'downloads' | 'created';
 
 interface FilterState {
   num_parameters_min: string | null;
@@ -68,7 +68,6 @@ const getSortLabel = (sort: SortType): string => {
   const sortLabels: Record<SortType, string> = {
     created: '최근 업데이트',
     downloads: '다운로드 수',
-    relevance: '관련도',
   };
   return sortLabels[sort];
 };
@@ -110,7 +109,6 @@ const useSort = (initialSort: SortType = 'downloads') => {
     () => [
       { label: '다운로드 수', onSelect: () => setSort('downloads') },
       { label: '최근 업데이트', onSelect: () => setSort('created') },
-      { label: '관련도', onSelect: () => setSort('relevance') },
     ],
     []
   );
