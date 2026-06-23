@@ -215,7 +215,7 @@ export default function WorkflowDetailPage() {
                       to={`/service/${workflow.service_id}`}
                       className="page-detail_item-data-link"
                     >
-                      {workflow.service_id}
+                      {workflow.service_name}
                     </Link>
                   ) : (
                     EMPTY_VALUE
