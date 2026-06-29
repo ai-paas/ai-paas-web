@@ -241,7 +241,7 @@ export const useGetKubernetesPodsResource = (
   namespace?: string,
   enabled: boolean = true
 ) => {
-  const { data, isPending, isError, error } = useQuery({
+  const { data, isPending, isFetching, isError, error, refetch } = useQuery({
     queryKey: ['kubernetes-pods-resource', clusterName, namespace],
     queryFn: async () => {
       const pageSize = 100;
@@ -303,7 +303,9 @@ export const useGetKubernetesPodsResource = (
   return {
     pods: data ?? [],
     isPending,
+    isFetching,
     isError,
     error,
+    refetch,
   };
 };

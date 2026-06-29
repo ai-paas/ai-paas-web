@@ -26,6 +26,13 @@ type FuriosaLabel = {
   node: string;
 };
 
+type TPULabel = {
+  node: string;
+  resource_type: string;
+  tpu_type: string;
+  zone: string;
+};
+
 type SelectOption = {
   text: string;
   value: string;
@@ -89,30 +96,26 @@ function AcceleratorPage() {
     setSelectedCluster(clusterOptions[0]);
   }, [clusterOptions, selectedCluster]);
 
-  const {
-    nodes,
-    isPending: isNodesPending,
-    isError: isNodesError,
-  } = useGetKubernetesNodes(selectedClusterName);
+  const { nodes, isError: isNodesError } = useGetKubernetesNodes(selectedClusterName);
 
-  const { data: gpuTempQueryResult, isPending: isGpuTempPending } = useInstantQuery<DCGMLabel>(
+  const { data: gpuTempQueryResult } = useInstantQuery<DCGMLabel>(
     'DCGM_FI_DEV_GPU_TEMP',
     selectedClusterName
   );
-  const { data: gpuPowerQueryResult, isPending: isGpuPowerPending } = useInstantQuery<DCGMLabel>(
+  const { data: gpuPowerQueryResult } = useInstantQuery<DCGMLabel>(
     'DCGM_FI_DEV_POWER_USAGE',
     selectedClusterName
   );
-  // const { data: tpuUtilQueryResult } = useInstantQuery<PrometheusVectorResult<DCGMLabel>[]>(
-  //   'stackdriver_tpu_worker_tpu_googleapis_com_cpu_utilization',
-  //   selectedCluster?.value
-  // );
-  const { data: npuUtilMetrics, isPending: isNpuTempPending } = useInstantQuery<FuriosaLabel>(
+  const { data: npuUtilMetrics } = useInstantQuery<FuriosaLabel>(
     'furiosa_npu_hw_temperature{label="Average"}',
     selectedClusterName
   );
-  const { data: npuPowerMetrics, isPending: isNpuPowerPending } = useInstantQuery<FuriosaLabel>(
+  const { data: npuPowerMetrics } = useInstantQuery<FuriosaLabel>(
     'furiosa_npu_hw_power{label="PCI Total RMS PWR"}',
+    selectedClusterName
+  );
+  const { data: tpuNodeAllocatableMetrics } = useInstantQuery<TPULabel>(
+    'gke_tpu_node_allocatable{resource_type="tpu"}',
     selectedClusterName
   );
 
@@ -207,6 +210,16 @@ function AcceleratorPage() {
       });
     });
 
+    tpuNodeAllocatableMetrics?.data.result.forEach(({ metric, value }) => {
+      for (let i = 0; i < Number(value[1]); i++) {
+        nodeMap.get(metric.node)?.devices.push({
+          acceleratorType: 'TPU',
+          modelName: metric.tpu_type,
+          deviceName: metric.node,
+        });
+      }
+    });
+
     return Array.from(nodeMap.entries());
   }, [
     gpuPowerQueryResult,
@@ -214,6 +227,7 @@ function AcceleratorPage() {
     nodes,
     npuPowerMetrics,
     npuUtilMetrics,
+    tpuNodeAllocatableMetrics,
     selectedClusterName,
   ]);
 
@@ -289,14 +303,6 @@ function AcceleratorPage() {
     []
   );
 
-  const isLoading =
-    !!selectedClusterName &&
-    (isNodesPending ||
-      isGpuTempPending ||
-      isGpuPowerPending ||
-      isNpuTempPending ||
-      isNpuPowerPending);
-
   return (
     <main>
       <div className="breadcrumbBox">
@@ -331,7 +337,6 @@ function AcceleratorPage() {
             useSearch={false}
             columns={columns}
             data={rows}
-            isLoading={isLoading}
             initialState={{ expanded: true }}
             getRowCanExpand={(row: TableRow<AcceleratorTableRow>) =>
               row.original.devices.length > 0

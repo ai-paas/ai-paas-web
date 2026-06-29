@@ -6,12 +6,11 @@ import {
   type PrometheusQueryResponse,
   type PrometheusVectorResult,
 } from '@/hooks/service/monitoring';
-import { useGetObservabilityAlerts } from '@/hooks/service/observability';
 import { BreadCrumb, Select, type SelectSingleValue } from '@innogrid/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { MetricLineChart } from './metric-line-chart';
-import { ResourceGaugeCard } from './resource-gauge-card';
 import styles from './monitoring.module.scss';
+import { ResourceGaugeCard } from './resource-gauge-card';
 
 type DCGMLabel = {
   Hostname: string;
@@ -98,7 +97,10 @@ const MonitoringPage = () => {
       instant('cpuTotal', 'sum(kube_node_status_capacity{resource="cpu"})'),
       instant('cpuUsage', 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))'),
       instant('memoryTotal', 'sum(kube_node_status_capacity{resource="memory"})'),
-      instant('memoryUsage', 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'),
+      instant(
+        'memoryUsage',
+        'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'
+      ),
       instant(
         'fileSystemTotal',
         'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
@@ -117,8 +119,8 @@ const MonitoringPage = () => {
       ),
       instant('npuTotal', 'sum(kube_node_status_capacity{resource=~".*npu.*"})'),
       instant('npuRequest', 'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})'),
-      instant('tpuTotal', 'gke_tpu_node_total'),
-      instant('tpuAllocated', 'gke_cluster_tpu_allocated'),
+      instant('tpuTotal', 'sum(gke_tpu_node_allocatable{resource_type="tpu"})'),
+      instant('tpuAllocated', 'sum(gke_cluster_tpu_allocated)'),
       range('cpuRange', 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))'),
       range('memoryRange', 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'),
       range(
@@ -161,15 +163,11 @@ const MonitoringPage = () => {
   const instantOf = <TLabel = Record<string, string>,>(
     name: string
   ): PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]> | undefined =>
-    results?.[name] as
-      | PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]>
-      | undefined;
+    results?.[name] as PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]> | undefined;
   const rangeOf = <TLabel = Record<string, string>,>(
     name: string
   ): PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]> | undefined =>
-    results?.[name] as
-      | PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]>
-      | undefined;
+    results?.[name] as PrometheusQueryResponse<PrometheusMatrixResult<TLabel>[]> | undefined;
   const scalar = (name: string): number =>
     Number.parseFloat(instantOf(name)?.data?.result?.[0]?.value?.[1] ?? '0') || 0;
 
@@ -389,62 +387,8 @@ const MonitoringPage = () => {
             </div>
           </div>
         </div>
-
-        {/* alerts 섹션 */}
-        {selectedCluster?.value && (
-          <ObservabilityAlertsSection clusterName={selectedCluster.value} />
-        )}
       </div>
     </main>
-  );
-};
-
-// Alerts 섹션 — 발생 중인 alert 표시
-const ObservabilityAlertsSection = ({ clusterName }: { clusterName: string }) => {
-  const { alerts, isPending, isError } = useGetObservabilityAlerts(clusterName);
-  return (
-    <div className={styles.section}>
-      <h3 className="page-detail-title">발생 중인 알람 ({alerts.length})</h3>
-      {isPending && <div style={{ color: '#666' }}>불러오는 중...</div>}
-      {isError && (
-        <div style={{ color: '#666' }}>
-          알람 정보를 불러올 수 없습니다. 모니터링 애드온이 설치되어 있는지 확인해주세요.
-        </div>
-      )}
-      {!isPending && !isError && alerts.length === 0 && (
-        <div style={{ color: '#666' }}>현재 발생 중인 알람이 없습니다.</div>
-      )}
-      {alerts.length > 0 && (
-        <ul style={{ maxHeight: 320, overflowY: 'auto', listStyle: 'none', padding: 0 }}>
-          {alerts.map((alert, idx) => {
-            const name = alert.labels?.alertname ?? `alert-${idx}`;
-            const severity = alert.labels?.severity ?? 'unknown';
-            const summary = alert.annotations?.summary ?? alert.annotations?.description ?? '';
-            const variant = severity === 'critical' ? 'negative' : 'wait';
-            return (
-              <li
-                key={`${name}-${idx}`}
-                style={{
-                  padding: 10,
-                  marginBottom: 6,
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span className={`table-td-state table-td-state-${variant}`}>{severity}</span>
-                  <strong>{name}</strong>
-                  {alert.state && (
-                    <span style={{ fontSize: 12, color: '#666' }}>{alert.state}</span>
-                  )}
-                </div>
-                {summary && <div style={{ fontSize: 13, color: '#444' }}>{summary}</div>}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
   );
 };
 
