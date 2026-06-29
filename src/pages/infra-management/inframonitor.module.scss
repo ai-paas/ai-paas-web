@@ -1,242 +1,324 @@
-//infraMonitor style
-
-//monitoring
-.chartRow {
-  display: flex;
-  gap: 48px;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 24px;
-}
-.chartBox {
-  display: flex;
-  width: 174px;
-  height: 168px;
-  background-color: $color-gray-75;
-  position: relative;
-  @include font-style;
-
-  .chartCount,
-  .chartLegend,
-  .chartName {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .chartCount {
-    @include absolute-center;
-    color: $page-font-color-900;
-    font-size: 24px;
-    font-weight: 700;
-  }
-  .chartLegend {
-    position: absolute;
-    top: 70%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: $page-font-color-900;
-    font-size: $page-font-13;
-  }
-  .chartName {
-    position: absolute;
-    left: 50%;
-    bottom: -6px;
-    transform: translateX(-50%);
-    color: $page-font-color-300;
-    font-size: $page-font-root;
-  }
-}
-
-.symbolBox {
+.selectorRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  height: 74px;
-
-  & > em {
-    @include font-style;
-    color: $page-font-color-900;
-    font-size: 36px;
-    font-weight: 700;
-  }
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-//event
-.eventBox {
-  margin-top: 16px;
-  padding: 16px 0 36px;
-  border-radius: 8px;
-  border: 1px solid $color-gray-75;
-  background: $color-gray-10;
-}
-
-.btnBox {
-  padding: 0 16px 16px;
-}
-.btnPlay,
-.btnStop {
+.selectorField {
   display: inline-flex;
   align-items: center;
-  height: 32px;
-  padding: 0 12px 0 10px;
-  border-radius: 4px;
-  border: 1px solid $color-gray-75;
-  background-color: $color-white;
-  @include transition-allEaseInOut;
-  @include font-style;
-  font-size: $page-font-root;
+  gap: 8px;
+}
+
+.selectorLabel {
+  flex: none;
+  color: $page-font-color-900;
+  font-size: $page-font-13;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clusterSelect {
+  width: 280px;
+}
+
+.namespaceSelect {
+  width: 220px;
+}
+
+.acceleratorBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background-color: #eef4ff;
+  color: $page-font-color-blue;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.deviceList {
+  padding: 8px 16px 16px;
+  background-color: #fbfcff;
+}
+
+.deviceListHeader,
+.deviceListRow {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.deviceListHeader {
+  padding: 10px 0;
+  border-bottom: 1px dashed $color-gray-50;
+  color: $page-font-color-300;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.deviceListRow {
+  padding: 12px 0;
+  border-bottom: 1px dashed $color-gray-50;
   color: $page-font-color-600;
+  font-size: $page-font-root;
 
-  .iconPlay,
-  .iconStop {
-    opacity: 0.6;
-    margin-right: 6px;
+  &:last-child {
+    border-bottom: 0;
   }
 
-  &:not(:disabled, .active) {
-    &:hover {
-      border-color: $color-gray-100;
-      color: $page-font-color-900;
-      background-color: $color-gray-25;
-      .iconPlay,
-      .iconStop {
-        opacity: 1;
-      }
-    }
-  }
-
-  &:disabled {
-    border-color: $color-gray-50;
-    color: $color-gray-100;
-    .iconPlay,
-    .iconStop {
-      opacity: 0.2;
-    }
+  > div {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-.palyBox {
-  padding: 16px 36px;
-  height: 100%;
-  max-height: 774px;
-  position: relative;
-  overflow-x: auto;
-  @include scrollbar;
-  .leftLine {
-    position: absolute;
-    top: 10px;
-    left: 41px;
-    z-index: 1;
-    height: 98%;
-    border-left: 3px solid $color-gray-75;
-  }
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 36px;
-    z-index: 2;
-    width: 14px;
-    height: 14px;
-    background-color: $color-gray-75;
-    border-radius: 50%;
-  }
-  &::after {
-    top: unset;
-    bottom: 0;
-  }
-}
-
-.cardBoxLeftInner {
-  margin-top: -40px;
-}
-.cardBoxRightInner {
-  margin-top: -487px;
-}
-.cardBoxLeft,
-.cardBoxRight {
-  position: relative;
-  margin-top: 24px;
-  .iconEventOn,
-  .iconEventOff {
-    position: absolute;
-    top: 38px;
-    left: -10px;
-    z-index: 2;
-  }
-  .iconEventOff {
-    top: 48px;
-    left: 0;
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    top: 55px;
-    left: 12px;
-    z-index: 1;
-    width: 38px;
-    height: 1px;
-    border-top: 1px dotted $color-gray-75;
-  }
-}
-
-.cardBoxRight {
-  &::after {
-    width: 804px;
-  }
-  .iconEventOn {
-    top: 38px;
-  }
-  .iconEventOff {
-    top: 48px;
-  }
-  .card {
-    margin-left: 816px;
-  }
-}
-
-.card {
-  position: relative;
-  top: 0;
-  z-index: 2;
-  margin-left: 50px;
+.deviceMetricCell {
   display: flex;
-  width: 750px;
-  padding: 16px 20px 20px 24px;
-  flex-direction: column;
-  gap: 14px;
-  border-radius: 6px;
-  border-left: 6px solid $color-gray-75;
-  background: $color-white;
-  box-shadow: 3px 4px 6px 0 rgba(0, 0, 0, 0.1);
-  &.warning {
-    border-color: #f5ab00;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+
+  > span {
+    flex-shrink: 0;
+    width: 82px;
   }
 }
 
-.state {
+.utilBar {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+  height: 22px;
+  border: 1px solid $color-gray-100;
+  border-radius: 999px;
+  background-color: $color-white;
+  overflow: hidden;
+}
+
+.utilBarFill {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c8f1c0 0%, #9de08f 100%);
+}
+
+.utilBarLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $page-font-color-900;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.workloadFilters {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  @include font-style;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+//catalog
+.flexBox {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+.catalogBox {
+  width: 536px;
+  height: 234px;
+  border-radius: 8px;
+  border: 1px solid $color-gray-75;
+  display: flex;
+  flex-direction: column;
+}
+
+.catalogInfo {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.catalogImg {
+  width: 84px;
+  height: 84px;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid $color-gray-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-white;
+
+  img {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 6px;
+  }
+}
+
+.catalogDesc {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: space-between;
+}
+
+.catalogTit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  & > p {
+    width: 200px;
+    color: $page-font-color-900;
+    font-size: $page-font-13;
+    @include font-style;
+    font-weight: 600;
+    @include ellipsis(1);
+  }
 
   & > span {
     color: $page-font-color-300;
     font-size: $page-font-root;
+    @include font-style;
   }
+}
 
-  & + p {
-    color: $page-font-color-blue;
+.catalogTxt {
+  width: 380px;
+  color: $page-font-color-600;
+  font-size: $page-font-root;
+  @include font-style;
+  font-weight: 600;
+  @include ellipsis(3);
+}
+
+.catalogKeyword {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.catalogKeywordDetail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+
+  & > span {
+    display: flex;
+    height: 24px;
+    padding: 10px 6px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2px;
+    background: $color-gray-25;
+    color: $page-font-color-300;
     font-size: $page-font-root;
+    @include font-style;
+  }
+}
 
-    & + span {
-      color: $page-font-color-600;
-      font-size: $page-font-root;
-    }
+.btnKeywordNum {
+  display: flex;
+  width: 34px;
+  height: 24px;
+  padding: 10px 6px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  background: $color-gray-300;
+  color: $color-white;
+  font-size: $page-font-root;
+  @include font-style;
+
+  &:hover {
+    background: $color-gray-600;
+  }
+}
+
+.keywordNumList {
+  position: absolute;
+  right: 0;
+  top: 28px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid $color-gray-600;
+  background: $color-white;
+
+  & > span {
+    display: flex;
+    height: 28px;
+    padding: 10px;
+    align-items: center;
+    color: $page-font-color-600;
+    font-size: $page-font-root;
+    @include font-style;
+  }
+}
+
+.catalogBtns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+  padding: 16px 24px;
+  border-top: 1px solid $color-gray-50;
+}
+
+.paginationBox {
+  margin-top: 24px;
+}
+
+// catalog detail
+.catalogDetailHeader {
+  margin-bottom: 24px;
+}
+
+.catalogDetailInfo {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.catalogDetailDesc {
+  flex: 1;
+
+  p {
+    color: $page-font-color-600;
+    font-size: $page-font-root;
+    @include font-style;
+    line-height: 1.6;
   }
 }

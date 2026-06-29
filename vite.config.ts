@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_SERVER_URL,
           changeOrigin: false,
           secure: false,
+          ws: true,
         },
       },
     },
