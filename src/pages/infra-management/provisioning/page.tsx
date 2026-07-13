@@ -8,6 +8,7 @@ import {
   useTablePagination,
   useTableSelection,
   useToast,
+  type CheckboxCheckedState,
 } from '@innogrid/ui';
 import {
   useGetVms,
@@ -235,7 +236,7 @@ export default function ProvisioningPage() {
             id="vm-show-deleted"
             label="삭제됨 보기"
             checked={showDeleted}
-            onCheckedChange={(c) => {
+            onCheckedChange={(c: CheckboxCheckedState) => {
               setShowDeleted(c === true);
               setRowSelection({});
             }}

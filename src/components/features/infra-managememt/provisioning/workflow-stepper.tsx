@@ -14,7 +14,6 @@ const STEP_ORDER: Record<string, number> = { PROVISION: 0, BOOTSTRAP: 1, VERIFY:
 function deriveState(stepKey: string, vm: Vm | undefined): StepState {
   if (!vm) return 'pending';
   const current = vm.currentWorkflowStep ?? '';
-  const lastSuccess = vm.lastSuccessfulStep ?? '';
   const lastFailed = vm.lastFailedStep ?? '';
   const status = vm.status ?? '';
 
