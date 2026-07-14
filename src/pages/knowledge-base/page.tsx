@@ -24,12 +24,19 @@ export default function KnowledgeBasePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { knowledgeBases, page, isPending, isError } = useGetKnowledgeBases({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -136,12 +143,14 @@ const columns: ColDef<KnowledgeBaseBrief>[] = [
     header: '생성자',
     accessorFn: (row: KnowledgeBaseBrief) => row.created_by,
     size: 225,
+    enableSorting: false,
   },
   {
     id: 'chunk_size',
     header: '청크 크기',
     accessorFn: (row: KnowledgeBaseBrief) => row.chunk_size,
     size: 271,
+    enableSorting: false,
   },
   {
     id: 'description',

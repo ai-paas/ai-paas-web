@@ -3,16 +3,17 @@ import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type {
   CreatePromptRequest,
+  GetPromptsParams,
   Prompt,
   PromptVariableTypeList,
   UpdatePromptRequest,
 } from '@/types/prompt';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetPrompts = () => {
+export const useGetPrompts = (params: GetPromptsParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.prompts.all,
-    queryFn: () => api.get(`prompts`).json<Page<Prompt>>(),
+    queryKey: queryKeys.prompts.list(params),
+    queryFn: () => api.get('prompts', { searchParams: { ...params } }).json<Page<Prompt>>(),
   });
 
   return {

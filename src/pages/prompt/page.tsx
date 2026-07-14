@@ -19,11 +19,22 @@ import type { Prompt } from '@/types/prompt';
 import { useEffect, useMemo, useState } from 'react';
 
 export default function PromptPage() {
-  const { prompts, page, isPending, isError } = useGetPrompts();
   const { searchValue, ...restProps } = useSearchInputState();
   const { setRowSelection, rowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'created_at', desc: true }]);
   const { pagination, setPagination, initializePagination } = useTablePagination();
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
+  const { prompts, page, isPending, isError } = useGetPrompts({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+    sort,
+  });
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -120,12 +131,14 @@ const columns = [
     header: '변수',
     accessorFn: (row: Prompt) => `${row.prompt_variable?.length ?? 0}개`,
     size: 230,
+    enableSorting: false,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: Prompt) => row.created_by,
     size: 230,
+    enableSorting: false,
   },
   {
     id: 'description',

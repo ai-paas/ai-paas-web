@@ -47,7 +47,7 @@ const columns = [
     size: 280,
   },
   {
-    id: 'creator',
+    id: 'created_by',
     header: '생성자',
     accessorFn: (row: Workflow) => row.created_by,
     size: 150,
@@ -57,15 +57,17 @@ const columns = [
     header: '서비스',
     accessorFn: (row: Workflow) => row.service_id,
     size: 250,
+    enableSorting: false,
   },
   {
     id: 'category',
     header: '카테고리',
     accessorFn: (row: Workflow) => row.category,
     size: 150,
+    enableSorting: false,
   },
   {
-    id: 'state',
+    id: 'status',
     header: '상태',
     accessorFn: (row: Workflow) => row.status,
     size: 100,
@@ -80,10 +82,10 @@ const columns = [
     header: '설명',
     accessorFn: (row: Workflow) => row.description,
     size: 300,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
+    enableSorting: false,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
     accessorFn: (row: Workflow) => formatDateTime(row.created_at),
     size: 225,
@@ -94,12 +96,19 @@ export default function WorkflowPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { setRowSelection, rowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { workflows, page, isPending, isError } = useGetWorkflows({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);

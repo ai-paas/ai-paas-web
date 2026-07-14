@@ -43,12 +43,14 @@ const columns = [
     header: '태그',
     accessorFn: (row: Service) => row.tags?.join(', '),
     size: 280,
+    enableSorting: false,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: Service) => row.created_by,
     size: 280,
+    enableSorting: false,
   },
   {
     id: 'description',
@@ -69,12 +71,19 @@ export default function ServicePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { services, page, isPending, isError } = useGetServices({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
-  const [ sorting, setSorting]  = useState<Sorting>([{ id: 'name', desc: false }])
 
   // 선택된 행의 ID를 추출
   const selectedId = useMemo(() => {
