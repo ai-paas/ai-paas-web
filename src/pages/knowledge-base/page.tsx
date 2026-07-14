@@ -9,9 +9,10 @@ import {
   useTableSelection,
   type ColDef,
   type TableRow,
+  type Sorting
 } from '@innogrid/ui';
 import type { KnowledgeBaseBrief } from '@/types/knowledgebase';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
 import { EditKnowledgeBaseButton } from '../../components/features/knowledge-base/edit-knowledge-base-button';
@@ -28,6 +29,7 @@ export default function KnowledgeBasePage() {
     size: pagination.pageSize,
     search: searchValue,
   });
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -91,6 +93,8 @@ export default function KnowledgeBasePage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>
@@ -138,13 +142,13 @@ const columns: ColDef<KnowledgeBaseBrief>[] = [
     header: '청크 크기',
     accessorFn: (row: KnowledgeBaseBrief) => row.chunk_size,
     size: 271,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'description',
     header: '설명',
     accessorFn: (row: KnowledgeBaseBrief) => row.description,
     size: 271,
+    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'created_at',

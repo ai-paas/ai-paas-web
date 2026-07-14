@@ -4,13 +4,14 @@ import {
   Table,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
 import { CreateWorkflowButton } from '../workflow/create-workflow-button';
 import { DeleteWorkflowButton } from '../workflow/delete-workflow-button';
 import { EditWorkflowButton } from '../workflow/edit-workflow-button';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatDateTime } from '@/util/date';
 import { getWorkflowStatus } from '@/util/workflow';
 import type { Workflow } from '@/types/workflow';
@@ -39,6 +40,7 @@ const columns = [
     header: '워크플로우ID',
     accessorFn: (row: Workflow) => row.surro_workflow_id,
     size: 325,
+    enableSorting: false,
   },
   {
     id: 'state',
@@ -74,6 +76,7 @@ export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
     size: pagination.pageSize,
     service_id: serviceId,
   });
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
     if (selectedRowKeys.length !== 1) return;
@@ -116,6 +119,8 @@ export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
           setPagination={setPagination}
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}
+          sorting={sorting}
+          setSorting={setSorting}
         />
       </div>
     </div>

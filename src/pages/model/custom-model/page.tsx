@@ -7,6 +7,7 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
 import { CreateCustomModelButton } from '../../../components/features/model/create-custom-model-button';
 import { Link } from 'react-router';
@@ -14,7 +15,7 @@ import { EditCustomModelButton } from '../../../components/features/model/edit-c
 import { DeleteCustomModelButton } from '../../../components/features/model/delete-custom-model-button';
 import { ModelImprovementButton } from '../../../components/features/model/model-improvement-button';
 import { useGetCustomModels } from '@/hooks/service/models';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CustomModel } from '@/types/model';
 import { formatDateTime } from '@/util/date';
 
@@ -91,6 +92,7 @@ export default function CustomModelPage() {
     size: pagination.pageSize,
     search: searchValue,
   });
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -165,6 +167,8 @@ export default function CustomModelPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>

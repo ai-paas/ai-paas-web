@@ -46,6 +46,7 @@ const columns = [
     accessorFn: (row: FileRow) => row.desc,
     size: 434,
     cell: () => <Button color="tertiary">버튼</Button>,
+    enableSorting: false,
   },
 ];
 

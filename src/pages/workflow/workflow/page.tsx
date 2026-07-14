@@ -7,13 +7,14 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting,
 } from '@innogrid/ui';
 import { CreateWorkflowButton } from '../../../components/features/workflow/create-workflow-button';
 import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
 import { ExecuteWorkflowButton } from '../../../components/features/workflow/execute-workflow-button';
 import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
 import { StopWorkflowDeploymentButton } from '../../../components/features/workflow/stop-workflow-deployment-button';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -56,7 +57,6 @@ const columns = [
     header: '서비스',
     accessorFn: (row: Workflow) => row.service_id,
     size: 250,
-    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'category',
@@ -80,6 +80,7 @@ const columns = [
     header: '설명',
     accessorFn: (row: Workflow) => row.description,
     size: 300,
+    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'date',
@@ -98,6 +99,7 @@ export default function WorkflowPage() {
     size: pagination.pageSize,
     search: searchValue,
   });
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -160,6 +162,8 @@ export default function WorkflowPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>

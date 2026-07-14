@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import {
   BreadCrumb,
@@ -9,6 +9,7 @@ import {
   useTableSelection,
   useTablePagination,
   useSearchInputState,
+  type Sorting
 } from '@innogrid/ui';
 import { EditServiceButton } from '@/components/features/service/edit-service-button';
 import { CreateServiceButton } from '@/components/features/service/create-service-button';
@@ -73,6 +74,7 @@ export default function ServicePage() {
     size: pagination.pageSize,
     search: searchValue,
   });
+  const [ sorting, setSorting]  = useState<Sorting>([{ id: 'name', desc: false }])
 
   // 선택된 행의 ID를 추출
   const selectedId = useMemo(() => {
@@ -135,6 +137,8 @@ export default function ServicePage() {
             totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
+            setSorting={setSorting}
+            sorting={sorting}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />

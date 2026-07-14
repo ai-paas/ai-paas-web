@@ -8,8 +8,9 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
@@ -97,6 +98,7 @@ const columns = [
     header: '설명',
     accessorFn: (row: Learning) => row.description,
     size: 225,
+    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'elapsed_time',
@@ -122,6 +124,7 @@ export default function LearningPage() {
     size: pagination.pageSize,
     search: searchValue,
   });
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedExperimentId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -186,6 +189,8 @@ export default function LearningPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>
