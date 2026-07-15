@@ -1,3 +1,10 @@
+export interface GetPromptsParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  sort?: string;
+}
+
 export interface Prompt {
   id: number;
   surro_prompt_id: number;

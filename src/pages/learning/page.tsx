@@ -8,8 +8,9 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
@@ -65,18 +66,21 @@ const columns = [
     header: 'ID',
     accessorFn: (row: Learning) => row.id,
     size: 170,
+    enableSorting: false,
   },
   {
     id: 'reference_model',
     header: '참조 모델',
     accessorFn: (row: Learning) => row.reference_model?.name,
     size: 200,
+    enableSorting: false,
   },
   {
     id: 'registration_status',
     header: '모델 등록',
     accessorFn: (row: Learning) => row.registration_status,
     size: 170,
+    enableSorting: false,
     cell: ({ row }: { row: { original: Learning } }) => {
       const { label, className } = getRegistrationStatusDisplay(row.original.registration_status);
       return <span className={`table-td-state ${className}`}>{label}</span>;
@@ -87,6 +91,7 @@ const columns = [
     header: '상태',
     accessorFn: (row: Learning) => row.status,
     size: 170,
+    enableSorting: false,
     cell: ({ row }: { row: { original: Learning } }) => {
       const { label, className } = getLearningStatusDisplay(row.original.status);
       return <span className={`table-td-state ${className}`}>{label}</span>;
@@ -97,12 +102,14 @@ const columns = [
     header: '설명',
     accessorFn: (row: Learning) => row.description,
     size: 225,
+    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'elapsed_time',
     header: '경과 시간',
     accessorFn: (row: Learning) => formatElapsed(row.elapsed_time),
     size: 200,
+    enableSorting: false,
   },
   {
     id: 'created_at',
@@ -117,10 +124,18 @@ export default function LearningPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { learnings, page, isPending, isError } = useGetLearnings({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
 
   const selectedExperimentId = useMemo(() => {
@@ -186,6 +201,8 @@ export default function LearningPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>

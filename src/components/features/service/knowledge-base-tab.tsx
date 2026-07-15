@@ -27,7 +27,6 @@ const columns = [
     header: '워크플로우',
     accessorFn: (row: KnowledgeBaseSummary) => row.workflow_refs.map((ref) => ref.name).join(', '),
     size: 300,
-    enableSorting: false,
   },
   {
     id: 'type',

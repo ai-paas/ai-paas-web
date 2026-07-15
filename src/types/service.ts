@@ -112,6 +112,7 @@ export interface GetServicesParams {
   page?: number;
   size?: number;
   search?: string;
+  sort?: string;
 }
 
 export interface CreateServiceRequest {

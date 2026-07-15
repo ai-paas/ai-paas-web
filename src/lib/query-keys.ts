@@ -23,6 +23,7 @@ import type {
   GetModelsParams,
   GetModelTypesParams,
 } from '@/types/model';
+import type { GetPromptsParams } from '@/types/prompt';
 import type { GetServicesParams } from '@/types/service';
 import type { WorkflowTemplateListParams } from '@/types/workflow';
 
@@ -137,6 +138,7 @@ export const queryKeys = {
   },
   prompts: {
     all: ['prompts'] as const,
+    list: (params: GetPromptsParams = {}) => [...queryKeys.prompts.all, params] as const,
     detail: (promptId: number) => ['prompt', promptId] as const,
     variableTypes: () => [...queryKeys.prompts.all, 'variable-types'] as const,
   },

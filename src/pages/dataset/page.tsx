@@ -8,8 +8,9 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { EditDatasetButton } from '../../components/features/dataset/edit-dataset-button';
 import { DeleteDatasetButton } from '../../components/features/dataset/delete-dataset-button';
@@ -41,12 +42,14 @@ const columns = [
     header: '생성자',
     accessorFn: (row: Dataset) => row.created_by,
     size: 400,
+    enableSorting: false,
   },
   {
     id: 'description',
     header: '설명',
     accessorFn: (row: Dataset) => row.description,
     size: 400,
+    enableSorting: false,
   },
   {
     id: 'created_at',
@@ -61,10 +64,18 @@ export default function DatasetPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { datasets, page, isPending, isError } = useGetDatasets({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
 
   const selectedId = useMemo(() => {
@@ -129,6 +140,8 @@ export default function DatasetPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>

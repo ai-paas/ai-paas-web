@@ -7,6 +7,7 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
+  type Sorting
 } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { CreatePromptButton } from '../../components/features/prompt/create-prompt-button';
@@ -15,13 +16,25 @@ import { DeletePromptButton } from '../../components/features/prompt/delete-prom
 import { useGetPrompts } from '@/hooks/service/prompts';
 import { formatDateTime } from '@/util/date';
 import type { Prompt } from '@/types/prompt';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function PromptPage() {
-  const { prompts, page, isPending, isError } = useGetPrompts();
   const { searchValue, ...restProps } = useSearchInputState();
   const { setRowSelection, rowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'created_at', desc: true }]);
   const { pagination, setPagination, initializePagination } = useTablePagination();
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
+  const { prompts, page, isPending, isError } = useGetPrompts({
+    page: pagination.pageIndex + 1,
+    size: pagination.pageSize,
+    search: searchValue,
+    sort,
+  });
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
@@ -85,6 +98,8 @@ export default function PromptPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
+            sorting={sorting}
+            setSorting={setSorting}
           />
         </div>
       </div>
@@ -116,18 +131,21 @@ const columns = [
     header: '변수',
     accessorFn: (row: Prompt) => `${row.prompt_variable?.length ?? 0}개`,
     size: 230,
+    enableSorting: false,
   },
   {
     id: 'created_by',
     header: '생성자',
     accessorFn: (row: Prompt) => row.created_by,
     size: 230,
+    enableSorting: false,
   },
   {
     id: 'description',
     header: '설명',
     accessorFn: (row: Prompt) => row.description,
     size: 362,
+    enableSorting: false, //오름차순/내림차순 아이콘 숨기기
   },
   {
     id: 'created_at',
