@@ -304,6 +304,7 @@ export interface GetCustomModelsParams {
   type_id?: number;
   format_id?: number;
   search?: string;
+  sort?: string;
 }
 
 export interface GetModelCatalogsParams {
@@ -313,6 +314,7 @@ export interface GetModelCatalogsParams {
   type_id?: number;
   format_id?: number;
   search?: string;
+  sort?: string;
 }
 
 export interface GetModelProvidersParams {

@@ -43,7 +43,7 @@ const columns = [
     enableSorting: false,
   },
   {
-    id: 'state',
+    id: 'status',
     header: '상태',
     accessorFn: (row: Workflow) => row.status,
     size: 325,
@@ -61,7 +61,7 @@ const columns = [
     enableSorting: false,
   },
   {
-    id: 'date',
+    id: 'created_at',
     header: '생성일시',
     accessorFn: (row: Workflow) => formatDateTime(row.created_at),
     size: 325,
@@ -71,12 +71,19 @@ const columns = [
 export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { workflows, page, isPending, isError } = useGetWorkflows({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     service_id: serviceId,
+    sort,
   });
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);
     if (selectedRowKeys.length !== 1) return;

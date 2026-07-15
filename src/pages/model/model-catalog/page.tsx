@@ -82,12 +82,19 @@ export default function ModelCatalogPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { modelCatalogs, page, isPending, isError } = useGetModelCatalogs({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
+    sort,
   });
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedId = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);

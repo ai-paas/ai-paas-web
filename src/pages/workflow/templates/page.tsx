@@ -74,11 +74,18 @@ export default function WorkflowTemplatePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
+  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+
+  const sort = useMemo(
+    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting],
+  );
+
   const { workflowTemplates, page, isPending, isError } = useGetTemplates({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
+    sort,
   });
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
 
   const selectedTemplate = useMemo(() => {
     const selectedRowKeys = Object.keys(rowSelection);

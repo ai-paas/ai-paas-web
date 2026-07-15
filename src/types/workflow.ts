@@ -132,6 +132,7 @@ export interface WorkflowTemplateListParams {
   page?: number;
   size?: number;
   category?: string;
+  sort?: string;
 }
 
 export interface GetWorkflowComponentTypes {
