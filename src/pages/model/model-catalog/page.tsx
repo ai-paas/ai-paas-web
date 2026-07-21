@@ -11,7 +11,6 @@ import {
 } from '@innogrid/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { CreateModelCatalogButton } from '../../../components/features/model/create-model-catalog-button';
-import { EditModelCatalogButton } from '../../../components/features/model/edit-model-catalog-button';
 import { DeleteModelCatalogButton } from '../../../components/features/model/delete-model-catalog-button';
 import { Link } from 'react-router';
 import { useGetModelCatalogs } from '@/hooks/service/models';
@@ -124,7 +123,6 @@ export default function ModelCatalogPage() {
             {isAdmin && (
               <>
                 <CreateModelCatalogButton />
-                <EditModelCatalogButton modelCatalogId={selectedId} />
                 <DeleteModelCatalogButton modelCatalogId={selectedId} />
               </>
             )}

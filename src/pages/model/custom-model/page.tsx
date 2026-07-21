@@ -11,7 +11,6 @@ import {
 } from '@innogrid/ui';
 import { CreateCustomModelButton } from '../../../components/features/model/create-custom-model-button';
 import { Link } from 'react-router';
-import { EditCustomModelButton } from '../../../components/features/model/edit-custom-model-button';
 import { DeleteCustomModelButton } from '../../../components/features/model/delete-custom-model-button';
 import { ModelImprovementButton } from '../../../components/features/model/model-improvement-button';
 import { useGetCustomModels } from '@/hooks/service/models';
@@ -127,7 +126,6 @@ export default function CustomModelPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <CreateCustomModelButton />
-            <EditCustomModelButton customModelId={selectedId} />
             <DeleteCustomModelButton customModelId={selectedId} />
             <ModelImprovementButton
               customModelId={selectedId}

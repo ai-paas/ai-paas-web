@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { ColDef, Sorting } from '@innogrid/ui';
 import {
   BreadCrumb,
-  Button,
   Table,
   useTableSelection,
   useTablePagination,
@@ -176,10 +175,7 @@ export default function CustomModelDetailPage() {
               category="lightweight"
               title="모델 경량화"
               selectLabel="경량화 방식"
-            />
-            <Button onClick={() => alert('Button clicked!')} size="medium" color="secondary">
-              편집
-            </Button>
+            />            
             <DeleteCustomModelButton customModelId={model?.id} />
           </div>
         </div>
