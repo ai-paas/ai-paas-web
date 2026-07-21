@@ -175,7 +175,7 @@ export default function CustomModelDetailPage() {
               category="lightweight"
               title="모델 경량화"
               selectLabel="경량화 방식"
-            />            
+            />
             <DeleteCustomModelButton customModelId={model?.id} />
           </div>
         </div>
