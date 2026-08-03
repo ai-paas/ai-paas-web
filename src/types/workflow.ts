@@ -32,6 +32,7 @@ export interface WorkflowModelBrief {
   format_info?: WorkflowComponentInfo | null;
   parent_model_id?: number | null;
   registry?: Record<string, unknown> | null;
+  task?: WorkflowModelTask | null;
   created_at?: string;
   updated_at?: string;
 }

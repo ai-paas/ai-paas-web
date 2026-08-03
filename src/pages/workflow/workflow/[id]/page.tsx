@@ -123,6 +123,19 @@ export default function WorkflowDetailPage() {
   } = useGetWorkflowModels(workflowId);
   const { nodes, edges } = useMemo(() => workflowToFlow(workflow), [workflow]);
 
+  // /models 응답에 task가 없는 경우(OLLAMA 등) 상세 응답의 components[].model.task로 보완한다.
+  const testModels = useMemo(() => {
+    const taskByComponentId = new Map(
+      (workflow?.components ?? [])
+        .filter((component) => component.model?.task)
+        .map((component) => [component.id, component.model?.task] as const)
+    );
+
+    return workflowModels.map((model) =>
+      model.task ? model : { ...model, task: taskByComponentId.get(model.component_id) ?? null }
+    );
+  }, [workflow?.components, workflowModels]);
+
   const publicUrl = getWorkflowValue(workflow, [
     'public_url',
     'publicUrl',
@@ -299,7 +312,7 @@ export default function WorkflowDetailPage() {
                 <WorkflowTestTab
                   workflowId={workflowId}
                   workflowStatus={workflow?.status}
-                  workflowModels={workflowModels}
+                  workflowModels={testModels}
                   isModelsPending={isModelsPending}
                 />
               </div>,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@innogrid/ui';
 
 import {
@@ -35,6 +35,13 @@ const TEST_LABEL: Record<TestKind, string> = {
   'protein-structure-prediction': '단백질 구조 예측',
 };
 
+interface ChatMessage {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  isError?: boolean;
+}
+
 interface WorkflowTestTabProps {
   workflowId?: string;
   workflowStatus?: string;
@@ -56,6 +63,11 @@ export function WorkflowTestTab({
   const [numLoops, setNumLoops] = useState(3);
   const [numSamplingSteps, setNumSamplingSteps] = useState(50);
   const [image, setImage] = useState<File>();
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  const chatIdRef = useRef(0);
+  const chatListRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
   const rag = useTestRagWorkflow();
   const ml = useTestMLWorkflow();
@@ -72,20 +84,55 @@ export function WorkflowTestTab({
     return kinds.size === 1 ? [...kinds][0] : undefined;
   }, [workflowModels]);
 
+  useEffect(() => {
+    const list = chatListRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [chatMessages, rag.isPending]);
+
   const mutation =
-    testKind === 'rag'
-      ? rag
-      : testKind === 'ml'
-        ? ml
-        : testKind === 'protein-classification'
-          ? classification
-          : testKind === 'fill-mask'
-            ? fillMask
-            : structure;
+    testKind === 'ml'
+      ? ml
+      : testKind === 'protein-classification'
+        ? classification
+        : testKind === 'fill-mask'
+          ? fillMask
+          : structure;
+
+  const appendChatMessage = (message: Omit<ChatMessage, 'id'>) => {
+    chatIdRef.current += 1;
+    setChatMessages((prev) => [...prev, { ...message, id: chatIdRef.current }]);
+  };
+
+  const sendChat = () => {
+    const trimmed = text.trim();
+    if (!workflowId || !trimmed || rag.isPending) return;
+
+    appendChatMessage({ role: 'user', content: trimmed });
+    setText('');
+    if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
+
+    rag.testRagWorkflow(
+      { surro_workflow_id: workflowId, text: trimmed },
+      {
+        onSuccess: (data) => {
+          appendChatMessage({
+            role: 'assistant',
+            content: data.final_result ?? JSON.stringify(data.results, null, 2),
+          });
+        },
+        onError: () => {
+          appendChatMessage({
+            role: 'assistant',
+            content: '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            isError: true,
+          });
+        },
+      }
+    );
+  };
 
   const submit = () => {
     if (!workflowId || !testKind) return;
-    if (testKind === 'rag') rag.testRagWorkflow({ surro_workflow_id: workflowId, text });
     if (testKind === 'ml' && image) ml.testMLWorkflow({ surro_workflow_id: workflowId, image });
     if (testKind === 'protein-classification') {
       classification.testProteinClassificationWorkflow({
@@ -107,58 +154,180 @@ export function WorkflowTestTab({
     }
   };
 
-  if (isModelsPending) return <div className={styles.testEmpty}>모델 정보를 불러오는 중입니다.</div>;
+  if (isModelsPending)
+    return <div className={styles.testEmpty}>모델 정보를 불러오는 중입니다.</div>;
   if (workflowStatus !== 'ACTIVE') {
-    return <div className={styles.testEmpty}>테스트는 ACTIVE 상태의 워크플로우에서 사용할 수 있습니다.</div>;
+    return (
+      <div className={styles.testEmpty}>
+        테스트는 ACTIVE 상태의 워크플로우에서 사용할 수 있습니다.
+      </div>
+    );
   }
   if (!testKind) {
     return <div className={styles.testEmpty}>지원하는 단일 task의 배포 모델이 없습니다.</div>;
   }
 
+  if (testKind === 'rag') {
+    return (
+      <div className={styles.chatPanel}>
+        <div className={styles.chatHeader}>
+          <h4>{TEST_LABEL[testKind]} 테스트</h4>
+          <Button
+            size="small"
+            color="secondary"
+            disabled={rag.isPending || chatMessages.length === 0}
+            onClick={() => setChatMessages([])}
+          >
+            새 채팅
+          </Button>
+        </div>
+        <div className={styles.chatMessages} ref={chatListRef}>
+          {chatMessages.length === 0 && !rag.isPending ? (
+            <div className={styles.chatEmpty}>메시지를 입력해 워크플로우를 테스트해보세요.</div>
+          ) : (
+            chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`${styles.chatMessage} ${
+                  message.role === 'user' ? styles.chatUser : styles.chatAssistant
+                }`}
+              >
+                <div
+                  className={`${styles.chatBubble} ${message.isError ? styles.chatBubbleError : ''}`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))
+          )}
+          {rag.isPending && (
+            <div className={`${styles.chatMessage} ${styles.chatAssistant}`}>
+              <div className={`${styles.chatBubble} ${styles.chatTyping}`}>
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className={styles.chatInputBox}>
+          <div className={styles.chatInputField}>
+            <textarea
+              ref={chatInputRef}
+              rows={1}
+              placeholder="메시지를 입력하세요. (Enter 전송, Shift+Enter 줄바꿈)"
+              value={text}
+              onChange={(event) => {
+                setText(event.target.value);
+                event.target.style.height = 'auto';
+                event.target.style.height = `${event.target.scrollHeight}px`;
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  sendChat();
+                }
+              }}
+            />
+            <Button
+              color="primary"
+              size="medium"
+              disabled={!text.trim() || rag.isPending}
+              onClick={sendChat}
+            >
+              전송
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const isValid =
-    testKind === 'rag'
-      ? Boolean(text.trim())
-      : testKind === 'ml'
-        ? Boolean(image)
-        : testKind === 'protein-classification'
-          ? Boolean(epitope.trim() && cdr3b.trim())
-          : testKind === 'fill-mask'
-            ? Boolean(sequence.trim()) && Number.isInteger(topK) && topK > 0
-            : Boolean(sequence.trim()) &&
-              Number.isInteger(numLoops) &&
-              numLoops > 0 &&
-              Number.isInteger(numSamplingSteps) &&
-              numSamplingSteps > 0;
+    testKind === 'ml'
+      ? Boolean(image)
+      : testKind === 'protein-classification'
+        ? Boolean(epitope.trim() && cdr3b.trim())
+        : testKind === 'fill-mask'
+          ? Boolean(sequence.trim()) && Number.isInteger(topK) && topK > 0
+          : Boolean(sequence.trim()) &&
+            Number.isInteger(numLoops) &&
+            numLoops > 0 &&
+            Number.isInteger(numSamplingSteps) &&
+            numSamplingSteps > 0;
 
   return (
     <div className={styles.testPanel}>
       <section className={styles.testForm}>
         <h4>{TEST_LABEL[testKind]} 테스트</h4>
-        {testKind === 'rag' && (
-          <label>입력 텍스트<textarea value={text} onChange={(event) => setText(event.target.value)} /></label>
-        )}
         {testKind === 'ml' && (
-          <label>이미지<input type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0])} /></label>
+          <label>
+            이미지
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => setImage(event.target.files?.[0])}
+            />
+          </label>
         )}
         {testKind === 'protein-classification' && (
           <>
-            <label>Epitope 서열<input value={epitope} onChange={(event) => setEpitope(event.target.value)} /></label>
-            <label>CDR3β 서열<input value={cdr3b} onChange={(event) => setCdr3b(event.target.value)} /></label>
+            <label>
+              Epitope 서열
+              <input value={epitope} onChange={(event) => setEpitope(event.target.value)} />
+            </label>
+            <label>
+              CDR3β 서열
+              <input value={cdr3b} onChange={(event) => setCdr3b(event.target.value)} />
+            </label>
           </>
         )}
         {(testKind === 'fill-mask' || testKind === 'protein-structure-prediction') && (
-          <label>서열<textarea value={sequence} onChange={(event) => setSequence(event.target.value)} /></label>
+          <label>
+            서열
+            <textarea value={sequence} onChange={(event) => setSequence(event.target.value)} />
+          </label>
         )}
         {testKind === 'fill-mask' && (
-          <label>Top K<input type="number" min={1} max={100} value={topK} onChange={(event) => setTopK(Number(event.target.value))} /></label>
+          <label>
+            Top K
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={topK}
+              onChange={(event) => setTopK(Number(event.target.value))}
+            />
+          </label>
         )}
         {testKind === 'protein-structure-prediction' && (
           <div className={styles.testOptions}>
-            <label>반복 횟수<input type="number" min={1} value={numLoops} onChange={(event) => setNumLoops(Number(event.target.value))} /></label>
-            <label>샘플링 단계<input type="number" min={1} value={numSamplingSteps} onChange={(event) => setNumSamplingSteps(Number(event.target.value))} /></label>
+            <label>
+              반복 횟수
+              <input
+                type="number"
+                min={1}
+                value={numLoops}
+                onChange={(event) => setNumLoops(Number(event.target.value))}
+              />
+            </label>
+            <label>
+              샘플링 단계
+              <input
+                type="number"
+                min={1}
+                value={numSamplingSteps}
+                onChange={(event) => setNumSamplingSteps(Number(event.target.value))}
+              />
+            </label>
           </div>
         )}
-        <Button color="primary" size="medium" disabled={!isValid || mutation.isPending} onClick={submit}>
+        <Button
+          color="primary"
+          size="medium"
+          disabled={!isValid || mutation.isPending}
+          onClick={submit}
+        >
           {mutation.isPending ? '테스트 중...' : '테스트 실행'}
         </Button>
       </section>
