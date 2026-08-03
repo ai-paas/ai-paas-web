@@ -429,10 +429,26 @@ export interface WorkflowRagTestResponse {
   final_result: string | null;
 }
 
+export interface ModelObjectDetectionPrediction {
+  score: number;
+  label: string;
+  box: number[];
+}
+export interface ModelObjectDetectionTestResult {
+  predictions: ModelObjectDetectionPrediction[];
+  image_info: {
+    original_size: { width: number; height: number };
+    model_input_size: { width: number; height: number };
+  } | null;
+}
+export interface WorkflowMlTestSuccessResult extends WorkflowTestSuccessResult {
+  result: ModelObjectDetectionTestResult;
+}
+
 export interface WorkflowMlTestResponse {
   workflow_id: string;
   execution_order: string[];
-  results: WorkflowTestResult[];
+  results: (WorkflowMlTestSuccessResult | WorkflowTestErrorResult)[];
   final_result: string | null;
 }
 

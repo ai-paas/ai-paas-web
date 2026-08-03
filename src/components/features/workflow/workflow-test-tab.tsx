@@ -243,6 +243,27 @@ export function WorkflowTestTab({
     );
   }
 
+  const mlPredictions =
+    ml.testResult?.results.flatMap((item) =>
+      item.error == null ? (item.result?.predictions ?? []) : []
+    ) ?? [];
+  const mlImageInfo = ml.testResult?.results.find((item) => item.error == null)?.result
+    ?.image_info;
+
+  // box는 [x1, y1, x2, y2] 픽셀 좌표. 표시 크기와 무관하도록 기준 크기 대비 퍼센트로 환산한다.
+  const getBoxStyle = (box: number[]) => {
+    if (!mlImageInfo || box.length < 4) return undefined;
+    const { model_input_size, original_size } = mlImageInfo;
+    const fitsModelInput = box[2] <= model_input_size.width && box[3] <= model_input_size.height;
+    const ref = fitsModelInput ? model_input_size : original_size;
+    return {
+      left: `${(box[0] / ref.width) * 100}%`,
+      top: `${(box[1] / ref.height) * 100}%`,
+      width: `${((box[2] - box[0]) / ref.width) * 100}%`,
+      height: `${((box[3] - box[1]) / ref.height) * 100}%`,
+    };
+  };
+
   const isValid =
     testKind === 'ml'
       ? Boolean(image)
@@ -335,10 +356,32 @@ export function WorkflowTestTab({
         <h4>테스트 결과</h4>
         {mutation.isError ? (
           <div className={styles.testError}>테스트 요청에 실패했습니다.</div>
-        ) : mutation.testResult ? (
-          <pre>{JSON.stringify(mutation.testResult, null, 2)}</pre>
-        ) : (
+        ) : !mutation.testResult ? (
           <div className={styles.testEmpty}>테스트를 실행하면 결과가 표시됩니다.</div>
+        ) : testKind === 'ml' ? (
+          ml.testResult?.final_result ? (
+            <div className={styles.testDetectionImageBox}>
+              <img
+                className={styles.testResultImage}
+                src={`data:image/jpeg;base64,${ml.testResult.final_result}`}
+                alt="객체 탐지 결과 이미지"
+              />
+              {mlPredictions.map((prediction, index) => {
+                const boxStyle = getBoxStyle(prediction.box);
+                return boxStyle ? (
+                  <div key={index} className={styles.testDetectionBox} style={boxStyle}>
+                    <span>
+                      {prediction.label} {(prediction.score * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <div className={styles.testError}>결과 이미지를 받지 못했습니다.</div>
+          )
+        ) : (
+          <pre>{JSON.stringify(mutation.testResult, null, 2)}</pre>
         )}
       </section>
     </div>
