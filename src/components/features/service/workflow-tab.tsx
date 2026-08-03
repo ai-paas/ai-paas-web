@@ -4,7 +4,7 @@ import {
   Table,
   useTablePagination,
   useTableSelection,
-  type Sorting
+  type SortValue,
 } from '@innogrid/ui';
 import { CreateWorkflowButton } from '../workflow/create-workflow-button';
 import { DeleteWorkflowButton } from '../workflow/delete-workflow-button';
@@ -71,11 +71,11 @@ const columns = [
 export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
 
   const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
+    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting]
   );
 
   const { workflows, page, isPending, isError } = useGetWorkflows({

@@ -7,7 +7,7 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting
+  type SortValue,
 } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { CreatePromptButton } from '../../components/features/prompt/create-prompt-button';
@@ -21,12 +21,12 @@ import { useEffect, useMemo, useState } from 'react';
 export default function PromptPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { setRowSelection, rowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'created_at', desc: true }]);
+  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'created_at', desc: true }]);
   const { pagination, setPagination, initializePagination } = useTablePagination();
 
   const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
+    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting]
   );
 
   const { prompts, page, isPending, isError } = useGetPrompts({

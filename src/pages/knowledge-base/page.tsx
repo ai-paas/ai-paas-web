@@ -9,7 +9,7 @@ import {
   useTableSelection,
   type ColDef,
   type TableRow,
-  type Sorting
+  type SortValue,
 } from '@innogrid/ui';
 import type { KnowledgeBaseBrief } from '@/types/knowledgebase';
 import { useEffect, useMemo, useState } from 'react';
@@ -24,11 +24,11 @@ export default function KnowledgeBasePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
 
   const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
+    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting]
   );
 
   const { knowledgeBases, page, isPending, isError } = useGetKnowledgeBases({

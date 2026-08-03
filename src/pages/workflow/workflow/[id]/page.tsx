@@ -15,6 +15,7 @@ import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows'
 import { formatDateTime } from '@/util/date';
 import { getWorkflowModelStatus, getWorkflowStatus } from '@/util/workflow';
 import type { WorkflowModel } from '@/types/workflow';
+import { WorkflowTestTab } from '@/components/features/workflow/workflow-test-tab';
 
 const EMPTY_VALUE = '-';
 
@@ -259,7 +260,7 @@ export default function WorkflowDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['워크플로우 오버뷰', '모델']}
+            labels={['워크플로우 오버뷰', '모델', '테스트']}
             components={[
               <div className="tabs-Content">
                 {nodes.length > 0 ? (
@@ -293,6 +294,14 @@ export default function WorkflowDetailPage() {
                     sorting={sorting}
                   />
                 </div>
+              </div>,
+              <div className="tabs-Content">
+                <WorkflowTestTab
+                  workflowId={workflowId}
+                  workflowStatus={workflow?.status}
+                  workflowModels={workflowModels}
+                  isModelsPending={isModelsPending}
+                />
               </div>,
             ]}
           />

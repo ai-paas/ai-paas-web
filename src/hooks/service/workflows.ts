@@ -21,6 +21,12 @@ import type {
   WorkflowRead,
   WorkflowModelsResponse,
   WorkflowMlTestResponse,
+  WorkflowFillMaskTestRequest,
+  WorkflowFillMaskTestResponse,
+  WorkflowProteinClassificationTestRequest,
+  WorkflowProteinClassificationTestResponse,
+  WorkflowProteinStructurePredictionTestRequest,
+  WorkflowProteinStructurePredictionTestResponse,
   WorkflowRagTestResponse,
   WorkflowStatusResponse,
   WorkflowTemplate,
@@ -422,11 +428,13 @@ export const useUpdateComponentDeployStatus = () => {
 export const useTestRagWorkflow = () => {
   const { mutate, isPending, isError, isSuccess, data } = useMutation({
     mutationFn: (params: { surro_workflow_id: string; text: string }) => {
-      const formData = new FormData();
-      formData.append('text', params.text);
+      const body = new URLSearchParams({ text: params.text });
 
       return api
-        .post(`workflows/${params.surro_workflow_id}/test/rag`, { body: formData })
+        .post(`workflows/${params.surro_workflow_id}/test/rag`, {
+          body,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
         .json<WorkflowRagTestResponse>();
     },
   });
@@ -461,6 +469,63 @@ export const useTestMLWorkflow = () => {
   };
 };
 
+export const useTestProteinClassificationWorkflow = () => {
+  const mutation = useMutation({
+    mutationFn: ({
+      surro_workflow_id,
+      ...json
+    }: { surro_workflow_id: string } & WorkflowProteinClassificationTestRequest) =>
+      api
+        .post(`workflows/${surro_workflow_id}/test/protein-classification`, { json })
+        .json<WorkflowProteinClassificationTestResponse>(),
+  });
+  return {
+    testProteinClassificationWorkflow: mutation.mutate,
+    testResult: mutation.data,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    isSuccess: mutation.isSuccess,
+  };
+};
+
+export const useTestFillMaskWorkflow = () => {
+  const mutation = useMutation({
+    mutationFn: ({
+      surro_workflow_id,
+      ...json
+    }: { surro_workflow_id: string } & WorkflowFillMaskTestRequest) =>
+      api
+        .post(`workflows/${surro_workflow_id}/test/fill-mask`, { json })
+        .json<WorkflowFillMaskTestResponse>(),
+  });
+  return {
+    testFillMaskWorkflow: mutation.mutate,
+    testResult: mutation.data,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    isSuccess: mutation.isSuccess,
+  };
+};
+
+export const useTestProteinStructurePredictionWorkflow = () => {
+  const mutation = useMutation({
+    mutationFn: ({
+      surro_workflow_id,
+      ...json
+    }: { surro_workflow_id: string } & WorkflowProteinStructurePredictionTestRequest) =>
+      api
+        .post(`workflows/${surro_workflow_id}/test/protein-structure-prediction`, { json })
+        .json<WorkflowProteinStructurePredictionTestResponse>(),
+  });
+  return {
+    testProteinStructurePredictionWorkflow: mutation.mutate,
+    testResult: mutation.data,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    isSuccess: mutation.isSuccess,
+  };
+};
+
 export const useCleanupWorkflow = () => {
   const queryClient = useQueryClient();
 
@@ -483,24 +548,21 @@ export const useCleanupWorkflow = () => {
 const FINALIZE_CLEANUP_POLL_INTERVAL = 3000;
 
 /**
- * cleanup API가 반환한 run_id로 finalize-cleanup을 폴링한다.
+ * cleanup 요청이 시작되면 finalize-cleanup을 폴링한다.
  * status가 'in_progress'인 동안 refetchInterval로 재호출하고,
  * 'completed' 또는 'failed'가 되면 멈춘다.
  */
 export const useFinalizeWorkflowCleanup = (params: {
   surro_workflow_id?: string;
-  run_id?: string;
   enabled?: boolean;
 }) => {
-  const enabled = Boolean(params.enabled && params.surro_workflow_id && params.run_id);
+  const enabled = Boolean(params.enabled && params.surro_workflow_id);
 
   const { data, isFetching, isError } = useQuery({
-    queryKey: queryKeys.workflows.finalizeCleanup(params.surro_workflow_id, params.run_id),
+    queryKey: queryKeys.workflows.finalizeCleanup(params.surro_workflow_id),
     queryFn: () =>
       api
-        .post(`workflows/${params.surro_workflow_id}/finalize-cleanup`, {
-          searchParams: { run_id: params.run_id ?? '' },
-        })
+        .post(`workflows/${params.surro_workflow_id}/finalize-cleanup`)
         .json<FinalizeWorkflowCleanupResponse>(),
     enabled,
     refetchInterval: (query) =>

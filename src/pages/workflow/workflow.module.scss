@@ -218,6 +218,38 @@
   margin-bottom: 2px;
 }
 
+.testPanel {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(0, 1.4fr);
+  gap: 24px;
+  min-height: 420px;
+  padding: 24px 0;
+}
+
+.testForm,
+.testResult {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid $color-gray-50;
+  border-radius: 6px;
+
+  h4 { font-size: 16px; font-weight: 600; }
+  label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; }
+  input, textarea { width: 100%; padding: 10px 12px; border: 1px solid $color-gray-100; border-radius: 4px; font: inherit; font-weight: 400; }
+  textarea { min-height: 112px; resize: vertical; }
+  pre { flex: 1; overflow: auto; margin: 0; padding: 16px; border-radius: 4px; background: $color-gray-10; white-space: pre-wrap; word-break: break-all; }
+}
+
+.testOptions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.testEmpty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: $color-gray-400; }
+.testError { color: #dc4646; }
+
+@media (max-width: 960px) {
+  .testPanel { grid-template-columns: 1fr; }
+}
+
 .addTitleInput {
   width: 100%;
   padding-bottom: 8px;

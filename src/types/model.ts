@@ -64,7 +64,7 @@ export interface Model {
   deleted_by: string;
   learning_enable_yn: boolean;
   opt_enable_yn: boolean;
-  visibility: string;
+  visibility: ModelVisibility;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
   member_info?: {
@@ -117,7 +117,7 @@ export interface CustomModel {
   };
   learning_enable_yn: boolean;
   opt_enable_yn: boolean;
-  visibility: string;
+  visibility: ModelVisibility;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
 }
@@ -165,7 +165,7 @@ export interface ModelCatalog {
   };
   learning_enable_yn: boolean;
   opt_enable_yn: boolean;
-  visibility: string;
+  visibility: ModelVisibility;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
 }
@@ -294,7 +294,7 @@ export interface GetModelsParams {
   model_type_id?: number;
   model_provider_id?: number;
   model_format_id?: number;
-  filter_type?: string;
+  visibility?: 'catalog' | 'custom';
 }
 
 export interface GetCustomModelsParams {
@@ -351,4 +351,3 @@ export interface GetHubModelsParams {
   inference_provider?: string[];
   other?: string[];
 }
-

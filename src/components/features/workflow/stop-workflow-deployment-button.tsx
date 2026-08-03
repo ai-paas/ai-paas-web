@@ -10,18 +10,17 @@ interface StopWorkflowDeploymentButtonProps {
 
 export const StopWorkflowDeploymentButton = ({ workflowId }: StopWorkflowDeploymentButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cleanupRunId, setCleanupRunId] = useState<string>();
+  const [isCleanupStarted, setIsCleanupStarted] = useState(false);
   const queryClient = useQueryClient();
   const toast = useToast();
 
   const { cleanupWorkflow, isPending } = useCleanupWorkflow();
   const { status, result, isPolling, isError } = useFinalizeWorkflowCleanup({
     surro_workflow_id: workflowId,
-    run_id: cleanupRunId,
-    enabled: Boolean(cleanupRunId),
+    enabled: isCleanupStarted,
   });
 
-  const isWorking = isPending || (Boolean(cleanupRunId) && isPolling);
+  const isWorking = isPending || (isCleanupStarted && isPolling);
 
   const handleStop = () => {
     if (!workflowId) return;
@@ -29,8 +28,8 @@ export const StopWorkflowDeploymentButton = ({ workflowId }: StopWorkflowDeploym
     cleanupWorkflow(
       { surro_workflow_id: workflowId },
       {
-        onSuccess: (data) => {
-          setCleanupRunId(data.cleanup_run_id);
+        onSuccess: () => {
+          setIsCleanupStarted(true);
         },
         onError: () => {
           toast.open({
@@ -44,7 +43,7 @@ export const StopWorkflowDeploymentButton = ({ workflowId }: StopWorkflowDeploym
   };
 
   useEffect(() => {
-    if (!cleanupRunId) return;
+    if (!isCleanupStarted) return;
 
     if (status === 'completed') {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
@@ -53,7 +52,7 @@ export const StopWorkflowDeploymentButton = ({ workflowId }: StopWorkflowDeploym
         title: '배포 중지 성공',
         children: '워크플로우 리소스 정리가 완료되었습니다.',
       });
-      setCleanupRunId(undefined);
+      setIsCleanupStarted(false);
       setIsOpen(false);
       return;
     }
@@ -64,9 +63,9 @@ export const StopWorkflowDeploymentButton = ({ workflowId }: StopWorkflowDeploym
         title: '배포 중지 실패',
         children: result?.message ?? '워크플로우 리소스 정리에 실패했습니다.',
       });
-      setCleanupRunId(undefined);
+      setIsCleanupStarted(false);
     }
-  }, [status, isError, cleanupRunId, result?.message, queryClient, toast]);
+  }, [status, isError, isCleanupStarted, result?.message, queryClient, toast]);
 
   const handleClose = () => {
     if (isWorking) return;

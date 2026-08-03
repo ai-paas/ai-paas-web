@@ -7,7 +7,7 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type Sorting
+  type SortValue,
 } from '@innogrid/ui';
 import { CreateCustomModelButton } from '../../../components/features/model/create-custom-model-button';
 import { Link } from 'react-router';
@@ -86,11 +86,11 @@ export default function CustomModelPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
 
   const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
+    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting]
   );
 
   const { customModels, page, isPending, isError } = useGetCustomModels({

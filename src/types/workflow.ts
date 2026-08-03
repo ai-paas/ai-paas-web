@@ -308,6 +308,8 @@ export interface WorkflowModel {
   component_id: string;
   component_name: string;
   model_id: number;
+  model_type?: 'LLM' | 'ODM' | 'BFM' | string;
+  task?: WorkflowModelTask | null;
   model_name: string;
   sanitized_model_name: string;
   service_name: string;
@@ -332,27 +334,105 @@ export interface WorkflowModelsResponse {
   total: number;
 }
 
-export interface WorkflowTestResult {
+export interface WorkflowTestSuccessResult {
   component_id: string;
   component_name: string;
   component_type: WorkflowComponentType;
-  model_type?: 'LLM' | 'ODM' | string;
-  result?: unknown;
-  error?: string | null;
+  model_type: 'LLM' | 'ODM' | 'BFM' | string | null;
+  task: WorkflowModelTask | string | null;
+  result: unknown;
+  error?: null;
 }
+
+export interface WorkflowTestErrorResult {
+  component_id: string;
+  component_name: string;
+  component_type: WorkflowComponentType;
+  model_type: string | null;
+  error: string;
+  task?: never;
+  result?: never;
+}
+
+export type WorkflowTestResult = WorkflowTestSuccessResult | WorkflowTestErrorResult;
+
+export type WorkflowModelTask =
+  | 'embedding'
+  | 'text-generation'
+  | 'object-detection'
+  | 'fill-mask'
+  | 'protein-classification'
+  | 'protein-structure-prediction'
+  | 'vqa';
+
+export interface WorkflowProteinClassificationTestRequest {
+  epitope: string;
+  cdr3b: string;
+}
+export interface ModelProteinClassificationTestResult {
+  predictions: { label: 0 | 1; score: number; probabilities: Record<'0' | '1', number> }[];
+  input_info: WorkflowProteinClassificationTestRequest | null;
+}
+export interface WorkflowFillMaskTestRequest {
+  sequence: string;
+  top_k?: number;
+}
+export interface ModelFillMaskTestResult {
+  predictions: { position: number; predictions: { token: string; score: number }[] }[];
+  input_info: Required<WorkflowFillMaskTestRequest> | null;
+}
+export interface WorkflowProteinStructurePredictionTestRequest {
+  sequence: string;
+  num_loops?: number;
+  num_sampling_steps?: number;
+}
+export interface ModelStructurePredictionTestResult {
+  predictions: {
+    pdb: string;
+    plddt_mean: number | null;
+    ptm: number | null;
+    iptm: number | null;
+  }[];
+  input_info: Required<WorkflowProteinStructurePredictionTestRequest> | null;
+}
+export interface WorkflowBfmTestResult<
+  TResult,
+  TTask extends WorkflowModelTask,
+> extends WorkflowTestSuccessResult {
+  model_type: 'BFM';
+  task: TTask;
+  result: TResult;
+}
+export interface WorkflowBfmTestResponse<TResult, TTask extends WorkflowModelTask> {
+  workflow_id: string;
+  execution_order: string[];
+  results: (WorkflowBfmTestResult<TResult, TTask> | WorkflowTestErrorResult)[];
+}
+export type WorkflowProteinClassificationTestResponse = WorkflowBfmTestResponse<
+  ModelProteinClassificationTestResult,
+  'protein-classification'
+>;
+export type WorkflowFillMaskTestResponse = WorkflowBfmTestResponse<
+  ModelFillMaskTestResult,
+  'fill-mask'
+>;
+export type WorkflowProteinStructurePredictionTestResponse = WorkflowBfmTestResponse<
+  ModelStructurePredictionTestResult,
+  'protein-structure-prediction'
+>;
 
 export interface WorkflowRagTestResponse {
   workflow_id: string;
   execution_order: string[];
   results: WorkflowTestResult[];
-  final_result: string;
+  final_result: string | null;
 }
 
 export interface WorkflowMlTestResponse {
   workflow_id: string;
   execution_order: string[];
   results: WorkflowTestResult[];
-  final_result: string;
+  final_result: string | null;
 }
 
 export interface ComponentDeployStatusBody {

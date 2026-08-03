@@ -9,7 +9,7 @@ import {
   useTableSelection,
   useTablePagination,
   useSearchInputState,
-  type Sorting
+  type SortValue,
 } from '@innogrid/ui';
 import { EditServiceButton } from '@/components/features/service/edit-service-button';
 import { CreateServiceButton } from '@/components/features/service/create-service-button';
@@ -71,11 +71,11 @@ export default function ServicePage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
 
   const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
+    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
+    [sorting]
   );
 
   const { services, page, isPending, isError } = useGetServices({
