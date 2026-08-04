@@ -9,6 +9,7 @@ import {
 import { formatDateTime } from '@/util/date';
 import type { HelmReleaseResource } from '@/types/helm';
 import Editor from '@monaco-editor/react';
+import { DetailValue } from '@/components/ui/detail-value';
 
 const normalizeStatus = (status?: string) => {
   if (!status) {
@@ -71,9 +72,11 @@ export default function HelmReleaseDetailPage() {
   const [searchParams] = useSearchParams();
   const clusterId = searchParams.get('clusterId') || undefined;
 
-  const { releases } = useGetHelmReleases({
+  const { releases, isPending } = useGetHelmReleases({
     clusterId,
   });
+  // clusterId 가 없으면 쿼리가 비활성화되어 isPending 이 계속 true 로 남는다
+  const isReleasesPending = !!clusterId && isPending;
 
   // 목록에서 현재 릴리즈 찾기
   const release = useMemo(() => {
@@ -193,7 +196,7 @@ export default function HelmReleaseDetailPage() {
     { label: release?.name || '상세' },
   ];
 
-  if (!release) {
+  if (!isReleasesPending && !release) {
     return (
       <main>
         <div className="breadcrumbBox">
@@ -235,31 +238,47 @@ export default function HelmReleaseDetailPage() {
               <ul className="page-detail-list">
                 <li>
                   <div className="page-detail_item-name">이름</div>
-                  <div className="page-detail_item-data">{release.name}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isReleasesPending} width={160}>
+                      {release?.name}
+                    </DetailValue>
+                  </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">배포 상태</div>
                   <div className="page-detail_item-data">
-                    <span className={`table-td-state table-td-state-${statusMeta.variant}`}>
-                      {statusMeta.label}
-                    </span>
+                    <DetailValue isLoading={isReleasesPending} width={100}>
+                      <span className={`table-td-state table-td-state-${statusMeta.variant}`}>
+                        {statusMeta.label}
+                      </span>
+                    </DetailValue>
                   </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">네임스페이스</div>
-                  <div className="page-detail_item-data">{release.namespace ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isReleasesPending} width={120}>
+                      {release?.namespace ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">리비전</div>
                   <div className="page-detail_item-data">
-                    {typeof release.revision === 'number'
-                      ? release.revision
-                      : (release.revision ?? '-')}
+                    <DetailValue isLoading={isReleasesPending} width={100}>
+                      {typeof release?.revision === 'number'
+                        ? release.revision
+                        : (release?.revision ?? '-')}
+                    </DetailValue>
                   </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">차트이름</div>
-                  <div className="page-detail_item-data">{release.chart ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isReleasesPending} width={160}>
+                      {release?.chart ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -271,22 +290,30 @@ export default function HelmReleaseDetailPage() {
               <ul className="page-detail-list">
                 <li>
                   <div className="page-detail_item-name">차트 버전</div>
-                  <div className="page-detail_item-data">{release.chartVersion ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isReleasesPending} width={100}>
+                      {release?.chartVersion ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">최근 업데이트</div>
                   <div className="page-detail_item-data">
-                    {release.updated || release.updatedAt
-                      ? formatDateTime(release.updated || release.updatedAt || '')
-                      : '-'}
+                    <DetailValue isLoading={isReleasesPending} width={140}>
+                      {release?.updated || release?.updatedAt
+                        ? formatDateTime(release.updated || release.updatedAt || '')
+                        : '-'}
+                    </DetailValue>
                   </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">생성일시</div>
                   <div className="page-detail_item-data">
-                    {release.created || release.createdAt
-                      ? formatDateTime(release.created || release.createdAt || '')
-                      : '-'}
+                    <DetailValue isLoading={isReleasesPending} width={140}>
+                      {release?.created || release?.createdAt
+                        ? formatDateTime(release.created || release.createdAt || '')
+                        : '-'}
+                    </DetailValue>
                   </div>
                 </li>
               </ul>
@@ -338,7 +365,7 @@ export default function HelmReleaseDetailPage() {
                     <Editor
                       height="100%"
                       language="yaml"
-                      value={values || release.values || ''}
+                      value={values || release?.values || ''}
                       theme="vs-dark"
                       options={{
                         readOnly: true,

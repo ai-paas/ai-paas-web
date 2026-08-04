@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router';
 import { DeleteWorkflowTemplateButton } from '@/components/features/workflow/delete-workflow-template-button';
 import { ReactFlowProvider } from '@xyflow/react';
 import { FlowChart } from '@/components/ui/flow-chart';
+import { DetailValue } from '@/components/ui/detail-value';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflowTemplate } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
@@ -73,64 +74,78 @@ export default function WorkflowTemplateDetailPage() {
       </div>
       <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
-        {isPending ? (
-          <div className="flex size-full items-center justify-center">Loading template...</div>
-        ) : (
-          <div className="page-detail-list-box">
-            <ul className="page-detail-list">
-              <li>
-                <div className="page-detail_item-name">이름</div>
-                <div className="page-detail_item-data">{workflowTemplate?.name || EMPTY_VALUE}</div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">카테고리</div>
-                <div className="page-detail_item-data">
+        <div className="page-detail-list-box">
+          <ul className="page-detail-list">
+            <li>
+              <div className="page-detail_item-name">이름</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {workflowTemplate?.name || EMPTY_VALUE}
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">카테고리</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
                   {workflowTemplate?.category || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">상태</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">상태</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
                   {workflowTemplate?.status
                     ? getWorkflowStatus(workflowTemplate.status).label
                     : EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">사용 수</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">사용 수</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
                   {workflowTemplate?.usage_count ?? EMPTY_VALUE}
-                </div>
-              </li>
-            </ul>
-            <ul className="page-detail-list">
-              <li>
-                <div className="page-detail_item-name">생성자</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+          </ul>
+          <ul className="page-detail-list">
+            <li>
+              <div className="page-detail_item-name">생성자</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
                   {workflowTemplate?.creator?.name || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">생성일시</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">생성일시</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
                   {formatDateTime(workflowTemplate?.created_at) || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">최근 업데이트</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">최근 업데이트</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
                   {formatDateTime(workflowTemplate?.updated_at) || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">설명</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">설명</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
                   {workflowTemplate?.description || EMPTY_VALUE}
-                </div>
-              </li>
-            </ul>
-          </div>
-        )}
+                </DetailValue>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">

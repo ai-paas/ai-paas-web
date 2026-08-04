@@ -9,6 +9,7 @@ import { DeleteLearningButton } from '../../../components/features/learning/dele
 import { ModelRegisterButton } from '../../../components/features/learning/model-register-button';
 import { useGetLearning } from '@/hooks/service/learning';
 import { formatDateTime, formatElapsed } from '@/util/date';
+import { DetailValue } from '@/components/ui/detail-value';
 import {
   CartesianGrid,
   Line,
@@ -35,7 +36,7 @@ function isLearningFinished(status?: string): boolean {
 export default function LearningDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { learning } = useGetLearning(Number(id));
+  const { learning, isPending } = useGetLearning(Number(id));
 
   const failed = isLearningFailed(learning?.status);
   const finished = isLearningFinished(learning?.status);
@@ -100,22 +101,22 @@ export default function LearningDetailPage() {
                 </div>
               </li>
             )}
-            {learning ? (
-              <li>
-                <div className="page-detail_item-name">Epoch</div>
-                <div className="page-detail_item-data">
+            <li>
+              <div className="page-detail_item-name">Epoch</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={200}>
                   <div className={styles.progressBox}>
                     <div>
-                      {learning.current_epoch ?? 0} / {learning.max_epoch ?? 0}
+                      {learning?.current_epoch ?? 0} / {learning?.max_epoch ?? 0}
                     </div>
                     <div className={styles.progress}>
                       <div
                         className={styles.progressActionBar}
                         style={{
-                          width: learning.max_epoch
+                          width: learning?.max_epoch
                             ? `${Math.min(
                                 100,
-                                ((learning.current_epoch ?? 0) / learning.max_epoch) * 100,
+                                ((learning?.current_epoch ?? 0) / learning.max_epoch) * 100,
                               )}%`
                             : '0%',
                         }}
@@ -123,30 +124,48 @@ export default function LearningDetailPage() {
                       <div className={styles.progressBar}></div>
                     </div>
                   </div>
-                </div>
-              </li>
-            ) : null}
+                </DetailValue>
+              </div>
+            </li>
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">{learning?.name ?? '-'}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {learning?.name ?? '-'}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
-                {learning?.created_at ? formatDateTime(learning.created_at) : '-'}
+                <DetailValue isLoading={isPending} width={140}>
+                  {learning?.created_at ? formatDateTime(learning.created_at) : '-'}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">경과 시간</div>
-              <div className="page-detail_item-data">{formatElapsed(learning?.elapsed_time)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
+                  {formatElapsed(learning?.elapsed_time)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">배포 서비스</div>
-              <div className="page-detail_item-data">-</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  -
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">{learning?.description ?? '-'}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {learning?.description ?? '-'}
+                </DetailValue>
+              </div>
             </li>
           </ul>
         </div>

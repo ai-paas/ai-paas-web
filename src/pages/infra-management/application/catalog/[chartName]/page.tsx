@@ -7,6 +7,7 @@ import {
   useGetCatalogValues,
 } from '@/hooks/service/catalog';
 import { formatDateTime } from '@/util/date';
+import { DetailValue } from '@/components/ui/detail-value';
 import styles from '../../../inframonitor.module.scss';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coy as syntaxStyle } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -317,8 +318,47 @@ export default function CatalogDetailPage() {
         <div className="page-title-box">
           <h2 className="page-title">카탈로그 상세</h2>
         </div>
-        <div className="page-content">
-          <div style={{ padding: '24px', textAlign: 'center' }}>로딩 중...</div>
+        <div className="page-content page-pb-40">
+          <h3 className="page-detail-title">상세 정보</h3>
+          <div style={{ display: 'flex', gap: '24px' }}>
+            <div style={{ flex: 1 }}>
+              <div className="page-detail-list-box">
+                <ul className="page-detail-list">
+                  <li>
+                    <div className="page-detail_item-name">이름</div>
+                    <div className="page-detail_item-data">
+                      <DetailValue isLoading width={160} />
+                    </div>
+                  </li>
+                  <li>
+                    <div className="page-detail_item-name">애플리케이션 버전</div>
+                    <div className="page-detail_item-data">
+                      <DetailValue isLoading width={100} />
+                    </div>
+                  </li>
+                  <li>
+                    <div className="page-detail_item-name">생성일시</div>
+                    <div className="page-detail_item-data">
+                      <DetailValue isLoading width={140} />
+                    </div>
+                  </li>
+                  <li>
+                    <div className="page-detail_item-name">최근 업데이트</div>
+                    <div className="page-detail_item-data">
+                      <DetailValue isLoading width={140} />
+                    </div>
+                  </li>
+                  <li>
+                    <div className="page-detail_item-name">레포지토리</div>
+                    <div className="page-detail_item-data">
+                      <DetailValue isLoading width={200} />
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div style={{ flex: 1 }} />
+          </div>
         </div>
       </main>
     );

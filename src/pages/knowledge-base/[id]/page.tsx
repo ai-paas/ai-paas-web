@@ -20,6 +20,7 @@ import { RetrievalTestTab } from '../../../components/features/knowledge-base/re
 import { useGetKnowledgeBase } from '@/hooks/service/knowledgebase';
 import { formatDateTime } from '@/util/date';
 import type { KnowledgeBaseFile } from '@/types/knowledgebase';
+import { DetailValue } from '@/components/ui/detail-value';
 
 const columns: ColDef<KnowledgeBaseFile>[] = [
   {
@@ -73,7 +74,7 @@ const columns: ColDef<KnowledgeBaseFile>[] = [
 
 export default function KnowledgeBaseDetailPage() {
   const { id } = useParams();
-  const { knowledgeBase, isError } = useGetKnowledgeBase(Number(id));
+  const { knowledgeBase, isPending, isError } = useGetKnowledgeBase(Number(id));
   const navigate = useNavigate();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
@@ -115,14 +116,20 @@ export default function KnowledgeBaseDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">{knowledgeBase?.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {knowledgeBase?.name}
+                </DetailValue>
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
-                {formatDateTime(knowledgeBase?.created_at)}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(knowledgeBase?.created_at)}
+                </DetailValue>
               </div>
             </li>
           </ul>
@@ -130,14 +137,20 @@ export default function KnowledgeBaseDetailPage() {
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
-                {formatDateTime(knowledgeBase?.updated_at)}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(knowledgeBase?.updated_at)}
+                </DetailValue>
               </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">{knowledgeBase?.description}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {knowledgeBase?.description}
+                </DetailValue>
+              </div>
             </li>
           </ul>
         </div>

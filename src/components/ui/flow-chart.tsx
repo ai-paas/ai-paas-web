@@ -285,7 +285,9 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
         onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         defaultViewport={DEFAULT_VIEWPORT}
-        fitView
+        // 빈 캔버스에서 fitView 를 켜두면 요청이 큐에 남아 있다가
+        // 첫 노드 배치 시점에 실행되어 뷰포트가 노드 중앙으로 이동해 버린다.
+        fitView={initialNodes.length > 0}
         fitViewOptions={FIT_VIEW_OPTIONS}
         connectionRadius={40}
         minZoom={0.2}

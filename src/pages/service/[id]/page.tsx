@@ -9,6 +9,7 @@ import { PromptTab } from '@/components/features/service/prompt-tab';
 import { MonitoringTab } from '@/components/features/service/monitoring-tab';
 import { useGetService } from '@/hooks/service/services';
 import { formatDateTime } from '@/util/date';
+import { DetailValue } from '@/components/ui/detail-value';
 
 export default function ServiceDetailPage() {
   const { id } = useParams();
@@ -39,23 +40,43 @@ export default function ServiceDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">{service?.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {service?.name}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">{formatDateTime(service?.created_at)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(service?.created_at)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
-              <div className="page-detail_item-data">{formatDateTime(service?.updated_at)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(service?.updated_at)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">태그</div>
-              <div className="page-detail_item-data">{service?.tags?.join(', ')}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={180}>
+                  {service?.tags?.join(', ')}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">{service?.description}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {service?.description}
+                </DetailValue>
+              </div>
             </li>
           </ul>
         </div>

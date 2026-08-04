@@ -38,10 +38,11 @@ import {
   type ResourceId,
 } from '@/components/features/infra-managememt/cluster-management/resource-meta';
 import { buildResourceSkeleton } from '@/components/features/infra-managememt/cluster-management/resource-skeletons';
+import { DetailValue } from '@/components/ui/detail-value';
 
 export default function ClusterDetailPage() {
   const { id } = useParams();
-  const { cluster } = useGetCluster(id);
+  const { cluster, isPending } = useGetCluster(id);
   const navigate = useNavigate();
 
   // path 의 id 가 클러스터 이름 (RFC 1123 label) — 모든 K8s 호출에 사용
@@ -146,11 +147,19 @@ export default function ClusterDetailPage() {
               <ul className="page-detail-list">
                 <li>
                   <div className="page-detail_item-name">이름</div>
-                  <div className="page-detail_item-data">{cluster?.clusterName ?? id ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isPending} width={160}>
+                      {cluster?.clusterName ?? id ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">소스</div>
-                  <div className="page-detail_item-data">{cluster?.source ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isPending} width={100}>
+                      {cluster?.source ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 {cluster?.linkedVmName && (
                   <li>
@@ -167,11 +176,19 @@ export default function ClusterDetailPage() {
                 )}
                 <li>
                   <div className="page-detail_item-name">상태</div>
-                  <div className="page-detail_item-data">{cluster?.status ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isPending} width={100}>
+                      {cluster?.status ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">프로바이더</div>
-                  <div className="page-detail_item-data">{cluster?.provider ?? '-'}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isPending} width={120}>
+                      {cluster?.provider ?? '-'}
+                    </DetailValue>
+                  </div>
                 </li>
                 {cluster?.region && (
                   <li>
@@ -188,12 +205,18 @@ export default function ClusterDetailPage() {
                 <li>
                   <div className="page-detail_item-name">GPU 노드</div>
                   <div className="page-detail_item-data">
-                    {cluster?.hasGpuNodes ? '포함' : '미포함'}
+                    <DetailValue isLoading={isPending} width={100}>
+                      {cluster?.hasGpuNodes ? '포함' : '미포함'}
+                    </DetailValue>
                   </div>
                 </li>
                 <li>
                   <div className="page-detail_item-name">생성일시</div>
-                  <div className="page-detail_item-data">{formatDateTime(cluster?.createdAt)}</div>
+                  <div className="page-detail_item-data">
+                    <DetailValue isLoading={isPending} width={140}>
+                      {formatDateTime(cluster?.createdAt)}
+                    </DetailValue>
+                  </div>
                 </li>
                 {cluster?.readyAt && (
                   <li>

@@ -3,10 +3,11 @@ import { formatDateTime } from '@/util/date';
 import { BreadCrumb, Tabs } from '@innogrid/ui';
 import { useNavigate, useParams } from 'react-router';
 import { formatPhone } from '@/util/phone';
+import { DetailValue } from '@/components/ui/detail-value';
 
 export default function MemberManagementDetailPage() {
   const { id } = useParams();
-  const { member } = useGetMember(id);
+  const { member, isPending } = useGetMember(id);
   const navigate = useNavigate();
 
   return (
@@ -30,43 +31,79 @@ export default function MemberManagementDetailPage() {
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">이름</div>
-              <div className="page-detail_item-data">{member?.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {member?.name}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">ID</div>
-              <div className="page-detail_item-data">{member?.member_id}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {member?.member_id}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">상태</div>
-              <div className="page-detail_item-data">{member?.is_active}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
+                  {member?.is_active}
+                </DetailValue>
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">생성일시</div>
-              <div className="page-detail_item-data">{formatDateTime(member?.created_at)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(member?.created_at)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">email</div>
-              <div className="page-detail_item-data">{member?.email}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={200}>
+                  {member?.email}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">역할</div>
-              <div className="page-detail_item-data">{member?.role}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
+                  {member?.role}
+                </DetailValue>
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">최종 접속 일시</div>
-              <div className="page-detail_item-data">{formatDateTime(member?.last_login)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(member?.last_login)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">연락처</div>
-              <div className="page-detail_item-data">{formatPhone(member?.phone)}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatPhone(member?.phone)}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">{member?.description}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {member?.description}
+                </DetailValue>
+              </div>
             </li>
           </ul>
         </div>

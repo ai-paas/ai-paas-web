@@ -5,6 +5,7 @@ import { EditPromptButton } from '../../../components/features/prompt/edit-promp
 import { DeletePromptButton } from '../../../components/features/prompt/delete-prompt-button';
 import { useGetPrompt } from '@/hooks/service/prompts';
 import { formatDateTime } from '@/util/date';
+import { DetailValue } from '@/components/ui/detail-value';
 
 /** 본문에서 `{{#변수#}}`를 찾아 인디고 칩으로 강조한다 (에디터 하이라이트와 동일 색). */
 const VARIABLE_RE = /\{\{#\s*([^{}#]+?)\s*#\}\}/g;
@@ -49,7 +50,7 @@ const VariableChip = ({ name }: { name: string }) => (
 export default function PromptDetailPage() {
   const { id } = useParams();
   const promptId = Number(id);
-  const { prompt } = useGetPrompt(promptId);
+  const { prompt, isPending } = useGetPrompt(promptId);
   const navigate = useNavigate();
 
   return (
@@ -77,22 +78,34 @@ export default function PromptDetailPage() {
             <li>
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
-                {formatDateTime(prompt?.created_at.toString()) ?? 'N/A'}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(prompt?.created_at.toString()) ?? 'N/A'}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
-                {formatDateTime(prompt?.updated_at.toString()) ?? 'N/A'}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(prompt?.updated_at.toString()) ?? 'N/A'}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">설명</div>
-              <div className="page-detail_item-data">{prompt?.description ?? 'N/A'}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {prompt?.description ?? 'N/A'}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">{prompt?.created_by ?? 'N/A'}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {prompt?.created_by ?? 'N/A'}
+                </DetailValue>
+              </div>
             </li>
           </ul>
         </div>

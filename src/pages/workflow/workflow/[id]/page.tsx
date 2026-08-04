@@ -9,6 +9,7 @@ import { ExecuteWorkflowButton } from '@/components/features/workflow/execute-wo
 import { CopyButton } from '@/components/ui/copy-button';
 import { ReactFlowProvider } from '@xyflow/react';
 import { FlowChart } from '@/components/ui/flow-chart';
+import { DetailValue } from '@/components/ui/detail-value';
 import { StopWorkflowDeploymentButton } from '@/components/features/workflow/stop-workflow-deployment-button';
 import { workflowToFlow } from '@/components/features/workflow/workflow-editor/workflow-to-flow';
 import { useGetWorkflow, useGetWorkflowModels } from '@/hooks/service/workflows';
@@ -200,30 +201,36 @@ export default function WorkflowDetailPage() {
       </div>
       <div className="page-content page-pb-40">
         <h3 className="page-detail-title">상세 정보</h3>
-        {isPending ? (
-          <div className="flex size-full items-center justify-center">Loading workflow...</div>
-        ) : (
-          <div className="page-detail-list-box">
-            <ul className="page-detail-list">
-              <li>
-                <div className="page-detail_item-name">이름</div>
-                <div className="page-detail_item-data">{workflow?.name || EMPTY_VALUE}</div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">생성일시</div>
-                <div className="page-detail_item-data">
+        <div className="page-detail-list-box">
+          <ul className="page-detail-list">
+            <li>
+              <div className="page-detail_item-name">이름</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={160}>
+                  {workflow?.name || EMPTY_VALUE}
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">생성일시</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
                   {formatDateTime(workflow?.created_at) || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">최근 업데이트</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">최근 업데이트</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={140}>
                   {formatDateTime(workflow?.updated_at) || EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">서비스</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">서비스</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
                   {workflow?.service_id ? (
                     <Link
                       to={`/service/${workflow.service_id}`}
@@ -234,41 +241,55 @@ export default function WorkflowDetailPage() {
                   ) : (
                     EMPTY_VALUE
                   )}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">공개 URL</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">공개 URL</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={200}>
                   {publicUrl}
                   {publicUrl !== EMPTY_VALUE && <CopyButton value={publicUrl} />}
-                </div>
-              </li>
-            </ul>
-            <ul className="page-detail-list">
-              <li>
-                <div className="page-detail_item-name">백엔드 서비스 API</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+          </ul>
+          <ul className="page-detail-list">
+            <li>
+              <div className="page-detail_item-name">백엔드 서비스 API</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={200}>
                   {backendApi}
                   {backendApi !== EMPTY_VALUE && <CopyButton value={backendApi} />}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">카테고리</div>
-                <div className="page-detail_item-data">{workflow?.category || EMPTY_VALUE}</div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">상태</div>
-                <div className="page-detail_item-data">
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">카테고리</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {workflow?.category || EMPTY_VALUE}
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">상태</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={100}>
                   {workflow?.status ? getWorkflowStatus(workflow.status).label : EMPTY_VALUE}
-                </div>
-              </li>
-              <li>
-                <div className="page-detail_item-name">설명</div>
-                <div className="page-detail_item-data">{workflow?.description || EMPTY_VALUE}</div>
-              </li>
-            </ul>
-          </div>
-        )}
+                </DetailValue>
+              </div>
+            </li>
+            <li>
+              <div className="page-detail_item-name">설명</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={240}>
+                  {workflow?.description || EMPTY_VALUE}
+                </DetailValue>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">

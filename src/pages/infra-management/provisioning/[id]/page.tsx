@@ -13,6 +13,7 @@ import {
 import { formatDateTime } from '@/util/date';
 import type { VmNode } from '@/types/vm';
 import { WorkflowStepper } from '@/components/features/infra-managememt/provisioning/workflow-stepper';
+import { DetailValue } from '@/components/ui/detail-value';
 
 const stateColor = (status?: string): 'run' | 'negative' | 'wait' => {
   if (!status) return 'wait';
@@ -188,12 +189,11 @@ export default function VmDetailPage() {
       </div>
 
       <div className="page-content page-pb-40">
-        {isPending && <div style={{ padding: 16 }}>로딩 중...</div>}
         {!isPending && !vm && (
           <div style={{ padding: 16, color: '#a33' }}>VM 을 찾을 수 없습니다.</div>
         )}
 
-        {vm && (
+        {(isPending || vm) && (
           <>
             <WorkflowStepper vm={vm} />
             <div style={{ display: 'flex', gap: 24 }}>
@@ -204,53 +204,85 @@ export default function VmDetailPage() {
                   <ul className="page-detail-list">
                     <li>
                       <div className="page-detail_item-name">이름</div>
-                      <div className="page-detail_item-data">{vm.clusterName}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={160}>
+                          {vm?.clusterName}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">상태</div>
                       <div className="page-detail_item-data">
-                        <span className={`table-td-state table-td-state-${stateColor(vm.status)}`}>
-                          {vm.status ?? '-'}
-                        </span>
+                        <DetailValue isLoading={isPending} width={100}>
+                          <span className={`table-td-state table-td-state-${stateColor(vm?.status)}`}>
+                            {vm?.status ?? '-'}
+                          </span>
+                        </DetailValue>
                       </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">프로바이더</div>
-                      <div className="page-detail_item-data">{vm.clusterProvider ?? '-'}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={120}>
+                          {vm?.clusterProvider ?? '-'}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">리전</div>
-                      <div className="page-detail_item-data">{vm.region ?? '-'}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={100}>
+                          {vm?.region ?? '-'}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">환경</div>
-                      <div className="page-detail_item-data">{vm.environment ?? '-'}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={100}>
+                          {vm?.environment ?? '-'}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">자격증명</div>
-                      <div className="page-detail_item-data">{vm.credentialName ?? '-'}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={140}>
+                          {vm?.credentialName ?? '-'}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">생성일시</div>
-                      <div className="page-detail_item-data">{formatDateTime(vm.createdAt)}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={140}>
+                          {formatDateTime(vm?.createdAt)}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">최종 변경</div>
-                      <div className="page-detail_item-data">{formatDateTime(vm.updatedAt)}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={140}>
+                          {formatDateTime(vm?.updatedAt)}
+                        </DetailValue>
+                      </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">연결 K8s cluster</div>
                       <div className="page-detail_item-data">
-                        {vm.clusterId ? (
-                          <Link
-                            to={`/infra-management/cluster-management/${encodeURIComponent(vm.clusterId)}`}
-                            className="table-td-link"
-                          >
-                            {vm.clusterId}
-                          </Link>
-                        ) : (
-                          <span style={{ color: '#999' }}>대기 (agent 등록 전)</span>
-                        )}
+                        <DetailValue isLoading={isPending} width={160}>
+                          {vm?.clusterId ? (
+                            <Link
+                              to={`/infra-management/cluster-management/${encodeURIComponent(vm.clusterId)}`}
+                              className="table-td-link"
+                            >
+                              {vm.clusterId}
+                            </Link>
+                          ) : (
+                            <span style={{ color: '#999' }}>대기 (agent 등록 전)</span>
+                          )}
+                        </DetailValue>
                       </div>
                     </li>
                   </ul>
@@ -265,16 +297,20 @@ export default function VmDetailPage() {
                     <li>
                       <div className="page-detail_item-name">현재 단계</div>
                       <div className="page-detail_item-data">
-                        {workflowStepLabel(vm.currentWorkflowStep ?? undefined)}
+                        <DetailValue isLoading={isPending} width={140}>
+                          {workflowStepLabel(vm?.currentWorkflowStep ?? undefined)}
+                        </DetailValue>
                       </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">마지막 완료</div>
                       <div className="page-detail_item-data">
-                        {workflowStepLabel(vm.lastSuccessfulStep ?? undefined)}
+                        <DetailValue isLoading={isPending} width={140}>
+                          {workflowStepLabel(vm?.lastSuccessfulStep ?? undefined)}
+                        </DetailValue>
                       </div>
                     </li>
-                    {vm.currentSubStep && (
+                    {vm?.currentSubStep && (
                       <li>
                         <div className="page-detail_item-name">세부 단계</div>
                         <div className="page-detail_item-data">{vm.currentSubStep}</div>
@@ -283,14 +319,20 @@ export default function VmDetailPage() {
                     <li>
                       <div className="page-detail_item-name">단계 시작</div>
                       <div className="page-detail_item-data">
-                        {formatDateTime(vm.stepStartedAt)}
+                        <DetailValue isLoading={isPending} width={140}>
+                          {formatDateTime(vm?.stepStartedAt)}
+                        </DetailValue>
                       </div>
                     </li>
                     <li>
                       <div className="page-detail_item-name">재시도 횟수</div>
-                      <div className="page-detail_item-data">{vm.workflowRetryCount ?? 0}</div>
+                      <div className="page-detail_item-data">
+                        <DetailValue isLoading={isPending} width={100}>
+                          {vm?.workflowRetryCount ?? 0}
+                        </DetailValue>
+                      </div>
                     </li>
-                    {vm.lastFailedStep && (
+                    {vm?.lastFailedStep && (
                       <li>
                         <div className="page-detail_item-name">마지막 실패</div>
                         <div className="page-detail_item-data">
@@ -299,7 +341,7 @@ export default function VmDetailPage() {
                         </div>
                       </li>
                     )}
-                    {vm.lastError && (
+                    {vm?.lastError && (
                       <li>
                         <div className="page-detail_item-name">에러 메시지</div>
                         <div className="page-detail_item-data" style={{ color: '#a33' }}>
@@ -307,19 +349,19 @@ export default function VmDetailPage() {
                         </div>
                       </li>
                     )}
-                    {vm.masterVmSpec && (
+                    {vm?.masterVmSpec && (
                       <li>
                         <div className="page-detail_item-name">Master 스펙</div>
                         <div className="page-detail_item-data">{vm.masterVmSpec}</div>
                       </li>
                     )}
-                    {vm.workerVmSpec && (
+                    {vm?.workerVmSpec && (
                       <li>
                         <div className="page-detail_item-name">Worker 스펙</div>
                         <div className="page-detail_item-data">{vm.workerVmSpec}</div>
                       </li>
                     )}
-                    {vm.osImage && (
+                    {vm?.osImage && (
                       <li>
                         <div className="page-detail_item-name">OS 이미지</div>
                         <div className="page-detail_item-data">{vm.osImage}</div>
@@ -330,126 +372,134 @@ export default function VmDetailPage() {
               </div>
             </div>
 
-            {/* 개별 VM 인스턴스 카드 그리드 — master + worker 인스턴스 직접 노출 */}
-            <div style={{ marginTop: 24 }}>
-              <h3 className="page-detail-title">VM 인스턴스 ({nodes.length})</h3>
-              {nodes.length === 0 ? (
-                <div
-                  style={{
-                    padding: 16,
-                    color: '#888',
-                    fontSize: 13,
-                    border: '1px dashed #d1d5db',
-                    borderRadius: 6,
-                  }}
-                >
-                  노드 정보 없음 — PROVISION 단계 완료 후 표시됩니다.
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: 12,
-                  }}
-                >
-                  {nodes.map((n, i) => {
-                    const ip = n.publicIp ?? n.privateIp ?? '-';
-                    return (
-                      <div
-                        key={`${n.hostname ?? n.role}-${i}`}
-                        style={{
-                          border: '1px solid #e5e7eb',
-                          borderRadius: 8,
-                          padding: 14,
-                          background: '#fafafa',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 10,
-                          }}
-                        >
-                          <span
-                            className={`table-td-state table-td-state-${roleColor(n.role)}`}
-                            style={{ fontSize: 11 }}
-                          >
-                            {n.role ?? 'node'}
-                          </span>
-                          <span style={{ fontWeight: 600, fontSize: 13 }}>
-                            {n.hostname ?? `instance-${i}`}
-                          </span>
-                        </div>
-                        <div style={{ display: 'grid', rowGap: 4, fontSize: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#666' }}>공인 IP</span>
-                            <span style={{ fontFamily: 'monospace' }}>{n.publicIp ?? '-'}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#666' }}>사설 IP</span>
-                            <span style={{ fontFamily: 'monospace' }}>{n.privateIp ?? '-'}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#666' }}>SSH user</span>
-                            <span style={{ fontFamily: 'monospace' }}>
-                              {n.sshUser ?? sshUserDefault}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          color="secondary"
-                          size="small"
-                          onClick={() => handleCopySshCommand(n)}
-                          disabled={ip === '-'}
-                          style={{ marginTop: 10, width: '100%' }}
-                          title={`ssh -i ~/.ssh/${vmName}.pem ${n.sshUser ?? sshUserDefault}@${ip}`}
-                        >
-                          SSH 명령 복사
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* state history 압축 */}
-            <div style={{ marginTop: 24 }}>
-              <h3 className="page-detail-title">상태 이력 (최근 30)</h3>
-              <div
-                style={{
-                  maxHeight: 240,
-                  overflow: 'auto',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 6,
-                  padding: 8,
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                }}
-              >
-                {historyItems.length === 0 && <div style={{ color: '#666' }}>이력 없음</div>}
-                {historyItems.map((row, idx) => {
-                  const r = row as Record<string, unknown>;
-                  return (
-                    <div key={idx} style={{ padding: '2px 0' }}>
-                      <span style={{ color: '#666' }}>
-                        {formatDateTime(r.createdAt as string | undefined)}
-                      </span>{' '}
-                      <span>{String(r.fromStatus ?? '-')}</span>
-                      {' → '}
-                      <span style={{ fontWeight: 600 }}>{String(r.toStatus ?? '-')}</span>{' '}
-                      <span style={{ color: '#888' }}>({String(r.reason ?? '')})</span>
-                      {r.valid === false && (
-                        <span style={{ color: '#a33', marginLeft: 6 }}>[invalid]</span>
-                      )}
+            {/* 개별 VM 인스턴스 카드 그리드 — master + worker 인스턴스 직접 노출 (데이터 로드 후에만 표시) */}
+            {vm && (
+              <>
+                <div style={{ marginTop: 24 }}>
+                  <h3 className="page-detail-title">VM 인스턴스 ({nodes.length})</h3>
+                  {nodes.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 16,
+                        color: '#888',
+                        fontSize: 13,
+                        border: '1px dashed #d1d5db',
+                        borderRadius: 6,
+                      }}
+                    >
+                      노드 정보 없음 — PROVISION 단계 완료 후 표시됩니다.
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: 12,
+                      }}
+                    >
+                      {nodes.map((n, i) => {
+                        const ip = n.publicIp ?? n.privateIp ?? '-';
+                        return (
+                          <div
+                            key={`${n.hostname ?? n.role}-${i}`}
+                            style={{
+                              border: '1px solid #e5e7eb',
+                              borderRadius: 8,
+                              padding: 14,
+                              background: '#fafafa',
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 10,
+                              }}
+                            >
+                              <span
+                                className={`table-td-state table-td-state-${roleColor(n.role)}`}
+                                style={{ fontSize: 11 }}
+                              >
+                                {n.role ?? 'node'}
+                              </span>
+                              <span style={{ fontWeight: 600, fontSize: 13 }}>
+                                {n.hostname ?? `instance-${i}`}
+                              </span>
+                            </div>
+                            <div style={{ display: 'grid', rowGap: 4, fontSize: 12 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#666' }}>공인 IP</span>
+                                <span style={{ fontFamily: 'monospace' }}>
+                                  {n.publicIp ?? '-'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#666' }}>사설 IP</span>
+                                <span style={{ fontFamily: 'monospace' }}>
+                                  {n.privateIp ?? '-'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#666' }}>SSH user</span>
+                                <span style={{ fontFamily: 'monospace' }}>
+                                  {n.sshUser ?? sshUserDefault}
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              color="secondary"
+                              size="small"
+                              onClick={() => handleCopySshCommand(n)}
+                              disabled={ip === '-'}
+                              style={{ marginTop: 10, width: '100%' }}
+                              title={`ssh -i ~/.ssh/${vmName}.pem ${n.sshUser ?? sshUserDefault}@${ip}`}
+                            >
+                              SSH 명령 복사
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* state history 압축 */}
+                <div style={{ marginTop: 24 }}>
+                  <h3 className="page-detail-title">상태 이력 (최근 30)</h3>
+                  <div
+                    style={{
+                      maxHeight: 240,
+                      overflow: 'auto',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 6,
+                      padding: 8,
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {historyItems.length === 0 && <div style={{ color: '#666' }}>이력 없음</div>}
+                    {historyItems.map((row, idx) => {
+                      const r = row as Record<string, unknown>;
+                      return (
+                        <div key={idx} style={{ padding: '2px 0' }}>
+                          <span style={{ color: '#666' }}>
+                            {formatDateTime(r.createdAt as string | undefined)}
+                          </span>{' '}
+                          <span>{String(r.fromStatus ?? '-')}</span>
+                          {' → '}
+                          <span style={{ fontWeight: 600 }}>{String(r.toStatus ?? '-')}</span>{' '}
+                          <span style={{ color: '#888' }}>({String(r.reason ?? '')})</span>
+                          {r.valid === false && (
+                            <span style={{ color: '#a33', marginLeft: 6 }}>[invalid]</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

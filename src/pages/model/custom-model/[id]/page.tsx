@@ -21,6 +21,7 @@ import { formatDateTime } from '@/util/date';
 import { DeleteCustomModelButton } from '@/components/features/model/delete-custom-model-button';
 import { ModelImprovementButton } from '@/components/features/model/model-improvement-button';
 import type { Model, ModelReadChild, ModelVisibility } from '@/types/model';
+import { DetailValue } from '@/components/ui/detail-value';
 
 interface ModelFile {
   name: string;
@@ -131,7 +132,7 @@ const columns: ColDef<ModelFile>[] = [
 
 export default function CustomModelDetailPage() {
   const { id } = useParams();
-  const { model } = useGetModel(Number(id));
+  const { model, isPending } = useGetModel(Number(id));
   const navigate = useNavigate();
 
   const treeNodes = model ? buildModelTree(model) : [];
@@ -187,111 +188,141 @@ export default function CustomModelDetailPage() {
             <li>
               <div className="page-detail_item-name">모델 소개</div>
               <div className="page-detail_item-data">
-                {model?.name || '-'}
-                {model?.provider_info.name === 'huggingface' && (
-                  <a
-                    href={`https://huggingface.co/${model?.repo_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`page-detail_item-data-link ${styles.itemLink}`}
-                  >
-                    <IconLogoHuggingface />
-                    허깅페이스 바로가기
-                  </a>
-                )}
-                {model?.provider_info.name === 'kaggle' && (
-                  <a
-                    href={`https://www.kaggle.com/models/${model?.repo_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`page-detail_item-data-link ${styles.itemLink}`}
-                  >
-                    <IconLogoKaggle />
-                    Kaggle 바로가기
-                  </a>
-                )}
+                <DetailValue isLoading={isPending} width={200}>
+                  {model?.name || '-'}
+                  {model?.provider_info.name === 'huggingface' && (
+                    <a
+                      href={`https://huggingface.co/${model?.repo_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`page-detail_item-data-link ${styles.itemLink}`}
+                    >
+                      <IconLogoHuggingface />
+                      허깅페이스 바로가기
+                    </a>
+                  )}
+                  {model?.provider_info.name === 'kaggle' && (
+                    <a
+                      href={`https://www.kaggle.com/models/${model?.repo_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`page-detail_item-data-link ${styles.itemLink}`}
+                    >
+                      <IconLogoKaggle />
+                      Kaggle 바로가기
+                    </a>
+                  )}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
-                {formatDateTime(model?.created_at.toString())}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(model?.created_at.toString())}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
-                {formatDateTime(model?.updated_at.toString())}
+                <DetailValue isLoading={isPending} width={140}>
+                  {formatDateTime(model?.updated_at.toString())}
+                </DetailValue>
               </div>
             </li>
             <li>
               <div className="page-detail_item-name">생성자</div>
-              <div className="page-detail_item-data">{model?.created_by || '-'}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {model?.created_by || '-'}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 ID</div>
-              <div className="page-detail_item-data">{model?.repo_id}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={200}>
+                  {model?.repo_id}
+                </DetailValue>
+              </div>
             </li>
           </ul>
           <ul className="page-detail-list">
             <li>
               <div className="page-detail_item-name">모델 공급자 ID</div>
-              <div className="page-detail_item-data">{model?.provider_info.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {model?.provider_info.name}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 타입 ID</div>
-              <div className="page-detail_item-data">{model?.type_info.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {model?.type_info.name}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 포맷 ID</div>
-              <div className="page-detail_item-data">{model?.format_info.name}</div>
+              <div className="page-detail_item-data">
+                <DetailValue isLoading={isPending} width={120}>
+                  {model?.format_info.name}
+                </DetailValue>
+              </div>
             </li>
             <li>
               <div className="page-detail_item-name">모델 트리</div>
               <div className="page-detail_item-data">
-                {treeNodes.length > 0 ? (
-                  <>
-                    <div className={styles.modelTree}>
-                      {treeNodes.map((node) => (
-                        <div
-                          key={node.id}
-                          style={{ paddingLeft: node.depth === 0 ? 0 : 4 + (node.depth - 1) * 24 }}
-                          className={
-                            node.relation === 'current' ? styles.modelTreeCurrent : undefined
-                          }
-                        >
-                          {node.depth > 0 && <IconArrowModelTree />}
-                          {node.name}
-                        </div>
-                      ))}
-                    </div>
-                    <div className={styles.modelTreeLink}>
-                      {treeNodes.map((node) => {
-                        const route = getModelTreeRoute(node);
-                        return (
-                          <div key={node.id}>
-                            {node.relation === 'current' ? (
-                              <span>{node.name}</span>
-                            ) : (
-                              <a
-                                href={route}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  navigate(route);
-                                }}
-                                className="page-detail_item-data-link"
-                              >
-                                {node.name}
-                              </a>
-                            )}
+                <DetailValue isLoading={isPending} width={200}>
+                  {treeNodes.length > 0 ? (
+                    <>
+                      <div className={styles.modelTree}>
+                        {treeNodes.map((node) => (
+                          <div
+                            key={node.id}
+                            style={{
+                              paddingLeft: node.depth === 0 ? 0 : 4 + (node.depth - 1) * 24,
+                            }}
+                            className={
+                              node.relation === 'current' ? styles.modelTreeCurrent : undefined
+                            }
+                          >
+                            {node.depth > 0 && <IconArrowModelTree />}
+                            {node.name}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  '-'
-                )}
+                        ))}
+                      </div>
+                      <div className={styles.modelTreeLink}>
+                        {treeNodes.map((node) => {
+                          const route = getModelTreeRoute(node);
+                          return (
+                            <div key={node.id}>
+                              {node.relation === 'current' ? (
+                                <span>{node.name}</span>
+                              ) : (
+                                <a
+                                  href={route}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    navigate(route);
+                                  }}
+                                  className="page-detail_item-data-link"
+                                >
+                                  {node.name}
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    '-'
+                  )}
+                </DetailValue>
               </div>
             </li>
           </ul>
