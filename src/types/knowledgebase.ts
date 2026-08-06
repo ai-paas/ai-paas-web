@@ -52,7 +52,7 @@ export interface CreateKnowledgeBaseRequest {
   search_method_id: number;
   top_k: number;
   threshold: number;
-  file: File[];
+  file: File;
 }
 
 export interface UpdateKnowledgeBaseRequest {

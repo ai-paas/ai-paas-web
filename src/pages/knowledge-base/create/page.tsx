@@ -27,7 +27,7 @@ import type { Model } from '@/types/model';
 interface FormData {
   name: string;
   description?: string;
-  files: File[];
+  file: File | null;
   chunk_size?: number;
   chunk_overlap?: number;
   chunk_type?: {
@@ -62,7 +62,7 @@ export default function KnowledgeBaseCreatePage() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    files: [],
+    file: null,
     chunk_type: { id: 0, name: '' },
     language: { id: 0, name: '' },
     embedding_model: { id: 0, name: '' },
@@ -80,7 +80,7 @@ export default function KnowledgeBaseCreatePage() {
   };
 
   const handleClickCreate = async () => {
-    if (!formData.chunk_type) return;
+    if (!formData.chunk_type || !formData.file) return;
 
     const form = new FormData();
     form.append('name', formData.name);
@@ -93,9 +93,7 @@ export default function KnowledgeBaseCreatePage() {
     form.append('search_method_id', String(formData.search_method.id));
     form.append('top_k', String(formData.top_k[0]));
     form.append('threshold', String(formData.threshold[0]));
-    formData.files.forEach((file) => {
-      form.append('file', file);
-    });
+    form.append('file', formData.file);
 
     await createKnowledgeBase(form, {
       onSuccess: () => {
@@ -179,14 +177,11 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
   const toast = useToast();
 
   const handleAddFile = (files: File[]) => {
-    setFormData((prev) => ({ ...prev, files: [...(prev?.files || []), ...files] }));
+    setFormData((prev) => ({ ...prev, file: files[0] ?? null }));
   };
 
-  const handleDeleteFile = ({ fileIndex }: { file: File; fileIndex: number }) => {
-    setFormData((prev) => ({
-      ...prev,
-      files: (prev?.files || []).filter((_, index) => index !== fileIndex),
-    }));
+  const handleDeleteFile = () => {
+    setFormData((prev) => ({ ...prev, file: null }));
   };
 
   return (
@@ -220,16 +215,15 @@ const Step1 = ({ formData, setFormData }: Step1Props) => {
             <div className="page-input_item-data_fileUpload">
               <FileDrop
                 id="knowledge-base-file"
-                multiple
                 extensions={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv']}
                 description={
                   <>
-                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                    파일을 여기에 드래그하거나 클릭하여 업로드하세요. (최대 크기 15MB)
                     <br />
                     허용되는 파일 형식: pdf, doc, docx, xls, xlsx, ppt, pptx, csv
                   </>
                 }
-                files={formData?.files ?? []}
+                files={formData?.file ? [formData.file] : []}
                 onAddFile={handleAddFile}
                 onDeleteFile={handleDeleteFile}
                 onError={({ errorMessage }) =>
@@ -510,13 +504,13 @@ const Step3 = ({ formData }: Step3Props) => {
             <div className="page-accordion_item-box">
               <div className="page-accordion_item-name">파일</div>
               <div className="page-accordion_item-data">
-                {(formData?.files?.length ?? 0) > 0
-                  ? formData?.files.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <IconDocument /> {item.name}
-                      </div>
-                    ))
-                  : '-'}
+                {formData?.file ? (
+                  <div className="flex items-center gap-2">
+                    <IconDocument /> {formData.file.name}
+                  </div>
+                ) : (
+                  '-'
+                )}
               </div>
             </div>
           </div>
