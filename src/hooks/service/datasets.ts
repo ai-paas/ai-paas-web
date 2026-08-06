@@ -4,6 +4,7 @@ import type { Page } from '@/types/api';
 import type {
   ValidateDatasetResponse,
   Dataset,
+  DatasetKindInfo,
   GetDatasetsParams,
   UpdateDatasetRequest,
 } from '@/types/dataset';
@@ -22,6 +23,19 @@ export const useGetDatasets = (params: GetDatasetsParams = {}) => {
       size: data?.size ?? 1,
       total: data?.total ?? 1,
     },
+    isPending,
+    isError,
+  };
+};
+
+export const useGetDatasetKinds = () => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.datasets.kinds(),
+    queryFn: () => api.get<DatasetKindInfo[]>('datasets/kinds').json(),
+  });
+
+  return {
+    kinds: data ?? [],
     isPending,
     isError,
   };

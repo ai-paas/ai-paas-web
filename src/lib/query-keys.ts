@@ -73,6 +73,7 @@ export const queryKeys = {
     all: ['datasets'] as const,
     list: (params: GetDatasetsParams = {}) => [...queryKeys.datasets.all, params] as const,
     detail: (datasetId?: number) => [...queryKeys.datasets.all, datasetId] as const,
+    kinds: () => [...queryKeys.datasets.all, 'kinds'] as const,
   },
   knowledgeBases: {
     all: ['knowledge-bases'] as const,

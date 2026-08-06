@@ -18,6 +18,11 @@ import { useGetDatasets } from '@/hooks/service/datasets';
 import { formatDateTime } from '@/util/date';
 import type { Dataset } from '@/types/dataset';
 
+const DATASET_KIND_LABELS: Record<string, string> = {
+  'object-detection': '객체 감지',
+  'protein-classification': '단백질 분류',
+};
+
 const columns = [
   {
     id: 'select',
@@ -36,6 +41,14 @@ const columns = [
         {row.original.name}
       </Link>
     ),
+  },
+  {
+    id: 'kind',
+    header: '분류',
+    accessorFn: (row: Dataset) =>
+      row.kind ? (DATASET_KIND_LABELS[row.kind] ?? row.kind) : 'N/A',
+    size: 200,
+    enableSorting: false,
   },
   {
     id: 'created_by',

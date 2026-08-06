@@ -1,12 +1,17 @@
+export type DatasetKind = 'object-detection' | 'protein-classification';
+
+export interface DatasetKindInfo {
+  name: string;
+  description: string | null;
+  accepted_formats: string[];
+  supported_models: string[];
+}
+
 export interface Dataset {
   id: number;
   name: string;
   description: string | null;
-  version: number;
-  subversion: number;
-  train_ratio: number;
-  validation_ratio: number;
-  test_ratio: number;
+  kind: DatasetKind | null;
   dataset_registry: {
     id: number;
     artifact_path: string;
@@ -42,15 +47,9 @@ export interface GetDatasetsParams {
 export interface ValidateDatasetResponse {
   is_valid: boolean;
   message: string;
-  details: {
-    additionalProp1: object;
-  };
-}
-
-export interface CreateDatasetRequest {
-  name: string;
-  description: string;
-  file?: string;
+  details?: {
+    errors?: string[];
+  } | null;
 }
 
 export interface UpdateDatasetRequest {

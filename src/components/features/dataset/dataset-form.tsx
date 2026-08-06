@@ -1,12 +1,21 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useForm, Controller } from 'react-hook-form';
-import { Button, FileDrop, Input, Textarea, useToast } from '@innogrid/ui';
+import { Button, FileDrop, Input, Select, Textarea, useToast } from '@innogrid/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useValidateDataset, useCreateDataset } from '@/hooks/service/datasets';
+import { useValidateDataset, useCreateDataset, useGetDatasetKinds } from '@/hooks/service/datasets';
 import * as z from 'zod';
+
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
+
+const DATASET_KIND_LABELS: Record<string, string> = {
+  'object-detection': '객체 감지',
+  'protein-classification': '단백질 분류',
+};
 
 const schema = z.object({
   name: z.string().min(1, '이름은 필수입니다.'),
+  dataset_kind: z.string().min(1, '데이터셋 분류를 선택해주세요.'),
   description: z.string().optional(),
   file: z
     .instanceof(File, { error: '파일이 필요합니다.' })
@@ -17,7 +26,7 @@ const schema = z.object({
         file.type === 'application/x-zip-compressed';
       return isZip;
     }, 'zip 파일만 업로드 가능합니다.')
-    .refine((file) => file.size <= 50 * 1024 * 1024, '파일 크기는 50MB 이하여야 합니다.'),
+    .refine((file) => file.size <= MAX_FILE_SIZE, '파일 크기는 1GB 이하여야 합니다.'),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -26,27 +35,38 @@ export const DatasetForm = () => {
   const navigate = useNavigate();
   const { validateDataset } = useValidateDataset();
   const { createDataset, isPending } = useCreateDataset();
+  const { kinds } = useGetDatasetKinds();
   const toast = useToast();
   const {
     register,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     setError,
     clearErrors,
     control,
     formState: { errors },
-  } = useForm<Schema>({ resolver: zodResolver(schema) });
+  } = useForm<Schema>({ resolver: zodResolver(schema), defaultValues: { dataset_kind: '' } });
 
   const selectedFile = watch('file');
+  const selectedKind = watch('dataset_kind');
+
+  const kindOptions = useMemo(() => {
+    const names =
+      kinds.length > 0 ? kinds.map((kind) => kind.name) : Object.keys(DATASET_KIND_LABELS);
+    return names.map((name) => ({ text: DATASET_KIND_LABELS[name] ?? name, value: name }));
+  }, [kinds]);
+
+  const selectedKindDescription = kinds.find((kind) => kind.name === selectedKind)?.description;
 
   const clearFile = () => {
     setValue('file', undefined as unknown as File, { shouldValidate: false });
   };
 
-  const processFile = async (file: File) => {
-    if (file.size > 50 * 1024 * 1024) {
-      setError('file', { type: 'manual', message: '파일 크기는 50MB 이하여야 합니다.' });
+  const processFile = async (file: File, datasetKind: string) => {
+    if (file.size > MAX_FILE_SIZE) {
+      setError('file', { type: 'manual', message: '파일 크기는 1GB 이하여야 합니다.' });
       clearFile();
       return;
     }
@@ -54,10 +74,14 @@ export const DatasetForm = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('dataset_kind', datasetKind);
       const response = await validateDataset(formData);
 
       if (!response.is_valid) {
-        setError('file', { type: 'manual', message: '유효하지 않은 데이터셋 구조입니다.' });
+        setError('file', {
+          type: 'manual',
+          message: response.message || '유효하지 않은 데이터셋 구조입니다.',
+        });
         clearFile();
         return;
       }
@@ -73,7 +97,14 @@ export const DatasetForm = () => {
   const handleAddFile = (files: File[]) => {
     const file = files[0];
     if (!file) return;
-    void processFile(file);
+
+    const datasetKind = getValues('dataset_kind');
+    if (!datasetKind) {
+      setError('file', { type: 'manual', message: '데이터셋 분류를 먼저 선택해주세요.' });
+      return;
+    }
+
+    void processFile(file, datasetKind);
   };
 
   const handleDeleteFile = () => {
@@ -90,6 +121,7 @@ export const DatasetForm = () => {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('description', data.description || '');
+    formData.append('dataset_kind', data.dataset_kind);
     formData.append('file', data.file);
 
     try {
@@ -130,6 +162,39 @@ export const DatasetForm = () => {
             </div>
           </div>
           <div className="page-input_item-box">
+            <div className="page-input_item-name page-icon-requisite">분류</div>
+            <div className="page-input_item-data">
+              <Controller
+                name="dataset_kind"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Select
+                    options={kindOptions}
+                    getOptionLabel={(option: { text: string; value: string }) => option.text}
+                    getOptionValue={(option: { text: string; value: string }) => option.value}
+                    value={kindOptions.find((o) => o.value === field.value) ?? null}
+                    onChange={(option: { text: string; value: string } | null) => {
+                      field.onChange(option?.value ?? '');
+
+                      const file = getValues('file');
+                      if (option?.value && file instanceof File) {
+                        void processFile(file, option.value);
+                      }
+                    }}
+                    placeholder="데이터셋 분류를 선택해주세요."
+                    errMessage={fieldState.error?.message}
+                  />
+                )}
+              />
+              {!errors.dataset_kind?.message && (
+                <p className="page-input_item-input-desc">
+                  {selectedKindDescription ||
+                    '데이터셋의 학습 태스크 분류를 선택하세요. 등록 후에는 변경할 수 없습니다.'}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">학습 파일</div>
             <div className="page-input_item-data">
               <div className="page-input_item-data_fileUpload">
@@ -140,7 +205,7 @@ export const DatasetForm = () => {
                     <>
                       파일을 여기에 드래그하거나 클릭하여 업로드하세요.
                       <br />
-                      (zip 50MB 이하)
+                      (zip 1GB 이하)
                     </>
                   }
                   files={selectedFile ? [selectedFile] : []}

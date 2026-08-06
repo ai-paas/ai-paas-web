@@ -142,6 +142,7 @@ export default function LearningCreatePage() {
         const formData = new FormData();
         formData.append('name', data.train_name);
         formData.append('description', data.description ?? '');
+        formData.append('dataset_kind', 'object-detection');
         formData.append('file', uploadedFile);
         const dataset = await createDataset(formData);
         datasetId = dataset.id;
@@ -343,6 +344,7 @@ const Step2 = ({
     try {
       const formData = new FormData();
       formData.append('file', uploadedFile);
+      formData.append('dataset_kind', 'object-detection');
       const response = await validateDataset(formData);
       setIsFileValidated(response.is_valid);
       toast.open({

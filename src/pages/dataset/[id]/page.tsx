@@ -6,6 +6,11 @@ import { DeleteDatasetButton } from '../../../components/features/dataset/delete
 import { useGetDataset } from '@/hooks/service/datasets';
 import { DetailValue } from '@/components/ui/detail-value';
 
+const DATASET_KIND_LABELS: Record<string, string> = {
+  'object-detection': '객체 감지',
+  'protein-classification': '단백질 분류',
+};
+
 export default function DatasetDetailPage() {
   const { id } = useParams();
   const { dataset, isPending } = useGetDataset(Number(id));
@@ -67,12 +72,10 @@ export default function DatasetDetailPage() {
           </ul>
           <ul className="page-detail-list">
             <li>
-              <div className="page-detail_item-name">버전 정보</div>
+              <div className="page-detail_item-name">분류</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={100}>
-                  {dataset?.version
-                    ? `${dataset.version}${dataset.subversion ? `.${dataset.subversion}` : ''}`
-                    : 'N/A'}
+                  {dataset?.kind ? (DATASET_KIND_LABELS[dataset.kind] ?? dataset.kind) : 'N/A'}
                 </DetailValue>
               </div>
             </li>
