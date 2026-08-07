@@ -51,7 +51,7 @@ export const useGetService = (surro_service_id?: string, enabled: boolean = true
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.services.detail(surro_service_id),
     queryFn: () => api.get(`services/${surro_service_id}`).json<ServiceDetail>(),
-    enabled,
+    enabled: enabled && !!surro_service_id,
   });
 
   return {

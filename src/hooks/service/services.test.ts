@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
+import { mockServiceDetail } from '@/test/mocks/handlers';
 import { createHookWrapper } from '@/test/utils/test-utils';
 import {
   useGetServices,
@@ -141,12 +142,24 @@ describe('services hooks', () => {
     });
 
     it('enabled가 false일 때 쿼리가 실행되지 않는다', async () => {
-      // 캐시되지 않은 새로운 ID를 사용하여 테스트
+      // 요청이 나가면 스파이가 기록한다
+      const requestSpy = vi.fn();
+      server.use(
+        http.get('http://localhost:3000/api/v1/services/srv-not-cached', () => {
+          requestSpy();
+          return HttpResponse.json(mockServiceDetail);
+        })
+      );
+
       const { result } = renderHook(() => useGetService('srv-not-cached', false), { wrapper });
 
       // enabled가 false이면 쿼리가 실행되지 않고 isPending 상태 유지
       expect(result.current.service).toBeUndefined();
       expect(result.current.isPending).toBe(true);
+
+      // 잠시 대기 후에도 네트워크 요청이 발생하지 않았는지 확인
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(requestSpy).not.toHaveBeenCalled();
     });
 
     it('존재하지 않는 서비스 조회 시 에러가 발생한다', async () => {
@@ -160,12 +173,24 @@ describe('services hooks', () => {
     });
 
     it('surro_service_id가 undefined일 때 쿼리가 실행되지 않는다', async () => {
+      // 가드가 없으면 GET services/undefined 요청이 실제로 나간다 — 스파이로 검증
+      const requestSpy = vi.fn();
+      server.use(
+        http.get('http://localhost:3000/api/v1/services/undefined', () => {
+          requestSpy();
+          return HttpResponse.json(mockServiceDetail);
+        })
+      );
+
       const { result } = renderHook(() => useGetService(undefined), {
         wrapper,
       });
 
       // undefined이므로 쿼리가 실행되지 않음
       expect(result.current.service).toBeUndefined();
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(requestSpy).not.toHaveBeenCalled();
     });
   });
 

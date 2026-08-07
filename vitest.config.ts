@@ -1,23 +1,24 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react-swc';
-import path from 'path';
+import { defineConfig, mergeConfig, coverageConfigDefaults } from 'vitest/config';
+import viteConfig from './vite.config';
 
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup-tests.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/components/features/service/**', 'src/hooks/service/**'],
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-});
+// vite.config.ts(플러그인·alias·scss additionalData 포함)를 그대로 상속해
+// 테스트마다 scss/svg를 수동 목킹할 필요를 없앤다.
+export default defineConfig((configEnv) =>
+  mergeConfig(
+    viteConfig(configEnv),
+    defineConfig({
+      test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup-tests.ts'],
+        include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        coverage: {
+          provider: 'v8',
+          reporter: ['text', 'json', 'html'],
+          include: ['src/**/*.{ts,tsx}'],
+          exclude: [...coverageConfigDefaults.exclude, 'src/test/**'],
+        },
+      },
+    })
+  )
+);

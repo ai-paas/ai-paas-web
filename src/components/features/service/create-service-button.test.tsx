@@ -1,17 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render } from '@/test/utils/test-utils';
 import '@/test/mocks/innogrid-ui';
 import { CreateServiceButton } from './create-service-button';
-
-// SCSS 모듈 모킹
-vi.mock('@/pages/service/service.module.scss', () => ({
-  default: {
-    modalBox: 'modalBox',
-    inputBox: 'inputBox',
-  },
-}));
 
 describe('CreateServiceButton', () => {
   // ============================================
