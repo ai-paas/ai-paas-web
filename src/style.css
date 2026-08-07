@@ -20,4 +20,13 @@
       height: 0;
     }
   }
+
+  /* 0.3s 안에 로드가 끝나면 아무것도 보이지 않고, 느릴 때만 나타나는 지연 표시용 */
+  --animate-delayed-fade-in: delayed-fade-in 0.15s ease-in 0.3s forwards;
+
+  @keyframes delayed-fade-in {
+    to {
+      opacity: 1;
+    }
+  }
 }
