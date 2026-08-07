@@ -1,8 +1,33 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
+
+// @innogrid/ui의 main.css에 base64 Pretendard Variable(2.7MB)이 @font-face로 내장되어 있는데,
+// 앱이 동일한 family('Pretendard Variable', weight 45 920)를 woff2 파일로 이미 배포·preload 중이라
+// 같은 폰트가 이중 전송된다. 라이브러리 쪽 base64 @font-face만 걷어낸다.
+// 라이브러리가 폰트 미포함 빌드를 제공하면 이 플러그인은 제거할 것. (TODO.md 2번)
+const stripInnogridEmbeddedPretendard = (): Plugin => ({
+  name: 'strip-innogrid-embedded-pretendard',
+  enforce: 'pre',
+  transform(code, id) {
+    if (
+      /node_modules[\\/]@innogrid[\\/]ui[\\/].*\.css(?:\?.*)?$/.test(id) &&
+      code.includes('Pretendard Variable') &&
+      code.includes('data:')
+    ) {
+      // family가 정확히 'Pretendard Variable'인 base64 블록만 제거 — 다른 임베디드 폰트는 보존.
+      return {
+        code: code.replace(
+          /@font-face\s*{(?=[^}]*font-family:\s*['"]?Pretendard Variable['"]?)[^}]*data:[^}]*}/g,
+          '',
+        ),
+        map: null,
+      };
+    }
+  },
+});
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,6 +35,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      stripInnogridEmbeddedPretendard(),
       react(),
       tailwindcss(),
       svgr({
