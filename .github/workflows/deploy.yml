@@ -14,17 +14,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.3
       - name: Setup Node.js environment
         uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
           cache: "pnpm"
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6.0.3
-      - name: Install & Build
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm run build
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Test
+        run: pnpm vitest run
+      - name: Build
+        run: pnpm run build
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -69,8 +71,8 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
+          username: deploy
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/${{ github.repository }}:latest
