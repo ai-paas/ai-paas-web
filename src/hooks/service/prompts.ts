@@ -81,9 +81,9 @@ export const useUpdatePrompt = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: ({ surro_prompt_id, ...data }: UpdatePromptRequest) =>
       api.put(`prompts/${surro_prompt_id}`, { json: data }).json<Prompt>(),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
+      // detail 키가 prompts.all 하위 계층이라 아래 한 번으로 목록·상세 모두 무효화된다
       queryClient.invalidateQueries({ queryKey: queryKeys.prompts.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.prompts.detail(variables.surro_prompt_id) });
     },
   });
 
@@ -101,7 +101,8 @@ export const useDeletePrompt = () => {
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (surro_prompt_id: number) =>
       api.delete(`prompts/${surro_prompt_id}`).json<string>(),
-    onSuccess: () => {
+    onSuccess: (_, surro_prompt_id) => {
+      queryClient.removeQueries({ queryKey: queryKeys.prompts.detail(surro_prompt_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.prompts.all });
     },
   });

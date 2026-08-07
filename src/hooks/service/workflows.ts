@@ -69,7 +69,7 @@ export const useGetWorkflowComponentTypes = () => {
 
 export const useGetTemplates = (params: WorkflowTemplateListParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.workflows.templates(params),
+    queryKey: queryKeys.workflows.templates.list(params),
     queryFn: () =>
       api
         .get<WorkflowTemplateListResponse>('workflows/templates', { searchParams: { ...params } })
@@ -160,7 +160,7 @@ export const useGetWorkflow = (workflowId?: number | string, enabled: boolean = 
 
 export const useGetWorkflowTemplate = (templateId?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.workflows.detail(templateId),
+    queryKey: queryKeys.workflows.templates.detail(templateId),
     queryFn: () => api.get(`workflows/templates/${templateId}`).json<WorkflowTemplate>(),
     enabled: !!templateId,
   });

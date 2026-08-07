@@ -99,7 +99,7 @@ export const queryKeys = {
   models: {
     all: ['models'] as const,
     list: (params: GetModelsParams = {}) => [...queryKeys.models.all, params] as const,
-    detail: (modelId: number) => ['model', modelId] as const,
+    detail: (modelId: number) => [...queryKeys.models.all, 'detail', modelId] as const,
   },
   customModels: {
     all: ['custom-models'] as const,
@@ -140,7 +140,7 @@ export const queryKeys = {
   prompts: {
     all: ['prompts'] as const,
     list: (params: GetPromptsParams = {}) => [...queryKeys.prompts.all, params] as const,
-    detail: (promptId: number) => ['prompt', promptId] as const,
+    detail: (promptId: number) => [...queryKeys.prompts.all, 'detail', promptId] as const,
     variableTypes: () => [...queryKeys.prompts.all, 'variable-types'] as const,
   },
   services: {
@@ -159,11 +159,16 @@ export const queryKeys = {
     list: (params: WorkflowListParams) => [...queryKeys.workflows.all, params] as const,
     detail: (workflowId?: number | string) => [...queryKeys.workflows.all, workflowId] as const,
     componentTypes: () => [...queryKeys.workflows.all, 'component-types'] as const,
-    templates: (params: WorkflowTemplateListParams = {}) =>
-      [...queryKeys.workflows.all, 'templates', params] as const,
+    templates: {
+      all: ['workflows', 'templates'] as const,
+      list: (params: WorkflowTemplateListParams = {}) =>
+        [...queryKeys.workflows.templates.all, params] as const,
+      detail: (templateId?: string) =>
+        [...queryKeys.workflows.templates.all, 'detail', templateId] as const,
+    },
     status: (workflowId?: string) => [...queryKeys.workflows.all, 'status', workflowId] as const,
     models: (workflowId?: string) => [...queryKeys.workflows.all, 'models', workflowId] as const,
-    finalizeCleanup: (workflowId?: string, runId?: string) =>
-      [...queryKeys.workflows.all, 'finalize-cleanup', workflowId, runId] as const,
+    finalizeCleanup: (workflowId?: string) =>
+      [...queryKeys.workflows.all, 'finalize-cleanup', workflowId] as const,
   },
 };
