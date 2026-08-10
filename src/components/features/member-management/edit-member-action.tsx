@@ -37,7 +37,7 @@ export const EditMemberAction = ({ formData }: EditMemberActionProps) => {
 
   // 검증
   const handleSubmit = () => {
-    let newErrors = {
+    const newErrors = {
       name: '',
       memberId: '',
       email: '',
