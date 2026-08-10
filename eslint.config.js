@@ -19,5 +19,10 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Fast Refresh(HMR) 전용 규칙이라 런타임 동작과 무관하다.
+      // 상수/훅을 컴포넌트와 같은 파일에서 내보내는 기존 코드가 있어 warn 으로 둔다.
+      'react-refresh/only-export-components': 'warn',
+    },
   },
 ])
