@@ -55,7 +55,7 @@ export default function LearningDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditLearningButton experimentId={Number(id)} />
-            <DeleteLearningButton experimentId={Number(id)} />
+            <DeleteLearningButton experimentId={Number(id)} redirect="/learning" />
             <ModelRegisterButton experimentId={Number(id)} />
           </div>
         </div>

@@ -66,8 +66,14 @@ export const useSubmitTraining = () => {
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (body: SubmitTrainingRequest) =>
-      api.post('learning/training', { json: body }).json<SubmitTrainingResponse>(),
+    mutationFn: (body: SubmitTrainingRequest) => {
+      const formData = new FormData();
+      Object.entries(body).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        formData.append(key, value instanceof File ? value : String(value));
+      });
+      return api.post('learning/training', { body: formData }).json<SubmitTrainingResponse>();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });
     },

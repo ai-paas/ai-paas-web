@@ -66,7 +66,7 @@ export default function PromptDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditPromptButton promptId={promptId} />
-            <DeletePromptButton promptId={promptId} />
+            <DeletePromptButton promptId={promptId} redirect="/prompt" />
           </div>
         </div>
       </div>

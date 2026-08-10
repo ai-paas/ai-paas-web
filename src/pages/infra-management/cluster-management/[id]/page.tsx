@@ -134,7 +134,10 @@ export default function ClusterDetailPage() {
               clusterId={id}
               returnTo={`/infra-management/cluster-management/${id}`}
             />
-            <DeleteClusterButton clusterId={id} />
+            <DeleteClusterButton
+              clusterId={id}
+              onDeleteSuccess={() => navigate('/infra-management/cluster-management')}
+            />
           </div>
         </div>
       </div>

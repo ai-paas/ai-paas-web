@@ -56,6 +56,7 @@ interface FormData {
 
 export default function KnowledgeBaseCreatePage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [step, setStep] = useState<number>(0);
   const { createKnowledgeBase, isPending } = useCreateKnowledgeBase();
 
@@ -80,7 +81,22 @@ export default function KnowledgeBaseCreatePage() {
   };
 
   const handleClickCreate = async () => {
-    if (!formData.chunk_type || !formData.file) return;
+    if (!formData.file) {
+      toast.open({
+        status: 'negative',
+        title: '파일이 없습니다.',
+        children: '기본 설정 단계에서 파일을 업로드해주세요.',
+      });
+      return;
+    }
+    if (!formData.chunk_type?.id) {
+      toast.open({
+        status: 'negative',
+        title: '청크 타입이 없습니다.',
+        children: '임베딩 설정 단계에서 청크 타입을 선택해주세요.',
+      });
+      return;
+    }
 
     const form = new FormData();
     form.append('name', formData.name);
@@ -100,8 +116,11 @@ export default function KnowledgeBaseCreatePage() {
         navigate('/knowledge-base');
       },
       onError: (error) => {
-        console.error('지식베이스 생성 실패:', error);
-        alert('지식베이스 생성에 실패했습니다.');
+        toast.open({
+          status: 'negative',
+          title: '지식 베이스 생성 실패',
+          children: error instanceof Error ? error.message : '지식 베이스 생성 중 오류가 발생했습니다.',
+        });
       },
     });
   };

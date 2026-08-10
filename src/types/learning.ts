@@ -32,18 +32,26 @@ export interface LearningStatus {
   message?: string;
 }
 
+/** MLOps 데이터셋 학습 태스크 분류 (DatasetKindEnum) */
+export type DatasetKind = 'object-detection' | 'protein-classification';
+
+/** POST learning/training 요청(multipart/form-data). dataset_id와 dataset_file은 둘 중 하나만 사용 */
 export interface SubmitTrainingRequest {
   model_id: number;
-  dataset_id: number;
   train_name: string;
   description: string;
+  /** 기존 데이터셋 ID. dataset_file과 XOR */
+  dataset_id?: number;
+  /** 직접 업로드할 데이터셋 파일. dataset_id와 XOR */
+  dataset_file?: File;
+  /** 데이터셋 학습 태스크 분류 */
+  dataset_kind?: DatasetKind;
   gpus: string;
   batch_size: string;
   epochs: string;
   save_period: string;
   weight_decay: string;
-  lr0: string;
-  lrf: string;
+  learning_rate: string;
 }
 
 export interface SubmitTrainingResponse {
