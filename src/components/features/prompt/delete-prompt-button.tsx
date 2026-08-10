@@ -1,14 +1,36 @@
 import { useDeletePrompt } from '@/hooks/service/prompts';
-import { AlertDialog, Button } from '@innogrid/ui';
+import { AlertDialog, Button, useToast } from '@innogrid/ui';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export const DeletePromptButton = ({ promptId }: { promptId?: number }) => {
+export const DeletePromptButton = ({
+  promptId,
+  redirect,
+}: {
+  promptId?: number;
+  redirect?: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { deletePrompt } = useDeletePrompt();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const handleConfirm = () => {
     if (!promptId) return;
-    deletePrompt(promptId);
+    deletePrompt(promptId, {
+      onSuccess: () => {
+        if (redirect) {
+          navigate(redirect, { replace: true });
+        }
+      },
+      onError: () => {
+        toast.open({
+          status: 'negative',
+          title: '프롬프트 삭제 실패',
+          children: '프롬프트 삭제 중 오류가 발생했습니다.',
+        });
+      },
+    });
   };
 
   return (

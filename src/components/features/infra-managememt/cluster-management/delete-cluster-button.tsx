@@ -1,5 +1,5 @@
 import { AlertDialog, Button } from '@innogrid/ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDeleteCluster } from '@/hooks/service/clusters';
 
 interface DeleteClusterButtonProps {
@@ -16,22 +16,24 @@ export const DeleteClusterButton = ({
 }: DeleteClusterButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  // onDeleteSuccess는 navigate 등 비멱등 콜백일 수 있어 setState 업데이터 밖에서 호출한다.
+  // (StrictMode는 업데이터를 두 번 실행한다)
+  const remainingRef = useRef(0);
 
   const ids: string[] = clusterIds && clusterIds.length > 0 ? clusterIds : clusterId ? [clusterId] : [];
 
   const { deleteCluster } = useDeleteCluster({
     onSuccess: () => {
-      setPendingCount((c) => {
-        const next = c - 1;
-        if (next <= 0) {
-          setIsOpen(false);
-          onDeleteSuccess?.();
-        }
-        return next;
-      });
+      remainingRef.current = Math.max(0, remainingRef.current - 1);
+      setPendingCount(remainingRef.current);
+      if (remainingRef.current === 0) {
+        setIsOpen(false);
+        onDeleteSuccess?.();
+      }
     },
     onError: () => {
-      setPendingCount((c) => Math.max(0, c - 1));
+      remainingRef.current = Math.max(0, remainingRef.current - 1);
+      setPendingCount(remainingRef.current);
     },
   });
 
@@ -39,6 +41,7 @@ export const DeleteClusterButton = ({
 
   const handleClickConfirm = () => {
     if (ids.length === 0) return;
+    remainingRef.current = ids.length;
     setPendingCount(ids.length);
     ids.forEach((id) => deleteCluster(id));
   };

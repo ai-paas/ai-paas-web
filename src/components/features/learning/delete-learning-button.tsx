@@ -1,11 +1,19 @@
 import { useDeleteLearning } from '@/hooks/service/learning';
 import { AlertDialog, Button, useToast } from '@innogrid/ui';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export const DeleteLearningButton = ({ experimentId }: { experimentId?: number }) => {
+export const DeleteLearningButton = ({
+  experimentId,
+  redirect,
+}: {
+  experimentId?: number;
+  redirect?: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { deleteLearning } = useDeleteLearning();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const handleClickConfirm = () => {
     if (!experimentId) return;
@@ -18,6 +26,9 @@ export const DeleteLearningButton = ({ experimentId }: { experimentId?: number }
           children: '학습이 성공적으로 삭제되었습니다.',
         });
         setIsOpen(false);
+        if (redirect) {
+          navigate(redirect, { replace: true });
+        }
       },
       onError: () => {
         toast.open({

@@ -106,7 +106,7 @@ export default function KnowledgeBaseDetailPage() {
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
             <EditKnowledgeBaseButton knowledgeBaseId={Number(id)} />
-            <DeleteKnowledgeBaseButton knowledgeBaseId={Number(id)} />
+            <DeleteKnowledgeBaseButton knowledgeBaseId={Number(id)} redirect="/knowledge-base" />
           </div>
         </div>
       </div>

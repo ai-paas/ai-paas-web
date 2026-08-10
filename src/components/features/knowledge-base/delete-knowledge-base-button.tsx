@@ -1,14 +1,36 @@
 import { useDeleteKnowledgeBase } from '@/hooks/service/knowledgebase';
-import { AlertDialog, Button } from '@innogrid/ui';
+import { AlertDialog, Button, useToast } from '@innogrid/ui';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export const DeleteKnowledgeBaseButton = ({ knowledgeBaseId }: { knowledgeBaseId?: number }) => {
+export const DeleteKnowledgeBaseButton = ({
+  knowledgeBaseId,
+  redirect,
+}: {
+  knowledgeBaseId?: number;
+  redirect?: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const { deleteKnowledgeBase } = useDeleteKnowledgeBase();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const handleClickConfirm = () => {
     if (!knowledgeBaseId) return;
-    deleteKnowledgeBase(knowledgeBaseId);
+    deleteKnowledgeBase(knowledgeBaseId, {
+      onSuccess: () => {
+        if (redirect) {
+          navigate(redirect, { replace: true });
+        }
+      },
+      onError: () => {
+        toast.open({
+          status: 'negative',
+          title: '지식 베이스 삭제 실패',
+          children: '지식 베이스 삭제 중 오류가 발생했습니다.',
+        });
+      },
+    });
   };
 
   return (

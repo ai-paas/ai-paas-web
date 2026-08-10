@@ -37,8 +37,7 @@ const schema = z.object({
   batch_size: z.string().min(1, 'Batch는 필수입니다.'),
   save_period: z.string().min(1, 'Save period는 필수입니다.'),
   gpus: z.string().min(1, 'Gpus는 필수입니다.'),
-  lr0: z.string().min(1, 'Lr0는 필수입니다.'),
-  lrf: z.string().min(1, 'Lrf는 필수입니다.'),
+  learning_rate: z.string().min(1, 'Learning rate는 필수입니다.'),
   weight_decay: z.string().min(1, 'Weight decay는 필수입니다.'),
 });
 
@@ -47,7 +46,7 @@ type FormValues = z.infer<typeof schema>;
 const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
   0: ['train_name', 'description'],
   1: [],
-  2: ['model_id', 'epochs', 'batch_size', 'save_period', 'gpus', 'lr0', 'lrf', 'weight_decay'],
+  2: ['model_id', 'epochs', 'batch_size', 'save_period', 'gpus', 'learning_rate', 'weight_decay'],
   3: [],
 };
 
@@ -78,8 +77,7 @@ export default function LearningCreatePage() {
       batch_size: '32',
       save_period: '1',
       gpus: '1',
-      lr0: '0.01',
-      lrf: '0.05',
+      learning_rate: '0.01',
       weight_decay: '0.0005',
     },
     mode: 'onChange',
@@ -167,8 +165,7 @@ export default function LearningCreatePage() {
         epochs: data.epochs,
         save_period: data.save_period,
         weight_decay: data.weight_decay,
-        lr0: data.lr0,
-        lrf: data.lrf,
+        learning_rate: data.learning_rate,
       });
       toast.open({
         status: 'positive',
@@ -569,26 +566,14 @@ const Step3 = () => {
           </div>
         </div>
         <div className="page-input_item-box">
-          <div className="page-input_item-name">Lr0</div>
+          <div className="page-input_item-name">Learning rate</div>
           <div className="page-input_item-data">
             <Input
               type="number"
               step="0.01"
-              placeholder="Lr0 값을 입력해주세요."
-              errMessage={errors.lr0?.message}
-              {...register('lr0')}
-            />
-          </div>
-        </div>
-        <div className="page-input_item-box">
-          <div className="page-input_item-name">Lrf</div>
-          <div className="page-input_item-data">
-            <Input
-              type="number"
-              step="0.01"
-              placeholder="Lrf 값을 입력해주세요."
-              errMessage={errors.lrf?.message}
-              {...register('lrf')}
+              placeholder="Learning rate 값을 입력해주세요."
+              errMessage={errors.learning_rate?.message}
+              {...register('learning_rate')}
             />
           </div>
         </div>
@@ -690,12 +675,8 @@ const Step4 = ({ uploadedFile }: Step4Props) => {
             <div className="page-accordion_item-data">{values.gpus}개</div>
           </div>
           <div className="page-accordion_item-box">
-            <div className="page-accordion_item-name">Lr0</div>
-            <div className="page-accordion_item-data">{values.lr0}</div>
-          </div>
-          <div className="page-accordion_item-box">
-            <div className="page-accordion_item-name">Lrf</div>
-            <div className="page-accordion_item-data">{values.lrf}</div>
+            <div className="page-accordion_item-name">Learning rate</div>
+            <div className="page-accordion_item-data">{values.learning_rate}</div>
           </div>
           <div className="page-accordion_item-box">
             <div className="page-accordion_item-name">Weight decay</div>
