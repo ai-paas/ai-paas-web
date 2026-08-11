@@ -12,11 +12,28 @@ export default defineConfig((configEnv) =>
         environment: 'jsdom',
         setupFiles: ['./src/test/setup-tests.ts'],
         include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        // date.ts 등 로컬 타임존 의존 유틸의 기대값을 CI/로컬에서 동일하게 고정
+        env: { TZ: 'Asia/Seoul' },
+        clearMocks: true,
+        server: {
+          deps: {
+            // @innogrid/ui가 CSS를 import하므로 vite 파이프라인으로 인라인 처리
+            inline: ['@innogrid/ui'],
+          },
+        },
         coverage: {
           provider: 'v8',
-          reporter: ['text', 'json', 'html'],
+          reporter: ['text', 'json', 'html', 'lcov'],
           include: ['src/**/*.{ts,tsx}'],
           exclude: [...coverageConfigDefaults.exclude, 'src/test/**'],
+          // 래칫 방식: 2026-08-07 실측치(St 1.44/Br 0.63/Fn 1.29/Ln 1.57) 기준 하한.
+          // 커버리지가 오르면 임계값도 함께 올린다 — 내리는 변경은 금지.
+          thresholds: {
+            statements: 1.4,
+            branches: 0.6,
+            functions: 1.2,
+            lines: 1.5,
+          },
         },
       },
     })

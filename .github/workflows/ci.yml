@@ -29,7 +29,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint
         run: pnpm lint
+      # 커버리지 임계값(vitest.config.ts thresholds) 미달 시 여기서 PR이 실패한다
       - name: Test
-        run: pnpm vitest run
+        run: pnpm test:coverage
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
       - name: Build
         run: pnpm run build

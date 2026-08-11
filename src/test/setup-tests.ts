@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
+import { clearAccessToken } from '@/lib/api';
 import { server } from './mocks/server';
 
 // jsdom 환경의 fetch/Request는 Node(undici) 구현이라 브라우저와 달리 상대 URL을
@@ -21,10 +21,39 @@ globalThis.Request = class extends OriginalRequest {
 const originalFetch = globalThis.fetch;
 globalThis.fetch = (input, init) => originalFetch(toAbsoluteUrl(input), init);
 
+// jsdom에 없는 브라우저 API 최소 스텁.
+// @innogrid/ui(차트 모듈이 import 시점에 matchMedia 호출)와 Radix 계열이 요구한다.
+// XyFlow 캔버스용 스텁(DOMMatrixReadOnly, getBBox 등)은 무겁고 영향 범위가 넓어
+// 전역이 아닌 src/test/utils/xyflow-stubs.ts opt-in 헬퍼로 제공한다.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string): MediaQueryList =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }) as unknown as MediaQueryList;
+}
+
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // MSW 서버 설정 (위 패치 이후에 listen해야 인터셉터가 패치된 fetch를 감싼다)
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+// RTL cleanup은 vitest globals(afterEach) 감지로 자동 수행되므로 수동 호출 불필요
 afterEach(() => {
-  cleanup();
   server.resetHandlers();
+  // src/lib/api.ts의 모듈 스코프 토큰이 테스트 간 누출되지 않도록 리셋
+  // (첫 테스트에서 캐시된 토큰이 이후 테스트의 refresh 경로를 건너뛰게 만드는 순서 의존 제거)
+  clearAccessToken();
 });
 afterAll(() => server.close());

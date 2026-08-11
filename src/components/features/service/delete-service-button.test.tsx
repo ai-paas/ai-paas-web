@@ -39,7 +39,7 @@ describe('DeleteServiceButton', () => {
     it('serviceId가 있으면 버튼이 활성화된다', () => {
       render(<DeleteServiceButton serviceId="srv-001" />);
 
-      expect(screen.getByRole('button', { name: '삭제' })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: '삭제' })).toBeEnabled();
     });
   });
 

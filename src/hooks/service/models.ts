@@ -196,20 +196,24 @@ export const useCreateModel = () => {
 };
 
 export const useGetHubModels = (params: GetHubModelsParams) => {
-  // 다중 필터(library/language/apps/inference_provider/other)는 키를 반복해 전달
-  // (FastAPI array<string> 규약). 빈 값/빈 배열은 제외.
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === '' || value === null || value === undefined) return;
-    if (Array.isArray(value)) {
-      value.forEach((item) => searchParams.append(key, String(item)));
-    } else {
-      searchParams.append(key, String(value));
-    }
-  });
   const { data, isPending, isFetching, isError } = useQuery({
     queryKey: queryKeys.hubModels.list(params),
-    queryFn: () => api.get<HubModelsResponse>('hub-connect/models', { searchParams }).json(),
+    // searchParams는 params에서만 파생 — queryFn 내부에서 만들어 쿼리키(params)와의
+    // 정합성을 lint(@tanstack/query/exhaustive-deps)가 보증할 수 있게 한다.
+    queryFn: () => {
+      // 다중 필터(library/language/apps/inference_provider/other)는 키를 반복해 전달
+      // (FastAPI array<string> 규약). 빈 값/빈 배열은 제외.
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === '' || value === null || value === undefined) return;
+        if (Array.isArray(value)) {
+          value.forEach((item) => searchParams.append(key, String(item)));
+        } else {
+          searchParams.append(key, String(value));
+        }
+      });
+      return api.get<HubModelsResponse>('hub-connect/models', { searchParams }).json();
+    },
     placeholderData: keepPreviousData,
   });
 
@@ -255,15 +259,18 @@ export const useGetImprovementTaskTypes = (
   params: GetImprovementTaskTypesParams = {},
   { enabled = true }: { enabled?: boolean } = {}
 ) => {
-  const searchParams = new URLSearchParams(
-    Object.entries(params)
-      .filter(([, value]) => value !== '' && value !== null && value !== undefined)
-      .map(([key, value]) => [key, String(value)])
-  );
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.modelImprovements.taskTypes(params),
-    queryFn: () =>
-      api.get<ModelImprovementTaskType[]>('model-improvements/task-types', { searchParams }).json(),
+    queryFn: () => {
+      const searchParams = new URLSearchParams(
+        Object.entries(params)
+          .filter(([, value]) => value !== '' && value !== null && value !== undefined)
+          .map(([key, value]) => [key, String(value)])
+      );
+      return api
+        .get<ModelImprovementTaskType[]>('model-improvements/task-types', { searchParams })
+        .json();
+    },
     enabled,
   });
 

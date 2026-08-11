@@ -1,5 +1,5 @@
 import { Suspense, lazy, type ComponentType } from 'react';
-import { Navigate, createBrowserRouter } from 'react-router';
+import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import DefaultLayout from '@/pages/layout';
 
 const LoginPage = lazy(() => import('@/pages/login/page'));
@@ -115,7 +115,9 @@ const page = (Component: ComponentType) => (
   </Suspense>
 );
 
-export const router = createBrowserRouter([
+// 라우트 정의를 분리 export — 테스트에서 createMemoryRouter(routes, { initialEntries })로
+// 라우팅/인증 가드 통합 테스트를 작성할 수 있게 한다.
+export const routes: RouteObject[] = [
   {
     path: '/login',
     element: page(LoginPage),
@@ -407,4 +409,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);

@@ -25,7 +25,7 @@ describe('EditServiceButton', () => {
     it('serviceId가 있으면 버튼이 활성화된다', () => {
       render(<EditServiceButton serviceId="srv-001" />);
 
-      expect(screen.getByRole('button', { name: '편집' })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: '편집' })).toBeEnabled();
     });
   });
 

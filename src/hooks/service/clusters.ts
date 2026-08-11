@@ -262,10 +262,7 @@ function extractItems(raw: unknown): Array<Record<string, unknown>> {
   return findItemsArray(raw, 0) ?? [];
 }
 
-function findItemsArray(
-  node: unknown,
-  depth: number,
-): Array<Record<string, unknown>> | null {
+function findItemsArray(node: unknown, depth: number): Array<Record<string, unknown>> | null {
   if (depth > 4) return null;
   if (Array.isArray(node)) return node as Array<Record<string, unknown>>;
   if (!node || typeof node !== 'object') return null;
@@ -379,7 +376,7 @@ export const useGetPodLogs = (
   if (options?.tailLines !== undefined) searchParams.tailLines = String(options.tailLines);
   if (options?.container) searchParams.container = options.container;
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['pod-logs', clusterName, namespace, podName, options],
+    queryKey: ['pod-logs', clusterName, namespace, podName, options, searchParams],
     queryFn: async () => {
       const response = await api
         .get(`any-cloud/kubernetes/pods/${podName}/logs`, { searchParams })
@@ -435,7 +432,10 @@ export interface KubeconfigDownloadOptions {
   ttlSeconds?: number;
 }
 
-export const downloadClusterKubeconfig = (clusterName: string, options?: KubeconfigDownloadOptions) => {
+export const downloadClusterKubeconfig = (
+  clusterName: string,
+  options?: KubeconfigDownloadOptions
+) => {
   const params = new URLSearchParams();
   if (options?.serviceAccount) params.set('serviceAccount', options.serviceAccount);
   if (options?.namespace) params.set('namespace', options.namespace);
@@ -602,9 +602,7 @@ export const useUpdateCluster = (options?: {
   const { mutate, isPending, isError, isSuccess, error } = useMutation({
     mutationKey: ['updateCluster'],
     mutationFn: ({ clusterName, spec }: UpdateClusterRequest) => {
-      return api
-        .put(`any-cloud/system/cluster/${clusterName}`, { json: { spec } })
-        .json<Cluster>();
+      return api.put(`any-cloud/system/cluster/${clusterName}`, { json: { spec } }).json<Cluster>();
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['clusters'] });
