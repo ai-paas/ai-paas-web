@@ -71,7 +71,9 @@ export const WorkloadLogsViewer = ({
     }),
   });
 
-  const merged = useMemo(() => {
+  // useQueries 결과는 렌더마다 새 참조라 useMemo 의존성으로 캐시가 되지 않는다
+  // (@tanstack/query/no-unstable-deps) — 매 렌더 직접 계산 (pods 수가 적어 비용 무시 가능).
+  const merged = (() => {
     const parts: string[] = [];
     for (let i = 0; i < pods.length; i += 1) {
       const podName = pods[i]?.metadata?.name ?? `pod-${i}`;
@@ -94,7 +96,7 @@ export const WorkloadLogsViewer = ({
       parts.push(lines.map((line) => `[${podName}] ${line}`).join('\n') + '\n');
     }
     return parts.join('');
-  }, [pods, logQueries]);
+  })();
 
   const isAnyFetching = logQueries.some((q) => q.isFetching);
   const isAnyError = logQueries.some((q) => q.isError);

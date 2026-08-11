@@ -28,7 +28,7 @@ type CatalogQueryResult = {
   meta?: CatalogListMeta;
 };
 
-const normalizeCatalogResponse = (response: CatalogResponse): CatalogQueryResult => {
+export const normalizeCatalogResponse = (response: CatalogResponse): CatalogQueryResult => {
   const result: CatalogQueryResult = { charts: [] };
 
   if (Array.isArray(response)) {
@@ -145,7 +145,7 @@ type DocumentFieldExtractorOptions = {
   priorityFields: string[];
 };
 
-const normalizeDocumentResponse = (
+export const normalizeDocumentResponse = (
   response: CatalogDocumentResponse,
   options: DocumentFieldExtractorOptions,
   inheritedVersion?: string
@@ -268,13 +268,13 @@ const normalizeDocumentResponse = (
   return { version: inheritedVersion, content: '' };
 };
 
-const normalizeReadmeResponse = (response: CatalogReadmeResponse): CatalogReadmeData => {
+export const normalizeReadmeResponse = (response: CatalogReadmeResponse): CatalogReadmeData => {
   return normalizeDocumentResponse(response, {
     priorityFields: ['readmeContent', 'readme', 'markdown'],
   });
 };
 
-const normalizeValuesResponse = (response: CatalogValuesResponse): CatalogValuesData => {
+export const normalizeValuesResponse = (response: CatalogValuesResponse): CatalogValuesData => {
   return normalizeDocumentResponse(response, {
     priorityFields: ['valuesContent', 'values', 'yaml'],
   });
