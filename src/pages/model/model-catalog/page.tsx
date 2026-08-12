@@ -82,6 +82,9 @@ export default function ModelCatalogPage() {
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
   const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
+  
+  // 모델 카탈로그 생성, 삭제는 써로마인드에서 직접 실행. 기존에 만들어두었던 버튼 비활성화. 추후 필요시 true로 변경하여 활성화 가능
+  const ControlCreatModelButton = false;
 
   const sort = useMemo(
     () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
@@ -120,7 +123,7 @@ export default function ModelCatalogPage() {
       <div className="page-content">
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
-            {isAdmin && (
+            {ControlCreatModelButton && isAdmin && (
               <>
                 <CreateModelCatalogButton />
                 <DeleteModelCatalogButton modelCatalogId={selectedId} />
