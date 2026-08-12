@@ -1,6 +1,8 @@
 import { clearAccessToken, getAccessToken, getOrCreateRefreshPromise } from '@/lib/api';
+import { useLogout } from '@/hooks/service/authentication';
 import { parseJwt } from '@/util/jwt';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 interface AuthContext {
   accessToken: string | null;
@@ -8,7 +10,7 @@ interface AuthContext {
   isAdmin: boolean;
   isLoading: boolean;
   setAccessToken: (token: string | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContext | null>(null);
@@ -16,15 +18,25 @@ const AuthContext = createContext<AuthContext | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [accessToken, setAccessToken] = useState(getAccessToken());
   const [isLoading, setIsLoading] = useState(!accessToken);
+  const queryClient = useQueryClient();
+  const { mutateAsync: requestLogout } = useLogout();
 
   const isAdmin = useMemo(() => {
     return accessToken ? parseJwt(accessToken)?.role === 'admin' : false;
   }, [accessToken]);
 
-  const logout = () => {
+  const logout = useCallback(async () => {
+    // 서버의 리프레시 토큰을 먼저 무효화하고(Authorization 헤더에 토큰 필요),
+    // 응답과 무관하게 로컬 토큰·캐시를 정리한다 — 요청이 실패해도 클라이언트는 로그아웃된다.
+    try {
+      await requestLogout();
+    } catch {
+      // 서버 무효화 실패는 무시
+    }
     clearAccessToken();
     setAccessToken(null);
-  };
+    queryClient.clear();
+  }, [requestLogout, queryClient]);
 
   useEffect(() => {
     const init = async () => {
@@ -51,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAccessToken,
       logout,
     }),
-    [accessToken, isAdmin, isLoading]
+    [accessToken, isAdmin, isLoading, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
