@@ -134,7 +134,7 @@ export default function ModelCatalogPage() {
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
           </div>
         </div>
-        <div>
+        <div className="h-120.25">
           <Table
             columns={columns}
             data={modelCatalogs}

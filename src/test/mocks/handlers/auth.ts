@@ -7,4 +7,9 @@ export const authHandlers = [
   http.post(`${BASE_URL}/auth/refresh`, () => {
     return HttpResponse.json({ access_token: 'test-access-token' });
   }),
+
+  // POST /auth/logout - 리프레시 토큰 무효화 (로그아웃)
+  http.post(`${BASE_URL}/auth/logout`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
