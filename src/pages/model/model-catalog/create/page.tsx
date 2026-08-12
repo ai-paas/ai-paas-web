@@ -32,6 +32,26 @@ const INITIAL_MODEL_CATALOG: ModelCatalog = {
   format_id: null,
 };
 
+// 공급자 이름은 백엔드 데이터라 표기(대소문자·공백·하이픈)가 흔들릴 수 있어 정규화 후 매칭한다.
+const normalize = (value: string) => value.toLowerCase().replace(/[\s-]/g, '');
+
+// 공급자에 따라 모델 ID 입력 규칙이 다르다 — custom 공급자만 임의 입력,
+// 허브 공급자는 해당 허브에 등록된 ID를 그대로 입력해야 한다.
+export const getRepoIdDescription = (provider: ModelProvider | undefined): string => {
+  if (!provider) return '모델 공급자를 먼저 선택해주세요.';
+  const name = normalize(provider.name);
+  if (name.includes('custom')) {
+    return '모델 저장소(Repository)의 고유 ID를 임의로 입력해주세요.';
+  }
+  if (name.includes('huggingface')) {
+    return 'Hugging Face에 등록된 모델 ID를 정확히 입력해주세요. (예: meta-llama/Llama-3-8B)';
+  }
+  if (name.includes('kaggle')) {
+    return 'Kaggle에 등록된 모델 ID를 정확히 입력해주세요. (예: google/gemma/PyTorch/7b)';
+  }
+  return `${provider.name}에 등록된 모델 ID를 정확히 입력해주세요.`;
+};
+
 export default function ModelCatalogCreatePage() {
   const { modelProviders } = useGetModelProviders();
   const { modelTypes } = useGetModelTypes();
@@ -39,6 +59,9 @@ export default function ModelCatalogCreatePage() {
   const [modelCatalog, setModelCatalog] = useState<ModelCatalog>(INITIAL_MODEL_CATALOG);
   const { createModel, isPending } = useCreateModel();
   const navigate = useNavigate();
+  const selectedProvider = modelProviders.find(
+    (provider) => provider.id === modelCatalog.provider_id
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setModelCatalog({
@@ -114,30 +137,13 @@ export default function ModelCatalogCreatePage() {
             </div>
           </div>
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">모델 ID</div>
-            <div className="page-input_item-data">
-              <Input
-                name="repo_id"
-                placeholder="모델 ID를 입력해주세요."
-                value={modelCatalog.repo_id ?? ''}
-                onChange={handleChange}
-              />
-              <p className="page-input_item-input-desc">
-                모델 저장소(Repository)의 고유 ID를 입력해주세요.
-              </p>
-            </div>
-          </div>
-          <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">모델 공급자 ID</div>
             <div className="page-input_item-data">
               <Select
                 options={modelProviders}
                 getOptionLabel={(option: ModelProvider) => option.name}
                 getOptionValue={(option: ModelProvider) => String(option.id)}
-                value={
-                  modelProviders.find((provider) => provider.id === modelCatalog.provider_id) ??
-                  null
-                }
+                value={selectedProvider ?? null}
                 onChange={(option: ModelProvider | null) =>
                   setModelCatalog((prev) => ({
                     ...prev,
@@ -146,6 +152,18 @@ export default function ModelCatalogCreatePage() {
                 }
               />
               <p className="page-input_item-input-desc">모델을 제공하는 공급자를 선택해주세요.</p>
+            </div>
+          </div>
+          <div className="page-input_item-box">
+            <div className="page-input_item-name page-icon-requisite">모델 ID</div>
+            <div className="page-input_item-data">
+              <Input
+                name="repo_id"
+                placeholder="모델 ID를 입력해주세요."
+                value={modelCatalog.repo_id ?? ''}
+                onChange={handleChange}
+              />
+              <p className="page-input_item-input-desc">{getRepoIdDescription(selectedProvider)}</p>
             </div>
           </div>
           <div className="page-input_item-box">
