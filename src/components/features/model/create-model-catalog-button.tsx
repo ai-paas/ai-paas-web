@@ -5,7 +5,7 @@ export const CreateModelCatalogButton = () => {
   const navigate = useNavigate();
 
   return (
-    <Button onClick={() => navigate('/model/model-catalog/create')} size="medium" color="primary">
+    <Button onClick={() => navigate('/model/model-catalog/create')} size="medium" color="primary" disabled>
       생성
     </Button>
   );

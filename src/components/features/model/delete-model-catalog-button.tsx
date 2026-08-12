@@ -17,7 +17,8 @@ export const DeleteModelCatalogButton = ({ modelCatalogId }: { modelCatalogId: n
         onClick={() => setIsOpen(true)}
         size="medium"
         color="negative"
-        disabled={!modelCatalogId}
+        // disabled={!modelCatalogId}
+        disabled
       >
         삭제
       </Button>
