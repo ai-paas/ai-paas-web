@@ -82,6 +82,7 @@ export default function ModelCatalogPage() {
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
   const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
+  
 
   const sort = useMemo(
     () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
