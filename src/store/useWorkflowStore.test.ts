@@ -33,6 +33,7 @@ describe('useWorkflowStore', () => {
       expect(state.selectedNodeId).toBeNull();
       expect(state.isDragging).toBe(false);
       expect(state.pendingNodeType).toBeNull();
+      expect(state.clipboard).toBeNull();
     });
   });
 
@@ -72,8 +73,8 @@ describe('useWorkflowStore', () => {
       expect(state.edges).toEqual(edges);
     });
 
-    it('히스토리·선택·드래그·pendingNodeType을 전부 리셋한다', () => {
-      // 오염 상태 구성: 히스토리 push + 선택 + 드래그 중 + pending 타입
+    it('히스토리·선택·드래그·pendingNodeType·클립보드를 전부 리셋한다', () => {
+      // 오염 상태 구성: 히스토리 push + 선택 + 드래그 중 + pending 타입 + 클립보드
       useWorkflowStore.getState().setInitialData([makeNode('a')], []);
       useWorkflowStore.getState().onNodesChange([{ type: 'add', item: makeNode('b') }]);
       useWorkflowStore.getState().selectNode('a');
@@ -81,8 +82,10 @@ describe('useWorkflowStore', () => {
         .getState()
         .onNodesChange([{ id: 'a', type: 'position', position: { x: 1, y: 1 }, dragging: true }]);
       useWorkflowStore.getState().setPendingNodeType('START');
+      useWorkflowStore.getState().copyNode('a');
       expect(useWorkflowStore.getState().past.length).toBeGreaterThan(0);
       expect(useWorkflowStore.getState().isDragging).toBe(true);
+      expect(useWorkflowStore.getState().clipboard).not.toBeNull();
 
       useWorkflowStore.getState().setInitialData([makeNode('c')], []);
 
@@ -92,6 +95,7 @@ describe('useWorkflowStore', () => {
       expect(state.selectedNodeId).toBeNull();
       expect(state.isDragging).toBe(false);
       expect(state.pendingNodeType).toBeNull();
+      expect(state.clipboard).toBeNull();
     });
 
     it('name은 리셋하지 않고 유지한다 (특성화)', () => {
@@ -355,6 +359,177 @@ describe('useWorkflowStore', () => {
       useWorkflowStore.getState().selectNode('a');
 
       expect(useWorkflowStore.getState().past).toEqual([]);
+    });
+  });
+
+  // ============================================
+  // copyNode / pasteClipboard
+  // ============================================
+  describe('copyNode / pasteClipboard', () => {
+    it('copyNode는 대상 노드 참조를 클립보드에 보관하고 스냅샷을 남기지 않는다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a'), makeNode('b')], []);
+
+      useWorkflowStore.getState().copyNode('a');
+
+      const state = useWorkflowStore.getState();
+      // 노드는 불변 갱신되므로 참조 보관만으로 복사 시점 상태가 고정된다
+      expect(state.clipboard).toBe(state.nodes[0]);
+      expect(state.past).toEqual([]);
+    });
+
+    it('존재하지 않는 nodeId를 copyNode하면 클립보드를 건드리지 않는다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a')], []);
+      useWorkflowStore.getState().copyNode('a');
+
+      useWorkflowStore.getState().copyNode('없는-id');
+
+      expect(useWorkflowStore.getState().clipboard?.id).toBe('a');
+    });
+
+    it('빈 클립보드에서 pasteClipboard는 no-op이다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a')], []);
+
+      useWorkflowStore.getState().pasteClipboard();
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toHaveLength(1);
+      expect(state.past).toEqual([]);
+    });
+
+    it('붙여넣기는 새 id·+40 오프셋·깊은 복사 데이터로 노드를 추가하고 그 노드만 선택한다', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData([makeNode('a', { position: { x: 10, y: 20 } })], []);
+      useWorkflowStore.getState().selectNode('a');
+      useWorkflowStore.getState().copyNode('a');
+
+      useWorkflowStore.getState().pasteClipboard();
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toHaveLength(2);
+      const [original, pasted] = state.nodes;
+      expect(pasted.id).not.toBe('a');
+      expect(pasted.position).toEqual({ x: 50, y: 60 });
+      expect(pasted.data).toEqual(original.data);
+      expect(pasted.data).not.toBe(original.data); // 깊은 복사 — 원본 data와 참조 분리
+      expect(pasted.selected).toBe(true);
+      expect(original.selected).toBe(false);
+      expect(state.selectedNodeId).toBe(pasted.id);
+      expect(state.past).toHaveLength(1);
+    });
+
+    it('연속 붙여넣기는 직전 붙여넣은 위치에서 다시 40씩 계단식으로 배치된다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a', { position: { x: 0, y: 0 } })], []);
+      useWorkflowStore.getState().copyNode('a');
+
+      useWorkflowStore.getState().pasteClipboard();
+      useWorkflowStore.getState().pasteClipboard();
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toHaveLength(3);
+      expect(state.nodes[1].position).toEqual({ x: 40, y: 40 });
+      expect(state.nodes[2].position).toEqual({ x: 80, y: 80 });
+      expect(state.nodes[1].id).not.toBe(state.nodes[2].id);
+    });
+  });
+
+  // ============================================
+  // duplicateNode
+  // ============================================
+  describe('duplicateNode', () => {
+    it('원본 옆 +40 오프셋에 복제본을 추가하고 복제본만 선택한다', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData([makeNode('a', { position: { x: 5, y: 5 } })], []);
+      useWorkflowStore.getState().selectNode('a');
+
+      useWorkflowStore.getState().duplicateNode('a');
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toHaveLength(2);
+      const [original, clone] = state.nodes;
+      expect(clone.id).not.toBe('a');
+      expect(clone.position).toEqual({ x: 45, y: 45 });
+      expect(clone.data).toEqual(original.data);
+      expect(clone.data).not.toBe(original.data);
+      expect(clone.selected).toBe(true);
+      expect(original.selected).toBe(false);
+      expect(state.selectedNodeId).toBe(clone.id);
+      expect(state.past).toHaveLength(1);
+    });
+
+    it('존재하지 않는 nodeId면 no-op이다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a')], []);
+
+      useWorkflowStore.getState().duplicateNode('없는-id');
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toHaveLength(1);
+      expect(state.past).toEqual([]);
+    });
+  });
+
+  // ============================================
+  // deleteNode
+  // ============================================
+  describe('deleteNode', () => {
+    it('노드와 연결된 엣지를 한 번의 스냅샷으로 함께 제거한다', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData(
+          [makeNode('a'), makeNode('b'), makeNode('c')],
+          [makeEdge('e1', 'a', 'b'), makeEdge('e2', 'b', 'c'), makeEdge('e3', 'a', 'c')]
+        );
+
+      useWorkflowStore.getState().deleteNode('b');
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes.map((n) => n.id)).toEqual(['a', 'c']);
+      // source/target 어느 쪽이든 b에 닿은 엣지는 제거, 무관한 엣지는 유지
+      expect(state.edges.map((e) => e.id)).toEqual(['e3']);
+      expect(state.past).toHaveLength(1);
+    });
+
+    it('undo 한 번으로 노드와 엣지가 함께 복원된다', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData([makeNode('a'), makeNode('b')], [makeEdge('e1', 'a', 'b')]);
+
+      useWorkflowStore.getState().deleteNode('a');
+      useWorkflowStore.getState().undo();
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes.map((n) => n.id)).toEqual(['a', 'b']);
+      expect(state.edges.map((e) => e.id)).toEqual(['e1']);
+    });
+
+    it('선택된 노드를 삭제하면 선택이 해제된다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a'), makeNode('b')], []);
+      useWorkflowStore.getState().selectNode('a');
+
+      useWorkflowStore.getState().deleteNode('a');
+
+      expect(useWorkflowStore.getState().selectedNodeId).toBeNull();
+    });
+
+    it('다른 노드가 선택된 상태의 삭제는 선택을 유지한다', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a'), makeNode('b')], []);
+      useWorkflowStore.getState().selectNode('a');
+
+      useWorkflowStore.getState().deleteNode('b');
+
+      expect(useWorkflowStore.getState().selectedNodeId).toBe('a');
+    });
+
+    it('존재하지 않는 nodeId면 no-op이다 (스냅샷 없음)', () => {
+      useWorkflowStore.getState().setInitialData([makeNode('a')], []);
+      const nodesBefore = useWorkflowStore.getState().nodes;
+
+      useWorkflowStore.getState().deleteNode('없는-id');
+
+      const state = useWorkflowStore.getState();
+      expect(state.nodes).toBe(nodesBefore);
+      expect(state.past).toEqual([]);
     });
   });
 

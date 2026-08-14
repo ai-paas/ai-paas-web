@@ -60,3 +60,8 @@
   border-radius: 1px;
   background-image: none;
 }
+
+/* 읽기 전용 캔버스에서는 노드 액션 메뉴(복사/복제/삭제)도 숨긴다. */
+.workflow-canvas--readonly .workflow-node-action-menu {
+  display: none;
+}

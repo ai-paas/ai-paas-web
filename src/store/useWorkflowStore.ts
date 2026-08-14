@@ -9,6 +9,8 @@ import {
   type Node,
   type NodeChange,
 } from '@xyflow/react';
+// workflow-node-defaults는 이 파일에서 타입만 import하므로 런타임 순환 없음
+import { createNodeId } from '@/components/features/workflow/workflow-editor/workflow-node-defaults';
 import type { WorkflowComponentType } from '@/types/workflow';
 
 interface BaseNodeData {
@@ -78,6 +80,7 @@ interface WorkflowState {
   future: HistorySnapshot[];
   isDragging: boolean;
   pendingNodeType: WorkflowComponentType | null;
+  clipboard: WorkflowNode | null;
   setName: (name: string) => void;
   setPendingNodeType: (type: WorkflowComponentType | null) => void;
   setInitialData: (nodes: WorkflowNode[], edges: Edge[]) => void;
@@ -86,6 +89,10 @@ interface WorkflowState {
   onConnect: (connection: Edge | Connection) => void;
   updateNodeData: (nodeId: string, newData: Partial<NodeData>) => void;
   selectNode: (nodeId: string | null) => void;
+  copyNode: (nodeId: string) => void;
+  pasteClipboard: () => void;
+  duplicateNode: (nodeId: string) => void;
+  deleteNode: (nodeId: string) => void;
   takeSnapshot: () => void;
   undo: () => void;
   redo: () => void;
@@ -98,6 +105,30 @@ const pushHistory = (
   future: [],
 });
 
+/** 복제·붙여넣기 시 원본과 겹치지 않도록 비껴 배치하는 간격 */
+const CLONE_OFFSET = 40;
+
+const cloneNode = (node: WorkflowNode): WorkflowNode => ({
+  ...node,
+  id: createNodeId(),
+  position: { x: node.position.x + CLONE_OFFSET, y: node.position.y + CLONE_OFFSET },
+  data: structuredClone(node.data),
+  selected: false,
+});
+
+/** 새 노드를 추가하면서 그 노드만 선택 상태로 만들고 스냅샷을 남긴다. */
+const withInsertedNode = (
+  state: Pick<WorkflowState, 'past' | 'nodes' | 'edges'>,
+  node: WorkflowNode
+) => ({
+  nodes: [
+    ...state.nodes.map((n) => (n.selected ? { ...n, selected: false } : n)),
+    { ...node, selected: true },
+  ],
+  selectedNodeId: node.id,
+  ...pushHistory(state),
+});
+
 export const useWorkflowStore = create<WorkflowState>((set) => ({
   name: '',
   nodes: [],
@@ -107,6 +138,7 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
   future: [],
   isDragging: false,
   pendingNodeType: null,
+  clipboard: null,
   setName: (name: string) => set({ name: name }),
   setPendingNodeType: (type: WorkflowComponentType | null) => set({ pendingNodeType: type }),
   setInitialData: (nodes: WorkflowNode[], edges: Edge[]) =>
@@ -118,6 +150,7 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
       future: [],
       isDragging: false,
       pendingNodeType: null,
+      clipboard: null,
     }),
   onNodesChange: (changes: NodeChange<WorkflowNode>[]) =>
     set((state) => {
@@ -166,6 +199,34 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
       selectedNodeId: nodeId,
       nodes: state.nodes.map((node) => ({ ...node, selected: node.id === nodeId })),
     })),
+  // 노드는 불변 갱신되므로 참조 보관만으로 복사 시점 상태가 고정된다
+  copyNode: (nodeId: string) =>
+    set((state) => {
+      const node = state.nodes.find((n) => n.id === nodeId);
+      return node ? { clipboard: node } : {};
+    }),
+  pasteClipboard: () =>
+    set((state) => {
+      if (!state.clipboard) return {};
+      const pasted = cloneNode(state.clipboard);
+      // 붙여넣은 노드를 클립보드로 승격해 연속 붙여넣기가 계단식으로 배치되게 한다
+      return { ...withInsertedNode(state, pasted), clipboard: pasted };
+    }),
+  duplicateNode: (nodeId: string) =>
+    set((state) => {
+      const node = state.nodes.find((n) => n.id === nodeId);
+      return node ? withInsertedNode(state, cloneNode(node)) : {};
+    }),
+  deleteNode: (nodeId: string) =>
+    set((state) => {
+      if (!state.nodes.some((n) => n.id === nodeId)) return {};
+      return {
+        nodes: state.nodes.filter((n) => n.id !== nodeId),
+        edges: state.edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
+        selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
+        ...pushHistory(state),
+      };
+    }),
   takeSnapshot: () => set((state) => pushHistory(state)),
   undo: () =>
     set((state) => {

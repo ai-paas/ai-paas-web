@@ -83,6 +83,35 @@ vi.mock('@innogrid/ui', async () => {
 
     Textarea,
 
+    // 트리거와 메뉴 아이템을 항상 렌더링하는 경량 목 — open/onOpenChange 상태 로직은 생략
+    DropdownMenu: ({
+      children,
+      menus,
+    }: {
+      children: React.ReactNode;
+      menus: {
+        label: React.ReactNode;
+        onSelect?: (event: Event) => void;
+        disabled?: boolean;
+      }[];
+    }) => (
+      <div>
+        {children}
+        <div role="menu">
+          {menus.map((menu, i) => (
+            <button
+              key={i}
+              role="menuitem"
+              disabled={menu.disabled}
+              onClick={() => menu.onSelect?.(new Event('select'))}
+            >
+              {menu.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    ),
+
     AlertDialog: ({
       isOpen,
       children,

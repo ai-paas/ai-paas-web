@@ -8,12 +8,14 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './flow-chart.css';
+import { useToast } from '@innogrid/ui';
 import { memo, useEffect, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import {
   WorkflowCanvasControls,
   type PaneMode,
 } from '@/components/features/workflow/workflow-editor/workflow-canvas-controls';
+import { WorkflowNodeActionMenu } from '@/components/features/workflow/workflow-editor/workflow-node-action-menu';
 import { WorkflowNodeCard } from '@/components/features/workflow/workflow-editor/workflow-node-card';
 import {
   createNodeId,
@@ -54,9 +56,10 @@ const StartNodeContent = ({ data }: { data: WorkflowNode['data'] }) => {
   );
 };
 
-const StartNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
+const StartNode = memo(({ id, data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
-    <div>
+    <div className="group relative">
+      <WorkflowNodeActionMenu nodeId={id} selected={selected} />
       <div
         className={`flex rounded-2xl border-[2px] ${selected ? 'border-blue-500' : 'border-transparent'}`}
       >
@@ -102,9 +105,10 @@ const ModelNodeContent = ({ data }: { data: WorkflowNode['data'] }) => {
   );
 };
 
-const ModelNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
+const ModelNode = memo(({ id, data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
-    <div>
+    <div className="group relative">
+      <WorkflowNodeActionMenu nodeId={id} selected={selected} />
       <Handle
         type="target"
         position={Position.Left}
@@ -152,9 +156,10 @@ const KnowledgebaseNodeContent = ({ data }: { data: WorkflowNode['data'] }) => {
   );
 };
 
-const KnowledgebaseNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
+const KnowledgebaseNode = memo(({ id, data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
-    <div>
+    <div className="group relative">
+      <WorkflowNodeActionMenu nodeId={id} selected={selected} />
       <Handle
         type="target"
         position={Position.Left}
@@ -178,9 +183,10 @@ const KnowledgebaseNode = memo(({ data, isConnectable, selected }: NodeProps<Wor
   );
 });
 
-const EndNode = memo(({ data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
+const EndNode = memo(({ id, data, isConnectable, selected }: NodeProps<WorkflowNode>) => {
   return (
-    <div>
+    <div className="group relative">
+      <WorkflowNodeActionMenu nodeId={id} selected={selected} />
       <Handle
         type="target"
         position={Position.Left}
@@ -204,10 +210,11 @@ const NoteNode = memo(({ id, data, selected }: NodeProps<WorkflowNode>) => {
   return (
     <div
       onDoubleClick={() => setEditing(true)}
-      className={`min-h-30 w-45 rounded-md border bg-amber-50 shadow-xs transition-shadow hover:shadow-md ${
+      className={`group relative min-h-30 w-45 rounded-md border bg-amber-50 shadow-xs transition-shadow hover:shadow-md ${
         selected ? 'border-amber-400' : 'border-amber-200'
       }`}
     >
+      <WorkflowNodeActionMenu nodeId={id} selected={selected} />
       {editing ? (
         <textarea
           autoFocus
@@ -251,10 +258,49 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
   const setPendingNodeType = useWorkflowStore((s) => s.setPendingNodeType);
   const { screenToFlowPosition, addNodes } = useReactFlow();
   const [paneMode, setPaneMode] = useState<PaneMode>('hand');
+  const toast = useToast();
 
   useEffect(() => {
     setInitialData(initialNodes, initialEdges);
   }, [initialEdges, initialNodes, setInitialData]);
+
+  // 노드 복사(Ctrl+C)·복제(Ctrl+D)·붙여넣기(Ctrl+V) 단축키.
+  // 삭제(Backspace·Del)는 ReactFlow deleteKeyCode가 처리한다.
+  useEffect(() => {
+    if (readOnly) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (key !== 'c' && key !== 'd' && key !== 'v') return;
+      // 이름 입력·설정 패널·메모 편집 중에는 브라우저 기본 동작(텍스트 복사/붙여넣기)으로 둔다
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+
+      const { selectedNodeId, copyNode, duplicateNode, pasteClipboard } =
+        useWorkflowStore.getState();
+
+      if (key === 'v') {
+        pasteClipboard();
+        return;
+      }
+      if (!selectedNodeId) return;
+      if (key === 'c') {
+        copyNode(selectedNodeId);
+        toast.open({
+          status: 'positive',
+          title: '노드 복사됨',
+          children: 'Ctrl+V로 캔버스에 붙여넣을 수 있습니다.',
+        });
+      } else {
+        e.preventDefault(); // Ctrl+D의 브라우저 북마크 기본 동작 차단
+        duplicateNode(selectedNodeId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readOnly, toast]);
 
   const isHandMode = paneMode === 'hand';
 
@@ -292,6 +338,8 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
         connectionRadius={40}
         minZoom={0.2}
         maxZoom={2}
+        // 읽기 전용 캔버스에서 Backspace로 노드가 지워지던 기본 동작도 함께 차단한다
+        deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
         panOnDrag={readOnly || (isHandMode && !pendingNodeType)}
         selectionOnDrag={!readOnly && !isHandMode && !pendingNodeType}
         nodesDraggable={!readOnly}

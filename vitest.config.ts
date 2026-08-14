@@ -26,13 +26,13 @@ export default defineConfig((configEnv) =>
           reporter: ['text', 'json', 'html', 'lcov'],
           include: ['src/**/*.{ts,tsx}'],
           exclude: [...coverageConfigDefaults.exclude, 'src/test/**'],
-          // 래칫 방식: 2026-08-12 실측치(St 7.30/Br 5.88/Fn 5.90/Ln 7.45) 기준 하한.
+          // 래칫 방식: 2026-08-13 실측치(St 7.73/Br 6.09/Fn 6.60/Ln 7.83) 기준 하한.
           // 커버리지가 오르면 임계값도 함께 올린다 — 내리는 변경은 금지.
           thresholds: {
-            statements: 7.3,
-            branches: 5.8,
-            functions: 5.9,
-            lines: 7.4,
+            statements: 7.7,
+            branches: 6.0,
+            functions: 6.5,
+            lines: 7.8,
           },
         },
       },
