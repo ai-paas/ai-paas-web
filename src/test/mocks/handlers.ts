@@ -3,8 +3,10 @@
 // (setup-tests.ts가 onUnhandledRequest: 'error'라 핸들러 없는 요청은 테스트가 즉시 실패한다)
 import { authHandlers } from './handlers/auth';
 import { serviceHandlers } from './handlers/services';
+import { workflowHandlers } from './handlers/workflows';
 
 export { BASE_URL } from './handlers/base';
 export { mockServices, mockServiceDetail } from './handlers/services';
+export { mockWorkflow } from './handlers/workflows';
 
-export const handlers = [...authHandlers, ...serviceHandlers];
+export const handlers = [...authHandlers, ...serviceHandlers, ...workflowHandlers];

@@ -23,6 +23,8 @@ interface WorkflowEditorProps {
   templateCategory?: string;
   status?: WorkflowStatus;
   serviceId?: string;
+  category?: string;
+  description?: string;
 }
 
 export const WorkflowEditor = ({
@@ -36,6 +38,8 @@ export const WorkflowEditor = ({
   templateCategory,
   status,
   serviceId,
+  category,
+  description,
 }: WorkflowEditorProps) => {
   return (
     <ReactFlowProvider>
@@ -49,7 +53,13 @@ export const WorkflowEditor = ({
         <div className="absolute top-5 right-5 flex gap-1.5">
           <ChecklistWorkflowButton />
           {mode === 'edit' && workflowId ? (
-            <UpdateWorkflowButton workflowId={workflowId} status={status} serviceId={serviceId} />
+            <UpdateWorkflowButton
+              workflowId={workflowId}
+              status={status}
+              serviceId={serviceId}
+              category={category}
+              description={description}
+            />
           ) : mode === 'templateEdit' && templateId ? (
             <UpdateWorkflowTemplateButton
               templateId={templateId}

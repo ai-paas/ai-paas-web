@@ -45,8 +45,7 @@ const columns = [
   {
     id: 'kind',
     header: '분류',
-    accessorFn: (row: Dataset) =>
-      row.kind ? (DATASET_KIND_LABELS[row.kind] ?? row.kind) : 'N/A',
+    accessorFn: (row: Dataset) => (row.kind ? (DATASET_KIND_LABELS[row.kind] ?? row.kind) : 'N/A'),
     size: 200,
     enableSorting: false,
   },
@@ -151,6 +150,7 @@ export default function DatasetPage() {
             totalCount={page.total}
             pagination={pagination}
             setPagination={setPagination}
+            pageSizeOptions={[10, 15, 20, 30, 50, 100]}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             sorting={sorting}

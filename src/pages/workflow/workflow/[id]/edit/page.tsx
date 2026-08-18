@@ -74,6 +74,8 @@ export default function WorkflowEditPage() {
           workflowId={workflowId}
           status={workflow.status}
           serviceId={workflow.service_id ?? undefined}
+          category={workflow.category}
+          description={workflow.description}
         />
       </div>
     </main>

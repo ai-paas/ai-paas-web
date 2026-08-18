@@ -83,6 +83,42 @@ vi.mock('@innogrid/ui', async () => {
 
     Textarea,
 
+    // 옵션을 네이티브 select로 렌더링하는 경량 목 — 검색·메뉴 포지셔닝 로직은 생략.
+    // placeholder를 aria-label로 노출하므로 getByRole('combobox') 또는 getByLabelText로 조회한다.
+    Select: ({
+      options = [],
+      value,
+      placeholder,
+      onChange,
+      getOptionLabel = (option) => String((option as { text?: unknown })?.text ?? ''),
+      getOptionValue = (option) => String((option as { value?: unknown })?.value ?? ''),
+    }: {
+      options?: unknown[];
+      value?: unknown;
+      placeholder?: string;
+      onChange?: (option: unknown | null) => void;
+      getOptionLabel?: (option: unknown) => string;
+      getOptionValue?: (option: unknown) => string;
+      menuPosition?: string;
+    }) => (
+      <select
+        aria-label={placeholder}
+        value={value != null ? getOptionValue(value) : ''}
+        onChange={(event) => {
+          const selected =
+            options.find((option) => getOptionValue(option) === event.target.value) ?? null;
+          onChange?.(selected);
+        }}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={getOptionValue(option)} value={getOptionValue(option)}>
+            {getOptionLabel(option)}
+          </option>
+        ))}
+      </select>
+    ),
+
     // 트리거와 메뉴 아이템을 항상 렌더링하는 경량 목 — open/onOpenChange 상태 로직은 생략
     DropdownMenu: ({
       children,
