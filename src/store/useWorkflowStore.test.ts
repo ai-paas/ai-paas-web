@@ -534,6 +534,45 @@ describe('useWorkflowStore', () => {
   });
 
   // ============================================
+  // deleteEdge
+  // ============================================
+  describe('deleteEdge', () => {
+    it('대상 엣지만 제거하고 스냅샷을 남긴다 — undo 한 번으로 복원된다', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData(
+          [makeNode('a'), makeNode('b'), makeNode('c')],
+          [makeEdge('e1', 'a', 'b'), makeEdge('e2', 'b', 'c')]
+        );
+
+      useWorkflowStore.getState().deleteEdge('e1');
+
+      let state = useWorkflowStore.getState();
+      expect(state.edges.map((e) => e.id)).toEqual(['e2']);
+      expect(state.nodes).toHaveLength(3);
+      expect(state.past).toHaveLength(1);
+
+      useWorkflowStore.getState().undo();
+
+      state = useWorkflowStore.getState();
+      expect(state.edges.map((e) => e.id)).toEqual(['e1', 'e2']);
+    });
+
+    it('존재하지 않는 edgeId면 no-op이다 (스냅샷 없음)', () => {
+      useWorkflowStore
+        .getState()
+        .setInitialData([makeNode('a'), makeNode('b')], [makeEdge('e1', 'a', 'b')]);
+      const edgesBefore = useWorkflowStore.getState().edges;
+
+      useWorkflowStore.getState().deleteEdge('없는-id');
+
+      const state = useWorkflowStore.getState();
+      expect(state.edges).toBe(edgesBefore);
+      expect(state.past).toEqual([]);
+    });
+  });
+
+  // ============================================
   // undo / redo
   // ============================================
   describe('undo / redo', () => {

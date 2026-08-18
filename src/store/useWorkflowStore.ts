@@ -93,6 +93,7 @@ interface WorkflowState {
   pasteClipboard: () => void;
   duplicateNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
+  deleteEdge: (edgeId: string) => void;
   takeSnapshot: () => void;
   undo: () => void;
   redo: () => void;
@@ -224,6 +225,14 @@ export const useWorkflowStore = create<WorkflowState>((set) => ({
         nodes: state.nodes.filter((n) => n.id !== nodeId),
         edges: state.edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
         selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
+        ...pushHistory(state),
+      };
+    }),
+  deleteEdge: (edgeId: string) =>
+    set((state) => {
+      if (!state.edges.some((e) => e.id === edgeId)) return {};
+      return {
+        edges: state.edges.filter((e) => e.id !== edgeId),
         ...pushHistory(state),
       };
     }),

@@ -1,4 +1,4 @@
-import { beforeAll } from 'vitest';
+import { afterAll, beforeAll } from 'vitest';
 import { installDomMeasurementStubs } from './dom-measure-stubs';
 
 /**
@@ -12,6 +12,33 @@ import { installDomMeasurementStubs } from './dom-measure-stubs';
  */
 export function installXyflowStubs() {
   installDomMeasurementStubs();
+
+  let originalResizeObserver: typeof ResizeObserver;
+
+  beforeAll(() => {
+    // xyflow 공식 가이드의 ResizeObserver — observe 즉시 콜백을 호출해 노드를 "측정된"
+    // 상태로 만든다. setup-tests의 전역 no-op 스텁으로는 노드 크기가 0으로 남아
+    // 노드에 붙은 엣지가 렌더되지 않는다. (opt-in: afterAll에서 원복)
+    originalResizeObserver = window.ResizeObserver;
+    window.ResizeObserver = class {
+      private callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+      }
+      observe(target: Element) {
+        this.callback(
+          [{ target } as ResizeObserverEntry],
+          this as unknown as ResizeObserver
+        );
+      }
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+  });
+
+  afterAll(() => {
+    window.ResizeObserver = originalResizeObserver;
+  });
 
   beforeAll(() => {
     // xyflow가 transform 문자열에서 줌 배율을 읽을 때 사용

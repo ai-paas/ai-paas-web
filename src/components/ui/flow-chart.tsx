@@ -9,7 +9,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import './flow-chart.css';
 import { useToast } from '@innogrid/ui';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import {
   WorkflowCanvasControls,
@@ -256,8 +256,12 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
     useWorkflowStore();
   const pendingNodeType = useWorkflowStore((s) => s.pendingNodeType);
   const setPendingNodeType = useWorkflowStore((s) => s.setPendingNodeType);
+  const deleteEdge = useWorkflowStore((s) => s.deleteEdge);
   const { screenToFlowPosition, addNodes } = useReactFlow();
   const [paneMode, setPaneMode] = useState<PaneMode>('hand');
+  // 엣지 우클릭 컨텍스트 메뉴 (캔버스 래퍼 기준 좌표)
+  const [edgeMenu, setEdgeMenu] = useState<{ edgeId: string; x: number; y: number } | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -302,6 +306,30 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [readOnly, toast]);
 
+  // 열린 엣지 메뉴는 메뉴 밖 클릭·우클릭 시 닫는다
+  useEffect(() => {
+    if (!edgeMenu) return;
+
+    const close = () => setEdgeMenu(null);
+    window.addEventListener('click', close);
+    window.addEventListener('contextmenu', close);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('contextmenu', close);
+    };
+  }, [edgeMenu]);
+
+  const handleEdgeContextMenu = (e: React.MouseEvent, edge: Edge) => {
+    e.preventDefault(); // 브라우저 기본 컨텍스트 메뉴 차단
+    e.stopPropagation(); // 위 close 리스너(window contextmenu)로 번져 바로 닫히지 않게 한다
+    const rect = wrapperRef.current?.getBoundingClientRect();
+    setEdgeMenu({
+      edgeId: edge.id,
+      x: e.clientX - (rect?.left ?? 0),
+      y: e.clientY - (rect?.top ?? 0),
+    });
+  };
+
   const isHandMode = paneMode === 'hand';
 
   const handlePaneClick = (e: React.MouseEvent) => {
@@ -319,6 +347,7 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
 
   return (
     <div
+      ref={wrapperRef}
       className={`relative size-full ${readOnly ? 'workflow-canvas--readonly' : ''} ${pendingNodeType ? '[&_.react-flow\\_\\_pane]:cursor-crosshair' : ''}`}
     >
       <ReactFlow
@@ -328,6 +357,7 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={(_, node) => selectNode(node.id)}
+        onEdgeContextMenu={readOnly ? undefined : handleEdgeContextMenu}
         onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         defaultViewport={DEFAULT_VIEWPORT}
@@ -352,6 +382,30 @@ export const FlowChart = ({ initialNodes, initialEdges, readOnly = false }: Flow
           <WorkflowCanvasControls paneMode={paneMode} onPaneModeChange={setPaneMode} />
         )}
       </ReactFlow>
+
+      {edgeMenu && (
+        <div
+          role="menu"
+          aria-label="엣지 메뉴"
+          className="absolute z-50 rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+          style={{ left: edgeMenu.x, top: edgeMenu.y }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              deleteEdge(edgeMenu.edgeId);
+              setEdgeMenu(null);
+            }}
+            className="flex w-full items-center justify-between gap-6 rounded px-2.5 py-1.5 text-left text-sm text-red-500 hover:bg-red-50"
+          >
+            삭제
+            <span aria-hidden className="text-xs text-gray-400">
+              Del
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
