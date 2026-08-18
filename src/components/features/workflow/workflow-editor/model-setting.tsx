@@ -327,9 +327,12 @@ export const ModelSetting = () => {
           }
           menuPosition="fixed"
         />
-        <div className={styles.promptTextareaBox}>
-          <Textarea onChange={() => {}} value={selectedPrompt?.content ?? ''} readOnly />
-        </div>
+        <Textarea
+          customSize={{ height: 240 }}
+          onChange={() => {}}
+          value={selectedPrompt?.content ?? ''}
+          readOnly
+        />
       </div>
       <div className={styles.addItemBox}>
         <div className={styles.accordion}>
