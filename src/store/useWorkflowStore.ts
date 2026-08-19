@@ -40,7 +40,8 @@ interface KnowledgebaseNodeData extends BaseNodeData {
 
 interface ModelNodeData extends BaseNodeData {
   description?: string;
-  type: 'custom' | 'catalog';
+  /** 저장 정의(WorkflowComponentDefinition)에 없는 프론트 전용 값 — 미지정이면 model_id가 속한 목록으로 역추론한다 */
+  type?: 'custom' | 'catalog';
   model_id: string;
   context: string;
   prompt_id: string;

@@ -34,9 +34,10 @@ const createNodeData = (component: WorkflowComponent): WorkflowNode['data'] => {
   }
 
   if (component.type === 'MODEL') {
+    // 모델 유형(custom/catalog)은 저장 정의에 없으므로 미지정으로 두고,
+    // 편집 화면(model-setting/flow-chart)에서 model_id가 속한 목록으로 역추론한다.
     return {
       ...baseData,
-      type: 'custom' as const,
       model_id: component.model_id ? String(component.model_id) : '',
       context: '',
       prompt_id: component.prompt_id ? String(component.prompt_id) : '',

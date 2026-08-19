@@ -258,13 +258,15 @@ describe('workflowToFlow', () => {
       expect(nodes[0].data.prompt_id).toBe('');
     });
 
-    it("context는 빈 문자열, type은 'custom'으로 초기화된다", () => {
+    it('context는 빈 문자열로 초기화되고 type(모델 유형)은 미지정으로 둔다', () => {
+      // type을 'custom'으로 채우면 카탈로그 모델을 쓴 노드가 수정 화면에서
+      // 커스텀 목록만 뒤져 선택값이 사라진다 — 미지정으로 두고 편집 화면에서 역추론한다.
       const { nodes } = workflowToFlow({
         components: [createComponent({ id: 'm1', type: 'MODEL' })],
       });
 
       expect(nodes[0].data.context).toBe('');
-      expect(nodes[0].data.type).toBe('custom');
+      expect(nodes[0].data.type).toBeUndefined();
     });
   });
 
@@ -568,7 +570,6 @@ describe('workflowToFlow', () => {
         label: '모델',
         name: '모델',
         description: '',
-        type: 'custom',
         model_id: '',
         context: '',
         prompt_id: '',
@@ -581,12 +582,13 @@ describe('workflowToFlow', () => {
     it('특성화: 사용자 편집 필드는 왕복 후 초기화된다 (저장 시 유실)', () => {
       // 버그 의심 — 팀 확인 필요:
       // start-setting/model-setting/knowledge-setting/end-setting 패널에서 편집 가능한
-      // inputFields·context·query_variable·output_variable(그리고 MODEL의 type)이
+      // inputFields·context·query_variable·output_variable이
       // buildWorkflowDefinition에서 직렬화되지 않아 저장 후 재로딩하면 사라진다.
+      // MODEL의 type도 직렬화되지 않지만, 미지정으로 남겨 편집 화면에서 역추론으로 복원한다.
       const modelData = findNode(nodes, 'model-1').data;
 
       expect(modelData.context).toBe(''); // 입력값 'question' 유실
-      expect(modelData.type).toBe('custom'); // 'catalog' → 'custom'
+      expect(modelData.type).toBeUndefined(); // 'catalog' 자체는 저장 안 됨 — 편집 화면에서 역추론
       expect(findNode(nodes, 'kb-1').data.query_variable).toBe(''); // 'question' 유실
       expect(findNode(nodes, 'start-1').data.inputFields).toEqual([]); // 1건 유실
       expect(findNode(nodes, 'end-1').data.output_variable).toEqual([]); // 1건 유실

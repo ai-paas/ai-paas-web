@@ -119,9 +119,16 @@ export const ModelSetting = () => {
   if (!selectedNode) return null;
 
   const description = (selectedNode.data.description as string | undefined) ?? '';
-  const modelType = ((selectedNode.data.type as ModelTypeValue | undefined) ??
-    'custom') as ModelTypeValue;
   const modelId = (selectedNode.data.model_id as string | undefined) ?? '';
+  // 저장 정의에는 모델 유형이 없어 수정 진입 시 type이 비어 있다 — model_id가 속한 목록으로 역추론한다.
+  const storedModelType = selectedNode.data.type as ModelTypeValue | undefined;
+  const modelType: ModelTypeValue =
+    storedModelType ??
+    (customModelOptions.some((option) => option.value === modelId)
+      ? 'custom'
+      : modelCatalogOptions.some((option) => option.value === modelId)
+        ? 'catalog'
+        : 'custom');
   const context = (selectedNode.data.context as string | undefined) ?? '';
   const promptId = (selectedNode.data.prompt_id as string | undefined) ?? '';
 

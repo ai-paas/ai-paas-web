@@ -19,38 +19,35 @@ vi.mock('@innogrid/ui', async () => {
 
   const Textarea = forwardRef<
     HTMLTextAreaElement,
-    React.TextareaHTMLAttributes<HTMLTextAreaElement> & { errMessage?: string }
-  >(({ errMessage, ...props }, ref) => (
+    React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+      errMessage?: string;
+      customSize?: { width?: number; height?: number };
+    }
+  >(({ errMessage, customSize, ...props }, ref) => (
     <>
-      <textarea ref={ref} {...props} />
+      <textarea
+        ref={ref}
+        style={customSize ? { width: customSize.width, height: customSize.height } : undefined}
+        {...props}
+      />
       {errMessage && <span>{errMessage}</span>}
     </>
   ));
   Textarea.displayName = 'Textarea';
 
+  // PopoverTrigger 등 radix asChild가 ref를 전달하므로 forwardRef로 구현한다.
+  const Button = forwardRef<
+    HTMLButtonElement,
+    React.ButtonHTMLAttributes<HTMLButtonElement> & { color?: string; size?: string }
+  >(({ children, color, size, ...props }, ref) => (
+    <button ref={ref} data-color={color} data-size={size} {...props}>
+      {children}
+    </button>
+  ));
+  Button.displayName = 'Button';
+
   return {
-    Button: ({
-      children,
-      onClick,
-      disabled,
-      color,
-      size,
-    }: {
-      children: React.ReactNode;
-      onClick?: () => void;
-      disabled?: boolean;
-      color?: string;
-      size?: string;
-    }) => (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        data-color={color}
-        data-size={size}
-      >
-        {children}
-      </button>
-    ),
+    Button,
 
     Modal: ({
       isOpen,
@@ -117,6 +114,75 @@ vi.mock('@innogrid/ui', async () => {
           </option>
         ))}
       </select>
+    ),
+
+    // 네이티브 라디오로 렌더링하는 경량 목 — label 텍스트로 getByRole('radio', { name })이 동작한다.
+    RadioGroupButton: ({
+      id,
+      options = [],
+      value,
+      onValueChange,
+    }: {
+      id?: string;
+      orientation?: string;
+      options?: { label: string; value: string }[];
+      value?: string;
+      onValueChange?: (value: string) => void;
+    }) => (
+      <div role="radiogroup">
+        {options.map((option) => (
+          <label key={option.value}>
+            <input
+              type="radio"
+              name={id}
+              checked={option.value === value}
+              onChange={() => onValueChange?.(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    ),
+
+    // 배열 value([number]) 규약만 유지한 네이티브 range 목
+    Slider: ({
+      value,
+      onValueChange,
+      min,
+      max,
+      step,
+    }: {
+      value?: number[];
+      onValueChange?: (value: number[]) => void;
+      min?: number;
+      max?: number;
+      step?: number;
+    }) => (
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value?.[0] ?? 0}
+        onChange={(event) => onValueChange?.([Number(event.target.value)])}
+      />
+    ),
+
+    // 모든 아이템을 펼친 상태로 렌더링하는 경량 목 — 접기/펼치기 상태 로직은 생략
+    Accordion: ({
+      components = [],
+    }: {
+      components?: { label: React.ReactNode; component: React.ReactNode }[];
+      defaultValue?: string;
+    }) => (
+      <div>
+        {components.map((item, i) => (
+          <div key={i}>
+            <div>{item.label}</div>
+            {item.component}
+          </div>
+        ))}
+      </div>
     ),
 
     // 트리거와 메뉴 아이템을 항상 렌더링하는 경량 목 — open/onOpenChange 상태 로직은 생략

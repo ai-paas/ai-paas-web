@@ -81,12 +81,18 @@ const MODEL_LIST_PARAMS = { size: 100 };
 
 /** 모델 노드에 설정된 모델(이름·유형)을 카드 하단에 표시한다. */
 const ModelNodeContent = ({ data }: { data: WorkflowNode['data'] }) => {
-  const modelType = (data.type as 'custom' | 'catalog' | undefined) ?? 'custom';
+  const modelType = data.type as 'custom' | 'catalog' | undefined;
   const modelId = (data.model_id as string | undefined) ?? '';
   const { customModels } = useGetCustomModels(MODEL_LIST_PARAMS);
   const { modelCatalogs } = useGetModelCatalogs(MODEL_LIST_PARAMS);
 
-  const models = modelType === 'custom' ? customModels : modelCatalogs;
+  // 저장 정의에는 모델 유형이 없어 수정 진입 시 type이 비어 있다 — 그때는 두 목록을 모두 뒤진다.
+  const models =
+    modelType === 'custom'
+      ? customModels
+      : modelType === 'catalog'
+        ? modelCatalogs
+        : [...customModels, ...modelCatalogs];
   const model = models.find((m) => String(m.id) === modelId);
 
   if (!modelId || !model) return null;
