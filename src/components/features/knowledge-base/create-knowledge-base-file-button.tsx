@@ -47,7 +47,7 @@ export const CreateKnowledgeBaseFileButton = ({
       toast.open({
         status: 'negative',
         title: '파일 생성 실패',
-        children: '파일 생성 중 오류가 발생했습니다.',
+        children: '파일 생성 중 오류가 발생했습니다. 다시 시도하면 파일이 다시 업로드됩니다.',
       });
     }
   };
@@ -65,10 +65,12 @@ export const CreateKnowledgeBaseFileButton = ({
         size="small"
         title="파일 생성"
         buttonTitle="확인"
-        onRequestClose={closeModal}
+        onRequestClose={() => {
+          if (!isPending) closeModal();
+        }}
         action={handleSubmit}
         subButton={
-          <Button size="large" color="secondary" onClick={closeModal}>
+          <Button size="large" color="secondary" disabled={isPending} onClick={closeModal}>
             취소
           </Button>
         }
@@ -83,7 +85,7 @@ export const CreateKnowledgeBaseFileButton = ({
                   extensions={['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv']}
                   description={
                     <>
-                      파일을 여기에 드래그하거나 클릭하여 업로드하세요. (파일당 최대 크기 15MB)
+                      파일을 여기에 드래그하거나 클릭하여 업로드하세요.
                       <br />
                       허용되는 파일 형식: pdf, doc, docx, xls, xlsx, ppt, pptx, csv
                     </>
@@ -99,6 +101,16 @@ export const CreateKnowledgeBaseFileButton = ({
                     })
                   }
                 />
+                <p className="mt-2 text-xs leading-5 text-[#667085]">
+                  대용량 파일은 업로드·임베딩에 수 분 이상 걸릴 수 있습니다.
+                </p>
+                {isPending && (
+                  <div className="mt-4" role="status" aria-live="polite">
+                    <div className="text-xs font-semibold">
+                      파일을 업로드하고 문서를 처리하고 있습니다.
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

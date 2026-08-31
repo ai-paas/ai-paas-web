@@ -64,6 +64,7 @@ export interface ServiceMonitoringData {
 
 export interface KnowledgeBaseSummary {
   id: number;
+  surro_knowledge_id: number;
   name: string;
   description: string | null;
   type: string;

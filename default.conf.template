@@ -13,7 +13,9 @@ server {
         client_max_body_size 1g;
         # 대용량 파일을 디스크 버퍼링 없이 백엔드로 스트리밍 전달
         proxy_request_buffering off;
-        proxy_read_timeout 300s;
+        # 지식베이스 대용량 업로드 후 임베딩 처리까지 단일 요청에서 대기할 수 있음
+        proxy_send_timeout 900s;
+        proxy_read_timeout 900s;
 
         proxy_pass $VITE_SERVER_URL;
         proxy_http_version 1.1;

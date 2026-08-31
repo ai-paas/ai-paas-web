@@ -61,7 +61,8 @@ export const useCreateKnowledgeBase = () => {
 
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: FormData) =>
-      api.post('knowledge-bases', { body: data }).json<KnowledgeBase>(),
+      api.post('knowledge-bases', { body: data, timeout: false }).json<KnowledgeBaseBrief>(),
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
     },
@@ -158,9 +159,13 @@ export const useAddFileToKnowledgeBase = (surro_knowledge_id: number) => {
       const formData = new FormData();
       formData.append('file', data.file);
       return api
-        .post(`knowledge-bases/${surro_knowledge_id}/files`, { body: formData })
+        .post(`knowledge-bases/${surro_knowledge_id}/files`, {
+          body: formData,
+          timeout: false,
+        })
         .json<KnowledgeBase>();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.knowledgeBases.files(surro_knowledge_id),

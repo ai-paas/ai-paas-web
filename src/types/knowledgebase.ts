@@ -24,7 +24,7 @@ export interface KnowledgeBaseBrief {
   updated_at: string;
   created_by: string;
   name: string;
-  description?: string;
+  description?: string | null;
   collection_name: string;
   chunk_size: number;
   chunk_overlap: number;

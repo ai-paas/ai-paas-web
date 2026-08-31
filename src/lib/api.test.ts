@@ -343,9 +343,9 @@ describe('refresh 실패 — 큐 reject', () => {
 });
 
 // ============================================
-// beforeError — detail 파싱
+// beforeError — detail 문자열 처리
 // ============================================
-describe('beforeError — detail 파싱', () => {
+describe('beforeError — detail 문자열 처리', () => {
   beforeEach(() => {
     // 401 재발급 경로에 진입하지 않도록 유효 토큰을 심는다
     setAccessToken('valid-token');
@@ -361,10 +361,12 @@ describe('beforeError — detail 파싱', () => {
     await expect(api.get('protected')).rejects.toThrow('이름이 중복되었습니다.');
   });
 
-  it('detail에 내장된 JSON이 있으면 내부 detail을 추출한다', async () => {
+  it('detail 문자열은 추가 JSON 파싱 없이 그대로 사용한다', async () => {
     respondWith({ detail: '백엔드 호출 실패: {"detail": "모델을 찾을 수 없습니다."}' });
 
-    await expect(api.get('protected')).rejects.toThrow('모델을 찾을 수 없습니다.');
+    await expect(api.get('protected')).rejects.toThrow(
+      '백엔드 호출 실패: {"detail": "모델을 찾을 수 없습니다."}'
+    );
   });
 
   it('내장 JSON 파싱에 실패하면 원본 detail을 그대로 사용한다', async () => {
@@ -388,6 +390,19 @@ describe('beforeError — detail 파싱', () => {
       },
       (caught: unknown) => caught
     );
+
+    expect(error).toBeInstanceOf(HTTPError);
+    expect((error as HTTPError).message).toMatch(/Request failed/);
+  });
+
+  it.each([
+    ['배열', [{ loc: ['body', 'name'], msg: '필수값입니다.' }]],
+    ['객체', { message: '검증 실패' }],
+    ['빈 문자열', '   '],
+  ])('detail이 %s이면 ky 기본 에러 메시지를 유지한다', async (_label, detail) => {
+    respondWith({ detail }, 422);
+
+    const error = await api.get('protected').catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(HTTPError);
     expect((error as HTTPError).message).toMatch(/Request failed/);

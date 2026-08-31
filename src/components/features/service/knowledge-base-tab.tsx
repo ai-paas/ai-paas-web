@@ -17,7 +17,7 @@ const columns = [
     accessorFn: (row: KnowledgeBaseSummary) => row.name,
     size: 300,
     cell: ({ row }: { row: { original: KnowledgeBaseSummary } }) => (
-      <Link to={`/knowledge-base/${row.original.id}`} className="table-td-link">
+      <Link to={`/knowledge-base/${row.original.surro_knowledge_id}`} className="table-td-link">
         {row.original.name}
       </Link>
     ),
