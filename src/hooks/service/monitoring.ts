@@ -84,7 +84,8 @@ type NormalizedKubernetesPodPage = {
   totalPages: number;
 };
 
-const normalizeKubernetesPodPageResponse = (
+// 유닛 테스트를 위해 export (catalog.ts normalize*와 동일한 최소 공개 원칙)
+export const normalizeKubernetesPodPageResponse = (
   response: KubernetesPodPageResponse | undefined
 ): NormalizedKubernetesPodPage => {
   if (Array.isArray(response)) {

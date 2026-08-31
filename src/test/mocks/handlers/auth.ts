@@ -8,6 +8,16 @@ export const authHandlers = [
     return HttpResponse.json({ access_token: 'test-access-token' });
   }),
 
+  // POST /auth/login - 로그인 (useLogin은 ky가 아닌 raw fetch 사용)
+  http.post(`${BASE_URL}/auth/login`, () => {
+    return HttpResponse.json({
+      access_token: 'login-access-token',
+      refresh_token: 'login-refresh-token',
+      token_type: 'bearer',
+      expires_in: 3600,
+    });
+  }),
+
   // POST /auth/logout - 리프레시 토큰 무효화 (로그아웃)
   http.post(`${BASE_URL}/auth/logout`, () => {
     return new HttpResponse(null, { status: 204 });

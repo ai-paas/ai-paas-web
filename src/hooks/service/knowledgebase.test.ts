@@ -3,10 +3,21 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, setAccessToken } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import { BASE_URL } from '@/test/mocks/handlers';
 import { server } from '@/test/mocks/server';
-import { createHookWrapper } from '@/test/utils/test-utils';
-import { useAddFileToKnowledgeBase, useCreateKnowledgeBase } from './knowledgebase';
+import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
+import {
+  useAddFileToKnowledgeBase,
+  useCreateKnowledgeBase,
+  useDeleteFileFromKnowledgeBase,
+  useDeleteKnowledgeBase,
+  useGetChunkTypes,
+  useGetLanguages,
+  useGetSearchMethods,
+  useSearchKnowledgeBase,
+  useUpdateKnowledgeBase,
+} from './knowledgebase';
 
 const createProductionLikeQueryClient = () =>
   new QueryClient({
@@ -140,5 +151,193 @@ describe('knowledgebase upload mutations', () => {
       body: formData,
       timeout: false,
     });
+  });
+});
+
+// ============================================
+// 캐시 무효화 계약 — files/search-records는 detail(id)의 하위 계층이라
+// detail 무효화 한 번으로 함께 stale 처리된다 (query-keys.ts 계층 구조 계약)
+// ============================================
+
+const KB_ID = 101;
+
+const seedCaches = (queryClient: ReturnType<typeof createTestQueryClient>) => {
+  queryClient.setQueryData(queryKeys.knowledgeBases.list({ page: 1 }), { data: [], total: 0 });
+  queryClient.setQueryData(queryKeys.knowledgeBases.detail(KB_ID), createdKnowledgeBase);
+  queryClient.setQueryData(queryKeys.knowledgeBases.files(KB_ID), []);
+  queryClient.setQueryData(queryKeys.knowledgeBases.searchRecords(KB_ID), []);
+  // 다른 지식베이스 — id 단위 무효화가 번지지 않아야 한다
+  queryClient.setQueryData(queryKeys.knowledgeBases.detail(202), { id: 8 });
+  // 무관 도메인
+  queryClient.setQueryData(queryKeys.datasets.list(), { data: [], total: 0 });
+};
+
+describe('knowledgebase 캐시 무효화 계약', () => {
+  describe('useAddFileToKnowledgeBase', () => {
+    it('파일 추가 성공 시 해당 KB의 detail 계층(files/search-records 포함)만 무효화하고 목록·다른 KB는 건드리지 않는다', async () => {
+      const queryClient = createTestQueryClient({ gcTime: Infinity });
+      seedCaches(queryClient);
+      const { result } = renderHook(() => useAddFileToKnowledgeBase(KB_ID), {
+        wrapper: createHookWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.addFileAsync({ file: createFile() });
+      });
+
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.detail(KB_ID))?.isInvalidated).toBe(
+        true
+      );
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.files(KB_ID))?.isInvalidated).toBe(
+        true
+      );
+      // 명시적으로 무효화하지 않아도 detail 하위 계층이라 함께 stale 처리된다
+      expect(
+        queryClient.getQueryState(queryKeys.knowledgeBases.searchRecords(KB_ID))?.isInvalidated
+      ).toBe(true);
+      // 목록과 다른 KB는 무관
+      expect(
+        queryClient.getQueryState(queryKeys.knowledgeBases.list({ page: 1 }))?.isInvalidated
+      ).toBe(false);
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.detail(202))?.isInvalidated).toBe(
+        false
+      );
+    });
+  });
+
+  describe('useDeleteFileFromKnowledgeBase', () => {
+    it('파일 삭제 성공 시 해당 KB의 detail 계층만 무효화한다', async () => {
+      const queryClient = createTestQueryClient({ gcTime: Infinity });
+      seedCaches(queryClient);
+      const { result } = renderHook(() => useDeleteFileFromKnowledgeBase(KB_ID), {
+        wrapper: createHookWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.deleteFileAsync(3);
+      });
+
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.detail(KB_ID))?.isInvalidated).toBe(
+        true
+      );
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.files(KB_ID))?.isInvalidated).toBe(
+        true
+      );
+      expect(
+        queryClient.getQueryState(queryKeys.knowledgeBases.list({ page: 1 }))?.isInvalidated
+      ).toBe(false);
+    });
+  });
+
+  describe('useUpdateKnowledgeBase', () => {
+    it('수정 성공 시 knowledge-bases 전체 계층을 무효화하고 무관 도메인은 건드리지 않는다', async () => {
+      const queryClient = createTestQueryClient({ gcTime: Infinity });
+      seedCaches(queryClient);
+      const { result } = renderHook(() => useUpdateKnowledgeBase(), {
+        wrapper: createHookWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.updateKnowledgeBaseAsync({
+          surro_knowledge_id: KB_ID,
+          name: '개정판',
+        });
+      });
+
+      expect(
+        queryClient.getQueryState(queryKeys.knowledgeBases.list({ page: 1 }))?.isInvalidated
+      ).toBe(true);
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.detail(KB_ID))?.isInvalidated).toBe(
+        true
+      );
+      expect(queryClient.getQueryState(queryKeys.datasets.list())?.isInvalidated).toBe(false);
+    });
+  });
+
+  describe('useDeleteKnowledgeBase', () => {
+    it('삭제 실패 시 무효화하지 않는다', async () => {
+      server.use(
+        http.delete(`${BASE_URL}/knowledge-bases/:id`, () =>
+          HttpResponse.json({ detail: 'Forbidden' }, { status: 403 })
+        )
+      );
+      const queryClient = createTestQueryClient({ gcTime: Infinity });
+      seedCaches(queryClient);
+      const { result } = renderHook(() => useDeleteKnowledgeBase(), {
+        wrapper: createHookWrapper(queryClient),
+      });
+
+      result.current.deleteKnowledgeBase(KB_ID);
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+      expect(
+        queryClient.getQueryState(queryKeys.knowledgeBases.list({ page: 1 }))?.isInvalidated
+      ).toBe(false);
+      expect(queryClient.getQueryState(queryKeys.knowledgeBases.detail(KB_ID))?.isInvalidated).toBe(
+        false
+      );
+    });
+  });
+});
+
+// ============================================
+// 메타 조회 3종 — Page envelope에서 data 배열만 풀어 반환한다
+// ============================================
+
+describe('knowledgebase 메타 조회', () => {
+  it('chunk-types/languages/search-methods를 envelope에서 풀어 배열로 반환한다', async () => {
+    const { result } = renderHook(
+      () => ({
+        chunkTypes: useGetChunkTypes(),
+        languages: useGetLanguages(),
+        searchMethods: useGetSearchMethods(),
+      }),
+      { wrapper: createHookWrapper() }
+    );
+
+    await waitFor(() => {
+      expect(result.current.chunkTypes.isPending).toBe(false);
+      expect(result.current.languages.isPending).toBe(false);
+      expect(result.current.searchMethods.isPending).toBe(false);
+    });
+    expect(result.current.chunkTypes.chunkTypes).toEqual([{ id: 1, name: 'sentence' }]);
+    expect(result.current.languages.languages).toEqual([{ id: 1, name: '한국어' }]);
+    expect(result.current.searchMethods.searchMethods).toEqual([{ id: 1, name: 'dense' }]);
+  });
+});
+
+// ============================================
+// useSearchKnowledgeBase — 검색 mutation (캐시 무효화 없음)
+// ============================================
+
+describe('useSearchKnowledgeBase', () => {
+  it('검색어를 POST body로 보내고 검색 결과를 searchResults로 노출한다', async () => {
+    let capturedBody: unknown;
+    server.use(
+      http.post(`${BASE_URL}/knowledge-bases/:id/search`, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({
+          results: [{ text: '연차는 15일이다', score: 0.92 }],
+          total: 1,
+          search_method: 'dense',
+        });
+      })
+    );
+    const { result } = renderHook(() => useSearchKnowledgeBase(KB_ID), {
+      wrapper: createHookWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.searchAsync({ text: '연차 규정' });
+    });
+
+    expect(capturedBody).toEqual({ text: '연차 규정' });
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(result.current.searchResults?.results[0].text).toBe('연차는 15일이다');
+    expect(result.current.searchResults?.search_method).toBe('dense');
   });
 });
