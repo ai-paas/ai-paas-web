@@ -6,13 +6,15 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { setAccessToken } from '@/lib/api';
 import type { ReactElement, ReactNode } from 'react';
 
-// 테스트용 QueryClient 생성
-export function createTestQueryClient() {
+// 테스트용 QueryClient 생성.
+// 기본 gcTime 0은 옵저버 없는 캐시 엔트리를 즉시 GC하므로, setQueryData로 시드한
+// 캐시의 무효화/제거를 검증하는 테스트는 { gcTime: Infinity }를 지정할 것.
+export function createTestQueryClient({ gcTime = 0 }: { gcTime?: number } = {}) {
   return new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
-        gcTime: 0,
+        gcTime,
         staleTime: 0,
       },
       mutations: {

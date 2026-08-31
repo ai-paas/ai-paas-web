@@ -8,10 +8,10 @@ import { serviceHandlers } from './handlers/services';
 import { workflowHandlers } from './handlers/workflows';
 
 export { BASE_URL } from './handlers/base';
-export { mockCustomModels, mockModelCatalogs } from './handlers/models';
+export { mockCustomModels, mockModelCatalogs, mockModels } from './handlers/models';
 export { mockPrompts } from './handlers/prompts';
 export { mockServices, mockServiceDetail } from './handlers/services';
-export { mockWorkflow } from './handlers/workflows';
+export { mockWorkflow, mockWorkflowRead, mockWorkflowTemplate } from './handlers/workflows';
 
 export const handlers = [
   ...authHandlers,

@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw';
 import { BASE_URL } from './base';
-import type { UpdateWorkflowRequest, Workflow } from '@/types/workflow';
+import type {
+  UpdateWorkflowRequest,
+  Workflow,
+  WorkflowRead,
+  WorkflowTemplate,
+} from '@/types/workflow';
 
 // 테스트용 목 데이터
 export const mockWorkflow: Workflow = {
@@ -18,7 +23,92 @@ export const mockWorkflow: Workflow = {
   template_id: null,
 };
 
+export const mockWorkflowRead: WorkflowRead = {
+  ...mockWorkflow,
+  service_name: null,
+  creator_id: 1,
+  template_name: null,
+  kubeflow_run_id: null,
+  public_url: null,
+  backend_api_url: null,
+};
+
+export const mockWorkflowTemplate: WorkflowTemplate = {
+  id: 'tpl-001',
+  name: '테스트 템플릿',
+  description: '템플릿 설명',
+  category: '템플릿 카테고리',
+  status: 'ACTIVE',
+  service_id: null,
+  creator_id: 1,
+  creator: {
+    id: 1,
+    username: 'user1',
+    name: '사용자1',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  is_template: true,
+  template_id: null,
+  usage_count: 0,
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+};
+
 export const workflowHandlers = [
+  // GET /workflows/templates/:templateId - 템플릿 상세
+  // (:surro_workflow_id 단일 파라미터 라우트보다 먼저 등록해야 'templates' 리터럴이 우선 매칭된다)
+  http.get(`${BASE_URL}/workflows/templates/:templateId`, ({ params }) =>
+    HttpResponse.json({ ...mockWorkflowTemplate, id: params.templateId as string })
+  ),
+
+  // GET /workflows/:surro_workflow_id/status - 배포 상태 (기본: 배포 완료 모델 1개)
+  http.get(`${BASE_URL}/workflows/:surro_workflow_id/status`, ({ params }) =>
+    HttpResponse.json({
+      workflow_id: params.surro_workflow_id as string,
+      status: 'ACTIVE',
+      deployed_models: [
+        {
+          component_id: 'comp-1',
+          service_name: 'svc-1',
+          model_name: '모델 A',
+          sanitized_model_name: 'model-a',
+          deployment_type: 'KSERVE',
+          status: 'DEPLOYED',
+        },
+      ],
+    })
+  ),
+
+  // POST /workflows/:surro_workflow_id/cleanup - 배포 리소스 정리 시작
+  http.post(`${BASE_URL}/workflows/:surro_workflow_id/cleanup`, ({ params }) =>
+    HttpResponse.json({
+      message: 'cleanup started',
+      workflow_id: params.surro_workflow_id as string,
+      cleanup_run_id: 'run-001',
+      status: 'cleanup_in_progress',
+      next_step: 'finalize-cleanup',
+    })
+  ),
+
+  // POST /workflows/:surro_workflow_id/finalize-cleanup - 정리 완료 확인 (기본: 즉시 completed)
+  http.post(`${BASE_URL}/workflows/:surro_workflow_id/finalize-cleanup`, ({ params }) =>
+    HttpResponse.json({
+      message: 'cleanup completed',
+      workflow_id: params.surro_workflow_id as string,
+      status: 'completed',
+      workflow_updated: true,
+    })
+  ),
+
+  // GET /workflows/:surro_workflow_id - 워크플로우 상세
+  http.get(`${BASE_URL}/workflows/:surro_workflow_id`, ({ params }) =>
+    HttpResponse.json({
+      ...mockWorkflowRead,
+      surro_workflow_id: params.surro_workflow_id as string,
+    })
+  ),
+
   // PUT /workflows/:surro_workflow_id - 워크플로우 수정 (부분 업데이트)
   http.put(`${BASE_URL}/workflows/:surro_workflow_id`, async ({ params, request }) => {
     const body = (await request.json()) as Omit<UpdateWorkflowRequest, 'workflowId'>;

@@ -1,5 +1,12 @@
 import { vi } from 'vitest';
 
+// 토스트 호출 검증용 안정 스파이. useToast()가 렌더마다 새 객체를 반환해도 open은
+// 이 스파이를 공유하므로 테스트에서 import해 호출 내용을 단언할 수 있다.
+// vi.mock 팩토리는 '@innogrid/ui'가 처음 import되는 시점(이 모듈 평가 완료 후)에야
+// 실행되므로 호이스팅된 팩토리가 이 변수를 참조해도 TDZ에 걸리지 않는다.
+// (호출 기록은 전역 clearMocks 설정이 테스트 간 자동 초기화한다)
+export const toastOpenSpy = vi.fn();
+
 // @innogrid/ui 컴포넌트 모킹
 // Input/Textarea는 react-hook-form의 {...register()}가 넘기는 ref/onBlur가 동작해야
 // reset()으로 채운 값이 DOM에 반영되므로 forwardRef + props 스프레드로 구현한다.
@@ -242,6 +249,6 @@ vi.mock('@innogrid/ui', async () => {
       <div role="status" style={style} />
     ),
 
-    useToast: () => ({ open: vi.fn() }),
+    useToast: () => ({ open: toastOpenSpy }),
   };
 });

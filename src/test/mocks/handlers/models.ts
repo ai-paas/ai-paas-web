@@ -13,9 +13,17 @@ export const mockModelCatalogs = [
   { id: 22, name: '카탈로그 모델 B' },
 ];
 
+export const mockModels = [
+  { id: 11, name: '커스텀 모델 A' },
+  { id: 21, name: '카탈로그 모델 A' },
+];
+
 const toPage = <T>(data: T[]) => ({ data, page: 1, size: 100, total: data.length });
 
 export const modelHandlers = [
   http.get(`${BASE_URL}/models/custom-models`, () => HttpResponse.json(toPage(mockCustomModels))),
   http.get(`${BASE_URL}/models/model-catalog`, () => HttpResponse.json(toPage(mockModelCatalogs))),
+  http.get(`${BASE_URL}/models`, () => HttpResponse.json(toPage(mockModels))),
+  http.post(`${BASE_URL}/models`, () => HttpResponse.json({ id: 99, name: '새 모델' })),
+  http.delete(`${BASE_URL}/models/:modelId`, () => HttpResponse.json('deleted')),
 ];

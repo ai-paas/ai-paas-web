@@ -34,6 +34,9 @@ render(<DashboardPage />, { auth: 'admin' });  // 'user' | 'admin' | { token }
 
 - 훅 테스트는 `renderHook(() => useMyHook(), { wrapper: createHookWrapper() })`.
 - `makeTestJwt({ role: 'admin' })`로 `parseJwt` 호환 토큰을 직접 만들 수 있다 (payload는 ASCII만).
+- **캐시 무효화 검증**(setQueryData 시드 → `getQueryState().isInvalidated` 단언)은
+  `createTestQueryClient({ gcTime: Infinity })` 필수 — 기본(0)은 옵저버 없는 시드 캐시를 즉시 GC한다.
+  패턴은 `src/hooks/service/models.test.ts` 참고.
 
 ## MSW (API 목킹)
 
@@ -68,6 +71,8 @@ server.use(
 
 - 목 import를 빠뜨리면 실제 라이브러리가 로드되어 원인 파악이 어려운 방식으로 실패할 수 있다.
 - 목에 없는 export를 쓰는 컴포넌트를 렌더하면 undefined 렌더 에러 — 목을 확장하거나 실제 렌더로 전환.
+- 토스트 내용 단언은 목이 export하는 `toastOpenSpy` 사용:
+  `import { toastOpenSpy } from '@/test/mocks/innogrid-ui';` (사이드이펙트 import 겸용).
 
 ## 자주 쓰는 패턴
 
