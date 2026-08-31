@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import { render } from '@/test/utils/test-utils';
+import { renderWithUser } from '@/test/utils/test-utils';
 import type { KnowledgeBaseSummary } from '@/types/service';
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { KnowledgeBaseTab } from './knowledge-base-tab';
 
 interface MockColumn {
@@ -42,13 +43,27 @@ const knowledgeBase: KnowledgeBaseSummary = {
   workflow_refs: [],
 };
 
+const LocationProbe = () => <div data-testid="current-location">{useLocation().pathname}</div>;
+
 describe('KnowledgeBaseTab', () => {
-  it('내부 id가 아닌 surro_knowledge_id로 상세 링크를 만든다', () => {
-    render(<KnowledgeBaseTab knowledgeBases={[knowledgeBase]} />);
+  it('서비스 상세 응답의 id로 상세 링크를 만들고 클릭하면 이동한다', async () => {
+    const { user } = renderWithUser(
+      <>
+        <KnowledgeBaseTab knowledgeBases={[knowledgeBase]} />
+        <LocationProbe />
+      </>,
+      { route: '/service/service-1' }
+    );
 
     const link = screen.getByRole('link', { name: knowledgeBase.name });
 
-    expect(link).toHaveAttribute('href', `/knowledge-base/${knowledgeBase.surro_knowledge_id}`);
-    expect(link).not.toHaveAttribute('href', `/knowledge-base/${knowledgeBase.id}`);
+    expect(link).toHaveAttribute('href', `/knowledge-base/${knowledgeBase.id}`);
+    expect(link).not.toHaveAttribute('href', `/knowledge-base/${knowledgeBase.surro_knowledge_id}`);
+
+    await user.click(link);
+
+    expect(screen.getByTestId('current-location')).toHaveTextContent(
+      `/knowledge-base/${knowledgeBase.id}`
+    );
   });
 });

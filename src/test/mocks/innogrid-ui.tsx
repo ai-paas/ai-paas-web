@@ -11,18 +11,47 @@ export const toastOpenSpy = vi.fn();
 // Input/Textarea는 react-hook-form의 {...register()}가 넘기는 ref/onBlur가 동작해야
 // reset()으로 채운 값이 DOM에 반영되므로 forwardRef + props 스프레드로 구현한다.
 vi.mock('@innogrid/ui', async () => {
-  const { forwardRef } = await import('react');
+  const { forwardRef, useState } = await import('react');
 
   const Input = forwardRef<
     HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement> & { errMessage?: string }
-  >(({ errMessage, ...props }, ref) => (
+    React.InputHTMLAttributes<HTMLInputElement> & {
+      errMessage?: string;
+      customSize?: { width?: number | string; height?: number | string };
+    }
+  >(({ errMessage, customSize, ...props }, ref) => (
     <>
-      <input ref={ref} {...props} />
+      <input
+        ref={ref}
+        style={customSize ? { width: customSize.width, height: customSize.height } : undefined}
+        {...props}
+      />
       {errMessage && <span>{errMessage}</span>}
     </>
   ));
   Input.displayName = 'Input';
+
+  // 로그인 페이지 등에서 라벨·placeholder 없이 쓰여 접근성 쿼리가 불가능하므로
+  // (실제 컴포넌트도 자체 라벨은 렌더하지 않는다) data-testid를 이스케이프 해치로 제공한다.
+  const Password = forwardRef<
+    HTMLInputElement,
+    React.InputHTMLAttributes<HTMLInputElement> & {
+      errMessage?: string;
+      customSize?: { width?: number | string; height?: number | string };
+    }
+  >(({ errMessage, customSize, ...props }, ref) => (
+    <>
+      <input
+        type="password"
+        data-testid="password-input"
+        ref={ref}
+        style={customSize ? { width: customSize.width, height: customSize.height } : undefined}
+        {...props}
+      />
+      {errMessage && <span>{errMessage}</span>}
+    </>
+  ));
+  Password.displayName = 'Password';
 
   const Textarea = forwardRef<
     HTMLTextAreaElement,
@@ -43,18 +72,76 @@ vi.mock('@innogrid/ui', async () => {
   Textarea.displayName = 'Textarea';
 
   // PopoverTrigger 등 radix asChild가 ref를 전달하므로 forwardRef로 구현한다.
+  // isLoading은 DOM 속성이 아니므로 스프레드 전에 걸러낸다 (React 경고 방지).
   const Button = forwardRef<
     HTMLButtonElement,
-    React.ButtonHTMLAttributes<HTMLButtonElement> & { color?: string; size?: string }
-  >(({ children, color, size, ...props }, ref) => (
-    <button ref={ref} data-color={color} data-size={size} {...props}>
+    React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      color?: string;
+      size?: string;
+      isLoading?: boolean;
+    }
+  >(({ children, color, size, isLoading, ...props }, ref) => (
+    <button ref={ref} data-color={color} data-size={size} data-loading={isLoading} {...props}>
       {children}
     </button>
   ));
   Button.displayName = 'Button';
 
+  // 라벨 버튼 + 활성 컴포넌트만 렌더하는 경량 목 — 실제처럼 비활성 탭 내용은 마운트하지 않는다.
+  const Tabs = ({
+    labels = [],
+    components = [],
+  }: {
+    labels?: React.ReactNode[];
+    components?: React.ReactNode[];
+  }) => {
+    const [active, setActive] = useState(0);
+
+    return (
+      <div>
+        <div role="tablist">
+          {labels.map((label, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              onClick={() => setActive(i)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div role="tabpanel">{components[active]}</div>
+      </div>
+    );
+  };
+
   return {
     Button,
+
+    // path가 있는 항목은 onNavigate 호출 버튼으로 렌더 — 브레드크럼 이동 검증용
+    BreadCrumb: ({
+      items = [],
+      onNavigate,
+    }: {
+      items?: { label: string; path?: string }[];
+      onNavigate?: (path: string) => void;
+    }) => (
+      <nav aria-label="경로">
+        {items.map((item, i) =>
+          item.path ? (
+            <button key={i} type="button" onClick={() => onNavigate?.(item.path as string)}>
+              {item.label}
+            </button>
+          ) : (
+            <span key={i}>{item.label}</span>
+          )
+        )}
+      </nav>
+    ),
+
+    Tabs,
 
     Modal: ({
       isOpen,
@@ -62,6 +149,7 @@ vi.mock('@innogrid/ui', async () => {
       title,
       action,
       buttonTitle,
+      buttonDisabled,
       subButton,
     }: {
       isOpen: boolean;
@@ -70,6 +158,7 @@ vi.mock('@innogrid/ui', async () => {
       action?: () => void;
       onRequestClose?: () => void;
       buttonTitle?: string;
+      buttonDisabled?: boolean;
       subButton?: React.ReactNode;
     }) =>
       isOpen ? (
@@ -78,12 +167,16 @@ vi.mock('@innogrid/ui', async () => {
           {children}
           <div>
             {subButton}
-            <button onClick={action}>{buttonTitle}</button>
+            <button disabled={buttonDisabled} onClick={action}>
+              {buttonTitle}
+            </button>
           </div>
         </div>
       ) : null,
 
     Input,
+
+    Password,
 
     Textarea,
 
@@ -94,6 +187,7 @@ vi.mock('@innogrid/ui', async () => {
       value,
       placeholder,
       onChange,
+      errMessage,
       getOptionLabel = (option) => String((option as { text?: unknown })?.text ?? ''),
       getOptionValue = (option) => String((option as { value?: unknown })?.value ?? ''),
     }: {
@@ -101,26 +195,100 @@ vi.mock('@innogrid/ui', async () => {
       value?: unknown;
       placeholder?: string;
       onChange?: (option: unknown | null) => void;
+      errMessage?: string;
       getOptionLabel?: (option: unknown) => string;
       getOptionValue?: (option: unknown) => string;
       menuPosition?: string;
     }) => (
-      <select
-        aria-label={placeholder}
-        value={value != null ? getOptionValue(value) : ''}
-        onChange={(event) => {
-          const selected =
-            options.find((option) => getOptionValue(option) === event.target.value) ?? null;
-          onChange?.(selected);
-        }}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={getOptionValue(option)} value={getOptionValue(option)}>
-            {getOptionLabel(option)}
-          </option>
+      <>
+        <select
+          aria-label={placeholder}
+          value={value != null ? getOptionValue(value) : ''}
+          onChange={(event) => {
+            const selected =
+              options.find((option) => getOptionValue(option) === event.target.value) ?? null;
+            onChange?.(selected);
+          }}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={getOptionValue(option)} value={getOptionValue(option)}>
+              {getOptionLabel(option)}
+            </option>
+          ))}
+        </select>
+        {errMessage && <span>{errMessage}</span>}
+      </>
+    ),
+
+    // 네이티브 file input으로 렌더링하는 경량 목 — 드래그앤드롭·미리보기는 생략.
+    // 실제 컴포넌트처럼 extensions에 없는 확장자는 onError를 호출하고 파일을 넘기지 않는다.
+    FileDrop: ({
+      id,
+      description,
+      extensions,
+      files = [],
+      multiple,
+      onAddFile,
+      onDeleteFile,
+      onError,
+    }: {
+      id?: string;
+      description?: React.ReactNode;
+      extensions?: string[];
+      files?: File[];
+      multiple?: boolean;
+      onAddFile?: (files: File[]) => void;
+      onDeleteFile?: (value: { file: File; fileIndex: number }) => void;
+      onError?: () => void;
+    }) => (
+      <div>
+        <input
+          aria-label="파일 업로드"
+          data-testid={id}
+          multiple={multiple}
+          type="file"
+          onChange={(event) => {
+            const list = Array.from(event.currentTarget.files ?? []);
+            const isAllowed = (file: File) =>
+              !extensions?.length ||
+              extensions.some((ext) => file.name.toLowerCase().endsWith(`.${ext.toLowerCase()}`));
+            if (list.some((file) => !isAllowed(file))) {
+              onError?.();
+              return;
+            }
+            onAddFile?.(list);
+          }}
+        />
+        <div>{description}</div>
+        {files.map((file, index) => (
+          <div key={`${file.name}-${file.size}`}>
+            <span>{file.name}</span>
+            <button type="button" onClick={() => onDeleteFile?.({ file, fileIndex: index })}>
+              삭제
+            </button>
+          </div>
         ))}
-      </select>
+      </div>
+    ),
+
+    // 단일 라디오 경량 목 — label 텍스트로 getByRole('radio', { name })이 동작한다.
+    RadioButton: ({
+      id,
+      label,
+      checked,
+      onCheckedChange,
+    }: {
+      id?: string;
+      label?: string;
+      value?: string;
+      checked?: boolean;
+      onCheckedChange?: (checked: boolean) => void;
+    }) => (
+      <label htmlFor={id}>
+        <input type="radio" id={id} checked={checked} onChange={() => onCheckedChange?.(true)} />
+        {label}
+      </label>
     ),
 
     // 네이티브 라디오로 렌더링하는 경량 목 — label 텍스트로 getByRole('radio', { name })이 동작한다.

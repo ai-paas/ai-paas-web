@@ -74,6 +74,20 @@ server.use(
 - 토스트 내용 단언은 목이 export하는 `toastOpenSpy` 사용:
   `import { toastOpenSpy } from '@/test/mocks/innogrid-ui';` (사이드이펙트 import 겸용).
 
+### 목록 페이지 (Table + SearchInput 패턴)
+
+`@/test/utils/list-page` 헬퍼 사용 — 기준 예시는 `src/pages/service/page.test.tsx`.
+
+- `renderListPage`(ToastProvider 포함 실제 렌더), `searchListFor`, `goToNextPage`,
+  `getPageIndexInput`, `toggleRowSelection`, `toggleSelectAll`
+- `createPagedListHandler(path, items, options?)`: page/size/search/sort를 서버처럼 처리하는
+  MSW 핸들러 + 요청 파라미터 캡처(`lastParams`). Table이 manualSorting/manualPagination이라
+  정렬·검색·페이지 이동 검증은 "요청 파라미터 단언"으로 한다. 봉투가 `Page<T>`가 아니면
+  `envelope` 옵션 사용(템플릿 목록의 `{ total, items }` 등).
+- 가상화 주의: 한 페이지에서 앞쪽 6행 정도만 DOM에 렌더된다 — 행 단언·선택은 앞쪽 행으로.
+- 체크박스 개별 클릭은 선택을 **교체**한다(행 클릭 핸들러 버블링) — 다중 선택 상태는
+  `toggleSelectAll`로만 만들 수 있다.
+
 ## 자주 쓰는 패턴
 
 ```ts
@@ -87,6 +101,21 @@ vi.mock('react-router', async () => ({
 
 - 테스트명은 한국어, `describe`로 섹션 구분 (기존 `create-service-button.test.tsx` 참고).
 - `clearMocks: true` 전역 설정 — `beforeEach(vi.clearAllMocks)` 불필요.
+
+## 접근성 스모크 (vitest-axe)
+
+```ts
+import { axe } from 'vitest-axe';
+
+// color-contrast는 jsdom(canvas 미구현)에서 판정 불가 — 항상 제외
+const results = await axe(container, { rules: { 'color-contrast': { enabled: false } } });
+expect(results).toHaveNoViolations(); // 매처는 setup-tests가 전역 등록
+```
+
+- **실제 @innogrid/ui로 렌더할 것** — 경량 목의 마크업을 검사하는 것은 무의미.
+  로그인처럼 기존 테스트 파일이 목을 쓰면 a11y만 별도 파일로 분리 (`page.a11y.test.tsx`).
+- Table을 쓰는 목록 페이지는 업스트림 위반 3종(button-name/label/select-name)이 항상 나온다 —
+  `src/pages/service/page.test.tsx`의 특성화 패턴(위반 id 집합 + 노드 allowlist)을 복제할 것.
 
 ## 상태 리셋 (전역 싱글턴 오염 방지)
 

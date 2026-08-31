@@ -56,11 +56,35 @@ export const mockWorkflowTemplate: WorkflowTemplate = {
 };
 
 export const workflowHandlers = [
-  // GET /workflows/templates/:templateId - 템플릿 상세
+  // GET /workflows - 워크플로우 목록 조회
+  http.get(`${BASE_URL}/workflows`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page')) || 1;
+    const size = Number(url.searchParams.get('size')) || 10;
+    return HttpResponse.json({ data: [mockWorkflow], total: 1, page, size });
+  }),
+
+  // POST /workflows - 워크플로우 생성
+  http.post(`${BASE_URL}/workflows`, () => HttpResponse.json(mockWorkflow)),
+
+  // POST /workflows/validate - 워크플로우 검증 (기본: 통과)
+  http.post(`${BASE_URL}/workflows/validate`, () =>
+    HttpResponse.json({ valid: true, checks: [] })
+  ),
+
+  // GET /workflows/templates - 템플릿 목록 조회
   // (:surro_workflow_id 단일 파라미터 라우트보다 먼저 등록해야 'templates' 리터럴이 우선 매칭된다)
+  http.get(`${BASE_URL}/workflows/templates`, () =>
+    HttpResponse.json({ total: 1, items: [mockWorkflowTemplate] })
+  ),
+
+  // GET /workflows/templates/:templateId - 템플릿 상세
   http.get(`${BASE_URL}/workflows/templates/:templateId`, ({ params }) =>
     HttpResponse.json({ ...mockWorkflowTemplate, id: params.templateId as string })
   ),
+
+  // DELETE /workflows/templates/:templateId - 템플릿 삭제
+  http.delete(`${BASE_URL}/workflows/templates/:templateId`, () => HttpResponse.json('deleted')),
 
   // GET /workflows/:surro_workflow_id/status - 배포 상태 (기본: 배포 완료 모델 1개)
   http.get(`${BASE_URL}/workflows/:surro_workflow_id/status`, ({ params }) =>

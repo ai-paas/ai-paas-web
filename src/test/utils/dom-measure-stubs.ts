@@ -57,6 +57,14 @@ export function installDomMeasurementStubs({ width = 1000, height = 500 } = {}) 
     originals.push(() => {
       Range.prototype.getBoundingClientRect = originalRangeRect;
     });
+
+    // Table이 페이지 이동 시 본문 뷰포트를 scrollTo({ top: 0 })로 되감는다 (jsdom 미구현)
+    if (!Element.prototype.scrollTo) {
+      Element.prototype.scrollTo = () => {};
+      originals.push(() => {
+        delete (Element.prototype as Partial<Element>).scrollTo;
+      });
+    }
   });
 
   afterAll(() => {

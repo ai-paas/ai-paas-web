@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
+// vitest-axe 매처(toHaveNoViolations) + vitest 타입 확장 — 접근성 스모크(TEST_PLAN 3D)
+import 'vitest-axe/extend-expect';
 import { configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { clearAccessToken } from '@/lib/api';

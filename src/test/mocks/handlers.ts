@@ -20,7 +20,7 @@ export { mockLearnings } from './handlers/learning';
 export { mockMembers } from './handlers/members';
 export { mockCustomModels, mockModelCatalogs, mockModels } from './handlers/models';
 export { mockPod } from './handlers/monitoring';
-export { mockPrompts } from './handlers/prompts';
+export { mockPrompts, mockPromptVariableTypes } from './handlers/prompts';
 export { mockServices, mockServiceDetail } from './handlers/services';
 export { mockWorkflow, mockWorkflowRead, mockWorkflowTemplate } from './handlers/workflows';
 
