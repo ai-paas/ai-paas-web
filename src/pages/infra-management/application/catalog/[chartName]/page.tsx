@@ -9,8 +9,14 @@ import {
 import { formatDateTime } from '@/util/date';
 import { DetailValue } from '@/components/ui/detail-value';
 import styles from '../../../inframonitor.module.scss';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
 import { coy as syntaxStyle } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// Prism 전체(수백 개 언어) 번들을 피하기 위해 실제 사용하는 언어만 등록
+SyntaxHighlighter.registerLanguage('markdown', markdown);
+SyntaxHighlighter.registerLanguage('yaml', yaml);
 
 const CopyIcon = ({ copied }: { copied?: boolean }) => (
   <svg

@@ -237,6 +237,11 @@ vi.mock('@innogrid/ui', async () => {
         </div>
       ) : null,
 
+    // 로딩 표지로 getByRole('status')로 조회할 수 있는 경량 목 — 애니메이션은 생략
+    Skeleton: ({ style }: { variant?: string; style?: React.CSSProperties }) => (
+      <div role="status" style={style} />
+    ),
+
     useToast: () => ({ open: vi.fn() }),
   };
 });
