@@ -39,7 +39,7 @@ import type { HTTPError } from 'ky';
 export const useGetWorkflows = (params: WorkflowListParams) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.workflows.list(params),
-    queryFn: () => api.get<Page<Workflow>>('workflows', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<Page<Workflow>>('workflows/', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -111,7 +111,7 @@ export const useCreateWorkflow = () => {
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: CreateWorkflowRequest) =>
-      api.post('workflows', { json: data }).json<Workflow>(),
+      api.post('workflows/', { json: data }).json<Workflow>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -130,7 +130,7 @@ export const useCreateWorkflowViaTemplate = () => {
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: CreateWorkflowRequest) =>
-      api.post('workflows', { json: data }).json<Workflow>(),
+      api.post('workflows/', { json: data }).json<Workflow>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -280,8 +280,9 @@ export const useDeleteWorkflowTemplate = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (templateId: string) =>
-      api.delete(`workflows/templates/${templateId}`).json<string>(),
+    mutationFn: async (templateId: string) => {
+      await api.delete(`workflows/templates/${templateId}`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },
@@ -401,17 +402,16 @@ export const useUpdateComponentDeployStatus = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (
-      data: { surro_workflow_id: string; component_id: string } & ComponentDeployStatusBody
-    ) =>
+    mutationFn: ({
+      surro_workflow_id,
+      component_id,
+      ...body
+    }: { surro_workflow_id: string; component_id: string } & ComponentDeployStatusBody) =>
       api
-        .post(
-          `workflows/${data.surro_workflow_id}/components/${data.component_id}/deployment-status`,
-          {
-            json: data,
-          }
-        )
-        .json<Workflow>(),
+        .post(`workflows/${surro_workflow_id}/components/${component_id}/deployment-status`, {
+          json: body,
+        })
+        .json<Record<string, unknown>>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workflows.all });
     },

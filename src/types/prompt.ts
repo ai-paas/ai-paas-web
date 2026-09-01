@@ -8,17 +8,19 @@ export interface GetPromptsParams {
 export interface Prompt {
   id: number;
   surro_prompt_id: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
   created_by: string;
   name: string;
-  description: string;
+  description?: string | null;
   content: string;
-  prompt_variable: {
-    id: number;
-    name: string;
-    prompt_id: number;
-  }[];
+  prompt_variable?:
+    | {
+        id: number;
+        name: string;
+        prompt_id: number;
+      }[]
+    | null;
 }
 
 export interface PromptVariableTypeList {

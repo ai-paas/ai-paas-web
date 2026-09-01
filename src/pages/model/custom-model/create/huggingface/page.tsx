@@ -740,14 +740,7 @@ const FilterTab = ({
 };
 
 interface ModelItemProps {
-  model: {
-    modelId: string;
-    task: string;
-    parameterDisplay: string | null;
-    downloads: number;
-    likes: number;
-    lastModified: string;
-  };
+  model: HubModel;
   isActive?: boolean;
   onClick: () => void;
 }
@@ -758,7 +751,7 @@ const ModelItem = ({ model, isActive, onClick }: ModelItemProps) => {
       className={`${styles.descInfoBox} ${isActive ? styles.active : ''} cursor-pointer`}
       onClick={onClick}
     >
-      <p>{model.modelId}</p>
+      <p>{model.modelId ?? model.id}</p>
       <div className={styles.descInfo}>
         <div>
           <span>Tasks</span>
@@ -770,15 +763,17 @@ const ModelItem = ({ model, isActive, onClick }: ModelItemProps) => {
         </div>
         <div>
           <span>업데이트 날짜(경과일)</span>
-          <div>업데이트 {formatRelativeTime(model.lastModified)}</div>
+          <div>
+            {model.lastModified ? `업데이트 ${formatRelativeTime(model.lastModified)}` : '-'}
+          </div>
         </div>
         <div>
           <span>다운로드 수</span>
-          <div>{formatCount(model.downloads)}</div>
+          <div>{formatCount(model.downloads ?? 0)}</div>
         </div>
         <div>
           <span>좋아요 수</span>
-          <div>{formatCount(model.likes)}</div>
+          <div>{formatCount(model.likes ?? 0)}</div>
         </div>
       </div>
     </div>

@@ -7,29 +7,39 @@ export interface GetLearningParams {
 
 export interface LearningRefSummary {
   id: number;
-  name: string;
+  name?: string | null;
+  recommended_hparams?: Record<string, string>;
+  kind?: DatasetKind | null;
 }
 
 export interface Learning {
   id: number;
-  name: string;
-  description?: string;
-  status: string;
-  registration_status: string;
-  registered_model_id: number | null;
-  elapsed_time: number;
-  end_time: string | null;
-  reference_model: LearningRefSummary;
-  dataset: LearningRefSummary;
-  created_at: string;
-  updated_at: string;
+  name?: string | null;
+  description?: string | null;
+  status?: string | null;
+  registration_status?: string | null;
+  registered_model_id?: number | null;
+  elapsed_time?: number | null;
+  end_time?: string | null;
+  reference_model?: LearningRefSummary | null;
+  dataset?: LearningRefSummary | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface LearningStatus {
-  experiment_id: string;
   status: string;
-  progress?: number;
-  message?: string;
+  start_time: number;
+  end_time?: number | null;
+  elapsed_time: number;
+  max_epoch: number;
+  current_epoch: number;
+  loss_history: unknown[];
+  epoch_history: unknown[];
+  average_precision_50_history: unknown[];
+  average_precision_75_history: unknown[];
+  best_average_precision_history: unknown[];
+  average_precision_50_95_history: unknown[];
 }
 
 /** MLOps 데이터셋 학습 태스크 분류 (DatasetKindEnum) */
@@ -87,21 +97,21 @@ export interface UpdateLearningInternalAccessRequest {
 export interface LearningReadResponse {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
   reference_model_id: number;
   dataset_id: number;
-  kubeflow_run_id?: string;
-  mlflow_run_id?: string;
+  kubeflow_run_id?: string | null;
+  mlflow_run_id?: string | null;
   status: string;
-  reference_model: Record<string, unknown>;
-  dataset: Record<string, unknown>;
-  hyperparameters: Record<string, unknown>[];
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string;
-  created_by?: string;
-  updated_by?: string;
-  deleted_by?: string;
+  reference_model?: Record<string, unknown> | null;
+  dataset?: Record<string, unknown> | null;
+  hyperparameters?: Record<string, unknown>[] | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+  created_by?: string | null;
+  updated_by?: string | null;
+  deleted_by?: string | null;
 }
 
 export interface LearningLossPoint {
@@ -111,30 +121,30 @@ export interface LearningLossPoint {
 
 export interface LearningDetail {
   id: number;
-  name: string;
-  description?: string;
-  reference_model_id: number;
-  dataset_id: number;
-  kubeflow_run_id?: string;
-  mlflow_run_id?: string;
-  status: string;
-  reference_model: LearningRefSummary;
-  dataset: LearningRefSummary;
-  hyperparameters: Record<string, unknown>[];
-  created_at: string;
-  updated_at: string;
-  registration_status: string;
-  registered_model_id: number;
-  train_msg?: string;
-  model_register_msg?: string;
-  elapsed_time: number;
-  end_time?: string;
-  max_epoch: number;
-  current_epoch: number;
-  loss: number;
-  loss_history: LearningLossPoint[];
-  average_precision: number;
-  accuracy: number;
-  precision: number;
-  recall: number;
+  name?: string | null;
+  description?: string | null;
+  reference_model_id?: number | null;
+  dataset_id?: number | null;
+  kubeflow_run_id?: string | null;
+  mlflow_run_id?: string | null;
+  status?: string | null;
+  reference_model?: LearningRefSummary | null;
+  dataset?: LearningRefSummary | null;
+  hyperparameters?: Record<string, unknown>[] | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  registration_status?: string | null;
+  registered_model_id?: number | null;
+  train_msg?: string | null;
+  model_register_msg?: string | null;
+  elapsed_time?: number | null;
+  end_time?: string | null;
+  max_epoch?: number | null;
+  current_epoch?: number | null;
+  loss?: number | null;
+  loss_history?: LearningLossPoint[] | null;
+  average_precision?: number | null;
+  accuracy?: number | null;
+  precision?: number | null;
+  recall?: number | null;
 }

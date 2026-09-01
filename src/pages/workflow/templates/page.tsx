@@ -8,9 +8,8 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type SortValue,
 } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { DeleteWorkflowTemplateButton } from '@/components/features/workflow/delete-workflow-template-button';
 import { useGetTemplates } from '@/hooks/service/workflows';
@@ -67,24 +66,16 @@ const columns = [
     accessorFn: (row: WorkflowTemplateBrief) => formatDateTime(row.created_at),
     size: 225,
   },
-];
+].map((column) => ({ ...column, enableSorting: false }));
 
 export default function WorkflowTemplatePage() {
   const navigate = useNavigate();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
   const { workflowTemplates, page, isPending, isError } = useGetTemplates({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
-    sort,
   });
 
   const selectedTemplate = useMemo(() => {
@@ -166,8 +157,6 @@ export default function WorkflowTemplatePage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
           />
         </div>
       </div>

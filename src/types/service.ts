@@ -1,8 +1,8 @@
 export interface Service {
   id: number;
   name: string;
-  description: string;
-  tags?: string[];
+  description: string | null;
+  tags: string[] | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -64,43 +64,44 @@ export interface ServiceMonitoringData {
 
 export interface KnowledgeBaseSummary {
   id: number;
-  surro_knowledge_id: number;
+  surro_knowledge_id?: number;
   name: string;
-  description: string | null;
-  type: string;
-  collection_name: string;
-  embedding_model_id: number;
-  search_method_id: number;
-  created_by: string;
-  created_at: string;
-  workflow_refs: WorkflowRef[];
+  description?: string | null;
+  type?: string;
+  collection_name?: string | null;
+  embedding_model_id?: number | null;
+  search_method_id?: number | null;
+  created_by?: string | null;
+  created_at?: string | null;
+  workflow_refs?: WorkflowRef[];
 }
 
 export interface ModelSummary {
   id: number;
   name: string;
-  description: string | null;
-  provider: string;
-  model_type: string;
-  format: string;
-  task: string;
-  visibility: string;
-  created_at: string;
-  workflow_refs: WorkflowRef[];
+  description?: string | null;
+  provider?: string | null;
+  model_type?: string | null;
+  format?: string | null;
+  task?: string | null;
+  visibility?: string | null;
+  created_at?: string | null;
+  workflow_refs?: WorkflowRef[];
 }
 
 export interface PromptSummary {
   id: number;
   name: string;
-  description: string | null;
-  content: string;
-  variables: string[];
-  created_at: string;
-  created_by: string;
-  workflow_refs: WorkflowRef[];
+  description?: string | null;
+  content?: string | null;
+  variables?: string[];
+  created_at?: string | null;
+  created_by?: string | null;
+  workflow_refs?: WorkflowRef[];
 }
 
 export interface ServiceDetail extends Service {
+  tags: string[];
   workflow_count: number;
   workflows: ServiceWorkflowBrief[];
   monitoring_data: ServiceMonitoringData | null;
@@ -118,10 +119,13 @@ export interface GetServicesParams {
 
 export interface CreateServiceRequest {
   name: string;
-  description: string;
-  tags: string[];
+  description?: string | null;
+  tags?: string[];
 }
 
-export interface UpdateServiceRequest extends CreateServiceRequest {
+export interface UpdateServiceRequest {
   surro_service_id: string;
+  name?: string;
+  description?: string | null;
+  tags?: string[] | null;
 }

@@ -7,9 +7,8 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type SortValue
 } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { CreateModelCatalogButton } from '../../../components/features/model/create-model-catalog-button';
 import { DeleteModelCatalogButton } from '../../../components/features/model/delete-model-catalog-button';
 import { Link } from 'react-router';
@@ -74,26 +73,17 @@ const columns = [
     accessorFn: (row: ModelCatalog) => formatDateTime(row.created_at.toString()),
     size: 225,
   },
-];
+].map((column) => ({ ...column, enableSorting: false }));
 
 export default function ModelCatalogPage() {
   const { isAdmin } = useAuth();
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-  
-
-  const sort = useMemo(
-    () => sorting.map(s => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting],
-  );
-
   const { modelCatalogs, page, isPending, isError } = useGetModelCatalogs({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
-    sort,
   });
 
   const selectedId = useMemo(() => {
@@ -159,8 +149,6 @@ export default function ModelCatalogPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
           />
         </div>
       </div>

@@ -27,12 +27,11 @@ export default function LoginPage() {
           navigate('/service');
         },
         onError: (error) => {
-          let message = '로그인에 실패했습니다.';
-          console.log(error);
+          let message = error.message || '로그인에 실패했습니다.';
 
-          if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          if (error.message.includes('HTTP 401')) {
             message = '아이디 또는 비밀번호를 확인해주세요.';
-          } else if (error.message.includes('Network')) {
+          } else if (/Network|Failed to fetch|fetch failed/i.test(error.message)) {
             message = '네트워크 연결을 확인해주세요.';
           }
 

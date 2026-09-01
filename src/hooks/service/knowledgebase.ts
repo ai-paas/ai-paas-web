@@ -114,7 +114,7 @@ export const useUpdateKnowledgeBase = () => {
 
   const { mutate, mutateAsync, isPending, isError, isSuccess } = useMutation({
     mutationFn: ({ surro_knowledge_id, ...data }: UpdateKnowledgeBaseRequest) =>
-      api.put(`knowledge-bases/${surro_knowledge_id}`, { json: data }).json<KnowledgeBase>(),
+      api.put(`knowledge-bases/${surro_knowledge_id}`, { json: data }).json<KnowledgeBaseBrief>(),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
       queryClient.invalidateQueries({
@@ -136,8 +136,9 @@ export const useDeleteKnowledgeBase = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (surro_knowledge_id: number) =>
-      api.delete(`knowledge-bases/${surro_knowledge_id}`).json<string>(),
+    mutationFn: async (surro_knowledge_id: number) => {
+      await api.delete(`knowledge-bases/${surro_knowledge_id}`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases.all });
     },

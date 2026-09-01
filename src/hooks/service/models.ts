@@ -51,7 +51,11 @@ export const useGetCustomModels = (params: GetCustomModelsParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.customModels.list(params),
     queryFn: () =>
-      api.get<Page<CustomModel>>('models/custom-models', { searchParams: { ...params } }).json(),
+      api
+        .get<Page<CustomModel>>('models/custom-models', {
+          searchParams: { ...params },
+        })
+        .json(),
   });
 
   return {
@@ -70,7 +74,11 @@ export const useGetModelCatalogs = (params: GetModelCatalogsParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.modelCatalogs.list(params),
     queryFn: () =>
-      api.get<Page<ModelCatalog>>('models/model-catalog', { searchParams: { ...params } }).json(),
+      api
+        .get<Page<ModelCatalog>>('models/model-catalog', {
+          searchParams: { ...params },
+        })
+        .json(),
   });
 
   return {
@@ -158,7 +166,8 @@ export const useDeleteModel = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (modelId: number) => api.delete(`models/${modelId}`).json<string>(),
+    mutationFn: (modelId: number) =>
+      api.delete(`models/${modelId}`).json<Record<string, unknown>>(),
     onSuccess: (_, modelId) => {
       queryClient.removeQueries({ queryKey: queryKeys.models.detail(modelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.models.all });
@@ -220,13 +229,13 @@ export const useGetHubModels = (params: GetHubModelsParams) => {
   return {
     hubModels: data?.data ?? [],
     page: {
-      number: data?.pagination.page ?? 1,
-      size: data?.pagination.limit ?? 1,
-      total: data?.pagination.total ?? 1,
+      number: data?.pagination?.page ?? params.page ?? 1,
+      size: data?.pagination?.limit ?? params.limit ?? data?.data.length ?? 0,
+      total: data?.pagination?.total ?? data?.data.length ?? 0,
     },
     // Kaggle 등 total 이 하한값인 마켓에서 다음 페이지 이동 판단용
-    hasMore: data?.pagination.has_more ?? false,
-    totalIsExact: data?.pagination.total_is_exact ?? true,
+    hasMore: data?.pagination?.has_more ?? false,
+    totalIsExact: data?.pagination?.total_is_exact ?? true,
     isPending,
     // 페이지/필터/검색 변경 등 모든 요청 진행 중에 true (스켈레톤 표시용)
     isFetching,
@@ -238,7 +247,11 @@ export const useGetHubModelTagsByGroup = (params: HubModelTagParams) => {
   const { data, isFetching, isPending, isError, refetch } = useQuery({
     queryKey: queryKeys.hubModelTags.list(params),
     queryFn: () =>
-      api.get<HubModelTag>(`hub-connect/tags/${params.group}`, { searchParams: params }).json(),
+      api
+        .get<HubModelTag>(`hub-connect/tags/${encodeURIComponent(params.group)}`, {
+          searchParams: { market: params.market },
+        })
+        .json(),
   });
 
   return {

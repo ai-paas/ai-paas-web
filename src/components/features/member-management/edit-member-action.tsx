@@ -2,7 +2,7 @@ import { AlertDialog, Button } from '@innogrid/ui';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUpdateMember } from '@/hooks/service/member';
-import type { UpdateMemberRequest } from '@/types/member';
+import type { UpdateMemberPayload } from '@/types/member';
 
 interface EditMemberActionProps {
   formData: {
@@ -84,18 +84,14 @@ export const EditMemberAction = ({ formData }: EditMemberActionProps) => {
   const handleClickConfirm = () => {
     const willChangePassword = !!(formData.password || formData.passwordConfirm);
 
-    const payload: UpdateMemberRequest = {
+    const payload: UpdateMemberPayload = {
       name: formData.name,
       member_id: formData.memberId,
       email: formData.email,
-      password: formData.password,
       phone: formData.phone,
       role: formData.role,
-      is_active: true,
       description: formData.description,
-      ...(willChangePassword
-        ? { password: formData.password, password_confirm: formData.passwordConfirm }
-        : {}),
+      ...(willChangePassword ? { password: formData.password } : {}),
     };
 
     updateMember(payload, {

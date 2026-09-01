@@ -19,7 +19,7 @@ import { useGetLearnings } from '@/hooks/service/learning';
 import { formatDateTime, formatElapsed } from '@/util/date';
 import type { Learning } from '@/types/learning';
 
-function getLearningStatusDisplay(status?: string): { label: string; className: string } {
+function getLearningStatusDisplay(status?: string | null): { label: string; className: string } {
   if (!status) return { label: '-', className: 'table-td-state-temp' };
   if (/fail|error/i.test(status)) return { label: '실패', className: 'table-td-state-negative' };
   if (/complete|success|finish|done/i.test(status))
@@ -27,7 +27,10 @@ function getLearningStatusDisplay(status?: string): { label: string; className: 
   return { label: '학습중', className: 'table-td-state-ing' };
 }
 
-function getRegistrationStatusDisplay(status?: string): { label: string; className: string } {
+function getRegistrationStatusDisplay(status?: string | null): {
+  label: string;
+  className: string;
+} {
   switch (status) {
     case 'PIPELINE_SUBMITTED':
       return { label: '등록 요청됨', className: 'table-td-state-ing' };

@@ -31,7 +31,7 @@ const columns = [
   {
     id: 'variable',
     header: '변수',
-    accessorFn: (row: PromptSummary) => `${row.variables.length}개`,
+    accessorFn: (row: PromptSummary) => `${row.variables?.length ?? 0}개`,
     size: 334,
   },
   {

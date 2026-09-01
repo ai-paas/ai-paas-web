@@ -1,4 +1,4 @@
-export function formatDateTime(dateString?: string): string {
+export function formatDateTime(dateString?: string | null): string {
   if (!dateString) return '';
   // 이미 타임존 표기(Z 또는 +09:00 등)가 있으면 그대로, 없으면 UTC(naive)로 간주해 'Z' 부여
   const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(dateString);
@@ -13,7 +13,7 @@ export function formatDateTime(dateString?: string): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-export function formatElapsed(seconds?: number): string {
+export function formatElapsed(seconds?: number | null): string {
   if (seconds === undefined || seconds === null || seconds < 0) return '-';
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);

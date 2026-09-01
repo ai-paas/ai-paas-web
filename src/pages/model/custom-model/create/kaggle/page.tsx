@@ -165,11 +165,11 @@ export default function CustomModelCreateKagglePage() {
                       </div>
                       <div>
                         <span>좋아요 수</span>
-                        <div>{formatCount(model.likes)}</div>
+                        <div>{formatCount(model.likes ?? 0)}</div>
                       </div>
                       <div>
                         <span>다운로드 수</span>
-                        <div>{formatCount(model.downloads)}</div>
+                        <div>{formatCount(model.downloads ?? 0)}</div>
                       </div>
                     </div>
                   </div>

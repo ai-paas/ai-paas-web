@@ -8,10 +8,29 @@ interface LoginRequest {
 
 interface LoginResponse {
   access_token: string;
-  refresh_token: string;
-  token_type: 'bearer';
-  expires_in: number;
+  token_type?: string;
+  expires_in?: number;
 }
+
+const getLoginErrorMessage = (data: unknown, status: number) => {
+  if (!data || typeof data !== 'object') return `HTTP ${status}`;
+
+  const { detail, message } = data as { detail?: unknown; message?: unknown };
+  if (typeof detail === 'string' && detail.trim()) return detail;
+
+  if (Array.isArray(detail)) {
+    const validationMessages = detail
+      .map((item) =>
+        item && typeof item === 'object' && 'msg' in item && typeof item.msg === 'string'
+          ? item.msg
+          : null
+      )
+      .filter((item): item is string => Boolean(item));
+    if (validationMessages.length) return validationMessages.join(', ');
+  }
+
+  return typeof message === 'string' && message.trim() ? message : `HTTP ${status}`;
+};
 
 // 서버의 리프레시 토큰(쿠키)을 무효화한다. 이 호출 없이 메모리 토큰만 지우면
 // 다음 새로고침 때 /auth/refresh 로 자동 재로그인되므로 로그아웃이 무력화된다.
@@ -44,8 +63,8 @@ export const useLogin = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
+        const errorData: unknown = await response.json().catch(() => null);
+        throw new Error(getLoginErrorMessage(errorData, response.status));
       }
 
       return response.json();

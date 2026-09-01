@@ -1,7 +1,7 @@
 // src/components/features/member-management/deactivate-member-button.tsx
 import { Button } from '@innogrid/ui';
 import { useMemo } from 'react';
-import { useUpdateMember } from '@/hooks/service/member';
+import { useUpdateMemberStatus } from '@/hooks/service/member';
 
 type Props = {
   selectedMemberId: string | null | undefined;
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function DeactivateMemberButton({ selectedMemberId, selectedIsActive }: Props) {
-  const { updateMember, isPending } = useUpdateMember();
+  const { updateMemberStatus, isPending } = useUpdateMemberStatus();
 
   const disabled = useMemo(() => {
     // 선택 없음 또는 이미 비활성화면 비활성화
@@ -18,8 +18,7 @@ export function DeactivateMemberButton({ selectedMemberId, selectedIsActive }: P
 
   const onClick = () => {
     if (!selectedMemberId) return;
-    console.log('Deactivating member with ID:', selectedMemberId);
-    updateMember({ member_id: selectedMemberId, is_active: false });
+    updateMemberStatus({ member_id: selectedMemberId, is_active: false });
   };
 
   return (

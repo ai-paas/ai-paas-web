@@ -21,7 +21,10 @@ const extractVariables = (content: string): string[] => {
 export default function PromptCreatePage() {
   const { createPrompt, isPending } = useCreatePrompt();
   const { availableTypes } = useGetPromptVariableTypes();
-  const [prompt, setPrompt] = useState<PromptBody>({} as PromptBody);
+  const [prompt, setPrompt] = useState<PromptBody>({
+    prompt: { name: '', description: '', content: '' },
+    prompt_variable: [],
+  });
   const navigate = useNavigate();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -34,9 +37,10 @@ export default function PromptCreatePage() {
     });
   };
 
-  const variables = useMemo(() => extractVariables(prompt.prompt?.content ?? ''), [
-    prompt.prompt?.content,
-  ]);
+  const variables = useMemo(
+    () => extractVariables(prompt.prompt?.content ?? ''),
+    [prompt.prompt?.content]
+  );
   const invalidVariables = useMemo(
     () => variables.filter((v) => !availableTypes.includes(v)),
     [variables, availableTypes]

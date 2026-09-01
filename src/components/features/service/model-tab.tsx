@@ -25,7 +25,7 @@ const columns = [
   {
     id: 'workflow',
     header: '워크플로우',
-    accessorFn: (row: ModelSummary) => row.workflow_refs.map((ref) => ref.name).join(', '),
+    accessorFn: (row: ModelSummary) => (row.workflow_refs ?? []).map((ref) => ref.name).join(', '),
     size: 225,
   },
   {

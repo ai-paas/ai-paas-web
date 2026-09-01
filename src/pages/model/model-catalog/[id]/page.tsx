@@ -136,7 +136,7 @@ export default function ModelCatalogDetailPage() {
               <div className="page-detail_item-name">모델 ID</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={200}>
-                  {model?.registry.uri ?? '-'}
+                  {model?.registry?.uri ?? '-'}
                 </DetailValue>
               </div>
             </li>

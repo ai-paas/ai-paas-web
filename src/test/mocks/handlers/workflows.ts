@@ -68,9 +68,7 @@ export const workflowHandlers = [
   http.post(`${BASE_URL}/workflows`, () => HttpResponse.json(mockWorkflow)),
 
   // POST /workflows/validate - 워크플로우 검증 (기본: 통과)
-  http.post(`${BASE_URL}/workflows/validate`, () =>
-    HttpResponse.json({ valid: true, checks: [] })
-  ),
+  http.post(`${BASE_URL}/workflows/validate`, () => HttpResponse.json({ valid: true, checks: [] })),
 
   // GET /workflows/templates - 템플릿 목록 조회
   // (:surro_workflow_id 단일 파라미터 라우트보다 먼저 등록해야 'templates' 리터럴이 우선 매칭된다)
@@ -84,7 +82,10 @@ export const workflowHandlers = [
   ),
 
   // DELETE /workflows/templates/:templateId - 템플릿 삭제
-  http.delete(`${BASE_URL}/workflows/templates/:templateId`, () => HttpResponse.json('deleted')),
+  http.delete(
+    `${BASE_URL}/workflows/templates/:templateId`,
+    () => new HttpResponse(null, { status: 204 })
+  ),
 
   // GET /workflows/:surro_workflow_id/status - 배포 상태 (기본: 배포 완료 모델 1개)
   http.get(`${BASE_URL}/workflows/:surro_workflow_id/status`, ({ params }) =>

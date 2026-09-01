@@ -150,7 +150,8 @@ export const useDeleteLearning = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (experimentId: number) => api.delete(`learning/${experimentId}`).json<string>(),
+    mutationFn: (experimentId: number) =>
+      api.delete(`learning/${experimentId}`).json<Record<string, unknown>>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });
     },

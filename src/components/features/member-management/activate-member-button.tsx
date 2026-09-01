@@ -1,7 +1,7 @@
 // src/components/features/member-management/activate-member-button.tsx
 import { Button } from '@innogrid/ui';
 import { useMemo } from 'react';
-import { useUpdateMember } from '@/hooks/service/member';
+import { useUpdateMemberStatus } from '@/hooks/service/member';
 
 type Props = {
   selectedMemberId: string | null | undefined;
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function ActivateMemberButton({ selectedMemberId, selectedIsActive }: Props) {
-  const { updateMember, isPending } = useUpdateMember();
+  const { updateMemberStatus, isPending } = useUpdateMemberStatus();
 
   const disabled = useMemo(() => {
     return !selectedMemberId || selectedIsActive === true;
@@ -17,7 +17,7 @@ export function ActivateMemberButton({ selectedMemberId, selectedIsActive }: Pro
 
   const onClick = () => {
     if (!selectedMemberId) return;
-    updateMember({ member_id: selectedMemberId, is_active: true });
+    updateMemberStatus({ member_id: selectedMemberId, is_active: true });
   };
 
   return (

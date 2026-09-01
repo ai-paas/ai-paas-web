@@ -107,7 +107,8 @@ export const useDeleteDataset = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (datasetId: number) => api.delete(`datasets/${datasetId}`).json<string>(),
+    mutationFn: (datasetId: number) =>
+      api.delete(`datasets/${datasetId}`).json<Record<string, unknown>>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },

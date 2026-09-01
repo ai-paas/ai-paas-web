@@ -58,7 +58,6 @@ describe('useLogin', () => {
         contentType = request.headers.get('Content-Type');
         return HttpResponse.json({
           access_token: 'login-access-token',
-          refresh_token: 'login-refresh-token',
           token_type: 'bearer',
           expires_in: 3600,
         });
@@ -106,10 +105,10 @@ describe('useLogin', () => {
     ).rejects.toThrow('HTTP 500');
   });
 
-  it('에러 본문이 JSON이지만 message가 없으면 HTTP 상태 코드 메시지로 폴백한다', async () => {
+  it('FastAPI 에러 응답의 detail을 에러 메시지로 사용한다', async () => {
     server.use(
       http.post(`${BASE_URL}/auth/login`, () =>
-        HttpResponse.json({ detail: 'Unauthorized' }, { status: 401 })
+        HttpResponse.json({ detail: '계정이 잠겨 있습니다.' }, { status: 401 })
       )
     );
 
@@ -117,6 +116,28 @@ describe('useLogin', () => {
 
     await expect(
       result.current.mutateAsync({ member_id: 'user-a', password: 'wrong' })
-    ).rejects.toThrow('HTTP 401');
+    ).rejects.toThrow('계정이 잠겨 있습니다.');
+  });
+
+  it('FastAPI 검증 오류의 detail 메시지 목록을 표시 가능한 문자열로 변환한다', async () => {
+    server.use(
+      http.post(`${BASE_URL}/auth/login`, () =>
+        HttpResponse.json(
+          {
+            detail: [
+              { loc: ['body', 'member_id'], msg: 'Field required', type: 'missing' },
+              { loc: ['body', 'password'], msg: 'Field required', type: 'missing' },
+            ],
+          },
+          { status: 422 }
+        )
+      )
+    );
+
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    await expect(result.current.mutateAsync({ member_id: '', password: '' })).rejects.toThrow(
+      'Field required, Field required'
+    );
   });
 });

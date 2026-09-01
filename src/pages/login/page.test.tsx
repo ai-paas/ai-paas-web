@@ -27,7 +27,6 @@ const loginUrl = `${BASE_URL}/auth/login`;
 const successResponse = () =>
   HttpResponse.json({
     access_token: makeTestJwt({ role: 'user' }),
-    refresh_token: 'refresh',
     token_type: 'bearer',
     expires_in: 3600,
   });
@@ -85,9 +84,9 @@ describe('LoginPage', () => {
       expected: '아이디 또는 비밀번호를 확인해주세요.',
     },
     {
-      name: "서버 message에 'Unauthorized'가 포함되면 아이디/비밀번호 확인 안내를 표시한다",
+      name: "서버 message에 'Unauthorized'가 포함되면 해당 메시지를 표시한다",
       respond: () => HttpResponse.json({ message: 'Unauthorized user' }, { status: 400 }),
-      expected: '아이디 또는 비밀번호를 확인해주세요.',
+      expected: 'Unauthorized user',
     },
     {
       name: "서버 message에 'Network'가 포함되면 네트워크 안내를 표시한다",
@@ -95,9 +94,14 @@ describe('LoginPage', () => {
       expected: '네트워크 연결을 확인해주세요.',
     },
     {
-      name: '그 외 서버 에러는 기본 실패 문구를 표시한다',
+      name: '그 외 서버 에러 메시지를 표시한다',
       respond: () => HttpResponse.json({ message: '서버 오류' }, { status: 500 }),
-      expected: '로그인에 실패했습니다.',
+      expected: '서버 오류',
+    },
+    {
+      name: 'FastAPI detail을 표시한다',
+      respond: () => HttpResponse.json({ detail: '계정이 잠겨 있습니다.' }, { status: 403 }),
+      expected: '계정이 잠겨 있습니다.',
     },
   ])('$name', async ({ respond, expected }) => {
     server.use(http.post(loginUrl, respond));
@@ -109,16 +113,12 @@ describe('LoginPage', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('네트워크 단절(fetch reject) 시 기본 실패 문구가 표시된다 — 버그 의심: 팀 확인 필요', async () => {
-    // Chromium('Failed to fetch')·undici('fetch failed') 모두 메시지에 'Network'가 없어
-    // includes('Network') 분기는 Firefox 계열('NetworkError ...')에서만 동작한다.
-    // 실제 네트워크 에러가 네트워크 안내 대신 기본 문구로 표시되는 현재 동작을 고정한다.
+  it('네트워크 단절(fetch reject) 시 네트워크 안내를 표시한다', async () => {
     server.use(http.post(loginUrl, () => HttpResponse.error()));
     const { user } = renderLoginPage();
     await fillAndSubmit(user);
 
-    expect(await screen.findAllByText('로그인에 실패했습니다.')).toHaveLength(2);
-    expect(screen.queryAllByText('네트워크 연결을 확인해주세요.')).toHaveLength(0);
+    expect(await screen.findAllByText('네트워크 연결을 확인해주세요.')).toHaveLength(2);
   });
 
   it('로그인 요청 진행 중에는 버튼이 비활성화된다', async () => {

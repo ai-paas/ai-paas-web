@@ -2,7 +2,6 @@ import ky from 'ky';
 
 type RefreshTokenResponse = {
   access_token?: string;
-  refresh_token?: string;
 };
 
 type QueuedRequest = {
@@ -17,12 +16,12 @@ let accessTokenMemory: string | null = null;
 
 export const getAccessToken = () => accessTokenMemory;
 
-export const setAccessToken = (token: string) => {
+export const setAccessToken = (token: string | null) => {
   accessTokenMemory = token;
 };
 
 export const clearAccessToken = () => {
-  accessTokenMemory = null;
+  setAccessToken(null);
 };
 
 const queueRequest = (request: Request) =>

@@ -64,7 +64,7 @@ describe('워크플로우 템플릿 목록 페이지', () => {
 
     const params = lastParams();
     expect(params?.get('page')).toBe('1');
-    expect(params?.get('sort')).toBe('name');
+    expect(params?.has('sort')).toBe(false);
   });
 
   it('검색은 서버로 전달되지 않고(파라미터 없음 — 특성화) 클라이언트 필터로만 동작하며, 페이지는 1로 초기화된다', async () => {
@@ -124,9 +124,7 @@ describe('워크플로우 템플릿 목록 페이지', () => {
     await waitFor(() => expect(deleteButton).toBeEnabled());
 
     await user.click(deleteButton);
-    expect(
-      await screen.findByText('템플릿 01 템플릿을 삭제하시겠습니까?')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('템플릿 01 템플릿을 삭제하시겠습니까?')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '확인' }));
 

@@ -78,6 +78,27 @@ describe('useAuth', () => {
     });
   });
 
+  describe('setAccessToken', () => {
+    it('컨텍스트 상태와 API 메모리 토큰을 함께 설정하고 해제한다', () => {
+      setAccessToken(makeTestJwt({ role: 'user' }));
+      const { wrapper } = createAuthWrapper();
+      const { result } = renderHook(() => useAuth(), { wrapper });
+      const adminToken = makeTestJwt({ role: 'admin' });
+
+      act(() => result.current.setAccessToken(adminToken));
+
+      expect(result.current.accessToken).toBe(adminToken);
+      expect(result.current.isAdmin).toBe(true);
+      expect(getAccessToken()).toBe(adminToken);
+
+      act(() => result.current.setAccessToken(null));
+
+      expect(result.current.accessToken).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(getAccessToken()).toBeNull();
+    });
+  });
+
   // ============================================
   // isAdmin — 토큰 role 클레임 파생
   // ============================================

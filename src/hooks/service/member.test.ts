@@ -5,7 +5,13 @@ import { server } from '@/test/mocks/server';
 import { BASE_URL } from '@/test/mocks/handlers';
 import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
 import { queryKeys } from '@/lib/query-keys';
-import { useCreateMember, useDeleteMember, useGetMember, useUpdateMember } from './member';
+import {
+  useCreateMember,
+  useDeleteMember,
+  useGetMember,
+  useUpdateMember,
+  useUpdateMemberStatus,
+} from './member';
 
 // 멤버 mutation은 members.all 프리픽스 무효화 계약이다.
 // detail(id)이 ['members', id]로 all 하위 계층이라 한 번의 무효화로 목록·상세가 모두 stale 처리된다.
@@ -52,7 +58,7 @@ describe('member hooks', () => {
 
     it('생성 실패 시 무효화하지 않는다', async () => {
       server.use(
-        http.post(`${BASE_URL}/members`, () =>
+        http.post(`${BASE_URL}/members/`, () =>
           HttpResponse.json({ detail: 'Duplicated' }, { status: 409 })
         )
       );
@@ -114,6 +120,42 @@ describe('member hooks', () => {
         true
       );
     });
+  });
+
+  describe('useUpdateMemberStatus', () => {
+    it.each([true, false])(
+      'PATCH 상태 변경 요청에 is_active=%s 쿼리를 보내고 멤버 캐시를 무효화한다',
+      async (isActive) => {
+        let capturedId: string | undefined;
+        let capturedStatus: string | null = null;
+        server.use(
+          http.patch(`${BASE_URL}/members/:memberId/status`, ({ request, params }) => {
+            capturedId = params.memberId as string;
+            capturedStatus = new URL(request.url).searchParams.get('is_active');
+            return HttpResponse.json({ member_id: 'user-a', is_active: isActive });
+          })
+        );
+        const queryClient = createTestQueryClient({ gcTime: Infinity });
+        seedCaches(queryClient);
+        const { result } = renderHook(() => useUpdateMemberStatus(), {
+          wrapper: createHookWrapper(queryClient),
+        });
+
+        result.current.updateMemberStatus({ member_id: 'user-a', is_active: isActive });
+
+        await waitFor(() => {
+          expect(result.current.isSuccess).toBe(true);
+        });
+        expect(capturedId).toBe('user-a');
+        expect(capturedStatus).toBe(String(isActive));
+        expect(queryClient.getQueryState(queryKeys.members.list({ page: 1 }))?.isInvalidated).toBe(
+          true
+        );
+        expect(queryClient.getQueryState(queryKeys.members.detail('user-a'))?.isInvalidated).toBe(
+          true
+        );
+      }
+    );
   });
 
   describe('useDeleteMember', () => {

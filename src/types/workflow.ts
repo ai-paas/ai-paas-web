@@ -9,8 +9,8 @@ export interface Workflow {
   updated_at: string;
   created_by: string;
   name: string;
-  description: string;
-  category: string;
+  description?: string | null;
+  category?: string | null;
   status: WorkflowStatus;
   service_id: string | null;
   is_template: boolean;
@@ -133,7 +133,6 @@ export interface WorkflowTemplateListParams {
   page?: number;
   size?: number;
   category?: string;
-  sort?: string;
 }
 
 export interface GetWorkflowComponentTypes {
@@ -170,18 +169,17 @@ export interface WorkflowDefinition {
 
 export interface CreateWorkflowRequest {
   name: string;
-  description?: string;
-  category?: string;
-  service_id?: string;
-  workflow_definition?: WorkflowDefinition;
+  description?: string | null;
+  category?: string | null;
+  service_id?: string | null;
+  workflow_definition?: WorkflowDefinition | null;
 }
 
 export interface CreateWorkflowTemplateRequest {
   name: string;
-  description?: string;
-  category?: string;
-  service_id?: string;
-  workflow_definition: WorkflowDefinition;
+  description?: string | null;
+  category?: string | null;
+  workflow_definition?: WorkflowDefinition | null;
 }
 
 export interface CloneWorkflowTemplateRequest {
@@ -287,21 +285,21 @@ export interface ValidateWorkflowResponse {
 
 export interface UpdateWorkflowRequest {
   workflowId: string;
-  name?: string;
-  description?: string;
-  category?: string;
-  status?: WorkflowStatus;
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  status?: WorkflowStatus | null;
   service_id?: string | null;
-  workflow_definition?: WorkflowDefinition;
+  workflow_definition?: WorkflowDefinition | null;
 }
 
 export interface UpdateWorkflowTemplateRequest {
   templateId: string;
-  name?: string;
-  description?: string;
-  category?: string;
-  status?: WorkflowStatus;
-  workflow_definition?: WorkflowDefinition;
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  status?: WorkflowStatus | null;
+  workflow_definition?: WorkflowDefinition | null;
 }
 
 export interface WorkflowModel {

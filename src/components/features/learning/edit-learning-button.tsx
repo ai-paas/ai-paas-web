@@ -72,7 +72,7 @@ export const EditLearningButton = ({ experimentId }: { experimentId?: number }) 
   useEffect(() => {
     if (learning && isModalOpen) {
       reset({
-        name: learning.name,
+        name: learning.name ?? '',
         description: learning.description ?? '',
       });
     }

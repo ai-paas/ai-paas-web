@@ -5,7 +5,13 @@ import { server } from '@/test/mocks/server';
 import { BASE_URL } from '@/test/mocks/handlers';
 import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
 import { queryKeys } from '@/lib/query-keys';
-import { useCreateModel, useDeleteModel, useGetModels } from './models';
+import {
+  useCreateModel,
+  useDeleteModel,
+  useGetCustomModels,
+  useGetHubModels,
+  useGetModels,
+} from './models';
 
 // a3dd1d4 회귀 방지: models.detail이 models.all 하위 계층(['models','detail',id])이고,
 // 생성/삭제가 models/model-catalogs/custom-models 3중 무효화를 수행하는 계약을 고정한다.
@@ -205,5 +211,56 @@ describe('models hooks — a3dd1d4 캐시 무효화 계약', () => {
       );
       expect(queryClient.getQueryState(queryKeys.modelCatalogs.list())?.isInvalidated).toBe(false);
     });
+  });
+});
+
+describe('models hooks — OpenAPI 요청/응답 계약', () => {
+  it('커스텀 모델 필터는 명세의 model_*_id 이름으로 보낸다', async () => {
+    let receivedParams: URLSearchParams | undefined;
+    server.use(
+      http.get(`${BASE_URL}/models/custom-models`, ({ request }) => {
+        receivedParams = new URL(request.url).searchParams;
+        return HttpResponse.json({ data: [], total: 0, page: 1, size: 10 });
+      })
+    );
+
+    const { result } = renderHook(
+      () =>
+        useGetCustomModels({
+          page: 1,
+          size: 10,
+          model_provider_id: 2,
+          model_type_id: 3,
+          model_format_id: 4,
+        }),
+      { wrapper: createHookWrapper() }
+    );
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(Object.fromEntries(receivedParams ?? [])).toEqual({
+      page: '1',
+      size: '10',
+      model_provider_id: '2',
+      model_type_id: '3',
+      model_format_id: '4',
+    });
+  });
+
+  it('허브 모델 응답의 pagination이 null이어도 기본 페이지 정보를 반환한다', async () => {
+    server.use(
+      http.get(`${BASE_URL}/hub-connect/models`, () =>
+        HttpResponse.json({ data: [], pagination: null })
+      )
+    );
+
+    const { result } = renderHook(
+      () => useGetHubModels({ market: 'huggingface', page: 1, limit: 30 }),
+      { wrapper: createHookWrapper() }
+    );
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.page).toEqual({ number: 1, size: 30, total: 0 });
+    expect(result.current.hasMore).toBe(false);
+    expect(result.current.totalIsExact).toBe(true);
   });
 });

@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw';
 import { BASE_URL } from './base';
-import type { Service, ServiceDetail, CreateServiceRequest } from '@/types/service';
+import type {
+  Service,
+  ServiceDetail,
+  CreateServiceRequest,
+  UpdateServiceRequest,
+} from '@/types/service';
 import type { Page } from '@/types/api';
 
 // 테스트용 목 데이터
@@ -29,6 +34,7 @@ export const mockServices: Service[] = [
 
 export const mockServiceDetail: ServiceDetail = {
   ...mockServices[0],
+  tags: mockServices[0].tags ?? [],
   workflow_count: 2,
   workflows: [],
   monitoring_data: {
@@ -91,8 +97,8 @@ export const serviceHandlers = [
     const newService: Service = {
       id: Date.now(),
       name: body.name,
-      description: body.description,
-      tags: body.tags,
+      description: body.description ?? null,
+      tags: body.tags ?? null,
       created_by: 'test-user',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -113,13 +119,13 @@ export const serviceHandlers = [
   // PUT /services/:id - 서비스 수정
   http.put(`${BASE_URL}/services/:surro_service_id`, async ({ params, request }) => {
     const { surro_service_id } = params;
-    const body = (await request.json()) as CreateServiceRequest;
+    const body = (await request.json()) as UpdateServiceRequest;
     const updatedService: Service = {
       ...mockServices[0],
       surro_service_id: surro_service_id as string,
-      name: body.name,
-      description: body.description,
-      tags: body.tags,
+      name: body.name ?? mockServices[0].name,
+      description: body.description ?? null,
+      tags: body.tags ?? null,
       updated_at: new Date().toISOString(),
     };
     return HttpResponse.json(updatedService);
@@ -127,6 +133,6 @@ export const serviceHandlers = [
 
   // DELETE /services/:id - 서비스 삭제
   http.delete(`${BASE_URL}/services/:surro_service_id`, () => {
-    return HttpResponse.json('deleted');
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

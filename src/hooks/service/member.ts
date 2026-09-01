@@ -5,17 +5,17 @@ import type {
   CreateMemberRequest,
   GetMembersParams,
   Member,
-  UpdateMemberRequest,
+  UpdateMemberPayload,
 } from '@/types/member';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-type UpdateMemberPayload = Partial<Omit<UpdateMemberRequest, 'member_id'>> & { member_id: string };
+type UpdateMemberStatusPayload = { member_id: string; is_active: boolean };
 
 export const useCreateMember = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: CreateMemberRequest) => api.post('members', { json: data }).json<Member>(),
+    mutationFn: (data: CreateMemberRequest) => api.post('members/', { json: data }).json<Member>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
     },
@@ -32,7 +32,7 @@ export const useCreateMember = () => {
 export const useGetMembers = (params: GetMembersParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.members.list(params),
-    queryFn: () => api.get<Page<Member>>('members', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<Page<Member>>('members/', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -84,11 +84,32 @@ export const useUpdateMember = () => {
   };
 };
 
+export const useUpdateMemberStatus = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, isError, isSuccess } = useMutation({
+    mutationFn: ({ member_id, is_active }: UpdateMemberStatusPayload) =>
+      api.patch(`members/${member_id}/status`, { searchParams: { is_active } }).json<Member>(),
+    onSuccess: (_res, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.detail(vars.member_id) });
+    },
+  });
+
+  return {
+    updateMemberStatus: mutate,
+    isPending,
+    isError,
+    isSuccess,
+  };
+};
+
 export const useDeleteMember = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (memberId: string) => api.delete(`members/${memberId}`).json<string>(),
+    mutationFn: (memberId: string) =>
+      api.delete(`members/${memberId}`).json<Record<string, unknown>>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
     },

@@ -93,7 +93,7 @@ export default function MemberManagementDetailPage() {
               <div className="page-detail_item-name">연락처</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatPhone(member?.phone)}
+                  {formatPhone(member?.phone ?? undefined)}
                 </DetailValue>
               </div>
             </li>

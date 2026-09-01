@@ -42,11 +42,7 @@ describe('CreateMemberAction', () => {
       ['이름이 비어 있으면', { name: '' }, '필수 항목을 입력해주세요.'],
       ['연락처가 비어 있으면', { phone: '' }, '필수 항목을 입력해주세요.'],
       ['이름에 한글 외 문자가 있으면', { name: 'John' }, '이름은 한글만 입력 가능합니다.'],
-      [
-        '이름에 숫자가 섞여 있으면',
-        { name: '홍길동1' },
-        '이름은 한글만 입력 가능합니다.',
-      ],
+      ['이름에 숫자가 섞여 있으면', { name: '홍길동1' }, '이름은 한글만 입력 가능합니다.'],
       [
         '아이디에 대문자가 있으면',
         { memberId: 'Hong-gildong' },
@@ -78,17 +74,9 @@ describe('CreateMemberAction', () => {
         { password: 'Ab1!def', passwordConfirm: 'Ab1!def' },
         '비밀번호는 8~16자, 영문 대/소문자·숫자·특수문자를 모두 포함해야 합니다.',
       ],
-      [
-        '비밀번호 확인이 다르면',
-        { passwordConfirm: 'Abcd123?' },
-        '비밀번호가 일치하지 않습니다.',
-      ],
+      ['비밀번호 확인이 다르면', { passwordConfirm: 'Abcd123?' }, '비밀번호가 일치하지 않습니다.'],
       // 필수 체크 목록에 passwordConfirm이 없어 빈 확인값은 불일치 검증에서 걸린다
-      [
-        '비밀번호 확인이 비어 있으면',
-        { passwordConfirm: '' },
-        '비밀번호가 일치하지 않습니다.',
-      ],
+      ['비밀번호 확인이 비어 있으면', { passwordConfirm: '' }, '비밀번호가 일치하지 않습니다.'],
       [
         '연락처에 하이픈이 있으면',
         { phone: '010-1234-5678' },
@@ -99,24 +87,27 @@ describe('CreateMemberAction', () => {
         { phone: '123456789' },
         '연락처는 숫자만 입력 가능하며 10~11자리여야 합니다.',
       ],
-    ])('%s 에러 모달이 뜨고 확인 모달·요청이 발생하지 않는다', async (_label, override, message) => {
-      const requestSpy = vi.fn();
-      server.use(
-        http.post(`${BASE_URL}/members`, () => {
-          requestSpy();
-          return HttpResponse.json(mockMembers[0]);
-        })
-      );
-      const { user } = renderWithUser(
-        <CreateMemberAction formData={{ ...validFormData, ...override }} />
-      );
+    ])(
+      '%s 에러 모달이 뜨고 확인 모달·요청이 발생하지 않는다',
+      async (_label, override, message) => {
+        const requestSpy = vi.fn();
+        server.use(
+          http.post(`${BASE_URL}/members/`, () => {
+            requestSpy();
+            return HttpResponse.json(mockMembers[0]);
+          })
+        );
+        const { user } = renderWithUser(
+          <CreateMemberAction formData={{ ...validFormData, ...override }} />
+        );
 
-      await user.click(screen.getByRole('button', { name: '생성' }));
+        await user.click(screen.getByRole('button', { name: '생성' }));
 
-      expect(screen.getByRole('alertdialog')).toHaveTextContent(message);
-      expect(screen.queryByText(CONFIRM_QUESTION)).not.toBeInTheDocument();
-      expect(requestSpy).not.toHaveBeenCalled();
-    });
+        expect(screen.getByRole('alertdialog')).toHaveTextContent(message);
+        expect(screen.queryByText(CONFIRM_QUESTION)).not.toBeInTheDocument();
+        expect(requestSpy).not.toHaveBeenCalled();
+      }
+    );
 
     it('에러 모달의 확인 버튼을 누르면 모달이 닫힌다', async () => {
       const { user } = renderWithUser(
@@ -138,7 +129,7 @@ describe('CreateMemberAction', () => {
     it('검증을 통과하면 확인 모달이 열리고, 취소하면 요청 없이 닫힌다', async () => {
       const requestSpy = vi.fn();
       server.use(
-        http.post(`${BASE_URL}/members`, () => {
+        http.post(`${BASE_URL}/members/`, () => {
           requestSpy();
           return HttpResponse.json(mockMembers[0]);
         })
@@ -161,7 +152,7 @@ describe('CreateMemberAction', () => {
     it('확인 시 폼 데이터가 snake_case 페이로드로 전송되고 성공 모달 닫기 후 목록으로 이동한다', async () => {
       let captured: CreateMemberRequest | undefined;
       server.use(
-        http.post(`${BASE_URL}/members`, async ({ request }) => {
+        http.post(`${BASE_URL}/members/`, async ({ request }) => {
           captured = (await request.json()) as CreateMemberRequest;
           return HttpResponse.json({ ...mockMembers[0], member_id: 'hong-gildong' });
         })
@@ -197,7 +188,7 @@ describe('CreateMemberAction', () => {
 
     it('생성 실패 시 실패 모달이 뜨고 닫아도 이동하지 않는다', async () => {
       server.use(
-        http.post(`${BASE_URL}/members`, () =>
+        http.post(`${BASE_URL}/members/`, () =>
           HttpResponse.json({ message: 'error' }, { status: 500 })
         )
       );

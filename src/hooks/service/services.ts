@@ -13,7 +13,7 @@ import type {
 export const useGetServices = (params: GetServicesParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.services.list(params),
-    queryFn: () => api.get<Page<Service>>('services', { searchParams: { ...params } }).json(),
+    queryFn: () => api.get<Page<Service>>('services/', { searchParams: { ...params } }).json(),
   });
 
   return {
@@ -33,7 +33,7 @@ export const useCreateService = () => {
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
     mutationFn: (data: CreateServiceRequest) =>
-      api.post('services', { json: data }).json<Service>(),
+      api.post('services/', { json: data }).json<Service>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.services.all });
     },
@@ -84,8 +84,9 @@ export const useDeleteService = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (surro_service_id: string) =>
-      api.delete(`services/${surro_service_id}`).json<string>(),
+    mutationFn: async (surro_service_id: string) => {
+      await api.delete(`services/${surro_service_id}`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.services.all });
     },

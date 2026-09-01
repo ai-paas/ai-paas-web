@@ -37,7 +37,13 @@ export const knowledgebaseHandlers = [
   http.get(`${BASE_URL}/knowledge-bases`, () => HttpResponse.json(toPage([mockKnowledgeBase]))),
   http.get(`${BASE_URL}/knowledge-bases/:id/search-records`, () =>
     HttpResponse.json([
-      { id: 1, knowledge_base_id: 101, source: 'kb-101', text: '휴가 규정', created_at: '2026-08-19T00:00:00Z' },
+      {
+        id: 1,
+        knowledge_base_id: 101,
+        source: 'kb-101',
+        text: '휴가 규정',
+        created_at: '2026-08-19T00:00:00Z',
+      },
     ])
   ),
   http.get(`${BASE_URL}/knowledge-bases/:id`, () => HttpResponse.json(mockKnowledgeBase)),
@@ -54,5 +60,5 @@ export const knowledgebaseHandlers = [
   http.delete(`${BASE_URL}/knowledge-bases/:id/files/:fileId`, () =>
     HttpResponse.json(mockKnowledgeBase)
   ),
-  http.delete(`${BASE_URL}/knowledge-bases/:id`, () => HttpResponse.json('deleted')),
+  http.delete(`${BASE_URL}/knowledge-bases/:id`, () => new HttpResponse(null, { status: 204 })),
 ];

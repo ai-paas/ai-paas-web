@@ -1,4 +1,8 @@
-import { clearAccessToken, getAccessToken, getOrCreateRefreshPromise } from '@/lib/api';
+import {
+  getAccessToken,
+  getOrCreateRefreshPromise,
+  setAccessToken as setApiAccessToken,
+} from '@/lib/api';
 import { useLogout } from '@/hooks/service/authentication';
 import { parseJwt } from '@/util/jwt';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,10 +20,15 @@ interface AuthContext {
 const AuthContext = createContext<AuthContext | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [accessToken, setAccessToken] = useState(getAccessToken());
+  const [accessToken, setAccessTokenState] = useState(getAccessToken());
   const [isLoading, setIsLoading] = useState(!accessToken);
   const queryClient = useQueryClient();
   const { mutateAsync: requestLogout } = useLogout();
+
+  const setAccessToken = useCallback((token: string | null) => {
+    setApiAccessToken(token);
+    setAccessTokenState(token);
+  }, []);
 
   const isAdmin = useMemo(() => {
     return accessToken ? parseJwt(accessToken)?.role === 'admin' : false;
@@ -33,14 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch {
       // 서버 무효화 실패는 무시
     }
-    clearAccessToken();
     setAccessToken(null);
     queryClient.clear();
-  }, [requestLogout, queryClient]);
+  }, [requestLogout, queryClient, setAccessToken]);
 
   useEffect(() => {
     const init = async () => {
-      if (!accessToken) {
+      if (!getAccessToken()) {
         try {
           const newAccessToken = await getOrCreateRefreshPromise();
           setAccessToken(newAccessToken);
@@ -52,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     init();
-  }, []);
+  }, [setAccessToken]);
 
   const value = useMemo(
     () => ({
@@ -63,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAccessToken,
       logout,
     }),
-    [accessToken, isAdmin, isLoading, logout]
+    [accessToken, isAdmin, isLoading, logout, setAccessToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

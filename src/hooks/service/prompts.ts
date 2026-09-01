@@ -13,7 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export const useGetPrompts = (params: GetPromptsParams = {}) => {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.prompts.list(params),
-    queryFn: () => api.get('prompts', { searchParams: { ...params } }).json<Page<Prompt>>(),
+    queryFn: () => api.get('prompts/', { searchParams: { ...params } }).json<Page<Prompt>>(),
   });
 
   return {
@@ -45,7 +45,7 @@ export const useCreatePrompt = () => {
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: CreatePromptRequest) => api.post('prompts', { json: data }).json<Prompt>(),
+    mutationFn: (data: CreatePromptRequest) => api.post('prompts/', { json: data }).json<Prompt>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.prompts.all });
     },
@@ -61,9 +61,10 @@ export const useCreatePrompt = () => {
 
 export const useGetPrompt = (surro_prompt_id?: number) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: surro_prompt_id !== undefined
-      ? queryKeys.prompts.detail(surro_prompt_id)
-      : ['prompts', 'detail', 'undefined'],
+    queryKey:
+      surro_prompt_id !== undefined
+        ? queryKeys.prompts.detail(surro_prompt_id)
+        : ['prompts', 'detail', 'undefined'],
     queryFn: () => api.get(`prompts/${surro_prompt_id}`).json<Prompt>(),
     enabled: surro_prompt_id !== undefined,
   });
@@ -99,8 +100,9 @@ export const useDeletePrompt = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (surro_prompt_id: number) =>
-      api.delete(`prompts/${surro_prompt_id}`).json<string>(),
+    mutationFn: async (surro_prompt_id: number) => {
+      await api.delete(`prompts/${surro_prompt_id}`);
+    },
     onSuccess: (_, surro_prompt_id) => {
       queryClient.removeQueries({ queryKey: queryKeys.prompts.detail(surro_prompt_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.prompts.all });

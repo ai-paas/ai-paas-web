@@ -101,3 +101,18 @@ export interface CatalogDetailResponse {
     status: number;
   };
 }
+
+/**
+ * POST /any-cloud/catalog/{repoName}/{chartName}/deploy
+ *
+ * OpenAPI 계약상 valuesFile은 multipart 파일이며, YAML 문자열을 JSON으로 보내지 않는다.
+ */
+export interface DeployCatalogRequest {
+  repoName: string;
+  chartName: string;
+  releaseName: string;
+  clusterId: string;
+  namespace?: string;
+  version?: string;
+  valuesFile?: File;
+}

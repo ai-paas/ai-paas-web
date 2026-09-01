@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import type { ColDef, Sorting } from '@innogrid/ui';
-import {
-  BreadCrumb,
-  Table,
-  useTableSelection,
-  useTablePagination,
-  Tabs,
-} from '@innogrid/ui';
+import { BreadCrumb, Table, useTableSelection, useTablePagination, Tabs } from '@innogrid/ui';
 
 import {
   IconArrowModelTree,
@@ -190,7 +184,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={200}>
                   {model?.name || '-'}
-                  {model?.provider_info.name === 'huggingface' && (
+                  {model?.provider_info?.name === 'huggingface' && (
                     <a
                       href={`https://huggingface.co/${model?.repo_id}`}
                       target="_blank"
@@ -201,7 +195,7 @@ export default function CustomModelDetailPage() {
                       허깅페이스 바로가기
                     </a>
                   )}
-                  {model?.provider_info.name === 'kaggle' && (
+                  {model?.provider_info?.name === 'kaggle' && (
                     <a
                       href={`https://www.kaggle.com/models/${model?.repo_id}`}
                       target="_blank"
@@ -219,7 +213,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(model?.created_at.toString())}
+                  {formatDateTime(model?.created_at)}
                 </DetailValue>
               </div>
             </li>
@@ -227,7 +221,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(model?.updated_at.toString())}
+                  {formatDateTime(model?.updated_at)}
                 </DetailValue>
               </div>
             </li>
@@ -253,7 +247,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-name">모델 공급자 ID</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={120}>
-                  {model?.provider_info.name}
+                  {model?.provider_info?.name ?? '-'}
                 </DetailValue>
               </div>
             </li>
@@ -261,7 +255,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-name">모델 타입 ID</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={120}>
-                  {model?.type_info.name}
+                  {model?.type_info?.name ?? '-'}
                 </DetailValue>
               </div>
             </li>
@@ -269,7 +263,7 @@ export default function CustomModelDetailPage() {
               <div className="page-detail_item-name">모델 포맷 ID</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={120}>
-                  {model?.format_info.name}
+                  {model?.format_info?.name ?? '-'}
                 </DetailValue>
               </div>
             </li>

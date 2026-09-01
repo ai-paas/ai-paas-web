@@ -1,19 +1,19 @@
 export interface ChunkType {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
 }
 
 export interface Language {
   id: number;
   name: string;
-  description: string;
+  description?: string | null;
 }
 
 export interface SearchMethod {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
 }
 
 /** 목록 조회 응답 항목 (KnowledgeBaseBriefReadSchema) */
@@ -26,19 +26,23 @@ export interface KnowledgeBaseBrief {
   name: string;
   description?: string | null;
   collection_name: string;
-  chunk_size: number;
-  chunk_overlap: number;
-  top_k: number;
-  threshold: number;
+  chunk_size?: number | null;
+  chunk_overlap?: number | null;
+  top_k?: number | null;
+  threshold?: number | null;
 }
 
 /** 상세 조회 응답 (KnowledgeBaseReadSchema) */
 export interface KnowledgeBase extends KnowledgeBaseBrief {
   embedding_model_id: number;
   language_id: number;
+  chunk_size: number;
+  chunk_overlap: number;
   chunk_type_id: number;
   search_method_id: number;
-  files: KnowledgeBaseFile[];
+  top_k: number;
+  threshold: number;
+  files?: KnowledgeBaseFile[];
 }
 
 export interface CreateKnowledgeBaseRequest {

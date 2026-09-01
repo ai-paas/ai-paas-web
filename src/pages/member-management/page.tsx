@@ -24,13 +24,13 @@ interface MemberRow {
   name: string;
   member_id: string;
   email: string;
-  phone: string;
+  phone?: string | null;
   role: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  last_login: string;
-  description: string;
+  last_login?: string | null;
+  description?: string | null;
 }
 
 const columns = [
@@ -68,7 +68,7 @@ const columns = [
   {
     id: 'phone',
     header: '연락처',
-    accessorFn: (row: MemberRow) => formatPhone(row.phone),
+    accessorFn: (row: MemberRow) => formatPhone(row.phone ?? undefined),
     size: 242,
     enableSorting: false,
   },

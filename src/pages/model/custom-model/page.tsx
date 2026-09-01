@@ -7,14 +7,13 @@ import {
   useSearchInputState,
   useTablePagination,
   useTableSelection,
-  type SortValue,
 } from '@innogrid/ui';
 import { CreateCustomModelButton } from '../../../components/features/model/create-custom-model-button';
 import { Link } from 'react-router';
 import { DeleteCustomModelButton } from '../../../components/features/model/delete-custom-model-button';
 import { ModelImprovementButton } from '../../../components/features/model/model-improvement-button';
 import { useGetCustomModels } from '@/hooks/service/models';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { CustomModel } from '@/types/model';
 import { formatDateTime } from '@/util/date';
 
@@ -59,25 +58,25 @@ const columns = [
   {
     id: 'provider_info',
     header: '모델 공급자',
-    accessorFn: (row: CustomModel) => row.provider_info.name,
+    accessorFn: (row: CustomModel) => row.provider_info?.name ?? '-',
     size: 200,
   },
   {
     id: 'type_info',
     header: '모델 타입',
-    accessorFn: (row: CustomModel) => row.type_info.name,
+    accessorFn: (row: CustomModel) => row.type_info?.name ?? '-',
     size: 200,
   },
   {
     id: 'format_info',
     header: '모델 포맷',
-    accessorFn: (row: CustomModel) => row.format_info.name,
+    accessorFn: (row: CustomModel) => row.format_info?.name ?? '-',
     size: 200,
   },
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row: CustomModel) => formatDateTime(row.created_at.toString()),
+    accessorFn: (row: CustomModel) => formatDateTime(row.created_at),
     size: 200,
   },
 ];
@@ -86,18 +85,10 @@ export default function CustomModelPage() {
   const { searchValue, ...restProps } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
   const { customModels, page, isPending, isError } = useGetCustomModels({
     page: pagination.pageIndex + 1,
     size: pagination.pageSize,
     search: searchValue,
-    sort,
   });
 
   const selectedId = useMemo(() => {
@@ -172,8 +163,6 @@ export default function CustomModelPage() {
             setPagination={setPagination}
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
           />
         </div>
       </div>

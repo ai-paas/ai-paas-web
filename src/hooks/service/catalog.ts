@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api';
 import type {
@@ -13,6 +13,7 @@ import type {
   CatalogValuesData,
   CatalogDocumentResponse,
   CatalogDocumentData,
+  DeployCatalogRequest,
 } from '../../types/catalog';
 
 type CatalogDataLike = {
@@ -112,10 +113,10 @@ export const useGetCatalogDetail = (repoName: string, chartName: string, version
   const { data, isPending, isError, error } = useQuery({
     queryKey: ['catalog-detail', repoName, chartName, version],
     queryFn: async () => {
-        const url = `any-cloud/catalog/${repoName}/${chartName}/detail`;
+      const url = `any-cloud/catalog/${repoName}/${chartName}/detail`;
       const searchParams = version ? { version } : undefined;
 
-        const response = await api.get(url, { searchParams }).json<CatalogDetailResponse>();
+      const response = await api.get(url, { searchParams }).json<CatalogDetailResponse>();
 
       // 응답 구조에 따라 CatalogDetail 추출
       // 실제 응답: { data: CatalogDetail, status: number }
@@ -124,11 +125,11 @@ export const useGetCatalogDetail = (repoName: string, chartName: string, version
       const catalogDetail = rawData as unknown as CatalogDetail;
 
       // source 필드 정규화: 문자열이면 배열로 변환
-        if (catalogDetail.source && !Array.isArray(catalogDetail.source)) {
-          catalogDetail.source = [catalogDetail.source];
-        }
+      if (catalogDetail.source && !Array.isArray(catalogDetail.source)) {
+        catalogDetail.source = [catalogDetail.source];
+      }
 
-        return catalogDetail;
+      return catalogDetail;
     },
     enabled: !!repoName && !!chartName,
   });
@@ -309,4 +310,56 @@ export const useGetCatalogValues = (repoName: string, chartName: string, version
     refetchOnMount: true,
     placeholderData: undefined, // queryKey가 변경되면 이전 데이터를 사용하지 않음
   });
+};
+
+export const useDeployCatalog = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, mutateAsync, isPending, isError, isSuccess, error } = useMutation({
+    mutationFn: ({
+      repoName,
+      chartName,
+      releaseName,
+      clusterId,
+      namespace = 'default',
+      version,
+      valuesFile,
+    }: DeployCatalogRequest) => {
+      const formData = new FormData();
+      formData.append('releaseName', releaseName);
+      formData.append('clusterId', clusterId);
+      formData.append('namespace', namespace);
+
+      if (version) {
+        formData.append('version', version);
+      }
+      if (valuesFile) {
+        formData.append('valuesFile', valuesFile);
+      }
+
+      return api
+        .post(
+          `any-cloud/catalog/${encodeURIComponent(repoName)}/${encodeURIComponent(chartName)}/deploy`,
+          { body: formData }
+        )
+        .json<unknown>();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['helm-releases'] });
+      options?.onSuccess?.();
+    },
+    onError: (mutationError) => options?.onError?.(mutationError),
+  });
+
+  return {
+    deployCatalog: mutate,
+    deployCatalogAsync: mutateAsync,
+    isPending,
+    isError,
+    isSuccess,
+    error,
+  };
 };

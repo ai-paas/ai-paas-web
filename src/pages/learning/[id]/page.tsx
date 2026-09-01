@@ -20,16 +20,16 @@ import {
   YAxis,
 } from 'recharts';
 
-function formatMetric(value?: number, suffix = ''): string {
+function formatMetric(value?: number | null, suffix = ''): string {
   if (value === undefined || value === null || Number.isNaN(value)) return '-';
   return `${value}${suffix}`;
 }
 
-function isLearningFailed(status?: string): boolean {
+function isLearningFailed(status?: string | null): boolean {
   return !!status && /fail|error/i.test(status);
 }
 
-function isLearningFinished(status?: string): boolean {
+function isLearningFinished(status?: string | null): boolean {
   return !!status && /complete|success|finish|done/i.test(status);
 }
 
@@ -40,7 +40,7 @@ export default function LearningDetailPage() {
 
   const failed = isLearningFailed(learning?.status);
   const finished = isLearningFinished(learning?.status);
-  const inProgress = !!learning && !failed && !finished;
+  const inProgress = !!learning?.status && !failed && !finished;
 
   return (
     <main>
@@ -116,7 +116,7 @@ export default function LearningDetailPage() {
                           width: learning?.max_epoch
                             ? `${Math.min(
                                 100,
-                                ((learning?.current_epoch ?? 0) / learning.max_epoch) * 100,
+                                ((learning?.current_epoch ?? 0) / learning.max_epoch) * 100
                               )}%`
                             : '0%',
                         }}

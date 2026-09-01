@@ -34,7 +34,7 @@ export const VERIFIED_EMBEDDING_MODEL_IDS = [KNOWLEDGE_BASE_DEFAULTS.embeddingMo
 export interface KnowledgeBaseFormOption {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
 }
 
 export interface KnowledgeBaseFormValues {
@@ -94,7 +94,7 @@ const positiveOptionSchema = (message: string) =>
   z.object({
     id: z.number().int().positive(message),
     name: z.string(),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(),
   });
 
 const embeddingSettingsSchema = z

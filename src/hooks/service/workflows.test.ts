@@ -9,9 +9,11 @@ import { queryKeys } from '@/lib/query-keys';
 import {
   isExecuteTimeoutError,
   useFinalizeWorkflowCleanup,
+  useGetTemplates,
   useGetWorkflow,
   useGetWorkflowStatus,
   useGetWorkflowTemplate,
+  useUpdateComponentDeployStatus,
 } from './workflows';
 
 // fake timers 아래에서 ms만큼 진행한 뒤, 응답 반영까지 1ms flush로 소진한다.
@@ -30,6 +32,67 @@ const advance = async (ms: number) => {
 };
 
 describe('workflows hooks', () => {
+  describe('OpenAPI 요청 계약', () => {
+    it('템플릿 목록 요청은 명세의 page, size, category만 전송한다', async () => {
+      let requestUrl: URL | undefined;
+      server.use(
+        http.get(`${BASE_URL}/workflows/templates`, ({ request }) => {
+          requestUrl = new URL(request.url);
+          return HttpResponse.json({ items: [], total: 0 });
+        })
+      );
+
+      const { result } = renderHook(() => useGetTemplates({ page: 2, size: 20, category: 'rag' }), {
+        wrapper: createHookWrapper(createTestQueryClient()),
+      });
+
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      expect(requestUrl?.searchParams.get('page')).toBe('2');
+      expect(requestUrl?.searchParams.get('size')).toBe('20');
+      expect(requestUrl?.searchParams.get('category')).toBe('rag');
+      expect(requestUrl?.searchParams.has('sort')).toBe(false);
+    });
+
+    it('컴포넌트 배포 상태 요청 본문에서 경로 식별자를 제외한다', async () => {
+      let requestBody: unknown;
+      server.use(
+        http.post(
+          `${BASE_URL}/workflows/:workflowId/components/:componentId/deployment-status`,
+          async ({ request }) => {
+            requestBody = await request.json();
+            return HttpResponse.json({ message: 'updated' });
+          }
+        )
+      );
+
+      const { result } = renderHook(() => useUpdateComponentDeployStatus(), {
+        wrapper: createHookWrapper(createTestQueryClient()),
+      });
+
+      act(() => {
+        result.current.updateComponentDeployStatus({
+          surro_workflow_id: 'workflow-1',
+          component_id: 'component-1',
+          service_name: 'model-service',
+          service_hostname: 'model-service.default.svc',
+          model_name: 'model-a',
+          status: 'ready',
+          internal_url: 'http://model-service.default.svc',
+        });
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(requestBody).toEqual({
+        service_name: 'model-service',
+        service_hostname: 'model-service.default.svc',
+        model_name: 'model-a',
+        status: 'ready',
+        internal_url: 'http://model-service.default.svc',
+      });
+    });
+  });
+
   // ============================================
   // a3dd1d4 회귀 방지 — 템플릿/워크플로우 detail 캐시 비충돌
   // ============================================

@@ -12,7 +12,6 @@ export const authHandlers = [
   http.post(`${BASE_URL}/auth/login`, () => {
     return HttpResponse.json({
       access_token: 'login-access-token',
-      refresh_token: 'login-refresh-token',
       token_type: 'bearer',
       expires_in: 3600,
     });

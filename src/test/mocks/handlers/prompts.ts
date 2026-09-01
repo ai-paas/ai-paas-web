@@ -21,9 +21,7 @@ export const promptHandlers = [
     return HttpResponse.json({ surro_prompt_id: 999, ...body }, { status: 201 });
   }),
   // 정적 경로를 :surroPromptId 매칭보다 먼저 등록한다 (MSW는 배열 순서로 매칭)
-  http.get(`${BASE_URL}/prompts/variable-types`, () =>
-    HttpResponse.json(mockPromptVariableTypes)
-  ),
+  http.get(`${BASE_URL}/prompts/variable-types`, () => HttpResponse.json(mockPromptVariableTypes)),
   http.get(`${BASE_URL}/prompts/:surroPromptId`, ({ params }) =>
     HttpResponse.json({ ...mockPrompts[0], surro_prompt_id: Number(params.surroPromptId) })
   ),
@@ -35,5 +33,5 @@ export const promptHandlers = [
       ...body,
     });
   }),
-  http.delete(`${BASE_URL}/prompts/:surroPromptId`, () => HttpResponse.json('deleted')),
+  http.delete(`${BASE_URL}/prompts/:surroPromptId`, () => new HttpResponse(null, { status: 204 })),
 ];

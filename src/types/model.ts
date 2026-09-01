@@ -24,23 +24,23 @@ export interface ModelReadChild {
 export interface Model {
   id: number;
   name: string;
-  description: string;
-  repo_id: string;
+  description: string | null;
+  repo_id: string | null;
   provider_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   type_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   format_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   parent_model_id: number | null;
   task: string | null;
   parameter: string | null;
@@ -51,20 +51,20 @@ export interface Model {
     uri: string;
     run_id: string | null;
     reference_model_id: number;
-    created_at: Date;
-    updated_at: Date;
-    created_by: string;
-    updated_by: string;
-  };
+    created_at: string | null;
+    updated_at: string | null;
+    created_by: string | null;
+    updated_by: string | null;
+  } | null;
   created_at: string;
   updated_at: string;
-  deleted_at: Date | null;
-  created_by: string;
-  updated_by: string;
-  deleted_by: string;
-  learning_enable_yn: boolean;
-  opt_enable_yn: boolean;
-  visibility: ModelVisibility;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
+  learning_enable_yn: boolean | null;
+  opt_enable_yn: boolean | null;
+  visibility: ModelVisibility | null;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
   member_info?: {
@@ -77,47 +77,47 @@ export interface Model {
 export interface CustomModel {
   id: number;
   name: string;
-  repo_id: string;
+  repo_id: string | null;
   description: string | null;
   parameter: string | null;
   sample_code: string | null;
   task: string | null;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date | null;
-  created_by: string;
-  updated_by: string;
-  deleted_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
   parent_model_id: number | null;
   provider_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   format_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   type_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   registry: {
     id: number;
     uri: string;
     artifact_path: string;
     run_id: string | null;
     reference_model_id: number;
-    created_at: string;
-    created_by: string;
-    updated_at: string;
-    updated_by: string;
-  };
-  learning_enable_yn: boolean;
-  opt_enable_yn: boolean;
-  visibility: ModelVisibility;
+    created_at: string | null;
+    created_by: string | null;
+    updated_at: string | null;
+    updated_by: string | null;
+  } | null;
+  learning_enable_yn: boolean | null;
+  opt_enable_yn: boolean | null;
+  visibility: ModelVisibility | null;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
 }
@@ -125,47 +125,47 @@ export interface CustomModel {
 export interface ModelCatalog {
   id: number;
   name: string;
-  repo_id: string;
-  description: string;
+  repo_id: string | null;
+  description: string | null;
   parameter: string | null;
   sample_code: string | null;
   task: string | null;
   parent_model_id: number | null;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date | null;
-  created_by: string;
-  updated_by: string;
-  deleted_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_by: string | null;
   provider_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   format_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   type_info: {
     id: number;
     name: string;
-    description: string;
-  };
+    description: string | null;
+  } | null;
   registry: {
     id: number;
     uri: string;
     artifact_path: string;
     run_id: string | null;
     reference_model_id: number;
-    created_at: string;
-    created_by: string;
-    updated_at: string;
-    updated_by: string;
-  };
-  learning_enable_yn: boolean;
-  opt_enable_yn: boolean;
-  visibility: ModelVisibility;
+    created_at: string | null;
+    created_by: string | null;
+    updated_at: string | null;
+    updated_by: string | null;
+  } | null;
+  learning_enable_yn: boolean | null;
+  opt_enable_yn: boolean | null;
+  visibility: ModelVisibility | null;
   parent_model?: ModelReadParent | null;
   child_models?: ModelReadChild[] | null;
 }
@@ -189,41 +189,41 @@ export interface ModelFormat {
 }
 
 export interface HubModel {
-  _id: string | null;
+  _id?: string | null;
   id: string;
-  modelId: string;
-  author: string;
-  createdAt: string | null;
-  lastModified: string;
-  downloads: number;
-  likes: number;
-  tags: string[];
-  pipeline_tag: string;
-  task: string;
-  library_name: string;
-  numParameters: number | null;
+  modelId?: string | null;
+  author?: string | null;
+  createdAt?: string | null;
+  lastModified?: string | null;
+  downloads?: number | null;
+  likes?: number | null;
+  tags?: string[] | null;
+  pipeline_tag?: string | null;
+  task?: string | null;
+  library_name?: string | null;
+  numParameters?: number | null;
   /** 사람이 읽기 쉬운 파라미터 표기. Kaggle은 항상 null */
-  parameterDisplay: string | null;
+  parameterDisplay?: string | null;
   /** 파라미터 범주 정보. Kaggle은 항상 null */
-  parameterRange: string | null;
-  private: boolean;
-  gated: boolean;
-  sha: string | null;
+  parameterRange?: string | null;
+  private?: boolean | null;
+  gated?: boolean | string | null;
+  sha?: string | null;
 }
 
 export interface HubModelsResponse {
   data: HubModel[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
+  pagination?: {
+    total?: number | null;
+    page?: number;
+    limit?: number;
     /** 다음 페이지가 있을 가능성 (Kaggle 등 lower-bound total 마켓에서 페이지 이동 판단용) */
-    has_more?: boolean;
+    has_more?: boolean | null;
     /** total 이 정확한 전체 수인지 (HuggingFace=true, Kaggle=false 하한값) */
-    total_is_exact?: boolean;
+    total_is_exact?: boolean | null;
     /** 실제 업스트림에 적용된 필터 정보 */
-    applied_filters?: Record<string, unknown>;
-  };
+    applied_filters?: Record<string, unknown> | null;
+  } | null;
 }
 
 export interface HubModelTag {
@@ -295,26 +295,26 @@ export interface GetModelsParams {
   model_provider_id?: number;
   model_format_id?: number;
   visibility?: 'catalog' | 'custom';
+  filter_type?: string;
+  sort?: string;
 }
 
 export interface GetCustomModelsParams {
   page?: number;
   size?: number;
-  provider_id?: number;
-  type_id?: number;
-  format_id?: number;
+  model_provider_id?: number;
+  model_type_id?: number;
+  model_format_id?: number;
   search?: string;
-  sort?: string;
 }
 
 export interface GetModelCatalogsParams {
   page?: number;
   size?: number;
-  provider_id?: number;
-  type_id?: number;
-  format_id?: number;
+  model_provider_id?: number;
+  model_type_id?: number;
+  model_format_id?: number;
   search?: string;
-  sort?: string;
 }
 
 export interface GetModelProvidersParams {

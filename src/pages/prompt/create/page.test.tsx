@@ -44,6 +44,24 @@ describe('PromptCreatePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('아무 입력 없이 생성해도 TypeError 없이 검증 경고를 띄우고 요청하지 않는다', async () => {
+    const requestSpy = vi.fn();
+    server.use(
+      http.post(`${BASE_URL}/prompts/`, () => {
+        requestSpy();
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+
+    const { user } = await renderPage();
+
+    await expect(user.click(screen.getByRole('button', { name: '생성' }))).resolves.toBeUndefined();
+
+    expect(alertSpy).toHaveBeenCalledWith('필수 항목을 모두 입력해주세요.');
+    expect(requestSpy).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('이름이 비어 있으면 alert를 띄우고 생성 요청을 보내지 않는다', async () => {
     const requestSpy = vi.fn();
     server.use(
