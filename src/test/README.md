@@ -126,5 +126,12 @@ expect(results).toHaveNoViolations(); // 매처는 setup-tests가 전역 등록
 
 - 전역 스텁(setup-tests.ts): `matchMedia`, `ResizeObserver`.
 - 크기 측정(가상화 테이블 등): `installDomMeasurementStubs()` — opt-in.
-- XyFlow 캔버스: `installXyflowStubs()` — opt-in. **드래그·엣지 연결·팬·줌은 jsdom으로 불가** — E2E 영역 (TEST_PLAN.md Phase 4).
+- XyFlow 캔버스: `installXyflowStubs()` — opt-in. **드래그·엣지 연결·팬·줌은 jsdom으로 불가** — E2E 영역 (아래 참고).
 - `navigator.clipboard`, `URL.createObjectURL`, Monaco, WebSocket(xterm)도 jsdom 미지원 — 개별 스텁 또는 E2E.
+
+## E2E (Playwright — `e2e/`)
+
+- 실행: `pnpm test:e2e` (헤디드 디버깅: `pnpm test:e2e:ui`). vite dev 서버(포트 4173)를 자동 기동한다.
+- **허메틱 모드**: 모든 `/api/v1` 요청을 `e2e/support/api-mocks.ts`의 `mockApi(page)`가 가로챈다 — 백엔드 불필요. 목킹 밖 요청은 500으로 실패하고 `unmockedRequests`에 기록되므로 테스트 끝에 `expect(api.unmockedRequests).toEqual([])`로 단언할 것 (MSW `onUnhandledRequest: 'error'`와 같은 규약).
+- 새 여정을 추가할 때는 `e2e/smoke.spec.ts`를 템플릿으로 복제하고, 필요한 엔드포인트를 `api-mocks.ts`에 증분 추가한다. 응답 형태는 `src/types`를 type-only import해 맞춘다.
+- jsdom 스위트와 역할 분담: 세부 분기·에러 경로는 vitest(빠름), **실브라우저 좌표·드래그가 필요한 여정만** E2E로.
