@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 
 export interface ProviderInfo {
   provider: string;
@@ -71,7 +72,7 @@ const unwrapList = <T>(payload: ListEnvelope<T> | undefined): T[] => {
 // 지원 CSP 목록
 export const useGetProviders = () => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['providers'],
+    queryKey: queryKeys.infraProviders.all,
     queryFn: () => api.get('any-cloud/providers').json<ListEnvelope<ProviderInfo>>(),
   });
   return { providers: unwrapList(data), isPending, isError, error };
@@ -84,7 +85,7 @@ export const useGetProviderRegions = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['provider-regions', provider, credentialId],
+    queryKey: queryKeys.infraProviders.regions(provider, credentialId),
     queryFn: () =>
       api
         .get(`any-cloud/providers/${provider}/regions`, {
@@ -110,7 +111,7 @@ export const useGetProviderSpecs = (
 ) => {
   const { provider, credentialId, region, gpuOnly, keyword, limit } = params;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['provider-specs', provider, credentialId, region, gpuOnly, keyword, limit],
+    queryKey: queryKeys.infraProviders.specs({ provider, credentialId, region, gpuOnly, keyword, limit }),
     queryFn: () => {
       const searchParams = Object.fromEntries(
         Object.entries({
@@ -145,7 +146,7 @@ export const useGetProviderImages = (
 ) => {
   const { provider, credentialId, region, keyword, architecture, owner, limit } = params;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['provider-images', provider, credentialId, region, keyword, architecture, owner, limit],
+    queryKey: queryKeys.infraProviders.images({ provider, credentialId, region, keyword, architecture, owner, limit }),
     queryFn: () => {
       const searchParams = Object.fromEntries(
         Object.entries({
@@ -169,7 +170,7 @@ export const useGetProviderImages = (
 // CSP 별 클러스터 설정 스키마
 export const useGetProviderConfigSchema = (provider?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['provider-config-schema', provider],
+    queryKey: queryKeys.infraProviders.configSchema(provider),
     queryFn: () =>
       api
         .get(`any-cloud/providers/${provider}/config-schema`)

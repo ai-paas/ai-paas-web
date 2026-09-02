@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Operation, OperationState } from '../../types/cluster';
 
 interface ListOperationsParams {
@@ -17,7 +18,7 @@ export const useGetOperations = (params: ListOperationsParams = {}) => {
   );
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['operations', searchParams],
+    queryKey: queryKeys.operations.list(searchParams),
     queryFn: () =>
       api
         .get('any-cloud/operations', { searchParams })
@@ -51,7 +52,7 @@ export const useGetOperation = (
   options?: { refetchInterval?: number | false; enabled?: boolean }
 ) => {
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['operation', operationId],
+    queryKey: queryKeys.operations.detail(operationId),
     queryFn: () => api.get(`any-cloud/operations/${operationId}`).json<Operation>(),
     enabled: (options?.enabled ?? true) && !!operationId,
     refetchInterval: options?.refetchInterval,
@@ -71,9 +72,9 @@ export const useCancelOperation = (options?: {
     mutationKey: ['cancelOperation'],
     mutationFn: (operationId: string) =>
       api.post(`any-cloud/operations/${operationId}/cancel`).json<Operation>(),
-    onSuccess: (op, operationId) => {
-      queryClient.invalidateQueries({ queryKey: ['operation', operationId] });
-      queryClient.invalidateQueries({ queryKey: ['operations'] });
+    onSuccess: (op) => {
+      // all 무효화가 list/detail 을 모두 커버 (detail 은 all 하위 prefix)
+      queryClient.invalidateQueries({ queryKey: queryKeys.operations.all });
       options?.onSuccess?.(op);
     },
     onError: (err) => options?.onError?.(err),

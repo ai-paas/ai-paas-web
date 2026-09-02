@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 
 export interface AuditLog {
   id?: string;
@@ -28,7 +29,7 @@ export const useGetAuditLogs = (params: ListAuditLogsParams = {}) => {
   ) as Record<string, string | number>;
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['audit-logs', searchParams],
+    queryKey: queryKeys.auditLogs.list(searchParams),
     queryFn: () =>
       api
         .get('any-cloud/audit-logs', {

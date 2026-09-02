@@ -171,8 +171,147 @@ describe('queryKeys', () => {
       ['learning.all', queryKeys.learning.all, ['learning']],
       ['workflows.all', queryKeys.workflows.all, ['workflows']],
       ['workflows.templates.all', queryKeys.workflows.templates.all, ['workflows', 'templates']],
+      // 인프라(any-cloud) 도메인
+      ['clusters.all', queryKeys.clusters.all, ['clusters']],
+      ['kubernetes.all', queryKeys.kubernetes.all, ['kubernetes']],
+      ['kubernetes.pods.all', queryKeys.kubernetes.pods.all, ['kubernetes', 'pods']],
+      ['kubernetes.resource.all', queryKeys.kubernetes.resource.all, ['kubernetes', 'resource']],
+      ['kubernetes.events.all', queryKeys.kubernetes.events.all, ['kubernetes', 'events']],
+      ['vms.all', queryKeys.vms.all, ['vms']],
+      ['credentials.all', queryKeys.credentials.all, ['credentials']],
+      ['operations.all', queryKeys.operations.all, ['operations']],
+      ['infraProviders.all', queryKeys.infraProviders.all, ['infra-providers']],
+      ['addons.all', queryKeys.addons.all, ['cluster-addons']],
+      ['addons.catalog', queryKeys.addons.catalog, ['addon-catalog']],
+      ['catalog.all', queryKeys.catalog.all, ['catalog']],
+      ['helmReleases.all', queryKeys.helmReleases.all, ['helm-releases']],
+      ['helmRepositories.all', queryKeys.helmRepositories.all, ['helm-repositories']],
+      ['monitoring.all', queryKeys.monitoring.all, ['monitoring']],
+      ['observability.all', queryKeys.observability.all, ['observability']],
+      ['adminAgents.all', queryKeys.adminAgents.all, ['admin-agents']],
+      ['auditLogs.all', queryKeys.auditLogs.all, ['audit-logs']],
     ])('%s 는 예상 루트 키와 일치한다', (_name, actual, expected) => {
       expect(actual).toStrictEqual(expected);
+    });
+  });
+
+  // ============================================
+  // 인프라 도메인 키 (TODO 7: 인라인 키 팩토리 통합)
+  // ============================================
+  describe('인프라 도메인 키', () => {
+    it('infraProviders.all은 model 도메인 modelProviders.all과 prefix가 충돌하지 않는다', () => {
+      expect(hashKey([...queryKeys.infraProviders.all])).not.toBe(
+        hashKey([...queryKeys.modelProviders.all])
+      );
+
+      // any-cloud CSP 목록 무효화가 모델 프로바이더 목록을 휩쓸면 안 된다
+      const client = new QueryClient();
+      seed(client, queryKeys.modelProviders.list({}));
+      client.invalidateQueries({ queryKey: queryKeys.infraProviders.all });
+      expect(isInvalidated(client, queryKeys.modelProviders.list({}))).toBe(false);
+    });
+
+    it('kubernetes.pods.all 무효화는 pods 목록만 무효화하고 pods-by-selector/모니터링 pods는 유지한다', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.kubernetes.pods.list('c1', 'ns1'));
+      seed(client, queryKeys.kubernetes.podsBySelector('c1', 'ns1', 'app=web'));
+      seed(client, queryKeys.monitoring.podsResource('c1', 'ns1'));
+
+      await client.invalidateQueries({ queryKey: queryKeys.kubernetes.pods.all });
+
+      expect(isInvalidated(client, queryKeys.kubernetes.pods.list('c1', 'ns1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.kubernetes.podsBySelector('c1', 'ns1', 'app=web'))).toBe(
+        false
+      );
+      expect(isInvalidated(client, queryKeys.monitoring.podsResource('c1', 'ns1'))).toBe(false);
+    });
+
+    it('kubernetes.all 무효화는 kind 목록·단건·events를 전부 무효화한다 (리소스 삭제 시 일괄 처리)', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.kubernetes.deployments.list('c1', 'ns1'));
+      seed(client, queryKeys.kubernetes.resource.detail('pods', 'p-1', 'c1', 'ns1'));
+      seed(client, queryKeys.kubernetes.events.list('pods', 'p-1', 'c1', 'ns1'));
+      seed(client, queryKeys.clusters.list({})); // 무관 네임스페이스
+
+      await client.invalidateQueries({ queryKey: queryKeys.kubernetes.all });
+
+      expect(isInvalidated(client, queryKeys.kubernetes.deployments.list('c1', 'ns1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.kubernetes.resource.detail('pods', 'p-1', 'c1', 'ns1'))).toBe(
+        true
+      );
+      expect(isInvalidated(client, queryKeys.kubernetes.events.list('pods', 'p-1', 'c1', 'ns1'))).toBe(
+        true
+      );
+      expect(isInvalidated(client, queryKeys.clusters.list({}))).toBe(false);
+    });
+
+    it('vms.detail(vmName) 무효화는 해당 VM의 operations/state-history/nodes를 함께 무효화한다', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.vms.detail('vm-1'));
+      seed(client, queryKeys.vms.operations('vm-1', 50));
+      seed(client, queryKeys.vms.stateHistory('vm-1', 50));
+      seed(client, queryKeys.vms.nodes('vm-1'));
+      seed(client, queryKeys.vms.detail('vm-2')); // 다른 VM은 유지
+
+      await client.invalidateQueries({ queryKey: queryKeys.vms.detail('vm-1') });
+
+      expect(isInvalidated(client, queryKeys.vms.detail('vm-1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.vms.operations('vm-1', 50))).toBe(true);
+      expect(isInvalidated(client, queryKeys.vms.stateHistory('vm-1', 50))).toBe(true);
+      expect(isInvalidated(client, queryKeys.vms.nodes('vm-1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.vms.detail('vm-2'))).toBe(false);
+    });
+
+    it('addons.byCluster(clusterName) 무효화는 해당 클러스터의 addon detail을 함께 무효화한다', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.addons.byCluster('c1'));
+      seed(client, queryKeys.addons.detail('c1', 'addon-1'));
+      seed(client, queryKeys.addons.byCluster('c2'));
+
+      await client.invalidateQueries({ queryKey: queryKeys.addons.byCluster('c1') });
+
+      expect(isInvalidated(client, queryKeys.addons.byCluster('c1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.addons.detail('c1', 'addon-1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.addons.byCluster('c2'))).toBe(false);
+    });
+
+    it('helmReleases.all 무효화는 list/resources/values를 전부 무효화한다 (배포 직후 최신화)', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.helmReleases.list({ clusterId: 'c1' }));
+      seed(client, queryKeys.helmReleases.resources('rel-1', 'c1', 'ns1'));
+      seed(client, queryKeys.helmReleases.values('rel-1'));
+      seed(client, queryKeys.helmRepositories.list({})); // 저장소 네임스페이스는 별개
+
+      await client.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
+
+      expect(isInvalidated(client, queryKeys.helmReleases.list({ clusterId: 'c1' }))).toBe(true);
+      expect(isInvalidated(client, queryKeys.helmReleases.resources('rel-1', 'c1', 'ns1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.helmReleases.values('rel-1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.helmRepositories.list({}))).toBe(false);
+    });
+
+    it('clusters.all 무효화는 list/detail/health 등 하위 키를 전부 무효화한다', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.clusters.list({}));
+      seed(client, queryKeys.clusters.detail('c1'));
+      seed(client, queryKeys.clusters.health('c1'));
+
+      await client.invalidateQueries({ queryKey: queryKeys.clusters.all });
+
+      expect(isInvalidated(client, queryKeys.clusters.list({}))).toBe(true);
+      expect(isInvalidated(client, queryKeys.clusters.detail('c1'))).toBe(true);
+      expect(isInvalidated(client, queryKeys.clusters.health('c1'))).toBe(true);
+    });
+
+    it('operations.all 무효화는 detail을 함께 무효화한다 (작업 취소 후 단건 최신화)', async () => {
+      const client = new QueryClient();
+      seed(client, queryKeys.operations.list({}));
+      seed(client, queryKeys.operations.detail('op-1'));
+
+      await client.invalidateQueries({ queryKey: queryKeys.operations.all });
+
+      expect(isInvalidated(client, queryKeys.operations.list({}))).toBe(true);
+      expect(isInvalidated(client, queryKeys.operations.detail('op-1'))).toBe(true);
     });
   });
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '../../types/api';
 import type {
   Vm,
@@ -25,7 +26,7 @@ export const useGetVms = (params: GetVmsParams = {}) => {
   );
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['vms', searchParams],
+    queryKey: queryKeys.vms.list(searchParams),
     queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
   });
 
@@ -42,7 +43,7 @@ export const useGetVms = (params: GetVmsParams = {}) => {
 // ============= 단일 VM 상세 =============
 export const useGetVm = (vmName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['vm', vmName],
+    queryKey: queryKeys.vms.detail(vmName),
     queryFn: () => api.get(`any-cloud/vms/${vmName}`).json<{ data?: Vm } | Vm>(),
     enabled: enabled && !!vmName,
   });
@@ -62,7 +63,7 @@ export const useCreateVm = (options?: {
     mutationFn: (data: VmCreateRequest) =>
       api.post('any-cloud/vms', { json: data }).json<unknown>(),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['vms'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vms.all });
       options?.onSuccess?.(data);
     },
     onError: (error) => options?.onError?.(error),
@@ -80,9 +81,9 @@ export const useScaleVm = (options?: {
     mutationKey: ['scaleVm'],
     mutationFn: ({ vmName, request }: { vmName: string; request: VmPatchRequest }) =>
       api.patch(`any-cloud/vms/${vmName}`, { json: request }).json<unknown>(),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['vms'] });
-      queryClient.invalidateQueries({ queryKey: ['vm', variables.vmName] });
+    onSuccess: (data) => {
+      // all 무효화가 list/detail(하위 operations 등 포함)을 모두 커버
+      queryClient.invalidateQueries({ queryKey: queryKeys.vms.all });
       options?.onSuccess?.(data);
     },
     onError: (error) => options?.onError?.(error),
@@ -100,7 +101,7 @@ export const useDeleteVm = (options?: {
     mutationKey: ['deleteVm'],
     mutationFn: (vmName: string) => api.delete(`any-cloud/vms/${vmName}`).json<unknown>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vms'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vms.all });
       options?.onSuccess?.();
     },
     onError: (error) => options?.onError?.(error),
@@ -111,7 +112,7 @@ export const useDeleteVm = (options?: {
 // ============= VM operations (이력 / 재시도) =============
 export const useGetVmOperations = (vmName?: string, pageSize: number = 50) => {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['vm-operations', vmName, pageSize],
+    queryKey: queryKeys.vms.operations(vmName, pageSize),
     queryFn: () =>
       api
         .get(`any-cloud/vms/${vmName}/operations`, { searchParams: { pageSize } })
@@ -130,8 +131,8 @@ export const useRetryVmOperation = (options?: {
     mutationFn: ({ vmName, type }: { vmName: string; type: string }) =>
       api.post(`any-cloud/vms/${vmName}/operations`, { json: { type } }).json<unknown>(),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['vm', variables.vmName] });
-      queryClient.invalidateQueries({ queryKey: ['vm-operations', variables.vmName] });
+      // detail prefix 무효화가 상세 + 하위 operations/state-history/nodes 를 함께 커버
+      queryClient.invalidateQueries({ queryKey: queryKeys.vms.detail(variables.vmName) });
       options?.onSuccess?.();
     },
     onError: (error) => options?.onError?.(error),
@@ -142,7 +143,7 @@ export const useRetryVmOperation = (options?: {
 // ============= VM state history =============
 export const useGetVmStateHistory = (vmName?: string, pageSize: number = 50) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['vm-state-history', vmName, pageSize],
+    queryKey: queryKeys.vms.stateHistory(vmName, pageSize),
     queryFn: () =>
       api
         .get(`any-cloud/vms/${vmName}/state-history`, { searchParams: { pageSize } })
@@ -155,7 +156,7 @@ export const useGetVmStateHistory = (vmName?: string, pageSize: number = 50) => 
 // ============= VM 노드 목록 =============
 export const useGetVmNodes = (vmName?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['vm-nodes', vmName],
+    queryKey: queryKeys.vms.nodes(vmName),
     queryFn: () => api.get(`any-cloud/vms/${vmName}/nodes`).json<VmNodeList>(),
     enabled: !!vmName,
   });

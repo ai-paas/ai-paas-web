@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 
 export interface ObservabilityTarget {
   job?: string;
@@ -56,7 +57,7 @@ const extractItems = <T>(data: unknown): T[] => {
 // scrape target 상태
 export const useGetObservabilityTargets = (clusterName?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['observability-targets', clusterName],
+    queryKey: queryKeys.observability.targets(clusterName),
     queryFn: () =>
       api.get(`any-cloud/clusters/${clusterName}/observability/targets`).json<unknown>(),
     enabled: !!clusterName,
@@ -68,7 +69,7 @@ export const useGetObservabilityTargets = (clusterName?: string) => {
 // 발생 alert
 export const useGetObservabilityAlerts = (clusterName?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['observability-alerts', clusterName],
+    queryKey: queryKeys.observability.alerts(clusterName),
     queryFn: () =>
       api.get(`any-cloud/clusters/${clusterName}/observability/alerts`).json<unknown>(),
     enabled: !!clusterName,
@@ -80,7 +81,7 @@ export const useGetObservabilityAlerts = (clusterName?: string) => {
 // silence 목록
 export const useGetAlertSilences = (clusterName?: string) => {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['alert-silences', clusterName],
+    queryKey: queryKeys.observability.alertSilences(clusterName),
     queryFn: () =>
       api.get(`any-cloud/clusters/${clusterName}/observability/alert-silences`).json<unknown>(),
     enabled: !!clusterName,
@@ -101,7 +102,7 @@ export const useCreateAlertSilence = (
         .post(`any-cloud/clusters/${clusterName}/observability/alert-silences`, { json: body })
         .json(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alert-silences', clusterName] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observability.alertSilences(clusterName) });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -122,7 +123,7 @@ export const useDeleteAlertSilence = (
         .delete(`any-cloud/clusters/${clusterName}/observability/alert-silences/${silenceId}`)
         .json(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alert-silences', clusterName] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observability.alertSilences(clusterName) });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -133,7 +134,7 @@ export const useDeleteAlertSilence = (
 // alert rule 카탈로그 (전역)
 export const useGetAlertRules = () => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['alert-rules'],
+    queryKey: queryKeys.observability.alertRules(),
     queryFn: () => api.get('any-cloud/observability/alert-rules').json<unknown>(),
   });
   return { rules: extractItems<AlertRuleSet>(data), isPending, isError };
@@ -154,7 +155,7 @@ export const useInstallAlertRule = (
         )
         .json(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alert-rules'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.observability.alertRules() });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -199,7 +200,7 @@ export const useDeleteAlertRule = (
 // 클러스터 대시보드 메타
 export const useGetObservabilityDashboard = (clusterName?: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['observability-dashboard', clusterName],
+    queryKey: queryKeys.observability.dashboard(clusterName),
     queryFn: () =>
       api.get(`any-cloud/clusters/${clusterName}/observability/dashboard`).json<unknown>(),
     enabled: !!clusterName,
@@ -219,7 +220,7 @@ export const useGetStandardMetric = (
       )
     : undefined;
   const { data, isPending, isError } = useQuery({
-    queryKey: ['standard-metric', clusterName, metric, searchParams],
+    queryKey: queryKeys.observability.standardMetric(clusterName, metric, searchParams),
     queryFn: () =>
       api
         .get(`any-cloud/monit/${clusterName}/standard/${metric}`, { searchParams })

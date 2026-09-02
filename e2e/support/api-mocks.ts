@@ -49,7 +49,10 @@ export async function mockApi(page: PlaywrightPage): Promise<MockApi> {
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     const method = request.method();
-    const path = new URL(request.url()).pathname.replace(/^\/api\/v1/, '');
+    // 실제 훅은 도메인에 따라 `services`와 `services/`를 혼용한다.
+    // API 서버처럼 끝 슬래시를 동등하게 취급해 목이 구현 세부사항에 깨지지 않게 한다.
+    const path =
+      new URL(request.url()).pathname.replace(/^\/api\/v1/, '').replace(/\/+$/, '') || '/';
     const match = (m: string, p: string) => method === m && path === p;
 
     // --- 인증 ---

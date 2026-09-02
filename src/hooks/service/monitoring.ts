@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '@/types/api';
 import type { KubernetesPod } from '@/types/cluster';
 import { queryOptions, useQuery } from '@tanstack/react-query';
@@ -136,7 +137,7 @@ export const createInstantQueryOptions = <TLabel = Record<string, string>>(
   options?: { enabled?: boolean }
 ) =>
   queryOptions({
-    queryKey: ['monitoring-instant-query', query, clusterName],
+    queryKey: queryKeys.monitoring.instant(query, clusterName),
     queryFn: () =>
       api
         .get(`any-cloud/monit/${clusterName}/query`, {
@@ -154,7 +155,7 @@ export const createRangeQueryOptions = <TLabel = Record<string, string>>(
   options?: RangeQueryOptions
 ) =>
   queryOptions({
-    queryKey: ['monitoring-range-query', clusterName, query, start, end, step],
+    queryKey: queryKeys.monitoring.range(clusterName, query, start, end, step),
     queryFn: () =>
       api
         .get(`any-cloud/monit/${clusterName}/query_range`, {
@@ -228,7 +229,7 @@ const useMemoizedQueryKey = (clusterName: string | undefined, queries: MultiQuer
   const signature = queries
     .map((q) => `${q.name}:${q.type}:${q.query}:${q.start ?? ''}:${q.end ?? ''}:${q.step ?? ''}:${q.time ?? ''}`)
     .join('|');
-  return ['monitoring-multi-query', clusterName, signature];
+  return queryKeys.monitoring.multi(clusterName, signature);
 };
 
 export const useRangeQuery = <TLabel = Record<string, string>>(
@@ -243,7 +244,7 @@ export const useGetKubernetesPodsResource = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['kubernetes-pods-resource', clusterName, namespace],
+    queryKey: queryKeys.monitoring.podsResource(clusterName, namespace),
     queryFn: async () => {
       const pageSize = 100;
       const baseSearchParams: Record<string, string> = {
