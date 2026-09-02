@@ -41,8 +41,8 @@ function renderLoginPage() {
 }
 
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByPlaceholderText('아이디를 입력해주세요.'), 'tester');
-  await user.type(screen.getByTestId('password-input'), 'secret1!');
+  await user.type(screen.getByLabelText('아이디'), 'tester');
+  await user.type(screen.getByLabelText('비밀번호'), 'secret1!');
   await user.click(screen.getByRole('button', { name: '로그인' }));
 }
 
@@ -54,6 +54,32 @@ describe('LoginPage', () => {
         HttpResponse.json({ message: 'expired' }, { status: 401 })
       )
     );
+  });
+
+  it('입력 목적과 자동완성 정보를 제공한다', () => {
+    renderLoginPage();
+
+    expect(screen.getByLabelText('아이디')).toHaveAttribute('autocomplete', 'username');
+    expect(screen.getByLabelText('비밀번호')).toHaveAttribute(
+      'autocomplete',
+      'current-password'
+    );
+    expect(screen.getByLabelText('아이디')).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.getByLabelText('비밀번호')).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('아이디 지우기 버튼을 키보드로 실행한 뒤 아이디 입력으로 포커스를 돌려준다', async () => {
+    const { user } = renderLoginPage();
+    const memberIdInput = screen.getByLabelText('아이디');
+
+    await user.type(memberIdInput, 'tester');
+    await user.tab();
+
+    expect(screen.getByRole('button', { name: '아이디 지우기' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(memberIdInput).toHaveValue('');
+    expect(memberIdInput).toHaveFocus();
   });
 
   it('성공 시 입력값을 그대로 제출하고 토큰 저장 후 /service로 이동한다', async () => {
@@ -108,8 +134,13 @@ describe('LoginPage', () => {
     const { user } = renderLoginPage();
     await fillAndSubmit(user);
 
-    // 아이디·비밀번호 입력 양쪽에 동일한 errMessage가 표시된다
-    expect(await screen.findAllByText(expected)).toHaveLength(2);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(expected);
+    expect(alert).toHaveAttribute('id', 'login-error');
+    expect(screen.getByLabelText('아이디')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('아이디')).toHaveAttribute('aria-describedby', 'login-error');
+    expect(screen.getByLabelText('비밀번호')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('비밀번호')).toHaveAttribute('aria-describedby', 'login-error');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -118,7 +149,7 @@ describe('LoginPage', () => {
     const { user } = renderLoginPage();
     await fillAndSubmit(user);
 
-    expect(await screen.findAllByText('네트워크 연결을 확인해주세요.')).toHaveLength(2);
+    expect(await screen.findByRole('alert')).toHaveTextContent('네트워크 연결을 확인해주세요.');
   });
 
   it('로그인 요청 진행 중에는 버튼이 비활성화된다', async () => {
@@ -140,7 +171,7 @@ describe('LoginPage', () => {
     server.use(http.post(loginUrl, () => HttpResponse.json({}, { status: 401 })));
     const { user } = renderLoginPage();
     await fillAndSubmit(user);
-    await screen.findAllByText('아이디 또는 비밀번호를 확인해주세요.');
+    await screen.findByRole('alert');
 
     // 두 번째 제출은 지연 응답 — 응답 도착 전(setErrorMessage('') 직후)에 에러가 사라져야 한다
     server.use(
@@ -151,9 +182,7 @@ describe('LoginPage', () => {
     );
     await user.click(screen.getByRole('button', { name: '로그인' }));
 
-    await waitFor(() =>
-      expect(screen.queryAllByText('아이디 또는 비밀번호를 확인해주세요.')).toHaveLength(0)
-    );
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   });
 
   it('이미 인증된 상태면 폼을 렌더하지 않는다 (즉시 홈으로 이동)', () => {

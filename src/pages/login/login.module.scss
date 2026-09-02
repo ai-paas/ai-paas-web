@@ -33,7 +33,7 @@
     padding-top: 36px;
     border-top: 1px solid $color-gray-25;
 
-    span {
+    & > div > label {
       display: inline-block;
       margin-bottom: 10px;
       @include font-style;
@@ -64,9 +64,6 @@
       border-radius: 50%;
       background-color: $color-gray-50;
       transition: background 0.3s ease-in-out;
-      & > span {
-        @include blind;
-      }
       &::after {
         content: '×';
         position: absolute;
@@ -83,6 +80,18 @@
           color: $color-gray-700;
         }
       }
+      &:focus-visible {
+        outline: 2px solid $color-point-blue;
+        outline-offset: 2px;
+      }
+    }
+
+    .errorMessage {
+      margin: 8px 0 0;
+      padding: 0;
+      @include font-style;
+      color: $color-error;
+      font-size: $page-font-root;
     }
   }
 }

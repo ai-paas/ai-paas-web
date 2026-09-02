@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { setAccessToken } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import { BASE_URL } from '@/test/mocks/handlers';
 import { server } from '@/test/mocks/server';
 import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
@@ -19,7 +20,7 @@ import {
 } from './helm';
 
 const seedRepositoryCache = (queryClient: QueryClient) => {
-  queryClient.setQueryData(['helm-repositories', 'list', {}], {
+  queryClient.setQueryData(queryKeys.helmRepositories.list({}), {
     repositories: [],
     meta: { page: 1, size: 20, total: 0, totalPages: 0 },
   });
@@ -110,7 +111,7 @@ describe('helm repository hooks', () => {
     await result.current.createHelmRepositoryAsync(request);
 
     expect(receivedBody).toEqual(request);
-    expect(queryClient.getQueryState(['helm-repositories', 'list', {}])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(queryKeys.helmRepositories.list({}))?.isInvalidated).toBe(true);
   });
 
   it('삭제 경로의 저장소 이름을 인코딩하고 성공 시 저장소 캐시를 무효화한다', async () => {
@@ -130,7 +131,7 @@ describe('helm repository hooks', () => {
     await result.current.deleteHelmRepositoryAsync('team repo');
 
     expect(receivedPath).toBe('/api/v1/any-cloud/helm-repos/team%20repo');
-    expect(queryClient.getQueryState(['helm-repositories', 'list', {}])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(queryKeys.helmRepositories.list({}))?.isInvalidated).toBe(true);
   });
 });
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type {
   GetHelmRepositoriesParams,
   HelmRelease,
@@ -32,14 +33,6 @@ export interface GetHelmReleasesParams {
   page?: number;
   size?: number;
 }
-
-const helmRepositoryQueryKeys = {
-  all: ['helm-repositories'] as const,
-  list: (params: Record<string, string | number>) =>
-    [...helmRepositoryQueryKeys.all, 'list', params] as const,
-  detail: (name?: string) => [...helmRepositoryQueryKeys.all, 'detail', name] as const,
-  exists: (name?: string) => [...helmRepositoryQueryKeys.all, 'exists', name] as const,
-};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
@@ -144,7 +137,7 @@ export const useGetHelmReleases = (params: GetHelmReleasesParams = {}) => {
   const enabled = !!params.clusterId;
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['helm-releases', searchParams],
+    queryKey: queryKeys.helmReleases.list(searchParams),
     queryFn: async () => {
       const response = await api
         .get('any-cloud/catalog/releases', {
@@ -193,7 +186,7 @@ export const useGetHelmRepositories = (params: GetHelmRepositoriesParams = {}) =
   const searchParams = compactSearchParams(params);
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: helmRepositoryQueryKeys.list(searchParams),
+    queryKey: queryKeys.helmRepositories.list(searchParams),
     queryFn: () =>
       api
         .get('any-cloud/helm-repos', { searchParams })
@@ -214,7 +207,7 @@ export const useGetHelmRepositories = (params: GetHelmRepositoriesParams = {}) =
 export const useGetHelmRepository = (helmRepoName?: string) => {
   const name = helmRepoName?.trim();
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: helmRepositoryQueryKeys.detail(name),
+    queryKey: queryKeys.helmRepositories.detail(name),
     queryFn: () =>
       api
         .get(`any-cloud/helm-repos/${encodeURIComponent(name ?? '')}`)
@@ -229,7 +222,7 @@ export const useGetHelmRepository = (helmRepoName?: string) => {
 export const useGetHelmRepositoryExists = (helmRepoName?: string) => {
   const name = helmRepoName?.trim();
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: helmRepositoryQueryKeys.exists(name),
+    queryKey: queryKeys.helmRepositories.exists(name),
     queryFn: () =>
       api
         .get(`any-cloud/helm-repos/${encodeURIComponent(name ?? '')}/exists`)
@@ -251,7 +244,7 @@ export const useCreateHelmRepository = (options?: {
     mutationFn: (request: HelmRepositoryCreateRequest) =>
       api.post('any-cloud/helm-repos', { json: request }).json<HelmRepositoryMutationResponse>(),
     onSuccess: (data, request) => {
-      queryClient.invalidateQueries({ queryKey: helmRepositoryQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmRepositories.all });
       options?.onSuccess?.(data, request);
     },
     onError: (mutationError) => options?.onError?.(mutationError),
@@ -279,7 +272,7 @@ export const useDeleteHelmRepository = (options?: {
         .delete(`any-cloud/helm-repos/${encodeURIComponent(helmRepoName)}`)
         .json<HelmRepositoryMutationResponse>(),
     onSuccess: (data, helmRepoName) => {
-      queryClient.invalidateQueries({ queryKey: helmRepositoryQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmRepositories.all });
       options?.onSuccess?.(data, helmRepoName);
     },
     onError: (mutationError) => options?.onError?.(mutationError),
@@ -301,7 +294,7 @@ export const useGetHelmReleaseResources = (
   namespace?: string
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['helm-release-resources', releaseName, clusterId, namespace],
+    queryKey: queryKeys.helmReleases.resources(releaseName, clusterId, namespace),
     queryFn: async () => {
       if (!clusterId || !namespace) return [];
 
@@ -338,7 +331,7 @@ export const useInstallHelmRelease = (
     mutationFn: (body: InstallHelmReleaseRequest) =>
       api.post(`any-cloud/clusters/${clusterName}/helm-releases`, { json: body }).json<Operation>(),
     onSuccess: (op) => {
-      queryClient.invalidateQueries({ queryKey: ['helm-releases'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
       options?.onSuccess?.(op);
     },
     onError: (err) => options?.onError?.(err),
@@ -349,7 +342,7 @@ export const useInstallHelmRelease = (
 
 export const useGetHelmReleaseValues = (releaseName: string) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['helm-release-values', releaseName],
+    queryKey: queryKeys.helmReleases.values(releaseName),
     queryFn: async () => {
       const response = await api
         .get<{ data: string }>(`any-cloud/catalog/releases/${releaseName}/values`)

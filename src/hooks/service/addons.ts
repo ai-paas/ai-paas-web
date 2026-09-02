@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Operation } from '../../types/cluster';
 
 export type AddonType =
@@ -53,7 +54,7 @@ export interface AddonInstallRequest {
 // 애드온 카탈로그
 export const useGetAddonCatalog = () => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['addon-catalog'],
+    queryKey: queryKeys.addons.catalog,
     queryFn: () =>
       api
         .get('any-cloud/addons')
@@ -67,7 +68,7 @@ export const useGetAddonCatalog = () => {
 // 클러스터에 설치된 애드온 목록
 export const useGetClusterAddons = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['cluster-addons', clusterName],
+    queryKey: queryKeys.addons.byCluster(clusterName),
     queryFn: () =>
       api
         .get(`any-cloud/clusters/${clusterName}/addons`)
@@ -82,7 +83,7 @@ export const useGetClusterAddons = (clusterName?: string, enabled: boolean = tru
 // 애드온 단건 조회
 export const useGetClusterAddon = (clusterName?: string, addonId?: string) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['cluster-addon', clusterName, addonId],
+    queryKey: queryKeys.addons.detail(clusterName, addonId),
     queryFn: () =>
       api.get(`any-cloud/clusters/${clusterName}/addons/${addonId}`).json<ClusterAddon>(),
     enabled: !!clusterName && !!addonId,
@@ -103,7 +104,7 @@ export const useInstallAddon = (
     mutationFn: (body: AddonInstallRequest) =>
       api.post(`any-cloud/clusters/${clusterName}/addons`, { json: body }).json<ClusterAddon>(),
     onSuccess: (op) => {
-      queryClient.invalidateQueries({ queryKey: ['cluster-addons', clusterName] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.addons.byCluster(clusterName) });
       options?.onSuccess?.(op);
     },
     onError: (err) => options?.onError?.(err),
@@ -124,7 +125,7 @@ export const useUninstallAddon = (
     mutationFn: (addonId: string) =>
       api.delete(`any-cloud/clusters/${clusterName}/addons/${addonId}`).json<Operation>(),
     onSuccess: (op) => {
-      queryClient.invalidateQueries({ queryKey: ['cluster-addons', clusterName] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.addons.byCluster(clusterName) });
       options?.onSuccess?.(op);
     },
     onError: (err) => options?.onError?.(err),
@@ -147,7 +148,7 @@ export const useRetryAddon = (
         .post(`any-cloud/clusters/${clusterName}/addons/${addonId}/retry`)
         .json<Operation>(),
     onSuccess: (op) => {
-      queryClient.invalidateQueries({ queryKey: ['cluster-addons', clusterName] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.addons.byCluster(clusterName) });
       options?.onSuccess?.(op);
     },
     onError: (err) => options?.onError?.(err),

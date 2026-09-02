@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 
 export interface Credential {
   id?: string;
@@ -24,7 +25,7 @@ export interface CreateCredentialRequest {
 export const useGetCredentials = (params?: { provider?: string }) => {
   const searchParams = params?.provider ? { provider: params.provider } : undefined;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['credentials', searchParams],
+    queryKey: queryKeys.credentials.list(searchParams),
     queryFn: () =>
       api
         .get('any-cloud/credentials', { searchParams })
@@ -43,7 +44,7 @@ export const useGetCredentials = (params?: { provider?: string }) => {
 // CSP 자격증명 단건 조회
 export const useGetCredential = (credentialId?: string) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['credential', credentialId],
+    queryKey: queryKeys.credentials.detail(credentialId),
     queryFn: () => api.get(`any-cloud/credentials/${credentialId}`).json<Credential>(),
     enabled: !!credentialId,
   });
@@ -63,7 +64,7 @@ export const useCreateCredential = (options?: {
     mutationFn: (data: CreateCredentialRequest) =>
       api.post('any-cloud/credentials', { json: data }).json<Credential>(),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['credentials'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credentials.all });
       options?.onSuccess?.(data);
     },
     onError: (err) => options?.onError?.(err),
@@ -84,7 +85,7 @@ export const useDeleteCredential = (options?: {
     mutationFn: (credentialId: string) =>
       api.delete(`any-cloud/credentials/${credentialId}`).json(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['credentials'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credentials.all });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),

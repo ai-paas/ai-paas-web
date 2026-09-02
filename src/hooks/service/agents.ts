@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { AdminAgent, AdminAgentsResponse } from '@/types/agent';
 
 /**
@@ -9,7 +10,7 @@ import type { AdminAgent, AdminAgentsResponse } from '@/types/agent';
  */
 export const useGetAdminAgents = () => {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['admin-agents'],
+    queryKey: queryKeys.adminAgents.all,
     queryFn: async () => {
       return api
         .get('any-cloud/admin/agents', { searchParams: { page: '0', size: '200' } })

@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { api } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
 import { useDeployCatalog } from './catalog';
 
@@ -19,7 +20,7 @@ describe('useDeployCatalog', () => {
       } as ReturnType<typeof api.post>;
     });
     const queryClient = createTestQueryClient({ gcTime: Infinity });
-    queryClient.setQueryData(['helm-releases'], []);
+    queryClient.setQueryData(queryKeys.helmReleases.all, []);
     const { result } = renderHook(() => useDeployCatalog(), {
       wrapper: createHookWrapper(queryClient),
     });
@@ -46,7 +47,7 @@ describe('useDeployCatalog', () => {
     expect(requestBody?.get('namespace')).toBe('production');
     expect(requestBody?.get('version')).toBe('1.2.3');
     expect(requestBody?.get('valuesFile')).toBe(valuesFile);
-    expect(queryClient.getQueryState(['helm-releases'])?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(queryKeys.helmReleases.all)?.isInvalidated).toBe(true);
   });
 
   it('namespace를 생략하면 명세 기본값인 default를 보내고 선택 필드는 제외한다', async () => {

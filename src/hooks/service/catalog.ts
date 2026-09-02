@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type {
   CatalogResponse,
   CatalogDetailResponse,
@@ -91,7 +92,7 @@ export const normalizeCatalogResponse = (response: CatalogResponse): CatalogQuer
 
 export const useGetCatalog = (repoName: string) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['catalog', repoName],
+    queryKey: queryKeys.catalog.list(repoName),
     queryFn: () =>
       api
         .get<CatalogResponse>(`any-cloud/catalog/${repoName}`)
@@ -111,7 +112,7 @@ export const useGetCatalog = (repoName: string) => {
 
 export const useGetCatalogDetail = (repoName: string, chartName: string, version?: string) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['catalog-detail', repoName, chartName, version],
+    queryKey: queryKeys.catalog.detail(repoName, chartName, version),
     queryFn: async () => {
       const url = `any-cloud/catalog/${repoName}/${chartName}/detail`;
       const searchParams = version ? { version } : undefined;
@@ -283,7 +284,7 @@ export const normalizeValuesResponse = (response: CatalogValuesResponse): Catalo
 
 export const useGetCatalogReadme = (repoName: string, chartName: string, version?: string) => {
   return useQuery({
-    queryKey: ['catalog-readme', repoName, chartName, version],
+    queryKey: queryKeys.catalog.readme(repoName, chartName, version),
     queryFn: () =>
       api
         .get<CatalogReadmeResponse>(`any-cloud/catalog/${repoName}/${chartName}/readme`, {
@@ -297,7 +298,7 @@ export const useGetCatalogReadme = (repoName: string, chartName: string, version
 
 export const useGetCatalogValues = (repoName: string, chartName: string, version?: string) => {
   return useQuery({
-    queryKey: ['catalog-values', repoName, chartName, version],
+    queryKey: queryKeys.catalog.values(repoName, chartName, version),
     queryFn: () =>
       api
         .get<CatalogValuesResponse>(`any-cloud/catalog/${repoName}/${chartName}/values`, {
@@ -348,7 +349,7 @@ export const useDeployCatalog = (options?: {
         .json<unknown>();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['helm-releases'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
       options?.onSuccess?.();
     },
     onError: (mutationError) => options?.onError?.(mutationError),

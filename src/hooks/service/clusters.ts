@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '../../types/api';
 import type {
   BootstrapInfo,
@@ -25,7 +26,7 @@ import type {
 // 클러스터 종합 health
 export const useGetClusterHealth = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['cluster-health', clusterName],
+    queryKey: queryKeys.clusters.health(clusterName),
     queryFn: () =>
       api.get(`any-cloud/system/cluster/${clusterName}/health`).json<Record<string, unknown>>(),
     enabled: enabled && !!clusterName,
@@ -48,7 +49,7 @@ export const useGetClusterOperations = (
       )
     : undefined;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['cluster-operations', clusterName, searchParams],
+    queryKey: queryKeys.clusters.operations(clusterName, searchParams),
     queryFn: () =>
       api
         .get(`any-cloud/system/cluster/${clusterName}/operations`, { searchParams })
@@ -66,7 +67,7 @@ export const useGetClusterOperations = (
 // VM 클러스터 workflow state 변경 이력
 export const useGetClusterStateHistory = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['cluster-state-history', clusterName],
+    queryKey: queryKeys.clusters.stateHistory(clusterName),
     queryFn: () =>
       api
         .get(`any-cloud/system/cluster/${clusterName}/state-history`)
@@ -84,7 +85,7 @@ export const useGetClusterStateHistory = (clusterName?: string, enabled: boolean
 // 클러스터 지원 kind 목록
 export const useGetClusterResourceKinds = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['cluster-resource-kinds', clusterName],
+    queryKey: queryKeys.clusters.resourceKinds(clusterName),
     queryFn: () =>
       api
         .get(`any-cloud/system/cluster/${clusterName}/resource-kinds`)
@@ -129,11 +130,11 @@ export const useCreateKubernetesResource = (options?: {
         .json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-pods'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-services'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-config-maps'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-secrets'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.pods.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.deployments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.services.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.configMaps.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.secrets.all });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -150,7 +151,7 @@ export const useGetKubernetesResource = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['kubernetes-resource', resourceType, resourceName, clusterName, namespace],
+    queryKey: queryKeys.kubernetes.resource.detail(resourceType, resourceName, clusterName, namespace),
     queryFn: async () => {
       const searchParams: Record<string, string> = { clusterName: clusterName! };
       if (namespace) searchParams.namespace = namespace;
@@ -200,17 +201,8 @@ export const useDeleteKubernetesResource = (options?: {
         .json();
     },
     onSuccess: () => {
-      // 모든 K8s list query 무효화 — kind 별로 enumerate 하기보다 prefix 일괄 처리
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-pods'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-replicasets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-daemonsets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-services'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-config-maps'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-secrets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-service-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-namespaces'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-nodes'] });
+      // 삭제 후에는 kind 를 특정할 수 없어 K8s 쿼리 전체(kind 목록 + 단건 + events 등)를 prefix 일괄 무효화
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.all });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -227,7 +219,7 @@ export const useGetKubernetesEvents = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['kubernetes-events', resourceType, resourceName, clusterName, namespace],
+    queryKey: queryKeys.kubernetes.events.list(resourceType, resourceName, clusterName, namespace),
     queryFn: async () => {
       const searchParams: Record<string, string> = { clusterName: clusterName! };
       if (namespace) searchParams.namespace = namespace;
@@ -308,12 +300,12 @@ export const useRestartKubernetesResource = (options?: {
     },
     onSuccess: () => {
       // 워크로드 리스트 + 단건 + events 무효화 — 재시작 직후 readyReplicas 0 → 회복 흐름이 자연스럽게 보이도록.
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-pods'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-replicasets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-daemonsets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-resource'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-events'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.pods.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.deployments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.replicaSets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.daemonSets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.resource.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.events.all });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -354,9 +346,9 @@ export const useScaleKubernetesResource = (options?: {
         .json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-deployments'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-replicasets'] });
-      queryClient.invalidateQueries({ queryKey: ['kubernetes-resource'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.deployments.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.replicaSets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.kubernetes.resource.all });
       options?.onSuccess?.();
     },
     onError: (err) => options?.onError?.(err),
@@ -371,13 +363,13 @@ export const useGetPodLogs = (
   podName?: string,
   options?: { tailLines?: number; container?: string; enabled?: boolean }
 ) => {
-  const searchParams: Record<string, string> = { clusterName: clusterName ?? '' };
-  if (namespace) searchParams.namespace = namespace;
-  if (options?.tailLines !== undefined) searchParams.tailLines = String(options.tailLines);
-  if (options?.container) searchParams.container = options.container;
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['pod-logs', clusterName, namespace, podName, options, searchParams],
+    queryKey: queryKeys.kubernetes.podLogs(clusterName, namespace, podName, options),
     queryFn: async () => {
+      const searchParams: Record<string, string> = { clusterName: clusterName ?? '' };
+      if (namespace) searchParams.namespace = namespace;
+      if (options?.tailLines !== undefined) searchParams.tailLines = String(options.tailLines);
+      if (options?.container) searchParams.container = options.container;
       const response = await api
         .get(`any-cloud/kubernetes/pods/${podName}/logs`, { searchParams })
         .text();
@@ -514,7 +506,7 @@ const fetchKubernetesResource = async <T>(
 // 클러스터 목록 조회
 export const useGetClusters = (params: GetClustersParams = {}) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['clusters', params],
+    queryKey: queryKeys.clusters.list(params),
     queryFn: () =>
       api
         .get('any-cloud/system/clusters', { searchParams: { ...params } })
@@ -560,7 +552,7 @@ export const useCreateCluster = (options?: {
       return body;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['clusters'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clusters.all });
       options?.onSuccess?.(data);
     },
     onError: (error) => {
@@ -580,7 +572,7 @@ export const useCreateCluster = (options?: {
 // 클러스터 단일 조회
 export const useGetCluster = (clusterId?: string, enabled: boolean = true) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['cluster', clusterId],
+    queryKey: queryKeys.clusters.detail(clusterId),
     queryFn: () => api.get(`any-cloud/system/cluster/${clusterId}`).json<Cluster>(),
     enabled: enabled && !!clusterId,
   });
@@ -604,12 +596,9 @@ export const useUpdateCluster = (options?: {
     mutationFn: ({ clusterName, spec }: UpdateClusterRequest) => {
       return api.put(`any-cloud/system/cluster/${clusterName}`, { json: { spec } }).json<Cluster>();
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['clusters'] });
-      queryClient.invalidateQueries({ queryKey: ['cluster', variables.clusterName] });
-      if (variables.clusterId) {
-        queryClient.invalidateQueries({ queryKey: ['cluster', variables.clusterId] });
-      }
+    onSuccess: (data) => {
+      // all 무효화가 list/detail(clusterName·clusterId 양쪽 키)을 모두 커버
+      queryClient.invalidateQueries({ queryKey: queryKeys.clusters.all });
       options?.onSuccess?.(data);
     },
     onError: (error) => {
@@ -637,7 +626,7 @@ export const useDeleteCluster = (options?: {
     mutationFn: (clusterId: string) =>
       api.delete(`any-cloud/system/cluster/${clusterId}`).json<string>(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clusters'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clusters.all });
       options?.onSuccess?.();
     },
     onError: (error) => {
@@ -656,7 +645,7 @@ export const useDeleteCluster = (options?: {
 // 쿠버네티스 노드 조회 (cluster-scoped)
 export const useGetKubernetesNodes = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-nodes', clusterName],
+    queryKey: queryKeys.kubernetes.nodes.list(clusterName),
     queryFn: () => fetchKubernetesResource<KubernetesNode>('nodes', clusterName!),
     enabled: enabled && !!clusterName,
     retry: 1,
@@ -669,7 +658,7 @@ export const useGetKubernetesNodes = (clusterName?: string, enabled: boolean = t
 // 쿠버네티스 네임스페이스 조회 (cluster-scoped)
 export const useGetKubernetesNamespaces = (clusterName?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-namespaces', clusterName],
+    queryKey: queryKeys.kubernetes.namespaces.list(clusterName),
     queryFn: () => fetchKubernetesResource<KubernetesNamespace>('namespaces', clusterName!),
     enabled: enabled && !!clusterName,
     retry: 1,
@@ -687,7 +676,7 @@ export const useGetKubernetesDeployments = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-deployments', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.deployments.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesDeployment>('deployments', clusterName!, namespace),
     enabled: enabled && !!clusterName,
@@ -706,7 +695,7 @@ export const useGetKubernetesReplicaSets = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-replicasets', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.replicaSets.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesReplicaSet>('replicasets', clusterName!, namespace),
     enabled: enabled && !!clusterName,
@@ -725,7 +714,7 @@ export const useGetKubernetesPods = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-pods', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.pods.list(clusterName, namespace),
     queryFn: () => fetchKubernetesResource<KubernetesPod>('pods', clusterName!, namespace),
     enabled: enabled && !!clusterName,
     retry: 1,
@@ -745,7 +734,7 @@ export const useGetKubernetesPodsBySelector = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['kubernetes-pods-by-selector', clusterName, namespace, labelSelector],
+    queryKey: queryKeys.kubernetes.podsBySelector(clusterName, namespace, labelSelector),
     queryFn: () =>
       fetchKubernetesResource<KubernetesPod>('pods', clusterName!, namespace, {
         labelSelector: labelSelector!,
@@ -766,7 +755,7 @@ export const useGetKubernetesServices = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-services', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.services.list(clusterName, namespace),
     queryFn: () => fetchKubernetesResource<KubernetesService>('services', clusterName!, namespace),
     enabled: enabled && !!clusterName,
     retry: 1,
@@ -784,7 +773,7 @@ export const useGetKubernetesDaemonSets = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-daemonsets', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.daemonSets.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesDaemonSet>('daemonsets', clusterName!, namespace),
     enabled: enabled && !!clusterName,
@@ -803,7 +792,7 @@ export const useGetGpuSchedulings = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['gpu-schedulings', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.gpuSchedulings.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<GpuScheduling>('gpu-schedulings', clusterName!, namespace),
     enabled: enabled && !!clusterName,
@@ -822,7 +811,7 @@ export const useGetKubernetesServiceAccounts = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-service-accounts', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.serviceAccounts.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesServiceAccount>(
         'service-accounts',
@@ -845,7 +834,7 @@ export const useGetKubernetesConfigMaps = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-config-maps', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.configMaps.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesConfigMap>('config-maps', clusterName!, namespace),
     enabled: enabled && !!clusterName,
@@ -864,7 +853,7 @@ export const useGetKubernetesSecrets = (
   enabled: boolean = true
 ) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['kubernetes-secrets', clusterName, namespace],
+    queryKey: queryKeys.kubernetes.secrets.list(clusterName, namespace),
     queryFn: () => fetchKubernetesResource<KubernetesSecret>('secrets', clusterName!, namespace),
     enabled: enabled && !!clusterName,
     retry: 1,
