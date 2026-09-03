@@ -128,7 +128,7 @@ export default function ModelCatalogDetailPage() {
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(model?.created_at?.toString())}
+                  {formatDateTime(model?.created_at)}
                 </DetailValue>
               </div>
             </li>
@@ -154,7 +154,7 @@ export default function ModelCatalogDetailPage() {
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(model?.updated_at?.toString())}
+                  {formatDateTime(model?.updated_at)}
                 </DetailValue>
               </div>
             </li>
