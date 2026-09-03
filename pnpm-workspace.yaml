@@ -4,3 +4,6 @@ allowBuilds:
   core-js: true
   esbuild: true
   msw: true
+
+overrides:
+  dompurify: '>=3.4.14'
