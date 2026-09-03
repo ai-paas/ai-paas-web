@@ -46,10 +46,6 @@ const PromptDetailPage = lazy(() => import('@/pages/prompt/[id]/page'));
 const LearningPage = lazy(() => import('@/pages/learning/page'));
 const LearningCreatePage = lazy(() => import('@/pages/learning/create/page'));
 const LearningDetailPage = lazy(() => import('@/pages/learning/[id]/page'));
-const LearningAssignmentStep2Page = lazy(() => import('@/pages/learning/assignment/step2/page'));
-const LearningAssignmentStep3Page = lazy(() => import('@/pages/learning/assignment/step3/page'));
-const LearningAssignmentStep5Page = lazy(() => import('@/pages/learning/assignment/step5/page'));
-const LearningSolutionStep2Page = lazy(() => import('@/pages/learning/solution/step2/page'));
 
 const ClusterManagementPage = lazy(() => import('@/pages/infra-management/cluster-management/page'));
 const ClusterCreatePage = lazy(
@@ -263,22 +259,6 @@ export const routes: RouteObject[] = [
       {
         path: 'learning/:id',
         element: page(LearningDetailPage),
-      },
-      {
-        path: 'learning/assignment/step2',
-        element: page(LearningAssignmentStep2Page),
-      },
-      {
-        path: 'learning/assignment/step3',
-        element: page(LearningAssignmentStep3Page),
-      },
-      {
-        path: 'learning/assignment/step5',
-        element: page(LearningAssignmentStep5Page),
-      },
-      {
-        path: 'learning/solution/step2',
-        element: page(LearningSolutionStep2Page),
       },
       {
         path: 'dashboard',

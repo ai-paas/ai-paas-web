@@ -150,7 +150,7 @@ const columns = [
   {
     id: 'created_at',
     header: '생성일시',
-    accessorFn: (row: Prompt) => formatDateTime(row.created_at.toString()),
+    accessorFn: (row: Prompt) => formatDateTime(row.created_at),
     size: 362,
   },
 ];

@@ -79,7 +79,7 @@ export default function PromptDetailPage() {
               <div className="page-detail_item-name">생성일시</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(prompt?.created_at.toString()) ?? 'N/A'}
+                  {formatDateTime(prompt?.created_at) ?? 'N/A'}
                 </DetailValue>
               </div>
             </li>
@@ -87,7 +87,7 @@ export default function PromptDetailPage() {
               <div className="page-detail_item-name">최근 업데이트</div>
               <div className="page-detail_item-data">
                 <DetailValue isLoading={isPending} width={140}>
-                  {formatDateTime(prompt?.updated_at.toString()) ?? 'N/A'}
+                  {formatDateTime(prompt?.updated_at) ?? 'N/A'}
                 </DetailValue>
               </div>
             </li>
