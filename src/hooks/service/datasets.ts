@@ -43,8 +43,9 @@ export const useGetDatasetKinds = () => {
 
 export const useValidateDataset = () => {
   const { mutateAsync } = useMutation({
+    // 대용량 파일(최대 1GB) 업로드 — 기본 타임아웃(30s) 해제
     mutationFn: (data: FormData) =>
-      api.post('datasets/validate', { body: data }).json<ValidateDatasetResponse>(),
+      api.post('datasets/validate', { body: data, timeout: false }).json<ValidateDatasetResponse>(),
   });
 
   return {
@@ -56,7 +57,9 @@ export const useCreateDataset = () => {
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: FormData) => api.post('datasets', { body: data }).json<Dataset>(),
+    // 대용량 파일 업로드 — 기본 타임아웃(30s) 해제
+    mutationFn: (data: FormData) =>
+      api.post('datasets', { body: data, timeout: false }).json<Dataset>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.datasets.all });
     },

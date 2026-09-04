@@ -72,7 +72,10 @@ export const useSubmitTraining = () => {
         if (value === undefined || value === null) return;
         formData.append(key, value instanceof File ? value : String(value));
       });
-      return api.post('learning/training', { body: formData }).json<SubmitTrainingResponse>();
+      // 데이터셋 파일 업로드 — 기본 타임아웃(30s) 해제
+      return api
+        .post('learning/training', { body: formData, timeout: false })
+        .json<SubmitTrainingResponse>();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.learning.all });

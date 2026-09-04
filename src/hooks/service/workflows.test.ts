@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { HTTPError, type NormalizedOptions } from 'ky';
+import { HTTPError, TimeoutError, type NormalizedOptions } from 'ky';
+import { QueryClient, onlineManager } from '@tanstack/react-query';
 import { server } from '@/test/mocks/server';
 import { BASE_URL } from '@/test/mocks/handlers';
 import { createHookWrapper, createTestQueryClient } from '@/test/utils/test-utils';
@@ -360,6 +361,55 @@ describe('workflows hooks', () => {
       await advance(1000);
       expect(requestSpy).not.toHaveBeenCalled();
     });
+
+    it('5xx로 실패하면 전역 정책과 무관하게 재시도 없이 즉시 에러다 (POST 폴링)', async () => {
+      let callCount = 0;
+      server.use(
+        http.post(`${BASE_URL}/workflows/:id/finalize-cleanup`, () => {
+          callCount += 1;
+          return HttpResponse.json({ detail: 'boom' }, { status: 500 });
+        })
+      );
+      // 테스트 기본 클라이언트는 retry:false라 훅 자체 옵션을 구분할 수 없다 — 재시도하는 클라이언트로 검증
+      const retryingClient = new QueryClient({
+        defaultOptions: { queries: { retry: 3, retryDelay: 0 } },
+      });
+
+      const { result } = renderHook(
+        () => useFinalizeWorkflowCleanup({ surro_workflow_id: 'wf-1', enabled: true }),
+        { wrapper: createHookWrapper(retryingClient) }
+      );
+
+      await advance(1000);
+      expect(result.current.isError).toBe(true);
+      expect(callCount).toBe(1);
+    });
+
+    it('재접속(offline → online) 시 확인 요청을 다시 보내지 않는다', async () => {
+      let callCount = 0;
+      server.use(
+        http.post(`${BASE_URL}/workflows/:id/finalize-cleanup`, () => {
+          callCount += 1;
+          return HttpResponse.json({ workflow_id: 'wf-1', status: 'completed' });
+        })
+      );
+
+      const { result } = renderHook(
+        () => useFinalizeWorkflowCleanup({ surro_workflow_id: 'wf-1', enabled: true }),
+        { wrapper: createHookWrapper(createTestQueryClient()) }
+      );
+      await advance(0);
+      expect(result.current.status).toBe('completed');
+      expect(callCount).toBe(1);
+
+      // 전역 기본값(refetchOnReconnect: true)이었다면 stale 쿼리가 재요청된다
+      act(() => {
+        onlineManager.setOnline(false);
+        onlineManager.setOnline(true);
+      });
+      await advance(1000);
+      expect(callCount).toBe(1);
+    });
   });
 
   // ============================================
@@ -397,6 +447,12 @@ describe('workflows hooks', () => {
       const error = createHttpError('Internal Server Error');
 
       await expect(isExecuteTimeoutError(error)).resolves.toBe(false);
+    });
+
+    it('ky TimeoutError(클라이언트 기본 타임아웃)도 타임아웃으로 판정한다 — 배포는 서버에서 계속 진행된다', async () => {
+      const error = new TimeoutError(new Request('http://localhost/x'));
+
+      await expect(isExecuteTimeoutError(error)).resolves.toBe(true);
     });
 
     it.each([

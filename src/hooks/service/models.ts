@@ -188,7 +188,9 @@ export const useCreateModel = () => {
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending, isError, isSuccess } = useMutation({
-    mutationFn: (data: FormData) => api.post('models', { body: data }).json<Model>(),
+    // 모델 파일 업로드 — 기본 타임아웃(30s) 해제
+    mutationFn: (data: FormData) =>
+      api.post('models', { body: data, timeout: false }).json<Model>(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.models.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.modelCatalogs.all });

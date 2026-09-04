@@ -34,7 +34,7 @@ import type {
   WorkflowTemplateListResponse,
 } from '@/types/workflow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { HTTPError } from 'ky';
+import { TimeoutError, type HTTPError } from 'ky';
 
 export const useGetWorkflows = (params: WorkflowListParams) => {
   const { data, isPending, isError } = useQuery({
@@ -367,6 +367,9 @@ export const useFinalizeWorkflowDeletion = () => {
 };
 
 export const isExecuteTimeoutError = async (error: unknown) => {
+  // 클라이언트 타임아웃(lib/api 기본 30s) — 배포는 서버에서 계속 진행되므로 상태 확인으로 전환한다
+  if (error instanceof TimeoutError) return true;
+
   const httpError = error as HTTPError;
 
   if (httpError?.response?.status !== 500) return false;
@@ -454,8 +457,9 @@ export const useTestMLWorkflow = () => {
       const formData = new FormData();
       formData.append('image', params.image);
 
+      // 이미지 업로드 + 추론 — 기본 타임아웃(30s)을 넘길 수 있어 개별 해제
       return api
-        .post(`workflows/${params.surro_workflow_id}/test/ml`, { body: formData })
+        .post(`workflows/${params.surro_workflow_id}/test/ml`, { body: formData, timeout: false })
         .json<WorkflowMlTestResponse>();
     },
   });
@@ -567,6 +571,11 @@ export const useFinalizeWorkflowCleanup = (params: {
     enabled,
     refetchInterval: (query) =>
       query.state.data?.status === 'in_progress' ? FINALIZE_CLEANUP_POLL_INTERVAL : false,
+    // POST를 폴링하는 쿼리 — 실패 시 자동 재시도나 포커스·재접속 refetch로 확인 요청이 임의로 반복되지 않게 한다.
+    // 재확인은 오직 refetchInterval(in_progress)로만 일어난다. [백엔드] 상태 조회용 GET 전환은 협의 항목(TODO 14).
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     gcTime: 0,
     staleTime: 0,
   });
