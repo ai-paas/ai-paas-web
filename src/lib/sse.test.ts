@@ -123,6 +123,52 @@ describe('subscribeSse', () => {
     expect(received).toEqual([{ event: 'progress', data: 'ok' }]);
   });
 
+  it('갱신 후에도 401 이면 refresh 를 반복하지 않고 백오프로 넘긴다', async () => {
+    // 권한 회수처럼 갱신해도 안 풀리는 401 에서 지연 없이 refresh 를 무한 호출하면 안 된다.
+    const { getOrCreateRefreshPromise } = await import('./api');
+    const controller = new AbortController();
+    const onError = vi.fn(() => controller.abort());
+
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: null,
+    } as unknown as Response);
+
+    await subscribeSse('operations/op-1/events', {
+      signal: controller.signal,
+      onMessage: () => undefined,
+      onError,
+    });
+
+    expect(vi.mocked(getOrCreateRefreshPromise)).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledOnce();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('연결에 성공하면 401 재시도 한도가 초기화된다', async () => {
+    // 스트림이 20~30분 살아 있으면 토큰이 여러 번 만료된다. 한 번 쓰고 잠기면 안 된다.
+    const { getOrCreateRefreshPromise } = await import('./api');
+    const controller = new AbortController();
+    const statuses = [401, 200, 401, 200];
+    let call = 0;
+
+    vi.mocked(global.fetch).mockImplementation(async () => {
+      const status = statuses[call] ?? 200;
+      call += 1;
+      if (status === 401) return { ok: false, status: 401, body: null } as unknown as Response;
+      if (call >= statuses.length) controller.abort();
+      return respond('event:progress\ndata:ok\n\n');
+    });
+
+    await subscribeSse('operations/op-1/events', {
+      signal: controller.signal,
+      onMessage: () => undefined,
+    });
+
+    expect(vi.mocked(getOrCreateRefreshPromise)).toHaveBeenCalledTimes(2);
+  });
+
   it('이미 abort 된 signal 이면 연결하지 않는다', async () => {
     const controller = new AbortController();
     controller.abort();
