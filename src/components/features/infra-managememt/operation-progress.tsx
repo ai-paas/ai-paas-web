@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { EngineLogPanel } from '@/components/features/infra-managememt/engine-log-panel';
+import { useOperationEvents } from '@/hooks/service/operation-events';
 import { useGetOperation, useCancelOperation } from '@/hooks/service/operations';
 import type { Operation, OperationState } from '@/types/cluster';
 
@@ -15,7 +17,7 @@ interface OperationProgressProps {
   operationId?: string | null;
   /** terminal state 도달 시 호출 */
   onComplete?: (operation: Operation) => void;
-  /** polling 주기 (ms). 기본 3000 */
+  /** SSE 가 끊겼을 때만 쓰는 polling 주기 (ms). 기본 3000 */
   intervalMs?: number;
   /** 취소 버튼 노출 (기본 true) */
   cancellable?: boolean;
@@ -29,9 +31,11 @@ export const OperationProgress = ({
 }: OperationProgressProps) => {
   // terminal state 에 도달하면 polling 중단
   const [polling, setPolling] = useState(true);
-  const { operation, isPending } = useGetOperation(operationId ?? undefined, {
-    refetchInterval: polling ? intervalMs : false,
+  const { operation: streamed, events, connected } = useOperationEvents(operationId ?? undefined);
+  const { operation: polled, isPending } = useGetOperation(operationId ?? undefined, {
+    refetchInterval: polling && !connected ? intervalMs : false,
   });
+  const operation = streamed ?? polled;
   const { cancelOperation, isPending: isCancelling } = useCancelOperation();
 
   useEffect(() => {
@@ -122,6 +126,7 @@ export const OperationProgress = ({
           {operation.errorMessage}
         </div>
       )}
+      <EngineLogPanel events={events} />
     </div>
   );
 };

@@ -30,6 +30,7 @@ import { ConfigMapsTab } from '@/components/features/infra-managememt/cluster-ma
 import { SecretsTab } from '@/components/features/infra-managememt/cluster-management/tabs/secrets-tab';
 import { OperationsTab } from '@/components/features/infra-managememt/cluster-management/tabs/operations-tab';
 import { ClusterHealthPill } from '@/components/features/infra-managememt/cluster-health-pill';
+import { LiveProgress } from '@/components/features/infra-managememt/provisioning/live-progress';
 import { YamlResourceEditor } from '@/components/features/infra-managememt/yaml-resource-editor';
 import { ResourceNavigationRail } from '@/components/features/infra-managememt/cluster-management/resource-navigation-rail';
 import {
@@ -142,6 +143,15 @@ export default function ClusterDetailPage() {
         </div>
       </div>
       <div className="page-content page-pb-40">
+        {cluster?.source === 'vm' && (
+          <LiveProgress
+            clusterName={clusterName}
+            fallbackPercent={cluster?.workflowProgress?.percent}
+            fallbackStep={
+              cluster?.workflowProgress?.currentStep ?? cluster?.workflowProgress?.lastSuccessfulStep
+            }
+          />
+        )}
         <div style={{ display: 'flex', gap: '24px' }}>
           {/* 왼쪽: 기본 정보 */}
           <div style={{ flex: 1 }}>
