@@ -91,6 +91,7 @@ const delay = (ms: number, signal: AbortSignal) =>
 export const subscribeSse = async (path: string, options: SseSubscribeOptions): Promise<void> => {
   const { signal, onMessage, onOpen, onClose, onError } = options;
   let retryMs = INITIAL_RETRY_MS;
+  let refreshed = false;
 
   while (!signal.aborted) {
     try {
@@ -100,6 +101,8 @@ export const subscribeSse = async (path: string, options: SseSubscribeOptions): 
       });
 
       if (response.status === 401) {
+        if (refreshed) throw new Error('SSE 인증 실패: 토큰 갱신 후에도 401');
+        refreshed = true;
         await getOrCreateRefreshPromise();
         continue;
       }
@@ -108,6 +111,7 @@ export const subscribeSse = async (path: string, options: SseSubscribeOptions): 
       }
 
       retryMs = INITIAL_RETRY_MS;
+      refreshed = false;
       onOpen?.();
       await readStream(response.body, onMessage);
       onClose?.();
