@@ -75,6 +75,13 @@ describe('subscribeSse', () => {
     expect(received[0].data).toBe('line1\nline2');
   });
 
+  it('콜론 뒤 공백이 없어도 파싱한다', async () => {
+    // Spring SseEmitter 의 실제 출력 형식 — 공백을 필수로 보면 전부 무시된다.
+    const received = await collectOnce('event:not-found\ndata:\n\n');
+
+    expect(received).toEqual([{ event: 'not-found', data: '' }]);
+  });
+
   it('주석과 미지원 필드는 버린다', async () => {
     const received = await collectOnce(': keep-alive\nid: 7\nretry: 500\nevent: x\ndata: v\n\n');
 
