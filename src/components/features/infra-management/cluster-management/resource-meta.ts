@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 // 좌측 navigation rail 의 카테고리 + 리소스 메타.
 // component 는 page.tsx 에서 직접 매핑 (props 시그니처 다양해 generic 함수형 매핑 어려움).
 
-export type ResourceCategoryId = 'workload' | 'network' | 'config' | 'cluster' | 'operations';
+// 운영 도구(터미널, 모니터링, 애드온, 작업 이력)는 리소스가 아니라 상세 페이지의 탭이다.
+export type ResourceCategoryId = 'workload' | 'network' | 'config' | 'cluster' | 'gpu';
 
 export type ResourceId =
   | 'pods'
@@ -17,7 +18,9 @@ export type ResourceId =
   | 'nodes'
   | 'namespaces'
   | 'gpu-scheduling'
-  | 'operations';
+  | 'gpu-workload'
+  | 'accelerator'
+  | 'usage';
 
 export interface ResourceItem {
   id: ResourceId;
@@ -63,13 +66,17 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
     items: [
       { id: 'nodes', label: '노드', namespaced: false },
       { id: 'namespaces', label: '네임스페이스', namespaced: false },
-      { id: 'gpu-scheduling', label: 'GPU 스케줄링', namespaced: true },
     ],
   },
   {
-    id: 'operations',
-    label: '운영',
-    items: [{ id: 'operations', label: '작업 이력', namespaced: false }],
+    id: 'gpu',
+    label: 'GPU',
+    items: [
+      { id: 'gpu-workload', label: 'GPU 워크로드', namespaced: true },
+      { id: 'gpu-scheduling', label: 'GPU 스케줄링', namespaced: true },
+      { id: 'accelerator', label: '가속기', namespaced: false },
+      { id: 'usage', label: '사용량', namespaced: false },
+    ],
   },
 ];
 

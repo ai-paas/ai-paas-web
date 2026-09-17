@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { clusterStatusTone } from '@/util/status-tone';
 import { Link } from 'react-router';
 import {
   BreadCrumb,
@@ -15,25 +16,28 @@ import { EditClusterButton } from '@/components/features/infra-management/cluste
 import { CreateClusterButton } from '@/components/features/infra-management/cluster-management/create-cluster-button';
 import { DeleteClusterButton } from '@/components/features/infra-management/cluster-management/delete-cluster-button';
 import { formatDateTime } from '@/util/date';
+import { nodeSummaryLabel } from '@/util/node-summary';
 import { useGetClusters } from '@/hooks/service/clusters';
-import type { Cluster } from '@/types/cluster';
+import type { Cluster, ClusterSource } from '@/types/cluster';
 
 // 클러스터의 식별자 (라우팅 / 선택 / API 호출 등 모든 곳에서 사용)
 const clusterKey = (cluster: Cluster | undefined): string => cluster?.clusterName ?? '';
 
 // 상태 → 표시 색상
-const statusColor = (status?: string): 'run' | 'negative' | 'wait' => {
-  if (!status) return 'wait';
-  if (status === 'READY' || status === 'IMPORTED') return 'run';
-  if (status === 'FAILED' || status === 'BLOCKED' || status === 'DELETED') return 'negative';
-  return 'wait';
-};
-
 const connectivityColor = (connectivity?: string): 'run' | 'negative' | 'wait' => {
   if (connectivity === 'CONNECTED') return 'run';
   if (connectivity === 'DISCONNECTED' || connectivity === 'NOT_REGISTERED') return 'negative';
   return 'wait';
 };
+
+const SOURCE_LABEL: Record<ClusterSource, string> = {
+  vm: 'VM 프로비저닝',
+  registered: '에이전트 등록',
+};
+
+// 백엔드가 합치기 전 응답을 주거나 옛 캐시가 남아 있으면 sources 가 비어 있다.
+const sourcesOf = (cluster: Cluster): ClusterSource[] =>
+  cluster.sources?.length ? cluster.sources : cluster.source ? [cluster.source] : [];
 
 // 테이블 컬럼 설정
 const columns = [
@@ -63,26 +67,33 @@ const columns = [
   },
   {
     id: 'source',
-    header: '소스',
-    accessorFn: (row: Cluster) => row.source ?? '-',
-    size: 140,
+    header: '출처',
+    accessorFn: (row: Cluster) => sourcesOf(row).join(','),
+    size: 200,
     cell: ({ row }: { row: { original: Cluster } }) => {
-      const s = row.original.source;
+      const sources = sourcesOf(row.original);
       const linked = row.original.linkedVmName;
-      if (linked) {
-        return (
-          <Link
-            to={`/infra-management/provisioning/${encodeURIComponent(linked)}`}
-            className="table-td-link"
-            title="VM 프로비저닝 자원으로 이동"
-          >
-            VM ({linked})
-          </Link>
-        );
-      }
-      if (s === 'vm') return 'VM 프로비저닝';
-      if (s === 'registered') return '수동 등록';
-      return s ?? '-';
+      if (sources.length === 0) return '-';
+      return (
+        <span className="table-td-badges">
+          {sources.map((s) =>
+            s === 'vm' && linked ? (
+              <Link
+                key={s}
+                to={`/infra-management/vm/${encodeURIComponent(linked)}`}
+                className="table-td-badge table-td-link"
+                title="이 클러스터를 만든 프로비저닝 작업으로 이동"
+              >
+                {SOURCE_LABEL.vm}
+              </Link>
+            ) : (
+              <span key={s} className="table-td-badge">
+                {SOURCE_LABEL[s]}
+              </span>
+            )
+          )}
+        </span>
+      );
     },
   },
   {
@@ -92,7 +103,9 @@ const columns = [
     size: 140,
     cell: ({ row }: { row: { original: Cluster } }) => {
       const s = row.original.status;
-      return <span className={`table-td-state table-td-state-${statusColor(s)}`}>{s ?? '-'}</span>;
+      return (
+        <span className={`table-td-state table-td-state-${clusterStatusTone(s)}`}>{s ?? '-'}</span>
+      );
     },
   },
   {
@@ -105,6 +118,19 @@ const columns = [
       if (!c) return '-';
       return <span className={`table-td-state table-td-state-${connectivityColor(c)}`}>{c}</span>;
     },
+  },
+  {
+    id: 'master',
+    header: 'master',
+    // 목록은 worker 행을 따로 보여주지 않는다. master 주소가 클러스터의 대표 주소다.
+    accessorFn: (row: Cluster) => row.masterPrivateIp ?? '-',
+    size: 140,
+  },
+  {
+    id: 'nodes',
+    header: '노드',
+    accessorFn: (row: Cluster) => nodeSummaryLabel(row.masterCount, row.workerCount),
+    size: 160,
   },
   {
     id: 'provider',
@@ -177,6 +203,16 @@ export default function ClusterManagementPage() {
     setRowSelection({});
   };
 
+  // 삭제가 무엇을 데려가는지 숫자로 보여준다. worker 가 함께 사라지는 것을 모르면 사고가 난다.
+  const singleSelectedCluster = useMemo(
+    () => (singleSelectedId ? clusters.find((c) => clusterKey(c) === singleSelectedId) : undefined),
+    [singleSelectedId, clusters]
+  );
+  const deleteConsequence =
+    singleSelectedCluster && typeof singleSelectedCluster.masterCount === 'number'
+      ? `master ${singleSelectedCluster.masterCount}대와 worker ${singleSelectedCluster.workerCount ?? 0}대가 모두 삭제되고, 클라우드의 네트워크와 디스크 자원도 함께 제거됩니다.`
+      : undefined;
+
   return (
     <main>
       <div className="breadcrumbBox">
@@ -190,7 +226,11 @@ export default function ClusterManagementPage() {
           <div className="page-toolBox-btns">
             <CreateClusterButton />
             <EditClusterButton clusterId={singleSelectedId} />
-            <DeleteClusterButton clusterIds={selectedIds} onDeleteSuccess={handleDeleteSuccess} />
+            <DeleteClusterButton
+              clusterIds={selectedIds}
+              consequence={deleteConsequence}
+              onDeleteSuccess={handleDeleteSuccess}
+            />
           </div>
           <div>
             <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
@@ -215,7 +255,7 @@ export default function ClusterManagementPage() {
                 <div className="flex flex-col items-center gap-4">
                   <div>클러스터가 없습니다.</div>
                   <div>
-                    수동 등록은 "등록" 버튼, VM 프로비저닝은 프로비저닝 메뉴에서 가능합니다.
+                    수동 등록은 "등록" 버튼, VM 프로비저닝은 VM 메뉴에서 가능합니다.
                   </div>
                 </div>
               )
@@ -223,6 +263,8 @@ export default function ClusterManagementPage() {
             totalCount={filteredClusters.length}
             pagination={pagination}
             setPagination={setPagination}
+            useSelect
+            useMultiSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />

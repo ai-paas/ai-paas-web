@@ -127,9 +127,8 @@ export const buildResourceSkeleton = (
         description: 'GPU workload high priority',
       });
     case 'nodes':
-    case 'operations':
     default:
-      // node 는 cloud-provider 가 생성 — 수동 생성 사용 사례 없음. operations 는 read-only.
+      // node 는 cloud-provider 가 생성 — 수동 생성 사용 사례 없음.
       return undefined;
   }
 };

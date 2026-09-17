@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '../../types/api';
@@ -653,6 +653,82 @@ export const useGetKubernetesNodes = (clusterName?: string, enabled: boolean = t
   });
 
   return { nodes: data ?? [], isPending, isError, error };
+};
+
+/**
+ * 여러 클러스터의 노드를 한 번에. VM 목록이 클러스터마다 쿠버네티스 상태를 붙일 때 쓴다.
+ *
+ * <p>에이전트가 끊긴 클러스터는 빈 배열이다 — 한 클러스터의 실패로 목록 전체가 비면 안 된다.
+ */
+export const useGetKubernetesNodesByCluster = (clusterNames: string[]) => {
+  const results = useQueries({
+    queries: clusterNames.map((clusterName) => ({
+      queryKey: queryKeys.kubernetes.nodes.list(clusterName),
+      queryFn: () => fetchKubernetesResource<KubernetesNode>('nodes', clusterName),
+      retry: 0,
+    })),
+  });
+
+  const byCluster = new Map<string, KubernetesNode[]>();
+  clusterNames.forEach((name, i) => byCluster.set(name, results[i]?.data ?? []));
+
+  return { byCluster, isPending: results.some((r) => r.isPending) };
+};
+
+/** 노드 셸용 임시 파드의 좌표. 기존 pod exec WebSocket 이 이걸로 붙는다. */
+export interface NodeDebugPod {
+  clusterName: string;
+  nodeName: string;
+  namespace: string;
+  podName: string;
+  expiresAt?: string;
+}
+
+/** 이 파드의 컨테이너 이름. 에이전트가 고정으로 만든다. */
+export const DEBUG_POD_CONTAINER = 'debug';
+
+/**
+ * 노드에 붙는 셸을 파드로 연다.
+ *
+ * <p>nsenter 로 호스트 네임스페이스에 들어가므로 노드에 직접 들어간 것과 같다. 백엔드에 이미
+ * 있던 경로를 쓴다 — 같은 일을 두 번 만들지 않는다.
+ */
+export const useCreateNodeDebugPod = (options?: {
+  onSuccess?: (pod: NodeDebugPod) => void;
+  onError?: (error: unknown) => void;
+}) => {
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationKey: ['createNodeDebugPod'],
+    mutationFn: ({
+      clusterName,
+      nodeName,
+      image,
+    }: {
+      clusterName: string;
+      nodeName: string;
+      image?: string;
+    }) =>
+      api
+        .post(`any-cloud/clusters/${clusterName}/nodes/${nodeName}/debug-pod`, {
+          // 호스트 셸이 아니라 클러스터를 보는 셸이다. 노드에 kubectl, k9s 가 깔려 있으리라
+          // 기대할 수 없어 이미지가 들고 온다.
+          json: {
+            image,
+            ttlSeconds: 1800,
+            toolsShell: true,
+            serviceAccount: 'aipaas-agent-installer',
+          },
+          timeout: false,
+        })
+        .json<{ data?: NodeDebugPod } | NodeDebugPod>(),
+    onSuccess: (raw) => {
+      const pod = (raw as { data?: NodeDebugPod }).data ?? (raw as NodeDebugPod);
+      options?.onSuccess?.(pod);
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { createNodeDebugPod: mutate, isPending, isError, error };
 };
 
 // 쿠버네티스 네임스페이스 조회 (cluster-scoped)
