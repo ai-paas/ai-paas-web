@@ -3,6 +3,7 @@ import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { Page } from '../../types/api';
 import type {
+  ClusterNode,
   Vm,
   VmCreateRequest,
   VmPatchRequest,
@@ -91,18 +92,52 @@ export const useScaleVm = (options?: {
   return { scaleVm: mutate, isPending, isError, isSuccess, error };
 };
 
+// ============= 노드 목록 (클러스터 경계를 넘어 한 행씩) =============
+// 백엔드가 /v1/vms 아래 두지 않은 이유: 클러스터 이름 path 변수와 겹친다.
+export const useGetClusterNodes = (params: { provider?: string; clusterName?: string } = {}) => {
+  const searchParams = Object.fromEntries(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => [k, String(v)])
+  );
+
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.clusterNodes.list(searchParams),
+    queryFn: () =>
+      api.get('any-cloud/nodes', { searchParams }).json<ListEnvelope<ClusterNode>>(),
+  });
+
+  const nodes: ClusterNode[] = (() => {
+    const raw = data?.data;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    return raw.items ?? [];
+  })();
+
+  return { nodes, isPending, isError, error, refetch };
+};
+
 // ============= VM 삭제 (Pulumi destroy 트리거) =============
+// force 는 destroy 없이 기록만 지운다. 자격증명이 먼저 지워져 destroy 가 영영 못 도는
+// 클러스터의 마지막 수단이고, CSP 에 자원이 남을 수 있어 응답의 orphanedStacks 를 전달한다.
+type DeleteVmVariables = { vmName: string; force?: boolean };
+
+type ForceDeleteEnvelope = { data?: { orphanedStacks?: string[] } };
+
 export const useDeleteVm = (options?: {
-  onSuccess?: () => void;
+  onSuccess?: (orphanedStacks: string[]) => void;
   onError?: (error: unknown) => void;
 }) => {
   const queryClient = useQueryClient();
   const { mutate, isPending, isError, isSuccess, error } = useMutation({
     mutationKey: ['deleteVm'],
-    mutationFn: (vmName: string) => api.delete(`any-cloud/vms/${vmName}`).json<unknown>(),
-    onSuccess: () => {
+    mutationFn: ({ vmName, force }: DeleteVmVariables) =>
+      api
+        .delete(`any-cloud/vms/${vmName}`, force ? { searchParams: { force: 'true' } } : undefined)
+        .json<ForceDeleteEnvelope>(),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.vms.all });
-      options?.onSuccess?.();
+      options?.onSuccess?.(data?.data?.orphanedStacks ?? []);
     },
     onError: (error) => options?.onError?.(error),
   });

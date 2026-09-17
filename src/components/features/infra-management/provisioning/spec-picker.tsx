@@ -64,6 +64,10 @@ export const SpecPicker = ({
   const [keyword, setKeyword] = useState('');
   const [gpuOnly, setGpuOnly] = useState(false);
 
+  // 인스턴스 타입은 CSP API 로 실시간 조회한다. 자격증명과 리전이 없으면 빈 목록이 오고,
+  // 사용자는 뭘 고르는지 모른 채 고른 뒤 PROVISION 에서 실패한다.
+  const ready = !!provider && !!credentialId && !!region;
+
   const { specs, isPending, isError } = useGetProviderSpecs(
     {
       provider,
@@ -73,7 +77,7 @@ export const SpecPicker = ({
       gpuOnly: gpuOnly || undefined,
       limit: 50,
     },
-    !!provider
+    ready
   );
 
   const grouped = useMemo(() => {
@@ -93,8 +97,15 @@ export const SpecPicker = ({
     }));
   }, [specs]);
 
-  const disabled = !provider;
-  const isEmpty = !isPending && grouped.length === 0;
+  const disabled = !ready;
+  const isEmpty = ready && !isPending && grouped.length === 0;
+  const gatePlaceholder = !provider
+    ? '프로바이더 선택 필요'
+    : !credentialId
+      ? '자격증명 선택 필요'
+      : !region
+        ? '리전 선택 필요'
+        : '인스턴스 타입 검색...';
 
   return (
     <div>
@@ -107,14 +118,10 @@ export const SpecPicker = ({
           flexWrap: 'wrap',
         }}
       >
-        {label && (
-          <span style={{ fontSize: 12, color: '#666', minWidth: 100 }}>
-            {label}
-          </span>
-        )}
+        {label && <span style={{ fontSize: 12, color: '#666', minWidth: 100 }}>{label}</span>}
         <div style={{ flex: 1, minWidth: 160 }}>
           <Input
-            placeholder={disabled ? '프로바이더 선택 필요' : '인스턴스 타입 검색...'}
+            placeholder={gatePlaceholder}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             disabled={disabled}
@@ -174,11 +181,7 @@ export const SpecPicker = ({
         {!disabled && !isPending && !isEmpty && (
           <div>
             {grouped.map(({ category, items }) => (
-              <details
-                key={category}
-                open
-                style={{ borderBottom: '1px solid #e5e7eb' }}
-              >
+              <details key={category} open style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <summary
                   style={{
                     cursor: 'pointer',
@@ -259,14 +262,10 @@ export const SpecPicker = ({
                             {spec.family}
                           </span>
                         )}
-                        <span
-                          style={{ fontFamily: 'monospace', minWidth: 70, textAlign: 'right' }}
-                        >
+                        <span style={{ fontFamily: 'monospace', minWidth: 70, textAlign: 'right' }}>
                           vCPU {spec.vcpu ?? '-'}
                         </span>
-                        <span
-                          style={{ fontFamily: 'monospace', minWidth: 80, textAlign: 'right' }}
-                        >
+                        <span style={{ fontFamily: 'monospace', minWidth: 80, textAlign: 'right' }}>
                           {formatMemory(spec.memoryGb)}
                         </span>
                         {(spec.gpuCount ?? 0) > 0 ? (

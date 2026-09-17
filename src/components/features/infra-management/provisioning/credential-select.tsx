@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Select, type SelectSingleValue } from '@innogrid/ui';
 import { useGetCredentials, type Credential } from '@/hooks/service/credentials';
+import { formatDateTime } from '@/util/date';
 
 interface CredentialSelectProps {
   provider?: string;
@@ -26,20 +27,29 @@ export const CredentialSelect = ({
   const options = useMemo<Option[]>(
     () =>
       credentials
-        .filter((c: Credential) => !provider || (c.provider ?? '').toUpperCase() === provider.toUpperCase())
+        .filter(
+          (c: Credential) =>
+            !provider || (c.provider ?? '').toUpperCase() === provider.toUpperCase()
+        )
         .filter((c): c is Credential & { id: string } => !!c.id)
         .map((c) => ({
-          text: `${c.name ?? c.id} (${c.credentialKeys?.length ?? 0} keys)`,
+          // 같은 이름으로 여러 개가 등록돼 있어 이름만으로는 구분되지 않는다.
+          // 설명과 등록일을 붙여 어느 것인지 알아볼 수 있게 한다.
+          text: [
+            c.name ?? c.id,
+            c.description,
+            c.createdAt ? formatDateTime(c.createdAt) : undefined,
+            `${c.credentialKeys?.length ?? 0} keys`,
+          ]
+            .filter(Boolean)
+            .join(' · '),
           value: c.id,
           credentialName: c.name ?? c.id,
         })),
     [credentials, provider]
   );
 
-  const selected = useMemo(
-    () => options.find((o) => o.value === value) ?? null,
-    [options, value]
-  );
+  const selected = useMemo(() => options.find((o) => o.value === value) ?? null, [options, value]);
 
   const isProviderMissing = !provider;
   const isEmpty = !isPending && options.length === 0;
