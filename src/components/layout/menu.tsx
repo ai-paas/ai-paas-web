@@ -102,14 +102,14 @@ export const Menu = () => {
       >
         <ul>
           <MenuItem2
+            label="VM"
+            href="/infra-management/vm"
+            isActive={isPathActive(location.pathname, '/infra-management/vm')}
+          />
+          <MenuItem2
             label="클러스터"
             href="/infra-management/cluster-management"
             isActive={isPathActive(location.pathname, '/infra-management/cluster-management')}
-          />
-          <MenuItem2
-            label="프로비저닝"
-            href="/infra-management/provisioning"
-            isActive={isPathActive(location.pathname, '/infra-management/provisioning')}
           />
           <MenuItem2
             label="모니터링"
@@ -170,12 +170,12 @@ export const Menu = () => {
               />
             </ul>
           </MenuItem2>
+          {/* 설정과 기록은 들어오는 이유가 다르다 — 등록하러 오는 사람과 확인하러 오는
+              사람이 같은 메뉴를 열고 있었다. URL 은 그대로 둬서 기존 링크가 살아 있다. */}
           <MenuItem2
-            label="시스템 설정"
+            label="설정"
             isActive={
               isPathActive(location.pathname, '/infra-management/credentials') ||
-              isPathActive(location.pathname, '/infra-management/audit-logs') ||
-              isPathActive(location.pathname, '/infra-management/operations') ||
               isPathActive(location.pathname, '/infra-management/cluster-agent')
             }
           >
@@ -186,19 +186,30 @@ export const Menu = () => {
                 isActive={isPathActive(location.pathname, '/infra-management/credentials')}
               />
               <MenuItem3
-                label="감사 로그"
-                href="/infra-management/audit-logs"
-                isActive={isPathActive(location.pathname, '/infra-management/audit-logs')}
+                label="에이전트"
+                href="/infra-management/cluster-agent"
+                isActive={isPathActive(location.pathname, '/infra-management/cluster-agent')}
               />
+            </ul>
+          </MenuItem2>
+          <MenuItem2
+            label="기록"
+            isActive={
+              isPathActive(location.pathname, '/infra-management/operations') ||
+              isPathActive(location.pathname, '/infra-management/audit-logs')
+            }
+          >
+            <ul>
+              {/* 작업 이력이 먼저다 — 무엇을 했는지 보러 오는 쪽이 훨씬 잦다. */}
               <MenuItem3
                 label="작업 이력"
                 href="/infra-management/operations"
                 isActive={isPathActive(location.pathname, '/infra-management/operations')}
               />
               <MenuItem3
-                label="에이전트"
-                href="/infra-management/cluster-agent"
-                isActive={isPathActive(location.pathname, '/infra-management/cluster-agent')}
+                label="감사 로그"
+                href="/infra-management/audit-logs"
+                isActive={isPathActive(location.pathname, '/infra-management/audit-logs')}
               />
             </ul>
           </MenuItem2>
