@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
+import { operationStateTone } from '@/util/status-tone';
 import { EngineLogPanel } from '@/components/features/infra-management/engine-log-panel';
 import { useOperationEvents } from '@/hooks/service/operation-events';
 import { useGetOperation, useCancelOperation } from '@/hooks/service/operations';
 import type { Operation, OperationState } from '@/types/cluster';
 
 const TERMINAL_STATES: OperationState[] = ['SUCCEEDED', 'FAILED', 'CANCELLED'];
-
-const stateColor = (state?: OperationState): 'run' | 'negative' | 'wait' => {
-  if (!state) return 'wait';
-  if (state === 'SUCCEEDED') return 'run';
-  if (state === 'FAILED' || state === 'CANCELLED') return 'negative';
-  return 'wait';
-};
 
 interface OperationProgressProps {
   operationId?: string | null;
@@ -64,7 +58,7 @@ export const OperationProgress = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <span className={`table-td-state table-td-state-${stateColor(operation.state)}`}>
+        <span className={`table-td-state table-td-state-${operationStateTone(operation.state)}`}>
           {operation.state ?? '-'}
         </span>
         <span style={{ fontSize: 13, color: '#666' }}>
@@ -122,9 +116,7 @@ export const OperationProgress = ({
         </>
       )}
       {operation.errorMessage && (
-        <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>
-          {operation.errorMessage}
-        </div>
+        <div style={{ marginTop: 8, fontSize: 12, color: '#dc2626' }}>{operation.errorMessage}</div>
       )}
       <EngineLogPanel events={events} />
     </div>
