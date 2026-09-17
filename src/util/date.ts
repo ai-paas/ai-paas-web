@@ -50,3 +50,25 @@ export function formatRelativeTime(dateString?: string): string {
 
   return '방금 전';
 }
+
+/**
+ * 시작 시각 이후 흐른 시간을 사람이 읽는 말로.
+ *
+ * <p>진행 중인 작업 옆에 붙는다. {@link formatElapsed} 의 "00:03:42" 는 한 번 더 읽어야 해서
+ * 흘깃 보는 자리에는 맞지 않는다.
+ *
+ * @param nowMs 테스트에서 시각을 고정하기 위한 기준. 비우면 현재 시각.
+ */
+export function formatDurationSince(startedAt?: string | null, nowMs?: number): string {
+  if (!startedAt) return '';
+  const started = new Date(startedAt).getTime();
+  if (Number.isNaN(started)) return '';
+
+  const seconds = Math.max(0, Math.floor(((nowMs ?? Date.now()) - started) / 1000));
+  if (seconds < 60) return `${seconds}초`;
+
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}시간 ${m}분`;
+  return `${m}분 ${seconds % 60}초`;
+}

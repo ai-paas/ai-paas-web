@@ -1,5 +1,10 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { formatDateTime, formatElapsed, formatRelativeTime } from './date';
+import {
+  formatDateTime,
+  formatDurationSince,
+  formatElapsed,
+  formatRelativeTime,
+} from './date';
 
 // vitest 설정에서 TZ='Asia/Seoul' 고정 — 모든 기대값은 KST 기준이다.
 
@@ -181,5 +186,31 @@ describe('date 유틸', () => {
         expect(formatRelativeTime('not-a-date')).toBe('방금 전');
       });
     });
+  });
+});
+
+describe('formatDurationSince', () => {
+  const now = new Date('2026-09-16T12:00:00Z').getTime();
+
+  it('몇 분째인지 바로 읽힌다', () => {
+    // "00:03:42" 는 한 번 더 읽어야 한다. 진행 중인 작업을 볼 때 그 한 번이 거슬린다.
+    expect(formatDurationSince('2026-09-16T11:56:18Z', now)).toBe('3분 42초');
+  });
+
+  it('한 시간을 넘으면 시간부터 말한다', () => {
+    expect(formatDurationSince('2026-09-16T09:30:00Z', now)).toBe('2시간 30분');
+  });
+
+  it('1분이 안 되면 초만 말한다', () => {
+    expect(formatDurationSince('2026-09-16T11:59:53Z', now)).toBe('7초');
+  });
+
+  it('시작 시각이 없으면 빈 문자열', () => {
+    // "-" 를 넣으면 0초 동안 진행 중인 것처럼 보인다.
+    expect(formatDurationSince(undefined, now)).toBe('');
+  });
+
+  it('시계가 앞서 있어도 음수를 보여주지 않는다', () => {
+    expect(formatDurationSince('2026-09-16T12:00:30Z', now)).toBe('0초');
   });
 });

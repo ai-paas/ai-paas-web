@@ -273,6 +273,10 @@ export const queryKeys = {
       [...queryKeys.vms.detail(vmName), 'state-history', pageSize] as const,
     nodes: (vmName?: string) => [...queryKeys.vms.detail(vmName), 'nodes'] as const,
   },
+  clusterNodes: {
+    all: ['cluster-nodes'] as const,
+    list: (params: Record<string, string> = {}) => [...queryKeys.clusterNodes.all, params] as const,
+  },
   credentials: {
     all: ['credentials'] as const,
     list: (params?: { provider?: string }) => [...queryKeys.credentials.all, params] as const,
@@ -295,6 +299,8 @@ export const queryKeys = {
       [...queryKeys.infraProviders.all, 'images', params] as const,
     configSchema: (provider?: string) =>
       [...queryKeys.infraProviders.all, 'config-schema', provider] as const,
+    credentialSchema: (provider?: string) =>
+      [...queryKeys.infraProviders.all, 'credential-schema', provider] as const,
   },
   addons: {
     catalog: ['addon-catalog'] as const,
