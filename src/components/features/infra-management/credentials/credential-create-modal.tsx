@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Modal, Textarea, useToast } from '@innogrid/ui';
+import { errorMessage } from '@/util/api-error';
+import { Button, Input, Modal, useToast } from '@innogrid/ui';
 import { useCreateCredential, type Credential } from '@/hooks/service/credentials';
-import { CSP_OPTIONS, CSP_PLACEHOLDERS, CspSelector } from './csp-selector';
+import { CSP_OPTIONS, CspSelector } from './csp-selector';
+import { CredentialFields } from './credential-fields';
 
 interface CredentialCreateModalProps {
   isOpen: boolean;
@@ -15,41 +17,6 @@ type ValidationErrors = {
   name?: string;
 };
 
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
-
-const parseCredentialsInput = (raw: string): Record<string, string> | undefined => {
-  const trimmed = raw.trim();
-  if (!trimmed) return undefined;
-  try {
-    const parsed = JSON.parse(trimmed) as unknown;
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      const obj: Record<string, string> = {};
-      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        obj[k] = String(v);
-      }
-      return obj;
-    }
-  } catch {
-    // KEY=VALUE 라인 fallback
-  }
-  const result: Record<string, string> = {};
-  trimmed.split(/\r?\n/).forEach((line) => {
-    const eq = line.indexOf('=');
-    if (eq > 0) {
-      const k = line.slice(0, eq).trim();
-      const v = line.slice(eq + 1).trim();
-      if (k) result[k] = v;
-    }
-  });
-  return Object.keys(result).length > 0 ? result : undefined;
-};
-
 export const CredentialCreateModal = ({
   isOpen,
   defaultProvider,
@@ -60,7 +27,7 @@ export const CredentialCreateModal = ({
   const [provider, setProvider] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [credentialsInput, setCredentialsInput] = useState('');
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
@@ -68,13 +35,12 @@ export const CredentialCreateModal = ({
       setProvider(defaultProvider ?? '');
       setName('');
       setDescription('');
-      setCredentialsInput('');
+      setCredentials({});
       setErrors({});
     }
   }, [isOpen, defaultProvider]);
 
   const providerLabel = CSP_OPTIONS.find((o) => o.value === provider)?.label;
-  const placeholderForProvider = provider ? CSP_PLACEHOLDERS[provider] : '';
 
   const { createCredential, isPending } = useCreateCredential({
     onSuccess: (data) => {
@@ -82,7 +48,7 @@ export const CredentialCreateModal = ({
       onCreated?.(data);
       onClose();
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '등록 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '등록 실패'), status: 'negative' }),
   });
 
   const handleConfirm = () => {
@@ -95,7 +61,7 @@ export const CredentialCreateModal = ({
       provider,
       name,
       description: description || undefined,
-      credentials: parseCredentialsInput(credentialsInput),
+      credentials: Object.keys(credentials).length > 0 ? credentials : undefined,
     });
   };
 
@@ -125,9 +91,7 @@ export const CredentialCreateModal = ({
               setErrors((p) => ({ ...p, provider: undefined }));
             }}
           />
-          {errors.provider && (
-            <p className="mt-1 text-[12px] text-[#b91c1c]">{errors.provider}</p>
-          )}
+          {errors.provider && <p className="mt-1 text-[12px] text-[#b91c1c]">{errors.provider}</p>}
         </div>
         <div>
           <div className="mb-1 text-[12px] text-[#6b7280]">자격증명 이름 *</div>
@@ -152,20 +116,10 @@ export const CredentialCreateModal = ({
         </div>
         <div>
           <div className="mb-1 text-[12px] text-[#6b7280]">
-            credentials (KEY=VALUE 또는 JSON)
-            {providerLabel && (
-              <span className="ml-1 text-[#888]">— {providerLabel} 형식</span>
-            )}
+            자격증명
+            {providerLabel && <span className="ml-1 text-[#888]">— {providerLabel}</span>}
           </div>
-          <Textarea
-            placeholder={
-              placeholderForProvider ||
-              '프로바이더를 먼저 선택하면 각 CSP 의 입력 예시가 표시됩니다.'
-            }
-            value={credentialsInput}
-            onChange={(e) => setCredentialsInput(e.target.value)}
-            rows={8}
-          />
+          <CredentialFields provider={provider} value={credentials} onChange={setCredentials} />
         </div>
       </div>
     </Modal>

@@ -1,47 +1,13 @@
 import { useState } from 'react';
+import { errorMessage } from '@/util/api-error';
 import { useNavigate } from 'react-router';
-import { BreadCrumb, Button, Input, Textarea, useToast } from '@innogrid/ui';
+import { BreadCrumb, Button, Input, useToast } from '@innogrid/ui';
 import { useCreateCredential } from '@/hooks/service/credentials';
+import { CredentialFields } from '@/components/features/infra-management/credentials/credential-fields';
 import {
   CSP_OPTIONS,
-  CSP_PLACEHOLDERS,
   CspSelector,
 } from '@/components/features/infra-management/credentials/csp-selector';
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
-
-const parseCredentialsInput = (raw: string): Record<string, string> | undefined => {
-  const trimmed = raw.trim();
-  if (!trimmed) return undefined;
-  try {
-    const parsed = JSON.parse(trimmed) as unknown;
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      const obj: Record<string, string> = {};
-      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        obj[k] = String(v);
-      }
-      return obj;
-    }
-  } catch {
-    // KEY=VALUE 한 줄씩 — JSON 파싱 실패 시 fallback
-  }
-  const result: Record<string, string> = {};
-  trimmed.split(/\r?\n/).forEach((line) => {
-    const eq = line.indexOf('=');
-    if (eq > 0) {
-      const k = line.slice(0, eq).trim();
-      const v = line.slice(eq + 1).trim();
-      if (k) result[k] = v;
-    }
-  });
-  return Object.keys(result).length > 0 ? result : undefined;
-};
 
 type ValidationErrors = {
   provider?: string;
@@ -55,18 +21,17 @@ export default function CredentialsCreatePage() {
   const [provider, setProvider] = useState<string>('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [credentialsInput, setCredentialsInput] = useState('');
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   const providerLabel = CSP_OPTIONS.find((o) => o.value === provider)?.label;
-  const placeholderForProvider = provider ? CSP_PLACEHOLDERS[provider] : '';
 
   const { createCredential, isPending } = useCreateCredential({
     onSuccess: () => {
       open({ title: '자격증명이 등록되었습니다.' });
       navigate('/infra-management/credentials');
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '등록 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '등록 실패'), status: 'negative' }),
   });
 
   const validate = (): boolean => {
@@ -83,7 +48,7 @@ export default function CredentialsCreatePage() {
       provider,
       name,
       description: description || undefined,
-      credentials: parseCredentialsInput(credentialsInput),
+      credentials: Object.keys(credentials).length > 0 ? credentials : undefined,
     });
   };
 
@@ -93,7 +58,7 @@ export default function CredentialsCreatePage() {
         <BreadCrumb
           items={[
             { label: '인프라 관리' },
-            { label: '시스템 설정' },
+            { label: '설정' },
             { label: '자격증명 관리', path: '/infra-management/credentials' },
             { label: '자격증명 등록' },
           ]}
@@ -105,7 +70,6 @@ export default function CredentialsCreatePage() {
       </div>
 
       <div className="page-content page-pb-40">
-
         <div className="page-input-box">
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">프로바이더</div>
@@ -150,22 +114,18 @@ export default function CredentialsCreatePage() {
 
           <div className="page-input_item-box">
             <div className="page-input_item-name">
-              credentials (KEY=VALUE 또는 JSON)
+              자격증명
               {providerLabel && (
                 <span style={{ marginLeft: 8, fontSize: 11, color: '#666', fontWeight: 400 }}>
-                  — {providerLabel} 형식
+                  — {providerLabel}
                 </span>
               )}
             </div>
             <div className="page-input_item-data">
-              <Textarea
-                placeholder={
-                  placeholderForProvider ||
-                  '프로바이더를 먼저 선택하면 각 CSP 의 입력 예시가 표시됩니다.'
-                }
-                value={credentialsInput}
-                onChange={(e) => setCredentialsInput(e.target.value)}
-                rows={10}
+              <CredentialFields
+                provider={provider}
+                value={credentials}
+                onChange={setCredentials}
               />
             </div>
           </div>
