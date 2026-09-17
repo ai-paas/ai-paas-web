@@ -1,6 +1,7 @@
-import { useGetClusters, useGetKubernetesNamespaces } from '@/hooks/service/clusters';
+import { useGetKubernetesNamespaces } from '@/hooks/service/clusters';
+import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import { useGetKubernetesPodsResource } from '@/hooks/service/monitoring';
-import type { Cluster, KubernetesPod } from '@/types/cluster';
+import type { KubernetesPod } from '@/types/cluster';
 import {
   BreadCrumb,
   SearchInput,
@@ -17,16 +18,6 @@ type SelectOption = {
   text: string;
   value: string;
 };
-
-const buildClusterOptions = (clusters: Cluster[]): SelectOption[] =>
-  clusters
-    .filter((cluster) => !!cluster.clusterName)
-    .map((cluster) => ({
-      text: cluster.clusterName ?? '',
-      value: cluster.clusterName ?? '',
-    }));
-
-const getLatestClusterOption = (clusters: Cluster[]) => buildClusterOptions(clusters)[0];
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -111,7 +102,11 @@ const columns = [
   },
 ];
 
-const WorkloadPage = () => {
+/**
+ * @param clusterName 주어지면 그 클러스터로 고정한다. 클러스터 상세가 같은 화면을
+ *   스코프만 좁혀 재사용하려고 쓴다 — 복제하면 한쪽만 고치게 된다.
+ */
+const WorkloadPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const {
     searchValue,
     value: searchInputValue,
@@ -119,47 +114,23 @@ const WorkloadPage = () => {
     onSearch: onSearchInputSearch,
   } = useSearchInputState();
   const { pagination, setPagination, initializePagination } = useTablePagination();
-
-  const { clusters, isPending: isClustersPending } = useGetClusters();
-  const clusterOptions = useMemo(() => buildClusterOptions(clusters), [clusters]);
-  const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
+  const [pickedCluster, setPickedCluster] = useState<SelectOption>();
+  const embedded = !!clusterName;
+  const selectedCluster: SelectOption | undefined = embedded
+    ? { text: clusterName, value: clusterName }
+    : pickedCluster;
+  const setSelectedCluster = setPickedCluster;
   const [selectedNamespace, setSelectedNamespace] = useState<SelectOption>({
     text: '전체',
     value: '',
   });
-
-  useEffect(() => {
-    if (!clusterOptions.length) {
-      let shouldInitializePagination = false;
-
-      if (selectedCluster) {
-        setSelectedCluster(undefined);
-        shouldInitializePagination = true;
-      }
-
-      if (selectedNamespace.value) {
-        setSelectedNamespace({ text: '전체', value: '' });
-        shouldInitializePagination = true;
-      }
-
-      if (shouldInitializePagination) {
-        initializePagination();
-      }
-
-      return;
-    }
-
-    if (selectedCluster && clusterOptions.some((option) => option.value === selectedCluster.value))
-      return;
-    setSelectedCluster(getLatestClusterOption(clusters));
-  }, [clusterOptions, clusters, initializePagination, selectedCluster, selectedNamespace.value]);
 
   const { namespaces, isPending: isNamespacesPending } = useGetKubernetesNamespaces(
     selectedCluster?.value
   );
   const {
     pods: allPods,
-    isPending: isPodsPending,
+    isLoading: isPodsLoading,
     isError,
   } = useGetKubernetesPodsResource(selectedCluster?.value, selectedNamespace.value);
 
@@ -190,9 +161,8 @@ const WorkloadPage = () => {
     initializePagination();
   }, [searchValue, initializePagination]);
 
-  const handleClusterChange = (option: SelectSingleValue<SelectOption>) => {
-    if (!option) return;
-    setSelectedCluster(option);
+  const handleClusterChange = (clusterName: string) => {
+    setSelectedCluster({ text: clusterName, value: clusterName });
     setSelectedNamespace({ text: '전체', value: '' });
     initializePagination();
   };
@@ -210,26 +180,26 @@ const WorkloadPage = () => {
           items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: 'GPU 워크로드' }]}
         />
       </div>
-      <div className="page-title-box">
-        <h2 className="page-title">GPU 워크로드</h2>
-      </div>
+      {!embedded && (
+        <div className="page-title-box">
+          <h2 className="page-title">GPU 워크로드</h2>
+        </div>
+      )}
       <div className="page-content">
         <div className="page-toolBox">
           <div className={styles.selectorRow}>
-            <div className={styles.selectorField}>
-              <div className={styles.selectorLabel}>클러스터 선택</div>
-              <div className={styles.clusterSelect}>
-                <Select
-                  options={clusterOptions}
-                  getOptionLabel={(option) => option.text}
-                  getOptionValue={(option) => option.value}
-                  value={selectedCluster ?? null}
-                  onChange={handleClusterChange}
-                  placeholder="클러스터를 선택해 주세요."
-                  isLoading={isClustersPending}
-                />
+            {!embedded && (
+              <div className={styles.selectorField}>
+                <div className={styles.selectorLabel}>클러스터 선택</div>
+                <div className={styles.clusterSelect}>
+                  <ClusterPicker
+                    value={selectedCluster?.value}
+                    onChange={handleClusterChange}
+                    requireReady={false}
+                  />
+                </div>
               </div>
-            </div>
+            )}
             <div className={styles.selectorField}>
               <div className={styles.selectorLabel}>네임스페이스 선택</div>
               <div className={styles.namespaceSelect}>
@@ -262,15 +232,18 @@ const WorkloadPage = () => {
             useClientPagination
             columns={columns}
             data={gpuPods}
-            isLoading={isPodsPending}
+            isLoading={isPodsLoading}
             globalFilter={searchValue}
             emptyMessage={
               isError ? (
                 '워크로드 정보를 불러오는 데 실패했습니다.'
+              ) : !selectedCluster ? (
+                // 로딩으로 두면 고를 것이 있는데 기다리는 줄 안다.
+                '클러스터를 선택해주세요.'
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div>파드가 없습니다.</div>
-                  <div>선택한 조건에 맞는 워크로드가 없습니다.</div>
+                  <div>GPU 워크로드가 없습니다.</div>
+                  <div>이 클러스터에서 GPU 자원을 요청한 파드가 없습니다.</div>
                 </div>
               )
             }

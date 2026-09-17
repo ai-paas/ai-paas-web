@@ -12,6 +12,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import styles from '../../inframonitor.module.scss';
 import { useGetCatalog } from '@/hooks/service/catalog';
+import { catalogEmptyReason } from '@/util/catalog-empty';
 import { useGetHelmRepositories } from '@/hooks/service/helm';
 import type { Chart } from '@/types/catalog';
 
@@ -325,8 +326,13 @@ export default function ApplicationCatalogPage() {
               <CatalogItem key={`${chart.name}-${index}`} chart={chart} />
             ))
           ) : (
-            <div style={{ padding: '24px', textAlign: 'center', width: '100%' }}>
-              검색 결과가 없습니다.
+            <div style={{ padding: '24px', textAlign: 'center', width: '100%', color: '#6b7280' }}>
+              {catalogEmptyReason({
+                repoSelected: !!selectedRepoName,
+                chartCount: charts.length,
+                searchValue,
+                isError,
+              }) ?? '표시할 차트가 없습니다.'}
             </div>
           )}
         </div>

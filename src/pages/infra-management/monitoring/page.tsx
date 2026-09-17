@@ -1,4 +1,6 @@
 import { useGetClusters } from '@/hooks/service/clusters';
+import { metricsOutage } from '@/util/prom-results';
+import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import {
   useMultiPromQuery,
   type MultiQuerySpec,
@@ -6,7 +8,8 @@ import {
   type PrometheusQueryResponse,
   type PrometheusVectorResult,
 } from '@/hooks/service/monitoring';
-import { BreadCrumb, Select, type SelectSingleValue } from '@innogrid/ui';
+import { BreadCrumb } from '@innogrid/ui';
+import { Link } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { MetricLineChart } from './metric-line-chart';
 import styles from './monitoring.module.scss';
@@ -29,17 +32,22 @@ type FuriosaLabel = {
 type SelectOption = {
   label: string;
   value: string;
+  isDisabled?: boolean;
+  reason?: string;
 };
 
-const MonitoringPage = () => {
-  const { clusters, isPending: isClustersPending } = useGetClusters();
-  const clusterOptions = clusters
-    .filter((cluster) => !!cluster.clusterName)
-    .map((cluster) => ({
-      label: cluster.clusterName ?? '',
-      value: cluster.clusterName ?? '',
-    }));
-  const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
+/**
+ * @param clusterName 주어지면 그 클러스터로 고정한다. 클러스터 상세가 같은 화면을
+ *   스코프만 좁혀 재사용하려고 쓴다 — 복제하면 한쪽만 고치게 된다.
+ */
+const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
+  const { clusters } = useGetClusters();
+  const [pickedCluster, setPickedCluster] = useState<SelectOption>();
+  const embedded = !!clusterName;
+  const selectedCluster: SelectOption | undefined = embedded
+    ? { label: clusterName, value: clusterName }
+    : pickedCluster;
+  const setSelectedCluster = setPickedCluster;
 
   // 비-가속기 cluster 에서 GPU query 6개 skip.
   const selectedClusterEntity = useMemo(
@@ -47,26 +55,6 @@ const MonitoringPage = () => {
     [clusters, selectedCluster]
   );
   const hasGpu = selectedClusterEntity?.hasGpuNodes ?? false;
-
-  useEffect(() => {
-    if (!clusters.length) {
-      if (selectedCluster) {
-        setSelectedCluster(undefined);
-      }
-
-      return;
-    }
-
-    const firstName = clusters[0].clusterName;
-    if (
-      !selectedCluster ||
-      !clusters.some((cluster) => cluster.clusterName === selectedCluster.value)
-    ) {
-      if (firstName) {
-        setSelectedCluster({ label: firstName, value: firstName });
-      }
-    }
-  }, [clusters, selectedCluster]);
 
   const [windowAnchor, setWindowAnchor] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => {
@@ -160,6 +148,9 @@ const MonitoringPage = () => {
     queries
   );
 
+  // 쿼리가 전부 실패하면 값이 0 인 그래프가 그려진다. 고장인지 미설치인지 알 수 없다.
+  const outage = metricsOutage(results);
+
   const instantOf = <TLabel = Record<string, string>,>(
     name: string
   ): PrometheusQueryResponse<PrometheusVectorResult<TLabel>[]> | undefined =>
@@ -213,25 +204,62 @@ const MonitoringPage = () => {
 
   return (
     <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '인프라 관리' }, { label: '모니터링' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">모니터링</h2>
-      </div>
+      {!embedded && (
+        <>
+          <div className="breadcrumbBox">
+            <BreadCrumb items={[{ label: '인프라 관리' }, { label: '모니터링' }]} />
+          </div>
+          <div className="page-title-box">
+            <h2 className="page-title">모니터링</h2>
+          </div>
+        </>
+      )}
       <div className={`page-content`}>
-        <div>클러스터 선택</div>
-        <Select
-          options={clusterOptions}
-          value={selectedCluster ?? null}
-          onChange={(option: SelectSingleValue<SelectOption>) => {
-            if (option) {
-              setSelectedCluster(option);
-            }
-          }}
-          placeholder="선택해 주세요."
-          isLoading={isClustersPending}
-        />
+        {!embedded && (
+          <>
+            <div>클러스터 선택</div>
+            <ClusterPicker
+              value={selectedCluster?.value}
+              onChange={(name) => setSelectedCluster({ label: name, value: name })}
+            />
+          </>
+        )}
+
+        {outage && (
+          <div
+            role="alert"
+            style={{
+              marginTop: 16,
+              padding: '12px 14px',
+              border: '1px solid #f0d8a8',
+              background: '#fdf8ed',
+              borderRadius: 6,
+              fontSize: 13,
+              color: '#8a5a00',
+            }}
+          >
+            <div style={{ fontWeight: 600 }}>{outage.message}</div>
+            {outage.kind === 'unreachable' && (
+              <div style={{ marginTop: 4 }}>
+                {selectedCluster?.value ? (
+                  <Link
+                    to={`/infra-management/cluster-management/${encodeURIComponent(
+                      selectedCluster.value
+                    )}/addons`}
+                    className="table-td-link"
+                  >
+                    애드온에서 Prometheus + Grafana Stack 설치하기 →
+                  </Link>
+                ) : (
+                  <span>애드온에서 Prometheus + Grafana Stack 을 설치하면 지표가 채워집니다.</span>
+                )}
+              </div>
+            )}
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.85, wordBreak: 'break-all' }}>
+              {outage.detail}
+            </div>
+          </div>
+        )}
 
         <div className="page-content-detail-col2 page-mt-16">
           <div className="page-detail-round-box page-flex-1">

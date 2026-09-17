@@ -131,6 +131,34 @@ describe('monitoring hooks', () => {
       expect(capturedParams[0].get('page')).toBe('1');
     });
 
+    it('클러스터를 고르기 전에는 불러오는 중이 아니다', async () => {
+      // 비활성 쿼리의 isPending 은 계속 true 다. 그걸 로딩으로 읽으면 표가 영원히 도는데,
+      // 실제로는 요청조차 나가지 않은 상태다 — GPU 워크로드 화면이 그렇게 보였다.
+      const { result } = renderHook(() => useGetKubernetesPodsResource(undefined, ''), {
+        wrapper: createHookWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isFetching).toBe(false);
+      });
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.pods).toEqual([]);
+    });
+
+    it('실제로 가져오는 동안에는 불러오는 중이다', async () => {
+      server.use(
+        http.get(`${BASE_URL}/any-cloud/kubernetes/pods`, () =>
+          HttpResponse.json({ data: [makePod('pod-1')], total: 1, size: 100, total_pages: 1 })
+        )
+      );
+      const { result } = renderHook(() => useGetKubernetesPodsResource('cluster-a', ''), {
+        wrapper: createHookWrapper(),
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+    });
+
     it('여러 페이지면 첫 페이지 후 나머지를 병렬로 가져와 합친다', async () => {
       const requestedPages: string[] = [];
       server.use(
