@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { BreadCrumb, Input, Table, useTablePagination, useTableSelection } from '@innogrid/ui';
+import { useEffect, useState } from 'react';
+import {
+  BreadCrumb,
+  Input,
+  Table,
+  useTablePagination,
+  useTableSelection,
+  type PaginationState,
+} from '@innogrid/ui';
 import { useGetAuditLogs, type AuditLog } from '@/hooks/service/audit-logs';
 import { formatDateTime } from '@/util/date';
 
@@ -9,17 +16,24 @@ export default function AuditLogsPage() {
   const [principal, setPrincipal] = useState('');
   const [pathFilter, setPathFilter] = useState('');
 
-  const { logs, isPending, isError } = useGetAuditLogs({
-    pageSize: 100,
+  // 감사 로그는 계속 쌓인다. 클라이언트에서 자르면 첫 100건 너머를 볼 방법이 없다.
+  const { logs, totalCount, isPending, isError } = useGetAuditLogs({
+    limit: pagination.pageSize,
+    page: pagination.pageIndex,
     principal: principal || undefined,
     path: pathFilter || undefined,
   });
+
+  // 필터가 바뀌면 첫 페이지로. 3페이지를 보다 필터를 걸면 빈 화면이 된다.
+  useEffect(() => {
+    setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
+  }, [principal, pathFilter, setPagination]);
 
   const columns = [
     {
       id: 'timestamp',
       header: '시각',
-      accessorFn: (row: AuditLog) => formatDateTime(row.timestamp),
+      accessorFn: (row: AuditLog) => formatDateTime(row.createdAt),
       size: 180,
     },
     {
@@ -49,7 +63,7 @@ export default function AuditLogsPage() {
     {
       id: 'status',
       header: '응답 코드',
-      accessorFn: (row: AuditLog) => row.status ?? '-',
+      accessorFn: (row: AuditLog) => row.statusCode ?? '-',
       size: 100,
     },
     {
@@ -63,9 +77,7 @@ export default function AuditLogsPage() {
   return (
     <main>
       <div className="breadcrumbBox">
-        <BreadCrumb
-          items={[{ label: '인프라 관리' }, { label: '시스템 설정' }, { label: '감사 로그' }]}
-        />
+        <BreadCrumb items={[{ label: '인프라 관리' }, { label: '기록' }, { label: '감사 로그' }]} />
       </div>
       <div className="page-title-box">
         <h2 className="page-title">감사 로그</h2>
@@ -95,7 +107,7 @@ export default function AuditLogsPage() {
             emptyMessage={
               isError ? '감사 로그를 불러오는 데 실패했습니다.' : '감사 로그가 없습니다.'
             }
-            totalCount={logs.length}
+            totalCount={totalCount}
             pagination={pagination}
             setPagination={setPagination}
             rowSelection={rowSelection}
