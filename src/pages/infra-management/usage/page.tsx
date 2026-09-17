@@ -1,12 +1,13 @@
-import { useGetClusters } from '@/hooks/service/clusters';
+import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import {
   type PrometheusMatrixResult,
   type PrometheusQueryResponse,
   useRangeQuery,
 } from '@/hooks/service/monitoring';
-import { BreadCrumb, Select } from '@innogrid/ui';
-import { type CSSProperties, useEffect, useMemo, useState } from 'react';
+import { BreadCrumb, RadioGroupButton } from '@innogrid/ui';
+import { type CSSProperties, useMemo, useState } from 'react';
 import styles from './page.module.scss';
+import { acceleratorEmptyReason } from '@/util/accelerator-empty';
 
 type DCGMLabel = {
   Hostname: string;
@@ -151,27 +152,18 @@ const buildAcceleratorUsage = <TLabel,>({
   };
 };
 
-const UsagePage = () => {
-  const { clusters, isPending: isClustersPending } = useGetClusters();
-  const clusterOptions = useMemo<SelectOption[]>(
-    () =>
-      clusters
-        .filter((cluster) => !!cluster.clusterName)
-        .map((cluster) => ({
-          text: cluster.clusterName ?? '',
-          value: cluster.clusterName ?? '',
-        })),
-    [clusters]
-  );
-  const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
+/**
+ * @param clusterName 주어지면 그 클러스터로 고정한다. 클러스터 상세가 같은 화면을
+ *   스코프만 좁혀 재사용하려고 쓴다 — 복제하면 한쪽만 고치게 된다.
+ */
+const UsagePage = ({ clusterName }: { clusterName?: string } = {}) => {
+  const [pickedCluster, setPickedCluster] = useState<SelectOption>();
+  const embedded = !!clusterName;
+  const selectedCluster: SelectOption | undefined = embedded
+    ? { text: clusterName, value: clusterName }
+    : pickedCluster;
+  const setSelectedCluster = setPickedCluster;
   const [selectedRange, setSelectedRange] = useState<RangeKey>('24h');
-
-  useEffect(() => {
-    if (!clusterOptions.length) return;
-    if (selectedCluster && clusterOptions.some((option) => option.value === selectedCluster.value))
-      return;
-    setSelectedCluster(clusterOptions[0]);
-  }, [clusterOptions, selectedCluster]);
 
   const rangeWindow = useMemo(() => {
     const selectedRangeOption =
@@ -256,115 +248,117 @@ const UsagePage = () => {
     '--heatmap-column-count': timeBuckets.length,
   } as CSSProperties;
 
+  // 못 가져온 것과 없는 것은 다른 말이다. 하나로 뭉뚱그리면 Prometheus 가 없을 때도 GPU 가
+  // 없는 것처럼 보여 엉뚱한 곳을 뒤지게 된다.
+  const emptyReason = acceleratorEmptyReason({
+    clusterSelected: !!selectedCluster?.value,
+    isPending: gpuUtilRange.isPending || npuCoreRange.isPending || tpuUsageRange.isPending,
+    anyFailed: gpuUtilRange.isError || npuCoreRange.isError || tpuUsageRange.isError,
+    rowCount: acceleratorUsage.heatmapRows.length,
+  });
+
   return (
     <main>
       <div className="breadcrumbBox">
         <BreadCrumb items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: '사용량' }]} />
       </div>
-      <div className="page-title-box">
-        <h2 className="page-title">사용량</h2>
-      </div>
+      {!embedded && (
+        <div className="page-title-box">
+          <h2 className="page-title">사용량</h2>
+        </div>
+      )}
       <div className="page-content">
-        <div className={styles.filterToolbar}>
-          <div className={styles.filterField}>
-            <div className={styles.filterLabel}>클러스터</div>
-            <div className={styles.clusterSelect}>
-              <Select
-                options={clusterOptions}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedCluster ?? null}
-                onChange={(option) => {
-                  if (!option) return;
-                  setSelectedCluster(option);
-                }}
-                placeholder="클러스터를 선택해 주세요."
-                isLoading={isClustersPending}
-              />
+        <div className={`${styles.filterToolbar} page-mt-16`}>
+          {!embedded && (
+            <div className={styles.filterField}>
+              <div className={styles.filterLabel}>클러스터</div>
+              <div className={styles.clusterSelect}>
+                <ClusterPicker
+                  value={selectedCluster?.value}
+                  onChange={(name) => setSelectedCluster({ text: name, value: name })}
+                  requireReady={false}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className={styles.filterField}>
             <div className={styles.filterLabel}>기간</div>
-            <div className={styles.rangeFilterRow}>
-              {rangeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setSelectedRange(option.value)}
-                  className={`${styles.rangeChip} ${
-                    selectedRange === option.value ? styles.rangeChipActive : ''
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <RadioGroupButton
+              id="usage-range"
+              options={rangeOptions.map(({ label, value }) => ({ label, value }))}
+              value={selectedRange}
+              onValueChange={(value: string) => setSelectedRange(value as RangeKey)}
+            />
           </div>
         </div>
 
-        <div className={styles.usageSummaryGrid}>
-          {acceleratorUsage.summaryCards.map((card) => (
-            <section key={card.name} className={styles.summaryCard}>
-              <div className={styles.summaryName}>{card.name}</div>
-              <div className={styles.summaryValue}>{formatPercent(card.value)}</div>
-              <div className={styles.summaryDevices}>{card.devices.toLocaleString()} Devices</div>
-            </section>
-          ))}
+        <div className="page-detail-round-box">
+          <div className="page-detail-round-name">가속기 사용량</div>
+          <div className={`page-detail-round-data ${styles.usageSummaryGrid}`}>
+            {acceleratorUsage.summaryCards.map((card) => (
+              <section key={card.name}>
+                <div className={styles.summaryName}>{card.name}</div>
+                <div className={styles.summaryValue}>{formatPercent(card.value)}</div>
+                <div className={styles.summaryDevices}>{card.devices.toLocaleString()} Devices</div>
+              </section>
+            ))}
+          </div>
         </div>
 
-        <section className={styles.heatmapSection}>
-          <div className={styles.sectionTitle}>가속기 사용량 히트맵</div>
-
-          <div className={styles.heatmapScroller}>
-            <div className={styles.heatmapGrid} style={heatmapGridStyle}>
-              <div className={styles.heatmapHeaderCell}>Node / Device</div>
-              {timeBuckets.map((bucket) => (
-                <div key={`${bucket.start}-${bucket.label}`} className={styles.heatmapTimeCell}>
-                  {bucket.label}
-                </div>
-              ))}
-
-              {acceleratorUsage.heatmapRows.length ? (
-                acceleratorUsage.heatmapRows.map((row) => (
-                  <div key={row.id} className={styles.heatmapRow}>
-                    <div className={styles.heatmapDeviceCell}>
-                      <span className={styles.acceleratorBadge}>{row.accelerator}</span>
-                      <span>{row.label}</span>
-                    </div>
-                    {row.values.map((value, index) => (
-                      <div
-                        key={`${row.id}-${timeBuckets[index]?.start ?? index}`}
-                        className={`${styles.heatCell} ${
-                          value === null ? styles.heatCellEmpty : ''
-                        }`}
-                        style={
-                          value === null
-                            ? undefined
-                            : ({
-                                '--heat-level': clampPercent(value),
-                              } as CSSProperties)
-                        }
-                        title={
-                          value === null
-                            ? `${row.label}: 데이터 없음`
-                            : `${row.label}: ${formatPercent(value)}`
-                        }
-                      />
-                    ))}
+        <div className="page-detail-round-box">
+          <div className="page-detail-round-name">가속기 사용량 히트맵</div>
+          <div className="page-detail-round-data">
+            <div className={styles.heatmapScroller}>
+              <div className={styles.heatmapGrid} style={heatmapGridStyle}>
+                <div className={styles.heatmapHeaderCell}>Node / Device</div>
+                {timeBuckets.map((bucket) => (
+                  <div key={`${bucket.start}-${bucket.label}`} className={styles.heatmapTimeCell}>
+                    {bucket.label}
                   </div>
-                ))
-              ) : (
-                <div
-                  className={styles.emptyState}
-                  style={{ gridColumn: `1 / span ${timeBuckets.length + 1}` }}
-                >
-                  표시할 가속기 사용량 데이터가 없습니다.
-                </div>
-              )}
+                ))}
+
+                {acceleratorUsage.heatmapRows.length ? (
+                  acceleratorUsage.heatmapRows.map((row) => (
+                    <div key={row.id} className={styles.heatmapRow}>
+                      <div className={styles.heatmapDeviceCell}>
+                        <span className={styles.acceleratorBadge}>{row.accelerator}</span>
+                        <span>{row.label}</span>
+                      </div>
+                      {row.values.map((value, index) => (
+                        <div
+                          key={`${row.id}-${timeBuckets[index]?.start ?? index}`}
+                          className={`${styles.heatCell} ${
+                            value === null ? styles.heatCellEmpty : ''
+                          }`}
+                          style={
+                            value === null
+                              ? undefined
+                              : ({
+                                  '--heat-level': clampPercent(value),
+                                } as CSSProperties)
+                          }
+                          title={
+                            value === null
+                              ? `${row.label}: 데이터 없음`
+                              : `${row.label}: ${formatPercent(value)}`
+                          }
+                        />
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  <div
+                    className={styles.emptyState}
+                    style={{ gridColumn: `1 / span ${timeBuckets.length + 1}` }}
+                  >
+                    {emptyReason}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </main>
   );

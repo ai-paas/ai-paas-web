@@ -1,9 +1,19 @@
+// 히트맵 색 스케일.
+//
+// 한 칸은 그 시간대의 가속기 사용률이다. 0% 는 배경과 구분만 되는 회색, 100% 는 초록에 가깝고,
+// 그 사이는 비율대로 섞인다. 값이 아예 없는 구간은 색이 아니라 빗금으로 구분한다 — 0% 와
+// "측정하지 못함" 은 다른 뜻이라 같은 축에 두면 안 된다.
+$heat-empty: $color-gray-25;
+$heat-full: color-mix(in srgb, $color-important 55%, $color-white);
+$heat-missing-base: $color-gray-10;
+$heat-missing-stripe: $color-gray-50;
+
+// 바깥 여백은 전역 유틸(page-mt-16)이 준다. 페이지마다 다른 값을 쓰면 화면 사이 간격이 어긋난다.
 .filterToolbar {
   display: flex;
   align-items: center;
   gap: 28px;
   flex-wrap: wrap;
-  margin-top: 18px;
 }
 
 .filterField {
@@ -15,8 +25,8 @@
 
 .filterLabel {
   color: $page-font-color-900;
-  font-size: $page-font-14;
-  font-weight: 700;
+  font-size: $page-font-13;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -24,95 +34,35 @@
   width: 180px;
 }
 
-.rangeFilterRow {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid $color-gray-300;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.rangeChip {
-  min-width: 60px;
-  height: 34px;
-  padding: 0 16px;
-  border: 0;
-  border-right: 1px solid $color-gray-300;
-  background-color: $color-white;
-  color: $page-font-color-900;
-  font-size: $page-font-14;
-  font-weight: 700;
-
-  &:last-child {
-    border-right: 0;
-  }
-
-  &:hover {
-    background-color: #f4f8ff;
-  }
-}
-
-.rangeChipActive {
-  color: $color-white;
-  background-color: $page-font-color-blue;
-
-  &:hover {
-    background-color: $page-font-color-blue;
-  }
-}
-
+// 틀(테두리·배경·안쪽 여백)은 page-detail-round-box 가 준다. 여기서는 칸만 나눈다.
 .usageSummaryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 14px;
-  margin-top: 18px;
-}
-
-.summaryCard {
-  min-height: 108px;
-  padding: 16px 20px;
-  border: 1px solid $color-gray-300;
-  border-radius: 4px;
-  background-color: $color-white;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  gap: 24px;
 }
 
 .summaryName {
   color: $page-font-color-900;
-  font-size: $page-font-16;
-  font-weight: 800;
+  font-size: $page-font-13;
+  font-weight: 600;
   line-height: 1.2;
 }
 
 .summaryValue {
   margin-top: 8px;
   color: $page-font-color-900;
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1;
 }
 
 .summaryDevices {
-  margin-top: 7px;
-  color: $page-font-color-600;
-  font-size: $page-font-14;
-  font-weight: 700;
-}
-
-.heatmapSection {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 2px solid $color-gray-200;
-}
-
-.sectionTitle {
-  color: $page-font-color-900;
-  font-size: $page-font-18;
-  font-weight: 800;
+  margin-top: 8px;
+  color: $page-font-color-300;
+  font-size: $page-font-root;
 }
 
 .heatmapScroller {
-  margin-top: 12px;
   overflow-x: auto;
   border: 1px solid $color-gray-300;
   border-radius: 4px;
@@ -135,7 +85,7 @@
   border-bottom: 1px solid $color-gray-200;
   color: $page-font-color-600;
   font-size: $page-font-root;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .heatmapHeaderCell,
@@ -173,32 +123,32 @@
   height: 18px;
   padding: 0 6px;
   border-radius: 3px;
-  background-color: #eef4ff;
+  background-color: color-mix(in srgb, $color-point-blue 8%, $color-white);
   color: $page-font-color-blue;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: $page-font-10;
+  font-weight: 700;
 }
 
 .heatCell {
   width: calc(100% - 6px);
   height: 20px;
   margin: 10px 3px;
-  border: 1px solid rgba(15, 23, 42, 0.18);
+  border: 1px solid $color-gray-100;
   border-radius: 3px;
   background-color: color-mix(
     in srgb,
-    #f1f5f9 calc(100% - var(--heat-level, 0) * 1%),
-    #86efac calc(var(--heat-level, 0) * 1%)
+    $heat-empty calc(100% - var(--heat-level, 0) * 1%),
+    $heat-full calc(var(--heat-level, 0) * 1%)
   );
 }
 
 .heatCellEmpty {
   background: repeating-linear-gradient(
     -45deg,
-    #f8fafc,
-    #f8fafc 4px,
-    #e5e7eb 4px,
-    #e5e7eb 8px
+    $heat-missing-base,
+    $heat-missing-base 4px,
+    $heat-missing-stripe 4px,
+    $heat-missing-stripe 8px
   );
 }
 
@@ -228,12 +178,7 @@
     flex-direction: column;
   }
 
-  .clusterSelect,
-  .rangeFilterRow {
+  .clusterSelect {
     width: 100%;
-  }
-
-  .rangeChip {
-    flex: 1;
   }
 }
