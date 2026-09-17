@@ -9,17 +9,29 @@ export interface AuditLog {
   clientIp?: string;
   httpMethod?: string;
   path?: string;
-  status?: number;
-  timestamp?: string;
+  action?: string;
+  resourceType?: string;
+  resourceId?: string;
+  statusCode?: number;
+  durationMs?: number;
+  createdAt?: string;
   [key: string]: unknown;
 }
 
+interface AuditLogEnvelope {
+  data?: { items?: AuditLog[] } | AuditLog[];
+  items?: AuditLog[];
+  meta?: { pagination?: { pageSize?: number; totalEstimate?: number } };
+}
+
 export interface ListAuditLogsParams {
-  pageSize?: number;
-  pageToken?: string;
+  /** 백엔드는 limit 으로 받는다. pageSize 를 보내면 무시되고 기본 100 이 쓰인다. */
+  limit?: number;
+  /** 0-based. 감사 로그는 계속 쌓이므로 첫 페이지만으로는 부족하다. */
+  page?: number;
   principal?: string;
   path?: string;
-  status?: number;
+  statusCode?: number;
 }
 
 // 감사 로그 조회
@@ -37,7 +49,7 @@ export const useGetAuditLogs = (params: ListAuditLogsParams = {}) => {
             Object.entries(searchParams).map(([k, v]) => [k, String(v)])
           ),
         })
-        .json<{ data?: { items?: AuditLog[] } | AuditLog[]; items?: AuditLog[] }>(),
+        .json<AuditLogEnvelope>(),
   });
 
   const items =
@@ -46,5 +58,8 @@ export const useGetAuditLogs = (params: ListAuditLogsParams = {}) => {
     (data && 'items' in data ? data.items : undefined) ??
     [];
 
-  return { logs: items, isPending, isError, error };
+  // 총 건수를 모르면 마지막 페이지를 계산할 수 없다 — 지금은 받은 건수만큼만 페이지가 생겼다.
+  const totalCount = data?.meta?.pagination?.totalEstimate ?? items.length;
+
+  return { logs: items, totalCount, isPending, isError, error };
 };
