@@ -1,4 +1,8 @@
-// 8 CSP 선택 카드 — brand color + 실제 Simple Icons CDN 의 brand 로고 (CC0).
+// 프로비저닝 emitter 가 있는 CSP 만 노출한다. 목록에 있는데 emitter 가 없으면
+// 자격증명까지 등록하고 프로비저닝에서 실패한다 (Alibaba, DigitalOcean 이 그랬다).
+// 백엔드 기준: YamlEmitters.supported()
+//
+// brand color + 실제 Simple Icons CDN 의 brand 로고 (CC0).
 // dropdown 대신 시각적 그리드. 선택 상태 = 강한 outline + 체크 표시.
 //
 // Simple Icons CDN: https://cdn.simpleicons.org/<slug>/<hex-color>
@@ -9,9 +13,9 @@ interface CspOption {
   value: string;
   label: string;
   description: string;
-  color: string;          // brand background
-  textColor?: string;     // contrast (default white)
-  iconSlug: string;       // Simple Icons brand slug — https://simpleicons.org
+  color: string; // brand background
+  textColor?: string; // contrast (default white)
+  iconSlug: string; // Simple Icons brand slug — https://simpleicons.org
 }
 
 export const CSP_OPTIONS: CspOption[] = [
@@ -44,13 +48,6 @@ export const CSP_OPTIONS: CspOption[] = [
     iconSlug: 'openstack',
   },
   {
-    value: 'ALIBABA',
-    label: 'Alibaba',
-    description: 'Alibaba Cloud',
-    color: '#FF6A00',
-    iconSlug: 'alibabacloud',
-  },
-  {
     value: 'OCI',
     label: 'OCI',
     description: 'Oracle Cloud Infrastructure',
@@ -58,11 +55,18 @@ export const CSP_OPTIONS: CspOption[] = [
     iconSlug: 'oracle',
   },
   {
-    value: 'DIGITALOCEAN',
-    label: 'DigitalOcean',
-    description: 'DigitalOcean',
-    color: '#0080FF',
-    iconSlug: 'digitalocean',
+    value: 'IBM',
+    label: 'IBM',
+    description: 'IBM Cloud VPC',
+    color: '#0F62FE',
+    iconSlug: 'ibmcloud',
+  },
+  {
+    value: 'PROXMOX',
+    label: 'Proxmox',
+    description: 'Proxmox VE',
+    color: '#E57000',
+    iconSlug: 'proxmox',
   },
 ];
 
@@ -203,45 +207,4 @@ export const CspSelector = ({ value, onChange }: CspSelectorProps) => {
       })}
     </div>
   );
-};
-
-// CSP 별 credentials 입력 예제 — backend 의 ProvisioningCredentialRules 와 일치.
-export const CSP_PLACEHOLDERS: Record<string, string> = {
-  AWS: `AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-
-또는 JSON:
-{"AWS_ACCESS_KEY_ID":"AKIA...","AWS_SECRET_ACCESS_KEY":"..."}`,
-  GCP: `# 둘 중 하나
-GOOGLE_CREDENTIALS={"type":"service_account","project_id":"...","private_key":"...","client_email":"..."}
-
-# 또는 backend 가 접근 가능한 파일 경로
-GOOGLE_APPLICATION_CREDENTIALS=/etc/gcp/sa-key.json`,
-  AZURE: `ARM_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-ARM_CLIENT_SECRET=...
-ARM_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-ARM_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`,
-  OPENSTACK: `OS_AUTH_URL=https://identity.example.com:5000/v3
-OS_USERNAME=admin
-OS_PASSWORD=...
-OS_PROJECT_NAME=admin
-OS_USER_DOMAIN_NAME=Default
-OS_PROJECT_DOMAIN_NAME=Default`,
-  ALIBABA: `ALICLOUD_ACCESS_KEY=LTAI...
-ALICLOUD_SECRET_KEY=...`,
-  OCI: `TF_VAR_tenancy_ocid=ocid1.tenancy.oc1..aaaaaaaa...
-TF_VAR_user_ocid=ocid1.user.oc1..aaaaaaaa...
-TF_VAR_fingerprint=aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99
-TF_VAR_region=ap-seoul-1
-
-# 둘 중 하나 — inline 또는 path
-TF_VAR_private_key=-----BEGIN PRIVATE KEY-----
-MIIEvQIB...
------END PRIVATE KEY-----
-또는
-TF_VAR_private_key_path=/etc/oci/api-key.pem`,
-  DIGITALOCEAN: `DIGITALOCEAN_TOKEN=dop_v1_...
-
-# 또는 (구버전 호환)
-DIGITALOCEAN_ACCESS_TOKEN=dop_v1_...`,
 };

@@ -45,6 +45,20 @@ export interface ProviderImage {
   [key: string]: unknown;
 }
 
+/** 자격증명 입력 칸 하나. 백엔드 CredentialFieldSchema 와 같은 모양. */
+export interface CredentialFieldSchema {
+  key: string;
+  label: string;
+  required: boolean;
+  secret: boolean;
+  multiline: boolean;
+  description?: string;
+  /** 값의 생김새를 보여주는 예시. */
+  placeholder?: string;
+  /** 같은 group 끼리는 하나만 채우면 된다. */
+  group?: string;
+}
+
 export interface ProviderConfigSchemaField {
   key: string;
   type: string;
@@ -175,6 +189,19 @@ export const useGetProviderConfigSchema = (provider?: string, enabled: boolean =
       api
         .get(`any-cloud/providers/${provider}/config-schema`)
         .json<ListEnvelope<ProviderConfigSchemaField>>(),
+    enabled: enabled && !!provider,
+  });
+  return { fields: unwrapList(data), isPending, isError, error };
+};
+
+/** CSP 별 자격증명 입력 필드 — 화면이 KEY=VALUE 를 직접 받지 않도록 폼을 만드는 데 쓴다. */
+export const useGetProviderCredentialSchema = (provider?: string, enabled: boolean = true) => {
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: queryKeys.infraProviders.credentialSchema(provider),
+    queryFn: () =>
+      api
+        .get(`any-cloud/providers/${provider}/credential-schema`)
+        .json<ListEnvelope<CredentialFieldSchema>>(),
     enabled: enabled && !!provider,
   });
   return { fields: unwrapList(data), isPending, isError, error };
