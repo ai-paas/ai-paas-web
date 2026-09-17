@@ -53,6 +53,36 @@ describe('LiveProgress', () => {
     expect(screen.getByText('BOOTSTRAP_ADDONS')).toBeInTheDocument();
   });
 
+  it('끝난 작업의 100% 는 접는다', () => {
+    // READY 인 클러스터 위에 "VERIFY 100%" 막대가 남아 있으면 상세를 열 때마다 끝난 일을
+    // 먼저 읽게 된다.
+    setup({});
+
+    const { container } = render(
+      <LiveProgress clusterName="c1" fallbackPercent={100} fallbackStep="VERIFY" />
+    );
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('진행 중이면 100% 라도 그린다', () => {
+    // 마지막 단계에서 잠깐 100% 가 되는 순간에 막대가 사라지면 깜빡인다.
+    setup({ operationId: 'op-1', operation: { state: 'RUNNING', progress: { percent: 100 } } });
+
+    render(<LiveProgress clusterName="c1" />);
+
+    expect(screen.getByText('100%')).toBeInTheDocument();
+  });
+
+  it('실패로 멈춘 값은 남긴다', () => {
+    // 어디서 멈췄는지는 그 숫자가 유일한 단서다.
+    setup({});
+
+    render(<LiveProgress clusterName="c1" fallbackPercent={64} fallbackStep="BOOTSTRAP" />);
+
+    expect(screen.getByText('64%')).toBeInTheDocument();
+  });
+
   it('SSE 스냅샷이 fallback 보다 우선한다', () => {
     setup({
       operationId: 'op-1',

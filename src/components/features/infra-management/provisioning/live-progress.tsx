@@ -18,6 +18,9 @@ export const LiveProgress = ({ clusterName, fallbackPercent, fallbackStep }: Liv
   const state = operation?.state;
 
   if (!operationId && fallbackPercent === undefined) return null;
+  // 끝난 작업의 100% 는 진행 상황이 아니다. 남겨두면 상세를 열 때마다 끝난 일을 먼저 읽게 된다.
+  // 실패로 멈춘 값은 남긴다 — 어디서 멈췄는지는 그 숫자가 유일한 단서다.
+  if (!operationId && percent >= 100) return null;
 
   return (
     <div
