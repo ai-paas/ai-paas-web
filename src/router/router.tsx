@@ -1,7 +1,13 @@
 import { Suspense, lazy, type ComponentType } from 'react';
-import { Navigate, Outlet, createBrowserRouter, type RouteObject } from 'react-router';
+import { Navigate, Outlet, createBrowserRouter, useParams, type RouteObject } from 'react-router';
 import DefaultLayout from '@/pages/layout';
 import { useAuth } from '@/hooks/useAuth';
+
+/** 옛 경로의 북마크를 살린다. :id 를 잃으면 목록으로 떨어져 무엇을 보려 했는지 사라진다. */
+const ProvisioningDetailRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/infra-management/vm/${id ?? ''}`} replace />;
+};
 
 const LoginPage = lazy(() => import('@/pages/login/page'));
 const HomePage = lazy(() => import('@/pages/page'));
@@ -64,11 +70,9 @@ const CredentialsPage = lazy(() => import('@/pages/infra-management/credentials/
 const CredentialsCreatePage = lazy(() => import('@/pages/infra-management/credentials/create/page'));
 const AuditLogsPage = lazy(() => import('@/pages/infra-management/audit-logs/page'));
 const OperationsPage = lazy(() => import('@/pages/infra-management/operations/page'));
-const ProvisioningPage = lazy(() => import('@/pages/infra-management/provisioning/page'));
-const ProvisioningCreatePage = lazy(
-  () => import('@/pages/infra-management/provisioning/create/page')
-);
-const VmDetailPage = lazy(() => import('@/pages/infra-management/provisioning/[id]/page'));
+const VmPage = lazy(() => import('@/pages/infra-management/vm/page'));
+const VmCreatePage = lazy(() => import('@/pages/infra-management/vm/create/page'));
+const VmDetailPage = lazy(() => import('@/pages/infra-management/vm/[id]/page'));
 const MonitoringPage = lazy(() => import('@/pages/infra-management/monitoring/page'));
 const WorkloadPage = lazy(() => import('@/pages/infra-management/workload/page'));
 const AcceleratorPage = lazy(() => import('@/pages/infra-management/accelerator/page'));
@@ -323,16 +327,29 @@ export const routes: RouteObject[] = [
             element: page(ClusterAgentFleetPage),
           },
           {
+            path: 'vm',
+            element: page(VmPage),
+          },
+          {
+            path: 'vm/create',
+            element: page(VmCreatePage),
+          },
+          {
+            path: 'vm/:id',
+            element: page(VmDetailPage),
+          },
+          // 메뉴에서 '프로비저닝'이 사라져도 기존 링크와 북마크는 살아 있어야 한다.
+          {
             path: 'provisioning',
-            element: page(ProvisioningPage),
+            element: <Navigate to="/infra-management/vm" replace />,
           },
           {
             path: 'provisioning/create',
-            element: page(ProvisioningCreatePage),
+            element: <Navigate to="/infra-management/vm/create" replace />,
           },
           {
             path: 'provisioning/:id',
-            element: page(VmDetailPage),
+            element: <ProvisioningDetailRedirect />,
           },
           {
             path: 'monitoring',

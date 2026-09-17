@@ -13,7 +13,7 @@ import type { AdminAgent, ClusterAgentStatus } from '@/types/agent';
 
 const breadcrumbItems = [
   { label: '인프라 관리' },
-  { label: '시스템 설정' },
+  { label: '설정' },
   { label: '에이전트' },
 ];
 
