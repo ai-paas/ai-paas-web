@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BreadCrumb, Button, Input, Select, type SelectSingleValue, useToast } from '@innogrid/ui';
 import { useCreateVm } from '@/hooks/service/vms';
+import type { ClusterSpecRequest } from '@/types/vm';
 import {
   useGetProviderImages,
   useGetProviderSpecs,
@@ -17,6 +18,7 @@ import { RegionSelect } from '@/components/features/infra-management/provisionin
 import { SpecPicker } from '@/components/features/infra-management/provisioning/spec-picker';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
+import { errorDetail, errorHint, errorMessage } from '@/util/api-error';
 import styles from '../../cluster-management/create/page.module.scss';
 
 type OptionType = { text: string; value: string };
@@ -43,14 +45,6 @@ type ValidationErrors = {
   workerSpec?: string;
 };
 
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
-
 export default function ProvisioningCreatePage() {
   const navigate = useNavigate();
   const { open } = useToast();
@@ -66,11 +60,18 @@ export default function ProvisioningCreatePage() {
   const [masterSpecId, setMasterSpecId] = useState<string>('');
   const [workerSpecId, setWorkerSpecId] = useState<string>('');
   const [osImageId, setOsImageId] = useState<string>('');
+  // 만들자마자 모니터링 화면을 여는 것이 보통이라 켜둔다. 자원이 아까운 쪽이 끈다.
+  const [enableMonitoring, setEnableMonitoring] = useState(true);
   // hasGpuNodes 는 master/worker spec 의 gpuCount + instance type prefix 로 자동 derive.
   // 사용자 manual toggle 제거 — UI 우회 방지를 위해 server 측도 같은 derive 적용 권장 (별 PR).
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [credentialModalOpen, setCredentialModalOpen] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [submitError, setSubmitError] = useState<{
+    message: string;
+    hint: string;
+    detail: string;
+  }>();
 
   // master / worker 의 선택된 spec 풀 details — node-composition 시각화용
   const { specs: allSpecs } = useGetProviderSpecs(
@@ -120,12 +121,24 @@ export default function ProvisioningCreatePage() {
 
   const handleSuccess = useCallback(() => {
     open({ title: 'VM 프로비저닝 요청이 수락되었습니다.' });
-    navigate('/infra-management/provisioning');
+    navigate('/infra-management/vm');
   }, [open, navigate]);
 
   const handleError = useCallback(
     (error: unknown) => {
-      open({ title: extractErrorMessage(error, '요청 실패'), status: 'negative' });
+      // 백엔드가 분류한 "할 일" 이 있으면 먼저 보여준다. CSP 원문은 그대로 보면 무엇을
+      // 고쳐야 하는지 알 수 없다.
+      const hint = errorHint(error);
+      open({
+        title: errorMessage(error, '요청 실패'),
+        description: hint || undefined,
+        status: 'negative',
+      });
+      setSubmitError({
+        message: errorMessage(error, '요청 실패'),
+        hint,
+        detail: errorDetail(error),
+      });
     },
     [open]
   );
@@ -191,13 +204,15 @@ export default function ProvisioningCreatePage() {
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const config: Record<string, string> = {
-      'anycloud-k8s:masterCount': String(masterCount),
-      'anycloud-k8s:workerCount': String(workerCount),
-      'anycloud-k8s:masterInstanceType': masterSpecId,
-      'anycloud-k8s:workerInstanceType': workerSpecId,
+    const spec: ClusterSpecRequest = {
+      masterCount,
+      workerCount,
+      masterInstanceType: masterSpecId,
+      workerInstanceType: workerSpecId,
     };
-    if (osImageId) config['anycloud-k8s:osImage'] = osImageId;
+    if (osImageId) spec.osImage = osImageId;
+    // 켜는 것이 기본이라 끌 때만 보낸다. 기본값 판단은 백엔드 한 곳에 둔다.
+    if (!enableMonitoring) spec.enableMonitoring = false;
 
     createVm({
       vmGroupName,
@@ -206,7 +221,7 @@ export default function ProvisioningCreatePage() {
       environment: environment.value || undefined,
       credentialId,
       description: description || undefined,
-      config,
+      spec,
       hasGpuNodes,
     });
   };
@@ -219,7 +234,7 @@ export default function ProvisioningCreatePage() {
         <BreadCrumb
           items={[
             { label: '인프라 관리' },
-            { label: '프로비저닝', path: '/infra-management/provisioning' },
+            { label: 'VM', path: '/infra-management/vm' },
             { label: 'VM 프로비저닝 생성' },
           ]}
           onNavigate={navigate}
@@ -230,6 +245,44 @@ export default function ProvisioningCreatePage() {
       </div>
 
       <div className="page-content page-pb-40">
+        {submitError && (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: '12px 14px',
+              border: '1px solid #fecaca',
+              background: '#fef2f2',
+              borderRadius: 6,
+            }}
+          >
+            <div style={{ fontWeight: 600, color: '#b91c1c', fontSize: 13 }}>
+              {submitError.message}
+            </div>
+            {submitError.hint && (
+              <div style={{ marginTop: 6, fontSize: 13, color: '#7f1d1d' }}>{submitError.hint}</div>
+            )}
+            {submitError.detail && (
+              <details style={{ marginTop: 8 }}>
+                <summary style={{ fontSize: 12, color: '#991b1b', cursor: 'pointer' }}>
+                  원본 메시지
+                </summary>
+                <pre
+                  style={{
+                    marginTop: 6,
+                    fontSize: 11,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
+                    color: '#7f1d1d',
+                    maxHeight: 200,
+                    overflow: 'auto',
+                  }}
+                >
+                  {submitError.detail}
+                </pre>
+              </details>
+            )}
+          </div>
+        )}
 
         <div className="page-input-box">
           {/* 1. VM 그룹 이름 */}
@@ -382,17 +435,21 @@ export default function ProvisioningCreatePage() {
             <div className="page-input_item-data">
               <button
                 type="button"
+                className="page-disclosure-btn"
+                aria-expanded={advancedOpen}
                 onClick={() => setAdvancedOpen((v) => !v)}
-                style={{
-                  background: 'none',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                }}
               >
-                {advancedOpen ? '▼ 접기' : '▶ 펼치기'}
+                {/* 화살표를 글자로 쓰면 글꼴마다 크기와 정렬이 달라진다. 도형으로 그린다. */}
+                <svg
+                  className={`page-disclosure-caret${advancedOpen ? 'is-open' : ''}`}
+                  width="8"
+                  height="8"
+                  viewBox="0 0 8 8"
+                  aria-hidden="true"
+                >
+                  <path d="M2 0 L7 4 L2 8 Z" fill="currentColor" />
+                </svg>
+                {advancedOpen ? '접기' : '펼치기'}
               </button>
               {advancedOpen && (
                 <div style={{ marginTop: 12, display: 'grid', rowGap: 12 }}>
@@ -442,7 +499,27 @@ export default function ProvisioningCreatePage() {
                     }}
                   >
                     <input type="checkbox" checked={hasGpuNodes} disabled readOnly />
-                    GPU 노드 — {hasGpuNodes ? '자동 감지됨' : '없음'} (master/worker spec 의 gpuCount + instance type 기반)
+                    GPU 노드 — {hasGpuNodes ? '자동 감지됨' : '없음'} (master/worker spec 의
+                    gpuCount + instance type 기반)
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      display: 'inline-flex',
+                      gap: 6,
+                      alignItems: 'center',
+                      marginTop: 8,
+                    }}
+                  >
+                    <input
+                      id="enable-monitoring"
+                      type="checkbox"
+                      checked={enableMonitoring}
+                      onChange={(e) => setEnableMonitoring(e.target.checked)}
+                    />
+                    <label htmlFor="enable-monitoring">
+                      모니터링 설치 — Prometheus + Grafana. 끄면 모니터링 화면이 비어 있습니다.
+                    </label>
                   </div>
                 </div>
               )}
@@ -458,7 +535,7 @@ export default function ProvisioningCreatePage() {
             <Button
               size="large"
               color="secondary"
-              onClick={() => navigate('/infra-management/provisioning')}
+              onClick={() => navigate('/infra-management/vm')}
             >
               취소
             </Button>

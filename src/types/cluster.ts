@@ -27,7 +27,10 @@ export interface ClusterWorkflowProgress {
 }
 
 export interface Cluster {
+  // 대표 출처 하나. 화면 배지는 sources 를 쓴다.
   source?: ClusterSource;
+  // 이 클러스터를 이루는 출처 전부. VM 으로 만들고 agent 가 등록하면 둘 다 들어간다.
+  sources?: ClusterSource[];
   clusterName?: string;
   // 백엔드 1:1 link — VmClusterEntity 가 같은 이름으로 존재하면 채워짐 (자체로는 clusterName 과 동일).
   // UI 가 cluster 상세 → VM 메뉴 cross-link 시 사용.
@@ -37,6 +40,9 @@ export interface Cluster {
   environment?: string;
   status?: ClusterStatus;
   workerCount?: number;
+  masterCount?: number;
+  /** 첫 master 의 사설 IP. 등록형 클러스터는 없다. */
+  masterPrivateIp?: string;
   createdAt?: string;
   readyAt?: string;
   lastError?: string;
@@ -134,6 +140,8 @@ export interface Operation {
   startedAt?: string;
   endedAt?: string;
   createdAt?: string;
+  /** 이 작업을 만든 요청 본문. 자격증명 값은 가려져서 온다. */
+  request?: string;
 }
 
 // Cluster 등록 직후 한 번만 노출되는 agent-led bootstrap 정보. token 은 short-lived (default 30분).
@@ -185,6 +193,11 @@ export interface KubernetesNode extends KubernetesResource<'Node', false> {
     conditions?: Array<{
       type: string;
       status: string;
+    }>;
+    /** 쿠버네티스가 주는 자리. InternalIP 가 여기 들어 있다. */
+    addresses?: Array<{
+      type?: string;
+      address?: string;
     }>;
     capacity?: {
       [key: string]: string;
@@ -238,7 +251,7 @@ export interface KubernetesPod extends KubernetesResource<'Pod'> {
     nodeName?: string;
     schedulerName?: string;
     containers?: Array<{
-    name: string;
+      name: string;
       image: string;
       resources?: {
         requests?: {

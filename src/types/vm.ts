@@ -34,6 +34,8 @@ export interface Vm {
   environment?: string;
   region?: string;
   credentialName?: string;
+  /** 자격증명이 삭제됐으면 더는 조회되지 않는 ID. 이름과 달리 참조다. */
+  credentialId?: string;
   credentialSourceType?: string;
   clusterRegistered?: boolean;
   masterVmSpec?: string;
@@ -55,6 +57,36 @@ export interface Vm {
   clusterId?: string;
 }
 
+// CSP 무관 클러스터 사양. 7개 CSP 전부에 대응물이 있는 값만 담는다.
+export interface ClusterSpecRequest {
+  kubernetesVersion?: string;
+  masterCount?: number;
+  workerCount?: number;
+  // Proxmox 는 인스턴스 타입이 없어 "코어-메모리MiB" 형식을 받는다 (예: 4-8192).
+  masterInstanceType?: string;
+  workerInstanceType?: string;
+  rootDiskSizeGb?: number;
+  // 표현이 CSP 마다 다르다 — OCI 는 image OCID, Azure 는 publisher:offer:sku:version.
+  osImage?: string;
+  sshUser?: string;
+  network?: NetworkSpecRequest;
+  enableIngress?: boolean;
+  enableGpuOperator?: boolean;
+  /** 비우면 백엔드가 설치한다. 끄려는 사람만 false 를 보낸다. */
+  enableMonitoring?: boolean;
+  useSpot?: boolean;
+}
+
+export interface NetworkSpecRequest {
+  // Proxmox 는 쓰지 않는다. 하이퍼바이저라 기존 브리지에 붙는다.
+  vpcCidr?: string;
+  podCidr?: string;
+  serviceCidr?: string;
+}
+
+// provider 마다 스키마가 다르다. 필요한 키는 GET /v1/providers/{provider}/config-schema 로 조회한다.
+export type ProviderSpecRequest = Record<string, string | number | boolean>;
+
 export interface VmCreateRequest {
   // VM 그룹 식별자. master + worker 인스턴스 집합을 묶는 이름. K8s cluster registration 시에도
   // 동일 이름이 cluster.id 로 사용됨 (1:1 매핑).
@@ -64,7 +96,8 @@ export interface VmCreateRequest {
   environment?: string;
   credentialId: string;
   description?: string;
-  config?: Record<string, string>;
+  spec?: ClusterSpecRequest;
+  providerSpec?: ProviderSpecRequest;
   hasGpuNodes?: boolean;
 }
 
@@ -78,6 +111,8 @@ export interface GetVmsParams {
   provider?: string;
   environment?: string;
   status?: string;
+  /** 삭제된 항목도 "함께" 반환. status 를 명시하면 그 필터가 우선한다. */
+  includeDeleted?: boolean;
 }
 
 export interface VmSshKey {
@@ -94,7 +129,25 @@ export interface VmNode {
   hostname?: string;
 }
 
+/** VM 목록의 한 행 — 클러스터가 아니라 노드 하나. 백엔드 VmNodeListItemResponse. */
+export interface ClusterNode {
+  nodeName: string;
+  role: string;
+  instanceId?: string;
+  privateIp?: string;
+  publicIp?: string;
+  publicDns?: string;
+  clusterName: string;
+  clusterProvider?: string;
+  region?: string;
+  environment?: string;
+  /** 소속 클러스터의 프로비저닝 상태. 노드별 인스턴스 상태가 아니다. */
+  infraStatus?: string;
+}
+
 export interface VmNodeList {
+  /** 노드가 사설망이라 점프 호스트를 거쳐야 하면 user@host[:port]. 비밀번호는 담기지 않는다. */
+  sshJump?: string;
   nodes: VmNode[];
   sshUser?: string;
 }
