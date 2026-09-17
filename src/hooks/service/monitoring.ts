@@ -52,8 +52,11 @@ export type PrometheusResult =
   | PrometheusStringResult;
 
 export type PrometheusQueryResponse<TData = PrometheusResult> = {
-  status: 'success';
-  data: {
+  // 백엔드는 쿼리마다 성공/실패를 따로 담아 200 으로 돌려준다. 성공만 담아두면 실패가 값 0 으로
+  // 읽혀 빈 그래프가 그려진다.
+  status: 'success' | 'error';
+  error?: string;
+  data?: {
     resultType: 'matrix' | 'vector' | 'scalar' | 'string';
     result: TData;
   };
@@ -305,6 +308,11 @@ export const useGetKubernetesPodsResource = (
   return {
     pods: data ?? [],
     isPending,
+    /*
+     * 비활성 쿼리(클러스터 미선택)의 isPending 은 계속 true 다. 그걸 로딩으로 읽으면 표가 영원히
+     * 도는데 요청은 나가지도 않았다. 실제로 가져오는 중일 때만 참이다.
+     */
+    isLoading: isPending && isFetching,
     isFetching,
     isError,
     error,
