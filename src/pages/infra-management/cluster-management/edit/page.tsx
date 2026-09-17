@@ -1,16 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
+import { errorMessage } from '@/util/api-error';
 import { BreadCrumb, Button, Input, useToast } from '@innogrid/ui';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useGetCluster, useUpdateCluster } from '@/hooks/service/clusters';
 import styles from '../create/page.module.scss';
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
 
 export default function ClusterEditPage() {
   const navigate = useNavigate();
@@ -37,7 +30,7 @@ export default function ClusterEditPage() {
 
   const handleError = useCallback(
     (error: unknown) => {
-      const message = extractErrorMessage(error, '클러스터 수정 중 오류가 발생했습니다.');
+      const message = errorMessage(error, '클러스터 수정 중 오류가 발생했습니다.');
       open({ title: message, status: 'negative' });
     },
     [open]

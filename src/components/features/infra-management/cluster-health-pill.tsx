@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { healthStatusTone } from '@/util/status-tone';
 import { Button } from '@innogrid/ui';
 import { useGetClusterHealth } from '@/hooks/service/clusters';
 
@@ -7,18 +8,6 @@ interface ClusterHealthPillProps {
 }
 
 type HealthStatus = 'HEALTHY' | 'DEGRADED' | 'UNHEALTHY' | string;
-
-const statusColor = (status?: HealthStatus): 'run' | 'negative' | 'wait' => {
-  if (!status) return 'wait';
-  const up = String(status).toUpperCase();
-  if (up === 'HEALTHY' || up === 'OK' || up === 'READY' || up === 'UP' || up === 'ACTIVE') {
-    return 'run';
-  }
-  if (up === 'UNHEALTHY' || up === 'FAILED' || up === 'CRITICAL' || up === 'DOWN') {
-    return 'negative';
-  }
-  return 'wait';
-};
 
 // 상태 문자열 한글화 — backend 가 영문 상수로 내려보내므로 표시 단계에서만 매핑
 const STATUS_KO: Record<string, string> = {
@@ -141,7 +130,7 @@ export const ClusterHealthPill = ({ clusterName }: ClusterHealthPillProps) => {
 
   if (!clusterName) return null;
 
-  const color = statusColor(status);
+  const color = healthStatusTone(status);
   const pillColor =
     color === 'run'
       ? 'border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d] hover:bg-[#dcfce7]'
@@ -185,7 +174,7 @@ export const ClusterHealthPill = ({ clusterName }: ClusterHealthPillProps) => {
         <div
           role="dialog"
           aria-label="클러스터 health 상세"
-          className="absolute right-0 top-[calc(100%+6px)] z-20 w-[420px] rounded-lg border border-[#e5e7eb] bg-white shadow-lg"
+          className="absolute top-[calc(100%+6px)] right-0 z-20 w-[420px] rounded-lg border border-[#e5e7eb] bg-white shadow-lg"
         >
           <div className="flex items-center gap-3 border-b border-[#f0f0f0] px-4 py-3">
             <strong className="text-[13px] text-[#1f2937]">클러스터 Health</strong>
@@ -222,12 +211,7 @@ export const ClusterHealthPill = ({ clusterName }: ClusterHealthPillProps) => {
                 {entries.length > 0 ? (
                   <ul className="m-0 list-none p-0">
                     {entries.map(([key, value]) => {
-                      const v = value as
-                        | Record<string, unknown>
-                        | string
-                        | number
-                        | boolean
-                        | null;
+                      const v = value as Record<string, unknown> | string | number | boolean | null;
                       const itemStatus =
                         v && typeof v === 'object'
                           ? ((v as Record<string, unknown>).status as string | undefined)
@@ -248,7 +232,7 @@ export const ClusterHealthPill = ({ clusterName }: ClusterHealthPillProps) => {
                           <div className="justify-self-end">
                             {itemStatus && (
                               <span
-                                className={`table-td-state table-td-state-${statusColor(itemStatus)}`}
+                                className={`table-td-state table-td-state-${healthStatusTone(itemStatus)}`}
                               >
                                 {localizeStatus(itemStatus)}
                               </span>
@@ -266,7 +250,7 @@ export const ClusterHealthPill = ({ clusterName }: ClusterHealthPillProps) => {
                         className="grid grid-cols-[140px_1fr] items-center gap-2 border-b border-[#f5f5f5] py-1.5 last:border-b-0"
                       >
                         <span className="text-[12px] text-[#6b7280]">{label}</span>
-                        <span className="break-all text-[12px] font-medium text-[#374151]">
+                        <span className="text-[12px] font-medium break-all text-[#374151]">
                           {value}
                         </span>
                       </li>

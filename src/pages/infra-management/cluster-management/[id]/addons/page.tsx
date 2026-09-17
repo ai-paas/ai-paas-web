@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
+import { addonStateTone } from '@/util/status-tone';
+import { errorMessage } from '@/util/api-error';
 import { useNavigate, useParams } from 'react-router';
 import {
+  HeaderCheckbox,
+  CellCheckbox,
   BreadCrumb,
   Button,
   Input,
@@ -24,23 +28,10 @@ import {
 
 type OptionType = { text: string; value: string };
 
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
-
-const stateColor = (state?: string): 'run' | 'negative' | 'wait' => {
-  if (!state) return 'wait';
-  const up = state.toUpperCase();
-  if (up === 'INSTALLED' || up === 'READY' || up === 'SUCCEEDED') return 'run';
-  if (up === 'FAILED' || up === 'DELETED') return 'negative';
-  return 'wait';
-};
-
-export default function ClusterAddonsPage() {
+/**
+ * @param embedded 클러스터 상세 안에서 쓸 때. 머리글을 겹쳐 그리지 않는다.
+ */
+export default function ClusterAddonsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { id: clusterName } = useParams<{ id: string }>();
   const { open } = useToast();
@@ -75,20 +66,20 @@ export default function ClusterAddonsPage() {
       setNamespace('');
       setValuesYaml('');
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '설치 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '설치 실패'), status: 'negative' }),
   });
   const { uninstallAddon, isPending: isUninstalling } = useUninstallAddon(clusterName, {
     onSuccess: () => {
       open({ title: '애드온 제거 요청이 접수되었습니다.' });
       setRowSelection({});
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '제거 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '제거 실패'), status: 'negative' }),
   });
   const { retryAddon, isPending: isRetrying } = useRetryAddon(clusterName, {
     onSuccess: () => {
       open({ title: '재시도 요청이 접수되었습니다.' });
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '재시도 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '재시도 실패'), status: 'negative' }),
   });
 
   const handleInstall = () => {
@@ -128,6 +119,13 @@ export default function ClusterAddonsPage() {
 
   const columns = [
     {
+      id: 'select',
+      size: 50,
+      header: ({ table }: { table: ClusterAddon }) => <HeaderCheckbox table={table} />,
+      cell: ({ row }: { row: ClusterAddon }) => <CellCheckbox row={row} />,
+      enableSorting: false,
+    },
+    {
       id: 'type',
       header: '타입',
       accessorFn: (row: ClusterAddon) => row.type ?? '-',
@@ -161,30 +159,36 @@ export default function ClusterAddonsPage() {
       size: 130,
       cell: ({ row }: { row: { original: ClusterAddon } }) => {
         const s = row.original.state;
-        return <span className={`table-td-state table-td-state-${stateColor(s)}`}>{s ?? '-'}</span>;
+        return (
+          <span className={`table-td-state table-td-state-${addonStateTone(s)}`}>{s ?? '-'}</span>
+        );
       },
     },
   ];
 
   return (
     <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb
-          items={[
-            { label: '인프라 관리' },
-            { label: '클러스터 관리', path: '/infra-management/cluster-management' },
-            {
-              label: clusterName ?? '-',
-              path: `/infra-management/cluster-management/${clusterName}`,
-            },
-            { label: '애드온' },
-          ]}
-          onNavigate={navigate}
-        />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">애드온 — {clusterName}</h2>
-      </div>
+      {!embedded && (
+        <>
+        <div className="breadcrumbBox">
+          <BreadCrumb
+            items={[
+              { label: '인프라 관리' },
+              { label: '클러스터 관리', path: '/infra-management/cluster-management' },
+              {
+                label: clusterName ?? '-',
+                path: `/infra-management/cluster-management/${clusterName}`,
+              },
+              { label: '애드온' },
+            ]}
+            onNavigate={navigate}
+          />
+        </div>
+        <div className="page-title-box">
+          <h2 className="page-title">애드온 — {clusterName}</h2>
+        </div>
+        </>
+      )}
 
       <div className="page-content">
         <h3 className="page-detail-title">새 애드온 설치</h3>
@@ -269,6 +273,7 @@ export default function ClusterAddonsPage() {
             totalCount={addons.length}
             pagination={pagination}
             setPagination={setPagination}
+            useSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />

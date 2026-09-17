@@ -1,4 +1,5 @@
-import { AlertDialog, Button } from '@innogrid/ui';
+import { Button } from '@innogrid/ui';
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { useRef, useState } from 'react';
 import { useDeleteCluster } from '@/hooks/service/clusters';
 
@@ -7,12 +8,15 @@ interface DeleteClusterButtonProps {
   clusterId?: string | null;
   clusterIds?: string[];
   onDeleteSuccess?: () => void;
+  /** 단건 삭제 확인 창에 함께 사라지는 것을 적는다. 노드 수처럼 실제 값. */
+  consequence?: string;
 }
 
 export const DeleteClusterButton = ({
   clusterId,
   clusterIds,
   onDeleteSuccess,
+  consequence,
 }: DeleteClusterButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -58,19 +62,17 @@ export const DeleteClusterButton = ({
       >
         {label}
       </Button>
-      <AlertDialog
+      {/* 단건은 이름을 쳐야 지워진다. 여러 건은 이름을 다 치게 하면 일괄 삭제가 막힌다. */}
+      <ConfirmDeleteDialog
         isOpen={isOpen}
-        confirmButtonText="확인"
-        cancelButtonText="취소"
-        onClickConfirm={handleClickConfirm}
-        onClickClose={() => setIsOpen(false)}
-      >
-        <span>
-          {ids.length > 1
-            ? `선택된 ${ids.length}개 클러스터를 삭제하시겠습니까?`
-            : '클러스터를 삭제하시겠습니까?'}
-        </span>
-      </AlertDialog>
+        resourceType="클러스터"
+        resourceName={ids.length === 1 ? ids[0] : undefined}
+        count={ids.length}
+        consequence={ids.length === 1 ? consequence : undefined}
+        isPending={isPending}
+        onConfirm={handleClickConfirm}
+        onClose={() => setIsOpen(false)}
+      />
     </>
   );
 };
