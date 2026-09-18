@@ -40,6 +40,7 @@ type ValidationErrors = {
   vmGroupName?: string;
   provider?: string;
   region?: string;
+  osImage?: string;
   providerSpec?: string;
   credentialId?: string;
   masterSpec?: string;
@@ -105,6 +106,14 @@ export default function ProvisioningCreatePage() {
   );
 
   const [imageKeyword, setImageKeyword] = useState('');
+  /*
+   * IBM, OCI, Alibaba 는 이미지를 반드시 받아야 한다 — 이름으로 찾는 안정된 필터가 없어
+   * emitter 가 값을 그대로 넘긴다. 고급 옵션 안에 접어 두면 비운 채로 만들기를 눌러
+   * 프로비저닝 중반에야 거절당한다.
+   */
+  const osImageRequired = configSchemaFields.some(
+    (f) => f.key === 'anycloud-k8s:osImage' && f.required
+  );
   const imagesEnabled = !!provider && !!credentialId && !!region;
   const {
     images,
@@ -208,6 +217,7 @@ export default function ProvisioningCreatePage() {
       ? 'worker 사양을 "코어-메모리MiB" 형식으로 입력해주세요.'
       : 'worker 인스턴스 타입을 선택해주세요.';
     // CSP 고유 값은 서버가 preflight 에서 거절한다. 여기서 막아야 생성 버튼을 누르기 전에 안다.
+    if (osImageRequired && !osImageId) next.osImage = 'OS 이미지를 선택해주세요.';
     const missingSpec = missingProviderSpecFields(configSchemaFields, providerSpec);
     if (missingSpec.length > 0) next.providerSpec = `${missingSpec.join(', ')} 을(를) 입력해주세요.`;
     setErrors(next);
@@ -225,6 +235,56 @@ export default function ProvisioningCreatePage() {
   const hasGpuNodes = useMemo(
     () => isGpuSpec(provider, masterSpecDetailFull) || isGpuSpec(provider, workerSpecDetailFull),
     [provider, masterSpecDetailFull, workerSpecDetailFull]
+  );
+
+  /* 고급 옵션과 본문 어느 쪽에도 같은 UI 를 놓는다. 두 벌로 두면 한쪽만 고쳐진다. */
+  const osImagePicker = (
+    <>
+      {isProxmox ? (
+                        /*
+                         * Proxmox 는 이미지 카탈로그가 없다. PVE 가 URL 에서 내려받으므로 주소를
+                         * 그대로 받는다. 비우면 Ubuntu 24.04 cloud 이미지를 쓴다.
+                         */
+                        <Input
+                          placeholder="이미지 URL — 비우면 Ubuntu 24.04 cloud 이미지"
+                          value={osImageId}
+                          onChange={(e) => setOsImageId(e.target.value.trim())}
+                          aria-label="Proxmox 이미지 URL"
+                        />
+                      ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <Input
+                          placeholder={
+                            imagesEnabled
+                              ? '이미지 검색 (예: ubuntu, amzn2, rhel)'
+                              : '프로바이더 / 자격증명 / 리전 선택 후 검색 가능'
+                          }
+                          value={imageKeyword}
+                          onChange={(e) => setImageKeyword(e.target.value)}
+                          disabled={!imagesEnabled}
+                        />
+                        <div className={styles.selectContainer} style={{ width: '100%' }}>
+                          <Select
+                            options={imageOptions}
+                            getOptionLabel={(o) => o.text}
+                            getOptionValue={(o) => o.value}
+                            value={selectedImage ?? null}
+                            onChange={(opt: SelectSingleValue<OptionType>) =>
+                              setOsImageId(opt?.value ?? '')
+                            }
+                            placeholder={imagePlaceholder}
+                            isClearable
+                            isDisabled={!imagesEnabled || isImagesPending}
+                            isLoading={isImagesPending}
+                            styles={{
+                              control: (base) => ({ ...base, width: '100%', minHeight: '40px' }),
+                              container: (base) => ({ ...base, width: '100%' }),
+                            }}
+                          />
+                        </div>
+                      </div>
+                      )}
+    </>
   );
 
   const handleSubmit = () => {
@@ -499,6 +559,19 @@ export default function ProvisioningCreatePage() {
             </div>
           </div>
 
+          {/* 9-1. OS 이미지 — 스키마가 필수라고 한 CSP 만 본문에 둔다 */}
+          {osImageRequired && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name page-icon-requisite">OS 이미지</div>
+              <div className="page-input_item-data">
+                {osImagePicker}
+                {errors.osImage && (
+                  <p className="page-input_item-input-error">{errors.osImage}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 10. 고급 옵션 */}
           <div className="page-input_item-box">
             <div className="page-input_item-name">고급 옵션</div>
@@ -523,55 +596,14 @@ export default function ProvisioningCreatePage() {
               </button>
               {advancedOpen && (
                 <div style={{ marginTop: 12, display: 'grid', rowGap: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
-                      OS 이미지 {providerLabel && `(${providerLabel} 기준)`}
-                    </div>
-                    {isProxmox ? (
-                      /*
-                       * Proxmox 는 이미지 카탈로그가 없다. PVE 가 URL 에서 내려받으므로 주소를
-                       * 그대로 받는다. 비우면 Ubuntu 24.04 cloud 이미지를 쓴다.
-                       */
-                      <Input
-                        placeholder="이미지 URL — 비우면 Ubuntu 24.04 cloud 이미지"
-                        value={osImageId}
-                        onChange={(e) => setOsImageId(e.target.value.trim())}
-                        aria-label="Proxmox 이미지 URL"
-                      />
-                    ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <Input
-                        placeholder={
-                          imagesEnabled
-                            ? '이미지 검색 (예: ubuntu, amzn2, rhel)'
-                            : '프로바이더 / 자격증명 / 리전 선택 후 검색 가능'
-                        }
-                        value={imageKeyword}
-                        onChange={(e) => setImageKeyword(e.target.value)}
-                        disabled={!imagesEnabled}
-                      />
-                      <div className={styles.selectContainer} style={{ width: '100%' }}>
-                        <Select
-                          options={imageOptions}
-                          getOptionLabel={(o) => o.text}
-                          getOptionValue={(o) => o.value}
-                          value={selectedImage ?? null}
-                          onChange={(opt: SelectSingleValue<OptionType>) =>
-                            setOsImageId(opt?.value ?? '')
-                          }
-                          placeholder={imagePlaceholder}
-                          isClearable
-                          isDisabled={!imagesEnabled || isImagesPending}
-                          isLoading={isImagesPending}
-                          styles={{
-                            control: (base) => ({ ...base, width: '100%', minHeight: '40px' }),
-                            container: (base) => ({ ...base, width: '100%' }),
-                          }}
-                        />
+                  {!osImageRequired && (
+                    <div>
+                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
+                        OS 이미지 {providerLabel && `(${providerLabel} 기준)`}
                       </div>
+                      {osImagePicker}
                     </div>
-                    )}
-                  </div>
+                  )}
                   {!isProxmox && (
                   <div
                     style={{
