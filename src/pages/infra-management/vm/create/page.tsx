@@ -20,7 +20,7 @@ import {
   type ProviderSpecValues,
 } from '@/components/features/infra-management/provisioning/provider-spec-fields';
 import { RegionSelect } from '@/components/features/infra-management/provisioning/region-select';
-import { useGetProviderConfigSchema } from '@/hooks/service/providers';
+import { useGetProviderConfigSchema, useGetProviders } from '@/hooks/service/providers';
 import { SpecPicker } from '@/components/features/infra-management/provisioning/spec-picker';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
@@ -34,13 +34,6 @@ const environmentOptions: OptionType[] = [
   { text: 'stage', value: 'stage' },
   { text: 'prod', value: 'prod' },
 ];
-
-const DEFAULT_REGION_BY_PROVIDER: Record<string, string> = {
-  aws: 'us-east-1',
-  gcp: 'us-central1',
-  azure: 'eastus',
-  ncp: 'KR',
-};
 
 type ValidationErrors = {
   vmGroupName?: string;
@@ -62,6 +55,11 @@ export default function ProvisioningCreatePage() {
   const [credentialId, setCredentialId] = useState<string>('');
   const [region, setRegion] = useState<string>('');
   const [providerSpec, setProviderSpec] = useState<ProviderSpecValues>({});
+  // 기본 리전은 백엔드가 CSP 마다 알려준다. 화면에 목록을 두면 CSP 가 늘 때 한쪽만 고쳐진다.
+  const { providers: providerCatalog } = useGetProviders();
+  const defaultRegionId = providerCatalog.find(
+    (p) => p.provider?.toLowerCase() === provider?.toLowerCase()
+  )?.recommendedRegion;
   const { fields: configSchemaFields } = useGetProviderConfigSchema(provider, !!provider, {
     credentialId: credentialId || undefined,
     region: region || undefined,
@@ -365,7 +363,7 @@ export default function ProvisioningCreatePage() {
                 credentialId={credentialId || undefined}
                 value={region}
                 onChange={onRegionChange}
-                defaultRegionId={DEFAULT_REGION_BY_PROVIDER[provider ?? '']}
+                defaultRegionId={defaultRegionId}
                 errorText={errors.region}
               />
             </div>
