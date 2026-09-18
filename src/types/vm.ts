@@ -66,7 +66,7 @@ export interface ClusterSpecRequest {
   masterInstanceType?: string;
   workerInstanceType?: string;
   rootDiskSizeGb?: number;
-  // 표현이 CSP 마다 다르다 — OCI 는 image OCID, Azure 는 publisher:offer:sku:version.
+  // 표현이 CSP 마다 다르다 — OCI 는 image OCID, Alibaba 는 ECS 이미지 ID.
   osImage?: string;
   sshUser?: string;
   network?: NetworkSpecRequest;
