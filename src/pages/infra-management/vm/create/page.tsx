@@ -14,7 +14,13 @@ import {
 } from '@/components/features/infra-management/credentials/csp-selector';
 import { CredentialSelect } from '@/components/features/infra-management/provisioning/credential-select';
 import { CredentialCreateModal } from '@/components/features/infra-management/credentials/credential-create-modal';
+import {
+  ProviderSpecFields,
+  missingProviderSpecFields,
+  type ProviderSpecValues,
+} from '@/components/features/infra-management/provisioning/provider-spec-fields';
 import { RegionSelect } from '@/components/features/infra-management/provisioning/region-select';
+import { useGetProviderConfigSchema } from '@/hooks/service/providers';
 import { SpecPicker } from '@/components/features/infra-management/provisioning/spec-picker';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
@@ -40,6 +46,7 @@ type ValidationErrors = {
   vmGroupName?: string;
   provider?: string;
   region?: string;
+  providerSpec?: string;
   credentialId?: string;
   masterSpec?: string;
   workerSpec?: string;
@@ -54,6 +61,8 @@ export default function ProvisioningCreatePage() {
   const [provider, setProvider] = useState<string>('');
   const [credentialId, setCredentialId] = useState<string>('');
   const [region, setRegion] = useState<string>('');
+  const [providerSpec, setProviderSpec] = useState<ProviderSpecValues>({});
+  const { fields: configSchemaFields } = useGetProviderConfigSchema(provider, !!provider);
   const [environment, setEnvironment] = useState<OptionType>(environmentOptions[0]);
   const [masterCount, setMasterCount] = useState<1 | 3>(1);
   const [workerCount, setWorkerCount] = useState<number>(3);
@@ -156,6 +165,7 @@ export default function ProvisioningCreatePage() {
     setMasterSpecId('');
     setWorkerSpecId('');
     setOsImageId('');
+    setProviderSpec({});
     setErrors((p) => ({ ...p, provider: undefined }));
   };
 
@@ -184,6 +194,9 @@ export default function ProvisioningCreatePage() {
     if (!region) next.region = '리전을 선택해주세요.';
     if (!masterSpecId) next.masterSpec = 'master 인스턴스 타입을 선택해주세요.';
     if (!workerSpecId) next.workerSpec = 'worker 인스턴스 타입을 선택해주세요.';
+    // CSP 고유 값은 서버가 preflight 에서 거절한다. 여기서 막아야 생성 버튼을 누르기 전에 안다.
+    const missingSpec = missingProviderSpecFields(configSchemaFields, providerSpec);
+    if (missingSpec.length > 0) next.providerSpec = `${missingSpec.join(', ')} 을(를) 입력해주세요.`;
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -222,6 +235,7 @@ export default function ProvisioningCreatePage() {
       credentialId,
       description: description || undefined,
       spec,
+      providerSpec: Object.keys(providerSpec).length > 0 ? providerSpec : undefined,
       hasGpuNodes,
     });
   };
@@ -353,6 +367,22 @@ export default function ProvisioningCreatePage() {
               />
             </div>
           </div>
+
+          {/* 5-1. CSP 고유 설정 — 어떤 칸이 뜨는지는 백엔드 config-schema 가 정한다 */}
+          <ProviderSpecFields
+            provider={provider || undefined}
+            values={providerSpec}
+            onChange={setProviderSpec}
+            showErrors={!!errors.providerSpec}
+          />
+          {errors.providerSpec && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name" />
+              <div className="page-input_item-data">
+                <p className="page-input_item-input-error">{errors.providerSpec}</p>
+              </div>
+            </div>
+          )}
 
           {/* 6. 환경 */}
           <div className="page-input_item-box">
