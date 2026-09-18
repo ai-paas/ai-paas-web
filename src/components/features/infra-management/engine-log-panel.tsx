@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ProvisionEvent } from '@/types/cluster';
+import { parseServerDate } from '@/util/date';
 
 const SEVERITY_COLOR: Record<string, string> = {
   error: '#dc2626',
@@ -11,9 +12,8 @@ const SEVERITY_COLOR: Record<string, string> = {
 const LOG_MAX_HEIGHT = 240;
 
 const formatTime = (timestamp?: string): string => {
-  if (!timestamp) return '';
-  const parsed = new Date(timestamp);
-  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleTimeString();
+  const parsed = parseServerDate(timestamp);
+  return parsed ? parsed.toLocaleTimeString() : '';
 };
 
 const describe = (event: ProvisionEvent): string =>

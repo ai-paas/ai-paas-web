@@ -1,4 +1,5 @@
 import type { Vm } from '@/types/vm';
+import { parseServerDate } from '@/util/date';
 
 type StepState = 'pending' | 'running' | 'success' | 'failed' | 'skipped';
 
@@ -54,10 +55,11 @@ function timestampFor(stepKey: string, vm: Vm | undefined): string | undefined {
 }
 
 function formatDuration(start?: string, end?: string): string {
-  if (!start) return '';
-  const s = new Date(start).getTime();
-  const e = end ? new Date(end).getTime() : Date.now();
-  if (!Number.isFinite(s) || !Number.isFinite(e) || e < s) return '';
+  const startedAt = parseServerDate(start);
+  if (!startedAt) return '';
+  const s = startedAt.getTime();
+  const e = parseServerDate(end)?.getTime() ?? Date.now();
+  if (e < s) return '';
   const sec = Math.floor((e - s) / 1000);
   if (sec < 60) return `${sec}s`;
   const m = Math.floor(sec / 60);
