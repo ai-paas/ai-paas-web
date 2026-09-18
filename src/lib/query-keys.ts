@@ -297,8 +297,8 @@ export const queryKeys = {
       [...queryKeys.infraProviders.all, 'specs', params] as const,
     images: (params: ProviderImagesKeyParams = {}) =>
       [...queryKeys.infraProviders.all, 'images', params] as const,
-    configSchema: (provider?: string) =>
-      [...queryKeys.infraProviders.all, 'config-schema', provider] as const,
+    configSchema: (provider?: string, params?: Record<string, string>) =>
+      [...queryKeys.infraProviders.all, 'config-schema', provider, params ?? {}] as const,
     credentialSchema: (provider?: string) =>
       [...queryKeys.infraProviders.all, 'credential-schema', provider] as const,
   },

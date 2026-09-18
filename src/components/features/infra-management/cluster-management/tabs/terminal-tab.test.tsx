@@ -28,8 +28,20 @@ vi.mock('@/hooks/service/clusters', () => ({
   }),
 }));
 vi.mock('../drawer/shell-tab', () => ({
-  ShellTab: ({ podName, enabled }: { podName?: string; enabled: boolean }) => (
-    <div data-testid="shell">{enabled ? `attached:${podName}` : 'idle'}</div>
+  ShellTab: ({
+    podName,
+    enabled,
+    initialCommand,
+    autoRetry,
+  }: {
+    podName?: string;
+    enabled: boolean;
+    initialCommand?: string;
+    autoRetry?: boolean;
+  }) => (
+    <div data-testid="shell" data-command={initialCommand} data-auto-retry={String(!!autoRetry)}>
+      {enabled ? `attached:${podName}` : 'idle'}
+    </div>
   ),
 }));
 vi.mock('@innogrid/ui', async (importOriginal) => {
@@ -98,5 +110,24 @@ describe('TerminalTab', () => {
     fireEvent.click(screen.getByRole('button', { name: '종료' }));
 
     expect(screen.getByTestId('shell')).toHaveTextContent('idle');
+  });
+
+  it('붙자마자 k9s 를 띄우고 끝내면 셸이 남는다', () => {
+    // k9s 만 실행하면 종료와 동시에 세션이 끊겨 kubectl 을 쓸 수 없다.
+    render(<TerminalTab clusterName="demo" />);
+    fireEvent.click(screen.getByText('터미널 시작'));
+
+    expect(screen.getByTestId('shell')).toHaveAttribute('data-command', '/bin/bash,-lc,k9s; exec bash');
+  });
+
+  it('연결은 스스로 다시 시도한다', () => {
+    /*
+     * 파드를 방금 만든 자리에서는 컨테이너가 아직 없어 첫 시도가 거의 항상 실패한다. 사용자가
+     * 연결 버튼을 눌러 가며 기다릴 일이 아니다.
+     */
+    render(<TerminalTab clusterName="demo" />);
+    fireEvent.click(screen.getByText('터미널 시작'));
+
+    expect(screen.getByTestId('shell')).toHaveAttribute('data-auto-retry', 'true');
   });
 });

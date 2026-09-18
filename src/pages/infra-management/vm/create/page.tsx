@@ -14,8 +14,15 @@ import {
 } from '@/components/features/infra-management/credentials/csp-selector';
 import { CredentialSelect } from '@/components/features/infra-management/provisioning/credential-select';
 import { CredentialCreateModal } from '@/components/features/infra-management/credentials/credential-create-modal';
+import {
+  ProviderSpecFields,
+  missingProviderSpecFields,
+  type ProviderSpecValues,
+} from '@/components/features/infra-management/provisioning/provider-spec-fields';
 import { RegionSelect } from '@/components/features/infra-management/provisioning/region-select';
+import { useGetProviderConfigSchema, useGetProviders } from '@/hooks/service/providers';
 import { SpecPicker } from '@/components/features/infra-management/provisioning/spec-picker';
+import { ProxmoxSpecInput } from '@/components/features/infra-management/provisioning/proxmox-spec-input';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
 import { errorDetail, errorHint, errorMessage } from '@/util/api-error';
@@ -29,17 +36,11 @@ const environmentOptions: OptionType[] = [
   { text: 'prod', value: 'prod' },
 ];
 
-const DEFAULT_REGION_BY_PROVIDER: Record<string, string> = {
-  aws: 'us-east-1',
-  gcp: 'us-central1',
-  azure: 'eastus',
-  ncp: 'KR',
-};
-
 type ValidationErrors = {
   vmGroupName?: string;
   provider?: string;
   region?: string;
+  providerSpec?: string;
   credentialId?: string;
   masterSpec?: string;
   workerSpec?: string;
@@ -54,6 +55,22 @@ export default function ProvisioningCreatePage() {
   const [provider, setProvider] = useState<string>('');
   const [credentialId, setCredentialId] = useState<string>('');
   const [region, setRegion] = useState<string>('');
+  const [providerSpec, setProviderSpec] = useState<ProviderSpecValues>({});
+  // 기본 리전은 백엔드가 CSP 마다 알려준다. 화면에 목록을 두면 CSP 가 늘 때 한쪽만 고쳐진다.
+  /*
+   * Proxmox 는 하이퍼바이저다. 리전이 없고, 인스턴스 타입 목록도 없어 "코어-메모리MiB" 를 직접
+   * 받는다. 조회로 채우는 칸을 그대로 두면 영영 비어 있어 폼을 제출할 수 없다.
+   */
+  const isProxmox = provider.toUpperCase() === 'PROXMOX';
+
+  const { providers: providerCatalog } = useGetProviders();
+  const defaultRegionId = providerCatalog.find(
+    (p) => p.provider?.toLowerCase() === provider?.toLowerCase()
+  )?.recommendedRegion;
+  const { fields: configSchemaFields } = useGetProviderConfigSchema(provider, !!provider, {
+    credentialId: credentialId || undefined,
+    region: region || undefined,
+  });
   const [environment, setEnvironment] = useState<OptionType>(environmentOptions[0]);
   const [masterCount, setMasterCount] = useState<1 | 3>(1);
   const [workerCount, setWorkerCount] = useState<number>(3);
@@ -156,6 +173,7 @@ export default function ProvisioningCreatePage() {
     setMasterSpecId('');
     setWorkerSpecId('');
     setOsImageId('');
+    setProviderSpec({});
     setErrors((p) => ({ ...p, provider: undefined }));
   };
 
@@ -181,9 +199,17 @@ export default function ProvisioningCreatePage() {
     if (!vmGroupName) next.vmGroupName = 'VM 그룹 이름을 입력해주세요.';
     if (!provider) next.provider = 'CSP 를 선택해주세요.';
     if (!credentialId) next.credentialId = '자격증명을 선택해주세요.';
-    if (!region) next.region = '리전을 선택해주세요.';
-    if (!masterSpecId) next.masterSpec = 'master 인스턴스 타입을 선택해주세요.';
-    if (!workerSpecId) next.workerSpec = 'worker 인스턴스 타입을 선택해주세요.';
+    // Proxmox 는 리전이 없다. 배치할 PVE 노드를 providerSpec.nodeName 으로 받는다.
+    if (!region && !isProxmox) next.region = '리전을 선택해주세요.';
+    if (!masterSpecId) next.masterSpec = isProxmox
+      ? 'master 사양을 "코어-메모리MiB" 형식으로 입력해주세요.'
+      : 'master 인스턴스 타입을 선택해주세요.';
+    if (!workerSpecId) next.workerSpec = isProxmox
+      ? 'worker 사양을 "코어-메모리MiB" 형식으로 입력해주세요.'
+      : 'worker 인스턴스 타입을 선택해주세요.';
+    // CSP 고유 값은 서버가 preflight 에서 거절한다. 여기서 막아야 생성 버튼을 누르기 전에 안다.
+    const missingSpec = missingProviderSpecFields(configSchemaFields, providerSpec);
+    if (missingSpec.length > 0) next.providerSpec = `${missingSpec.join(', ')} 을(를) 입력해주세요.`;
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -217,11 +243,13 @@ export default function ProvisioningCreatePage() {
     createVm({
       vmGroupName,
       provider: provider.toLowerCase(),
-      region,
+      // 백엔드는 region 을 저장 키로 쓴다. Proxmox 에는 리전이 없어 배치 노드 이름을 넣는다.
+      region: isProxmox ? (providerSpec.nodeName ?? '') : region,
       environment: environment.value || undefined,
       credentialId,
       description: description || undefined,
       spec,
+      providerSpec: Object.keys(providerSpec).length > 0 ? providerSpec : undefined,
       hasGpuNodes,
     });
   };
@@ -339,20 +367,40 @@ export default function ProvisioningCreatePage() {
             </div>
           </div>
 
-          {/* 5. 리전 */}
-          <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">리전</div>
-            <div className="page-input_item-data">
-              <RegionSelect
-                provider={provider}
-                credentialId={credentialId || undefined}
-                value={region}
-                onChange={onRegionChange}
-                defaultRegionId={DEFAULT_REGION_BY_PROVIDER[provider ?? '']}
-                errorText={errors.region}
-              />
+          {/* 5. 리전 — Proxmox 는 하이퍼바이저라 리전이 없다 */}
+          {!isProxmox && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name page-icon-requisite">리전</div>
+              <div className="page-input_item-data">
+                <RegionSelect
+                  provider={provider}
+                  credentialId={credentialId || undefined}
+                  value={region}
+                  onChange={onRegionChange}
+                  defaultRegionId={defaultRegionId}
+                  errorText={errors.region}
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* 5-1. CSP 고유 설정 — 어떤 칸이 뜨는지는 백엔드 config-schema 가 정한다 */}
+          <ProviderSpecFields
+            provider={provider || undefined}
+            credentialId={credentialId || undefined}
+            region={region || undefined}
+            values={providerSpec}
+            onChange={setProviderSpec}
+            showErrors={!!errors.providerSpec}
+          />
+          {errors.providerSpec && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name" />
+              <div className="page-input_item-data">
+                <p className="page-input_item-input-error">{errors.providerSpec}</p>
+              </div>
+            </div>
+          )}
 
           {/* 6. 환경 */}
           <div className="page-input_item-box">
@@ -395,18 +443,29 @@ export default function ProvisioningCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">Master 인스턴스</div>
             <div className="page-input_item-data">
-              <SpecPicker
-                provider={provider}
-                credentialId={credentialId || undefined}
-                region={region || undefined}
-                value={masterSpecId}
-                onChange={(v) => {
-                  setMasterSpecId(v);
-                  setErrors((p) => ({ ...p, masterSpec: undefined }));
-                }}
-                showGpuToggle={false}
-                errorText={errors.masterSpec}
-              />
+              {isProxmox ? (
+                <ProxmoxSpecInput
+                  value={masterSpecId}
+                  onChange={(v) => {
+                    setMasterSpecId(v);
+                    setErrors((p) => ({ ...p, masterSpec: undefined }));
+                  }}
+                  errorText={errors.masterSpec}
+                />
+              ) : (
+                <SpecPicker
+                  provider={provider}
+                  credentialId={credentialId || undefined}
+                  region={region || undefined}
+                  value={masterSpecId}
+                  onChange={(v) => {
+                    setMasterSpecId(v);
+                    setErrors((p) => ({ ...p, masterSpec: undefined }));
+                  }}
+                  showGpuToggle={false}
+                  errorText={errors.masterSpec}
+                />
+              )}
             </div>
           </div>
 
@@ -414,18 +473,29 @@ export default function ProvisioningCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">Worker 인스턴스</div>
             <div className="page-input_item-data">
-              <SpecPicker
-                provider={provider}
-                credentialId={credentialId || undefined}
-                region={region || undefined}
-                value={workerSpecId}
-                onChange={(v) => {
-                  setWorkerSpecId(v);
-                  setErrors((p) => ({ ...p, workerSpec: undefined }));
-                }}
-                showGpuToggle={true}
-                errorText={errors.workerSpec}
-              />
+              {isProxmox ? (
+                <ProxmoxSpecInput
+                  value={workerSpecId}
+                  onChange={(v) => {
+                    setWorkerSpecId(v);
+                    setErrors((p) => ({ ...p, workerSpec: undefined }));
+                  }}
+                  errorText={errors.workerSpec}
+                />
+              ) : (
+                <SpecPicker
+                  provider={provider}
+                  credentialId={credentialId || undefined}
+                  region={region || undefined}
+                  value={workerSpecId}
+                  onChange={(v) => {
+                    setWorkerSpecId(v);
+                    setErrors((p) => ({ ...p, workerSpec: undefined }));
+                  }}
+                  showGpuToggle={true}
+                  errorText={errors.workerSpec}
+                />
+              )}
             </div>
           </div>
 
@@ -457,6 +527,18 @@ export default function ProvisioningCreatePage() {
                     <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
                       OS 이미지 {providerLabel && `(${providerLabel} 기준)`}
                     </div>
+                    {isProxmox ? (
+                      /*
+                       * Proxmox 는 이미지 카탈로그가 없다. PVE 가 URL 에서 내려받으므로 주소를
+                       * 그대로 받는다. 비우면 Ubuntu 24.04 cloud 이미지를 쓴다.
+                       */
+                      <Input
+                        placeholder="이미지 URL — 비우면 Ubuntu 24.04 cloud 이미지"
+                        value={osImageId}
+                        onChange={(e) => setOsImageId(e.target.value.trim())}
+                        aria-label="Proxmox 이미지 URL"
+                      />
+                    ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <Input
                         placeholder={
@@ -488,7 +570,9 @@ export default function ProvisioningCreatePage() {
                         />
                       </div>
                     </div>
+                    )}
                   </div>
+                  {!isProxmox && (
                   <div
                     style={{
                       fontSize: 12,
@@ -502,6 +586,7 @@ export default function ProvisioningCreatePage() {
                     GPU 노드 — {hasGpuNodes ? '자동 감지됨' : '없음'} (master/worker spec 의
                     gpuCount + instance type 기반)
                   </div>
+                  )}
                   <div
                     style={{
                       fontSize: 12,

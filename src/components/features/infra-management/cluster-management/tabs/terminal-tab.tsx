@@ -14,6 +14,14 @@ interface Props {
 }
 
 /**
+ * 붙자마자 k9s 를 띄운다.
+ *
+ * <p>k9s 를 끝내도 세션이 같이 끊기면 kubectl 을 쓸 수 없다. 뒤에 셸을 이어 두어 k9s 를 나오면
+ * 그 자리에 남는다. 백엔드가 command 를 쉼표로 쪼개므로 인자마다 쉼표로 가른다.
+ */
+const K9S_ON_LOGIN = '/bin/bash,-lc,k9s; exec bash';
+
+/**
  * kubectl, k9s 를 쓸 수 있는 터미널.
  *
  * <p>노드에 SSH 로 붙는 대신 도구가 들어 있는 파드를 그 노드에 띄우고 안으로 들어간다. 파드 안으로
@@ -90,8 +98,8 @@ export const TerminalTab = ({ clusterName }: Props) => {
       </div>
 
       <span style={{ fontSize: 13, color: '#666' }}>
-        고른 노드에 kubectl, k9s 가 들어 있는 파드를 띄우고 그 안에서 명령을 실행합니다. 파드는 일정
-        시간 뒤 스스로 사라집니다.
+        고른 노드에 kubectl, k9s 가 들어 있는 파드를 띄우고 붙는 즉시 k9s 를 엽니다. k9s 를 끝내면
+        같은 자리에서 셸을 씁니다. 파드는 일정 시간 뒤 스스로 사라집니다.
       </span>
 
       <ShellTab
@@ -100,6 +108,8 @@ export const TerminalTab = ({ clusterName }: Props) => {
         podName={pod?.podName}
         containers={pod ? [{ name: DEBUG_POD_CONTAINER }] : []}
         enabled={!!pod}
+        initialCommand={K9S_ON_LOGIN}
+        autoRetry
       />
     </div>
   );

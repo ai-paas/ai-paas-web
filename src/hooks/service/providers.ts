@@ -182,12 +182,22 @@ export const useGetProviderImages = (
 };
 
 // CSP 별 클러스터 설정 스키마
-export const useGetProviderConfigSchema = (provider?: string, enabled: boolean = true) => {
+export const useGetProviderConfigSchema = (
+  provider?: string,
+  enabled: boolean = true,
+  // 주면 계정에서 실제로 고를 수 있는 값이 allowedValues 에 채워진다.
+  params?: { credentialId?: string; region?: string }
+) => {
+  const searchParams = Object.fromEntries(
+    Object.entries({ credentialId: params?.credentialId, region: params?.region }).filter(
+      ([, v]) => !!v
+    )
+  ) as Record<string, string>;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: queryKeys.infraProviders.configSchema(provider),
+    queryKey: queryKeys.infraProviders.configSchema(provider, searchParams),
     queryFn: () =>
       api
-        .get(`any-cloud/providers/${provider}/config-schema`)
+        .get(`any-cloud/providers/${provider}/config-schema`, { searchParams })
         .json<ListEnvelope<ProviderConfigSchemaField>>(),
     enabled: enabled && !!provider,
   });

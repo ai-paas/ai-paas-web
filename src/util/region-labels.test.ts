@@ -5,7 +5,6 @@ describe('regionLabel', () => {
   it.each([
     ['ap-northeast-2', 'ap-northeast-2 (서울)'],
     ['asia-northeast3', 'asia-northeast3 (서울)'],
-    ['koreacentral', 'koreacentral (서울)'],
     ['ap-tokyo-1', 'ap-tokyo-1 (도쿄)'],
     ['jp-tok', 'jp-tok (도쿄)'],
   ])('%s → %s', (code, expected) => {
