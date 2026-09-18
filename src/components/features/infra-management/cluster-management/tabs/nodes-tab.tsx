@@ -152,6 +152,7 @@ export const NodesTab = ({ clusterName }: NodesTabProps) => {
           totalCount={nodes.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

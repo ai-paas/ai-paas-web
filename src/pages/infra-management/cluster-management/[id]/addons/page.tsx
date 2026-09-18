@@ -273,6 +273,7 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
             totalCount={addons.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}

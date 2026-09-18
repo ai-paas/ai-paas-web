@@ -348,6 +348,7 @@ export default function HelmReleaseDetailPage() {
                     totalCount={resources.length}
                     pagination={pagination}
                     setPagination={setPagination}
+                    useClientPagination
                   />
                 </div>
               </div>,

@@ -211,6 +211,7 @@ export default function VmPage() {
             }
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             useSelect

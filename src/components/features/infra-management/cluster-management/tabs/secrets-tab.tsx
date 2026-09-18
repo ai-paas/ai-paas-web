@@ -129,6 +129,7 @@ export const SecretsTab = ({ clusterName, namespace }: SecretsTabProps) => {
           totalCount={secrets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

@@ -196,6 +196,7 @@ export default function ApplicationHelmRepositoryPage() {
             totalCount={filteredRepositories.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}

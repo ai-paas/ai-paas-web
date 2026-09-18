@@ -131,6 +131,7 @@ export const OperationTable = ({ resourceId, state, height = 480 }: Props) => {
           totalCount={operations.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}

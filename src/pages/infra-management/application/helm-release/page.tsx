@@ -359,6 +359,7 @@ export default function ApplicationHelmReleasePage() {
             totalCount={filteredReleases.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             useMultiSelect
             rowSelection={rowSelection}

@@ -174,6 +174,7 @@ export default function ClusterAgentFleetPage() {
             totalCount={filteredAgents.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
           />
         </div>
       </div>
