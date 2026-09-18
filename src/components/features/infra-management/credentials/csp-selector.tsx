@@ -1,5 +1,5 @@
 // 프로비저닝 emitter 가 있는 CSP 만 노출한다. 목록에 있는데 emitter 가 없으면
-// 자격증명까지 등록하고 프로비저닝에서 실패한다 (Alibaba, DigitalOcean 이 그랬다).
+// 자격증명까지 등록하고 프로비저닝에서 실패한다 — emitter 가 없는 CSP 를 목록에 두면 그렇게 된다.
 // 백엔드 기준: YamlEmitters.supported()
 //
 // brand color + 실제 Simple Icons CDN 의 brand 로고 (CC0).
@@ -34,11 +34,11 @@ export const CSP_OPTIONS: CspOption[] = [
     iconSlug: 'googlecloud',
   },
   {
-    value: 'AZURE',
-    label: 'Azure',
-    description: 'Microsoft Azure',
-    color: '#0078D4',
-    iconSlug: 'microsoftazure',
+    value: 'ALIBABA',
+    label: 'Alibaba Cloud',
+    description: 'Alibaba Cloud ECS',
+    color: '#FF6A00',
+    iconSlug: 'alibabacloud',
   },
   {
     value: 'OPENSTACK',

@@ -22,7 +22,7 @@ const formatMemory = (gb?: number): string => {
 
 type SpecCategory = 'gpu' | 'compute' | 'memory' | 'storage' | 'general' | 'other';
 
-// family prefix(첫 글자) 기반 휴리스틱. AWS/GCP/Azure family naming 의 합집합.
+// family prefix(첫 글자) 기반 휴리스틱. AWS/GCP/Alibaba family naming 의 합집합.
 // gpuCount > 0 은 family 와 무관하게 GPU 로 우선 분류.
 const categorize = (spec: ProviderSpec): SpecCategory => {
   if ((spec.gpuCount ?? 0) > 0) return 'gpu';
