@@ -62,7 +62,10 @@ export default function ProvisioningCreatePage() {
   const [credentialId, setCredentialId] = useState<string>('');
   const [region, setRegion] = useState<string>('');
   const [providerSpec, setProviderSpec] = useState<ProviderSpecValues>({});
-  const { fields: configSchemaFields } = useGetProviderConfigSchema(provider, !!provider);
+  const { fields: configSchemaFields } = useGetProviderConfigSchema(provider, !!provider, {
+    credentialId: credentialId || undefined,
+    region: region || undefined,
+  });
   const [environment, setEnvironment] = useState<OptionType>(environmentOptions[0]);
   const [masterCount, setMasterCount] = useState<1 | 3>(1);
   const [workerCount, setWorkerCount] = useState<number>(3);
@@ -371,6 +374,8 @@ export default function ProvisioningCreatePage() {
           {/* 5-1. CSP 고유 설정 — 어떤 칸이 뜨는지는 백엔드 config-schema 가 정한다 */}
           <ProviderSpecFields
             provider={provider || undefined}
+            credentialId={credentialId || undefined}
+            region={region || undefined}
             values={providerSpec}
             onChange={setProviderSpec}
             showErrors={!!errors.providerSpec}
