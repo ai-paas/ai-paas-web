@@ -4,6 +4,8 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
+import { wsAuthProtocols } from '@/lib/ws-auth';
+
 interface ContainerOption {
   name: string;
 }
@@ -133,7 +135,7 @@ export const ShellTab = ({ clusterName, namespace, podName, containers, enabled 
         podName
       )}/exec?${params.toString()}`;
 
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(wsUrl, wsAuthProtocols());
     ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
