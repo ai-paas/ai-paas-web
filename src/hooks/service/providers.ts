@@ -59,13 +59,23 @@ export interface CredentialFieldSchema {
   group?: string;
 }
 
+/** 값 하나. 식별자가 곧 이름이면 label 은 value 와 같다. */
+export interface ConfigOption {
+  value: string;
+  label: string;
+}
+
 export interface ProviderConfigSchemaField {
   key: string;
   type: string;
   required?: boolean;
   defaultValue?: string;
+  /** 화면에 띄울 이름. 비면 키 뒷부분을 그대로 쓴다. */
+  label?: string;
   description?: string;
   allowedValues?: string[];
+  /** allowedValues 에 사람이 읽을 이름을 붙인 것. */
+  allowedOptions?: ConfigOption[];
   [key: string]: unknown;
 }
 

@@ -23,12 +23,12 @@ const NO_REGION = new Set(['Proxmox']);
 const IMAGE_REQUIRED = new Set(['IBM', 'OCI', 'Alibaba']);
 
 const DROPDOWN_FIELDS: Partial<Record<(typeof CSPS)[number], string[]>> = {
-  GCP: ['project'],
-  IBM: ['zone'],
-  OCI: ['compartmentId'],
-  OpenStack: ['imageName', 'flavorName', 'externalNetworkId', 'floatingIpPool'],
-  Proxmox: ['nodeName', 'datastoreId', 'networkBridge'],
-  Alibaba: ['zone'],
+  GCP: ['프로젝트'],
+  IBM: ['존', '리소스 그룹'],
+  OCI: ['컴파트먼트'],
+  OpenStack: ['인스턴스 사양', '외부 네트워크', 'Floating IP 풀'],
+  Proxmox: ['PVE 노드', '디스크 저장소', '네트워크 브리지'],
+  Alibaba: ['존'],
 };
 
 async function login(page: Page) {

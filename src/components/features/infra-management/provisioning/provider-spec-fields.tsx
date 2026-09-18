@@ -22,6 +22,12 @@ export const providerSpecFieldName = (key: string) => key.slice(PROVIDER_SPEC_PR
 const isProviderSpecKey = (field: ProviderConfigSchemaField) =>
   field.key.startsWith(PROVIDER_SPEC_PREFIX);
 
+/** 이름이 따로 오는 CSP(OCI compartment, OpenStack 외부망)와 값만 오는 CSP 를 같은 모양으로 맞춘다. */
+const optionsOf = (field: ProviderConfigSchemaField): SpecOption[] =>
+  field.allowedOptions?.length
+    ? field.allowedOptions.map((o) => ({ label: o.label || o.value, value: o.value }))
+    : (field.allowedValues ?? []).map((v) => ({ label: v, value: v }));
+
 /** 채워야 하는데 비어 있는 필드 이름. 호출부가 제출 전에 막는 데 쓴다. */
 export const missingProviderSpecFields = (
   fields: ProviderConfigSchemaField[],
@@ -69,7 +75,14 @@ export const ProviderSpecFields = ({
     const seeded: ProviderSpecValues = {};
     for (const field of specFields) {
       const name = providerSpecFieldName(field.key);
-      if (values[name] === undefined && field.defaultValue) seeded[name] = field.defaultValue;
+      if (values[name] !== undefined) continue;
+      const options = optionsOf(field);
+      /*
+       * 고를 것이 하나뿐이면 그것으로 채운다. GCP 프로젝트나 OCI 컴파트먼트처럼 계정에 하나만
+       * 있는 값을 굳이 고르게 하면, 사용자는 무엇을 판단해야 하는지 모른 채 한 번 더 눌러야 한다.
+       */
+      if (options.length === 1) seeded[name] = options[0].value;
+      else if (field.defaultValue) seeded[name] = field.defaultValue;
     }
     if (Object.keys(seeded).length > 0) onChange({ ...values, ...seeded });
     // values 를 의존성에 넣으면 사용자가 지울 때마다 기본값이 되돌아온다.
@@ -87,34 +100,39 @@ export const ProviderSpecFields = ({
         const name = providerSpecFieldName(field.key);
         const value = values[name] ?? '';
         const invalid = !!showErrors && !!field.required && !value.trim();
-        const options = field.allowedValues ?? [];
+        const options = optionsOf(field);
+        // 라벨은 백엔드 스키마가 준다. 화면에 CSP 별 이름표를 두면 프로바이더가 늘 때 한쪽만 고쳐진다.
+        const title = field.label || name;
+        const selected = options.find((o) => o.value === value);
 
         return (
           <div className="page-input_item-box" key={field.key}>
             <div
               className={`page-input_item-name${field.required ? ' page-icon-requisite' : ''}`}
             >
-              {name}
+              {title}
             </div>
             <div className="page-input_item-data">
               {options.length > 0 ? (
                 <Select
-                  options={options.map((o) => ({ label: o, value: o }))}
-                  value={options.includes(value) ? { label: value, value } : undefined}
-                  onChange={(selected) =>
-                    set(name, (selected as SelectSingleValue<SpecOption>)?.value ?? '')
+                  options={options}
+                  getOptionLabel={(o: SpecOption) => o.label}
+                  getOptionValue={(o: SpecOption) => o.value}
+                  value={selected ?? null}
+                  onChange={(option) =>
+                    set(name, (option as SelectSingleValue<SpecOption>)?.value ?? '')
                   }
                 />
               ) : (
                 <Input
-                  placeholder={field.description ?? name}
+                  placeholder={field.description ?? title}
                   value={value}
                   onChange={(e) => set(name, e.target.value)}
                   variant={invalid ? 'err' : 'default'}
                 />
               )}
               {invalid ? (
-                <p className="page-input_item-input-error">{name} 을(를) 입력해주세요.</p>
+                <p className="page-input_item-input-error">{title} 을(를) 입력해주세요.</p>
               ) : (
                 field.description && <p className="page-input_item-input-desc">{field.description}</p>
               )}
