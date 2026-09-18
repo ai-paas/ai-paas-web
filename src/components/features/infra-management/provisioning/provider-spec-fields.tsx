@@ -34,6 +34,9 @@ export const missingProviderSpecFields = (
 
 interface Props {
   provider?: string;
+  /** 계정에서 고를 수 있는 값을 받아 오려면 필요하다. 없으면 자유 입력으로 남는다. */
+  credentialId?: string;
+  region?: string;
   values: ProviderSpecValues;
   onChange: (values: ProviderSpecValues) => void;
   /** 제출을 시도한 뒤에만 비어 있는 칸을 빨갛게 표시한다. */
@@ -46,8 +49,18 @@ interface Props {
  * 어떤 칸이 필요한지는 백엔드 config-schema 가 정한다. 화면에 CSP 별 분기를 두면 프로바이더가
  * 늘 때마다 같은 목록을 두 곳에서 관리하게 되고, 한쪽만 고쳐 생성이 조용히 실패한다.
  */
-export const ProviderSpecFields = ({ provider, values, onChange, showErrors }: Props) => {
-  const { fields, isPending } = useGetProviderConfigSchema(provider, !!provider);
+export const ProviderSpecFields = ({
+  provider,
+  credentialId,
+  region,
+  values,
+  onChange,
+  showErrors,
+}: Props) => {
+  const { fields, isPending } = useGetProviderConfigSchema(provider, !!provider, {
+    credentialId,
+    region,
+  });
 
   const specFields = useMemo(() => fields.filter(isProviderSpecKey), [fields]);
 
