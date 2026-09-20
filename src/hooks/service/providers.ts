@@ -70,6 +70,9 @@ export interface ProvisioningDefaults {
   region?: string | null;
   masterInstanceType?: string | null;
   workerInstanceType?: string | null;
+  vcpu?: number | null;
+  memoryGb?: number | null;
+  gpuCount?: number | null;
   osImage?: string | null;
   providerSpec?: Record<string, string> | null;
 }
@@ -248,13 +251,20 @@ export const useGetProviderCredentialSchema = (provider?: string, enabled: boole
  * <p>화면에 값을 박아 두면 스펙이나 이미지가 갈릴 때마다 어긋나고, 그 사실을 생성 실패로야
  * 알게 된다. 백엔드가 계정에서 조회해 조립한 것을 그대로 쓴다.
  */
-export const useGetProvisioningDefaults = (enabled: boolean = true) => {
+export const useGetProvisioningDefaults = (provider?: string, enabled: boolean = true) => {
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: queryKeys.infraProviders.provisioningDefaults(),
+    queryKey: queryKeys.infraProviders.provisioningDefaults(provider),
     queryFn: () =>
-      api.get('any-cloud/providers/provisioning-defaults').json<ListEnvelope<ProvisioningDefaults>>(),
+      api
+        .get('any-cloud/providers/provisioning-defaults', {
+          searchParams: provider ? { provider } : undefined,
+        })
+        .json<ListEnvelope<ProvisioningDefaults>>(),
     enabled,
-    // CSP API 를 실제로 두드려 조립한다. 모달을 열 때마다 다시 부르면 느리다.
+    /*
+     * CSP API 를 실제로 두드려 조립한다. 백엔드도 캐시하지만 모달을 여닫을 때마다 왕복할
+     * 이유가 없다. 용량처럼 바뀌는 값이 있어 오래 들고 있지는 않는다.
+     */
     staleTime: 60_000,
   });
   return { defaults: unwrapList(data), isPending, isError, error, refetch };

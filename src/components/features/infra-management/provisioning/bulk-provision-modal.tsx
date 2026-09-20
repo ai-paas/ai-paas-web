@@ -1,11 +1,12 @@
 import { Button, Input, Modal, useToast } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useGetProvisioningDefaults, type ProvisioningDefaults } from '@/hooks/service/providers';
+import { CSP_OPTIONS } from '@/components/features/infra-management/credentials/csp-selector';
+import { type ProvisioningDefaults } from '@/hooks/service/providers';
 import { useCreateVm } from '@/hooks/service/vms';
 import type { VmCreateRequest } from '@/types/vm';
 
-type Outcome = 'pending' | 'running' | 'accepted' | 'failed';
+import { BulkProvisionRow, type RowOutcome } from './bulk-provision-row';
 
 interface Props {
   isOpen: boolean;
@@ -39,25 +40,37 @@ const toRequest = (item: ProvisioningDefaults, prefix: string): VmCreateRequest 
  */
 export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
   const { open: openToast } = useToast();
-  const { defaults, isPending, isError } = useGetProvisioningDefaults(isOpen);
+  const [loaded, setLoaded] = useState<Record<string, ProvisioningDefaults | null>>({});
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [prefix, setPrefix] = useState('e2e-');
   const [confirmation, setConfirmation] = useState('');
-  const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
+  const [outcomes, setOutcomes] = useState<Record<string, RowOutcome>>({});
   const [submitting, setSubmitting] = useState(false);
   const { createVm } = useCreateVm();
 
-  const ready = useMemo(() => defaults.filter((d) => d.ready), [defaults]);
-
-  // 만들 수 있는 것만 미리 켜 둔다. 차단된 CSP 를 켜 두면 눌러도 되는 것처럼 보인다.
   useEffect(() => {
-    if (!isOpen) return;
-    setSelected(Object.fromEntries(ready.map((d) => [d.provider, true])));
+    if (isOpen) return;
     setOutcomes({});
     setConfirmation('');
-  }, [isOpen, ready]);
+  }, [isOpen]);
 
-  const chosen = ready.filter((d) => selected[d.provider]);
+  /* 줄이 값을 받아오면 만들 수 있는 것만 켠다. 차단된 CSP 를 켜 두면 눌러도 되는 것처럼 보인다. */
+  const handleLoaded = useCallback((provider: string, item: ProvisioningDefaults | null) => {
+    setLoaded((prev) => (prev[provider] === item ? prev : { ...prev, [provider]: item }));
+    setSelected((prev) =>
+      provider in prev ? prev : { ...prev, [provider]: !!item?.ready }
+    );
+  }, []);
+
+  const chosen = useMemo(
+    () =>
+      Object.entries(selected)
+        .filter(([, on]) => on)
+        .map(([provider]) => loaded[provider])
+        .filter((item): item is ProvisioningDefaults => !!item?.ready),
+    [selected, loaded]
+  );
+
   const confirmed = confirmation.trim() === prefix.trim() && prefix.trim().length > 0;
   const canSubmit = chosen.length > 0 && confirmed && !submitting;
 
@@ -86,14 +99,6 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
     openToast({ title: `${chosen.length}개 CSP 생성 요청을 보냈습니다.` });
   };
 
-  const statusText = (item: ProvisioningDefaults) => {
-    const outcome = outcomes[item.provider];
-    if (outcome === 'running') return '요청 중';
-    if (outcome === 'accepted') return '수락됨';
-    if (outcome === 'failed') return '요청 실패';
-    return item.ready ? '준비됨' : (item.blockedReason ?? '사용할 수 없음');
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -110,48 +115,37 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
         </Button>
       }
     >
+      <style>{`@keyframes bulk-skeleton{0%{background-position:100% 50%}100%{background-position:0 50%}}`}</style>
       <div style={{ display: 'grid', rowGap: 12 }}>
-        <p style={{ fontSize: 13, color: '#b45309' }}>
-          실제 자원이 생성되고 과금됩니다. CSP 마다 master 1대, worker 1대가 만들어집니다.
-        </p>
+        <p style={{ fontSize: 13, color: '#b45309' }}>실제 자원이 생성되고 과금됩니다.</p>
 
-        {isPending && <p style={{ fontSize: 13 }}>계정에서 쓸 수 있는 값을 조회하는 중입니다...</p>}
-        {isError && <p style={{ fontSize: 13, color: '#b91c1c' }}>기본값을 불러오지 못했습니다.</p>}
-
-        {defaults.length > 0 && (
-          <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: '#666' }}>
-                <th style={{ width: 36 }} />
-                <th>CSP</th>
-                <th>리전</th>
-                <th>인스턴스</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              {defaults.map((item) => (
-                <tr key={item.provider} style={{ borderTop: '1px solid #eee' }}>
-                  <td style={{ padding: '6px 0' }}>
-                    <input
-                      type="checkbox"
-                      aria-label={`${item.displayName} 선택`}
-                      checked={!!selected[item.provider]}
-                      disabled={!item.ready || submitting}
-                      onChange={(e) =>
-                        setSelected((prev) => ({ ...prev, [item.provider]: e.target.checked }))
-                      }
-                    />
-                  </td>
-                  <td>{item.displayName}</td>
-                  <td>{item.region ?? '—'}</td>
-                  <td>{item.masterInstanceType ?? '—'}</td>
-                  <td style={{ color: item.ready ? '#15803d' : '#b45309' }}>{statusText(item)}</td>
-                </tr>
+        <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', color: '#666' }}>
+              <th style={{ width: 36 }} />
+              <th>CSP / 자격증명</th>
+              <th>리전</th>
+              <th>인스턴스</th>
+              <th>노드</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isOpen &&
+              CSP_OPTIONS.map((csp) => (
+                <BulkProvisionRow
+                  key={csp.value}
+                  provider={csp.value}
+                  displayName={csp.label}
+                  checked={!!selected[csp.value]}
+                  disabled={submitting}
+                  outcome={outcomes[csp.value]}
+                  onChange={(on) => setSelected((prev) => ({ ...prev, [csp.value]: on }))}
+                  onLoaded={(item) => handleLoaded(csp.value, item)}
+                />
               ))}
-            </tbody>
-          </table>
-        )}
+          </tbody>
+        </table>
 
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <label style={{ fontSize: 13, minWidth: 72 }} htmlFor="bulk-prefix">

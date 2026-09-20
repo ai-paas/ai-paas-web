@@ -34,17 +34,19 @@ test.describe('CSP 일괄 프로비저닝', () => {
     await page.getByRole('button', { name: '일괄 생성 (검증용)' }).click();
 
     // 지원하는 CSP 가 모두 줄로 나와야 한다. 빠지면 "지원하지 않는다" 로 읽힌다.
-    for (const csp of ['AWS', 'GCP', 'IBM', 'OCI', 'OpenStack', 'Proxmox', 'Alibaba']) {
-      await expect(
-        page.getByLabel(`${csp} 선택`),
-        `${csp} 줄이 없다`
-      ).toBeVisible({ timeout: 60_000 });
+    for (const csp of ['AWS', 'GCP', 'IBM', 'OCI', 'OPENSTACK', 'PROXMOX', 'ALIBABA']) {
+      await expect(page.getByTestId(`bulk-row-${csp}`), `${csp} 줄이 없다`).toBeVisible({
+        timeout: 60_000,
+      });
     }
 
     /*
      * 체크된 CSP 는 리전과 인스턴스가 채워져 있어야 한다. 비어 있으면 눌러도 생성이
      * 400 으로 끝난다 — 검증용 화면이 오히려 실패를 만든다.
      */
+    // 줄마다 따로 조회한다. 마지막 줄까지 "조회 중" 이 사라질 때까지 기다린다.
+    await expect(page.getByText('조회 중')).toHaveCount(0, { timeout: 120_000 });
+
     const rows = page.locator('tbody tr');
     const count = await rows.count();
     let ready = 0;
@@ -54,6 +56,9 @@ test.describe('CSP 일괄 프로비저닝', () => {
       ready += 1;
       await expect(row.locator('td').nth(2)).not.toHaveText('—');
       await expect(row.locator('td').nth(3)).not.toHaveText('—');
+      // 타입 이름만 보고 크기를 아는 사람은 없다. 사양과 노드 수가 같이 있어야 한다.
+      await expect(row.locator('td').nth(3)).toContainText('vCPU');
+      await expect(row.locator('td').nth(4)).toHaveText('master 1 · worker 1');
     }
     expect(ready, '만들 수 있는 CSP 가 하나도 없다').toBeGreaterThan(0);
 

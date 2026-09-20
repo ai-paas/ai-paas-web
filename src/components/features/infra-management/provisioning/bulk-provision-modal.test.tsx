@@ -1,14 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BulkProvisionModal } from './bulk-provision-modal';
 
 const createVm = vi.fn();
-const defaults = vi.fn();
+const byProvider = vi.fn();
 
 vi.mock('@/hooks/service/providers', () => ({
-  useGetProvisioningDefaults: () => defaults(),
+  useGetProvisioningDefaults: (provider?: string) => byProvider(provider),
 }));
 vi.mock('@/hooks/service/vms', () => ({
   useCreateVm: () => ({ createVm }),
@@ -18,45 +18,74 @@ vi.mock('@innogrid/ui', async (importOriginal) => {
   return { ...actual, useToast: () => ({ open: vi.fn() }) };
 });
 
-const READY = {
+const AWS = {
   provider: 'AWS',
   displayName: 'AWS',
   ready: true,
   region: 'ap-northeast-2',
   credentialId: 'cred-aws',
+  credentialName: 'aws-e2e-02',
   masterInstanceType: 't3.large',
   workerInstanceType: 't3.large',
+  vcpu: 2,
+  memoryGb: 8,
+  gpuCount: 0,
   providerSpec: {},
 };
-const BLOCKED = {
+const OCI_BLOCKED = {
   provider: 'OCI',
   displayName: 'OCI',
   ready: false,
   blockedReason: 'ap-tokyo-1 에 자리가 없습니다.',
 };
 
+const resolved = (item: unknown) => ({ defaults: item ? [item] : [], isPending: false, isError: false });
+const loading = { defaults: [], isPending: true, isError: false };
+
 describe('CSP 일괄 프로비저닝 모달', () => {
   beforeEach(() => {
     createVm.mockReset();
     createVm.mockImplementation((_req, opts) => opts?.onSuccess?.({}));
-    defaults.mockReturnValue({ defaults: [READY, BLOCKED], isPending: false, isError: false });
+    byProvider.mockImplementation((provider?: string) => {
+      if (provider === 'AWS') return resolved(AWS);
+      if (provider === 'OCI') return resolved(OCI_BLOCKED);
+      return resolved(null);
+    });
   });
 
-  const confirmPrefix = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.type(screen.getByPlaceholderText('위 접두를 그대로 입력'), 'e2e-');
-  };
+  const row = (provider: string) => screen.getByTestId(`bulk-row-${provider}`);
+
+  it('아직 못 받은 줄은 조회 중으로 남는다', () => {
+    // 7종을 한 번에 물으면 가장 느린 CSP 가 끝날 때까지 화면이 멈춘 것처럼 보인다.
+    byProvider.mockImplementation((provider?: string) =>
+      provider === 'AWS' ? resolved(AWS) : loading
+    );
+    render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
+
+    expect(within(row('AWS')).getByText('준비됨')).toBeInTheDocument();
+    expect(within(row('OCI')).getByText('조회 중')).toBeInTheDocument();
+  });
+
+  it('사양과 자격증명, 노드 수를 함께 보여준다', () => {
+    render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
+
+    const aws = within(row('AWS'));
+    expect(aws.getByText('t3.large')).toBeInTheDocument();
+    expect(aws.getByText('2 vCPU · 8 GB')).toBeInTheDocument();
+    // 어느 계정에 과금되는지가 여기서 갈린다.
+    expect(aws.getByText('aws-e2e-02')).toBeInTheDocument();
+    expect(aws.getByText('master 1 · worker 1')).toBeInTheDocument();
+  });
 
   it('만들 수 없는 CSP 는 고를 수 없고 이유를 보여준다', () => {
     render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
 
     expect(screen.getByLabelText('OCI 선택')).toBeDisabled();
-    expect(screen.getByText('ap-tokyo-1 에 자리가 없습니다.')).toBeInTheDocument();
-    // 만들 수 있는 것만 미리 켜 둔다.
+    expect(within(row('OCI')).getByText('ap-tokyo-1 에 자리가 없습니다.')).toBeInTheDocument();
     expect(screen.getByLabelText('AWS 선택')).toBeChecked();
   });
 
   it('접두를 다시 입력하기 전에는 생성할 수 없다', async () => {
-    // 오클릭 한 번으로 여러 CSP 가 올라가면 되돌리기 어렵다.
     const user = userEvent.setup();
     render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
 
@@ -69,7 +98,7 @@ describe('CSP 일괄 프로비저닝 모달', () => {
     const user = userEvent.setup();
     render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
 
-    await confirmPrefix(user);
+    await user.type(screen.getByPlaceholderText('위 접두를 그대로 입력'), 'e2e-');
     await user.click(screen.getByRole('button', { name: /1종 생성/ }));
 
     await waitFor(() => expect(createVm).toHaveBeenCalledTimes(1));
@@ -87,9 +116,9 @@ describe('CSP 일괄 프로비저닝 모달', () => {
     const user = userEvent.setup();
     render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
 
-    await confirmPrefix(user);
+    await user.type(screen.getByPlaceholderText('위 접두를 그대로 입력'), 'e2e-');
     await user.click(screen.getByRole('button', { name: /1종 생성/ }));
 
-    await waitFor(() => expect(screen.getByText('요청 실패')).toBeInTheDocument());
+    await waitFor(() => expect(within(row('AWS')).getByText('요청 실패')).toBeInTheDocument());
   });
 });
