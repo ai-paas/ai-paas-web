@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import {
   BreadCrumb,
   Button,
@@ -17,6 +17,8 @@ import { kubernetesStatusOf, type StatusTone as NodeTone } from '@/util/node-sta
 import { regionLabel } from '@/util/region-labels';
 import { mergeVmRows, type VmRow } from '@/util/vm-rows';
 import { InfraProgressTooltip } from '@/components/features/infra-management/provisioning/infra-progress';
+import { BulkProvisionModal } from '@/components/features/infra-management/provisioning/bulk-provision-modal';
+import { syncDevToolsFromUrl } from '@/util/dev-tools';
 
 // 인프라 상태와 쿠버네티스 상태는 출처가 다르다. 한 칸에 합치면 어느 쪽이 문제인지 알 수 없다.
 const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
@@ -28,6 +30,14 @@ const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
 
 export default function VmPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  /*
+   * 검증용 일괄 생성은 평소에 보이지 않는다. 주소에 스위치를 달았을 때만 노출한다 —
+   * 토큰은 번들에 들어가므로 접근 통제가 아니라 숨김이다.
+   */
+  const [devTools, setDevTools] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  useEffect(() => setDevTools(syncDevToolsFromUrl(location.search)), [location.search]);
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
 
@@ -176,6 +186,11 @@ export default function VmPage() {
             <Button color="primary" onClick={() => navigate('/infra-management/vm/create')}>
               VM 만들기
             </Button>
+            {devTools && (
+              <Button color="secondary" onClick={() => setBulkOpen(true)}>
+                일괄 생성 (검증용)
+              </Button>
+            )}
             {/*
               노드는 Pulumi 스택 단위로 관리한다. worker 하나만 지우는 경로가 없어서,
               삭제 버튼을 두면 할 수 없는 일을 할 수 있다고 오해하게 된다.
@@ -218,6 +233,7 @@ export default function VmPage() {
           />
         </div>
       </div>
+      {devTools && <BulkProvisionModal isOpen={bulkOpen} onClose={() => setBulkOpen(false)} />}
     </main>
   );
 }

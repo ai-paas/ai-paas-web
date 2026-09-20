@@ -59,6 +59,21 @@ export interface CredentialFieldSchema {
   group?: string;
 }
 
+/** CSP 하나에 대해 "지금 통과하는" 생성 요청 한 벌. 값은 백엔드가 계정에서 조회해 조립한다. */
+export interface ProvisioningDefaults {
+  provider: string;
+  displayName: string;
+  ready: boolean;
+  blockedReason?: string | null;
+  credentialId?: string | null;
+  credentialName?: string | null;
+  region?: string | null;
+  masterInstanceType?: string | null;
+  workerInstanceType?: string | null;
+  osImage?: string | null;
+  providerSpec?: Record<string, string> | null;
+}
+
 /** 값 하나. 식별자가 곧 이름이면 label 은 value 와 같다. */
 export interface ConfigOption {
   value: string;
@@ -225,4 +240,22 @@ export const useGetProviderCredentialSchema = (provider?: string, enabled: boole
     enabled: enabled && !!provider,
   });
   return { fields: unwrapList(data), isPending, isError, error };
+};
+
+/**
+ * CSP 마다 지금 통과하는 생성 기본값.
+ *
+ * <p>화면에 값을 박아 두면 스펙이나 이미지가 갈릴 때마다 어긋나고, 그 사실을 생성 실패로야
+ * 알게 된다. 백엔드가 계정에서 조회해 조립한 것을 그대로 쓴다.
+ */
+export const useGetProvisioningDefaults = (enabled: boolean = true) => {
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.infraProviders.provisioningDefaults(),
+    queryFn: () =>
+      api.get('any-cloud/providers/provisioning-defaults').json<ListEnvelope<ProvisioningDefaults>>(),
+    enabled,
+    // CSP API 를 실제로 두드려 조립한다. 모달을 열 때마다 다시 부르면 느리다.
+    staleTime: 60_000,
+  });
+  return { defaults: unwrapList(data), isPending, isError, error, refetch };
 };
