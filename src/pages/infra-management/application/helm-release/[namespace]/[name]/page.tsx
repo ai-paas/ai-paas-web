@@ -91,14 +91,15 @@ export default function HelmReleaseDetailPage() {
     resources,
     isPending: isResourcesPending,
     isError: isResourcesError,
-  } = useGetHelmReleaseResources(name || '');
+    // 클러스터와 네임스페이스를 넘기지 않아 쿼리가 꺼진 채였다 — 탭이 늘 비어 있었다.
+  } = useGetHelmReleaseResources(name || '', clusterId, namespace);
 
   // Values YAML 가져오기
   const {
     values,
     isPending: isValuesPending,
     isError: isValuesError,
-  } = useGetHelmReleaseValues(name || '');
+  } = useGetHelmReleaseValues(name || '', clusterId, namespace);
 
   const handleResourceNameClick = useCallback((resource: HelmReleaseResource) => {
     setSelectedResource(resource);

@@ -340,17 +340,25 @@ export const useInstallHelmRelease = (
   return { installHelmRelease: mutate, isPending, isError, isSuccess, error };
 };
 
-export const useGetHelmReleaseValues = (releaseName: string) => {
+export const useGetHelmReleaseValues = (
+  releaseName: string,
+  clusterId?: string,
+  namespace?: string
+) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: queryKeys.helmReleases.values(releaseName),
+    queryKey: queryKeys.helmReleases.values(releaseName, clusterId, namespace),
     queryFn: async () => {
+      // 클러스터와 네임스페이스가 없으면 어느 릴리즈인지 정할 수 없다.
       const response = await api
-        .get<{ data: string }>(`any-cloud/catalog/releases/${releaseName}/values`)
+        .get<{ data: string }>(
+          `any-cloud/catalog/releases/${encodeURIComponent(releaseName)}/values`,
+          { searchParams: { clusterId: clusterId ?? '', namespace: namespace ?? '' } }
+        )
         .json();
 
       return response.data || '';
     },
-    enabled: !!releaseName,
+    enabled: !!releaseName && !!clusterId && !!namespace,
   });
 
   return {

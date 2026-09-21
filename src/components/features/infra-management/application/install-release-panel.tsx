@@ -2,6 +2,7 @@ import { Button, Input, Modal, Select, useToast, type SelectSingleValue } from '
 import { useEffect, useMemo, useState } from 'react';
 
 import { useGetClusters, useGetKubernetesNamespaces } from '@/hooks/service/clusters';
+import { useScopedCluster } from '@/hooks/use-scoped-cluster';
 import { useGetCatalogValues } from '@/hooks/service/catalog';
 import { useGetHelmRepositories, useInstallHelmRelease } from '@/hooks/service/helm';
 
@@ -27,8 +28,6 @@ type Props = {
 
 /** helm 릴리즈 이름 규칙. 어기면 설치가 거절되는데 메시지는 helm 원문으로 온다. */
 const RELEASE_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,52}$/;
-
-const LAST_CLUSTER_KEY = 'aipaas.lastInstallCluster';
 
 /**
  * 차트를 고른 자리에서 바로 설치한다.
@@ -61,6 +60,7 @@ export const InstallReleasePanel = ({
   const [valuesYaml, setValuesYaml] = useState('');
   const [touched, setTouched] = useState(false);
 
+  const { clusterName: scopedCluster, setClusterName: setScopedCluster } = useScopedCluster();
   const { clusters } = useGetClusters();
   const { namespaces } = useGetKubernetesNamespaces(clusterName, !!clusterName);
   const { data: valuesData } = useGetCatalogValues(repoName, target.chartName, target.version);
@@ -74,9 +74,9 @@ export const InstallReleasePanel = ({
       setNamespace(fixed.namespace);
       return;
     }
-    // 방금 쓴 클러스터를 기억한다. 화면을 옮길 때마다 같은 것을 다시 고르게 하지 않는다.
-    setClusterName((prev) => prev || window.sessionStorage.getItem(LAST_CLUSTER_KEY) || '');
-  }, [isOpen, fixed, target.chartName]);
+    // 섹션이 공유하는 클러스터를 그대로 쓴다. 화면을 옮길 때마다 다시 고르게 하지 않는다.
+    setClusterName((prev) => prev || scopedCluster);
+  }, [isOpen, fixed, target.chartName, scopedCluster]);
 
   useEffect(() => {
     if (valuesData?.content) setValuesYaml(valuesData.content);
@@ -107,7 +107,7 @@ export const InstallReleasePanel = ({
 
   const { installHelmRelease, isPending } = useInstallHelmRelease(clusterName, {
     onSuccess: () => {
-      window.sessionStorage.setItem(LAST_CLUSTER_KEY, clusterName);
+      setScopedCluster(clusterName);
       openToast({
         title: isUpgrade ? '업그레이드 요청을 보냈습니다.' : '설치 요청을 보냈습니다.',
       });

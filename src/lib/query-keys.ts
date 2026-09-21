@@ -328,8 +328,8 @@ export const queryKeys = {
       [...queryKeys.helmReleases.all, params] as const,
     resources: (releaseName?: string, clusterId?: string, namespace?: string) =>
       [...queryKeys.helmReleases.all, 'resources', releaseName, clusterId, namespace] as const,
-    values: (releaseName?: string) =>
-      [...queryKeys.helmReleases.all, 'values', releaseName] as const,
+    values: (releaseName?: string, clusterId?: string, namespace?: string) =>
+      [...queryKeys.helmReleases.all, 'values', releaseName, clusterId, namespace] as const,
   },
   helmRepositories: {
     all: ['helm-repositories'] as const,
