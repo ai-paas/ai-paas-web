@@ -74,7 +74,20 @@ export const VmFailureBanner = ({ vm }: { vm?: Vm }) => {
     >
       <strong>{workflowStepLabel(vm.lastFailedStep ?? undefined)} 단계에서 멈췄습니다</strong>
       {vm.lastErrorCode && <span> ({vm.lastErrorCode})</span>}
-      {vm.lastError && <div style={{ marginTop: 4, color: '#7a2b2b' }}>{vm.lastError}</div>}
+      {/* 아는 실패면 원인과 할 일을 먼저 보여준다. 원문은 수백 줄이라 그 안을 뒤질 수 없다. */}
+      {vm.lastErrorSummary && (
+        <div style={{ marginTop: 6, color: '#7a2b2b', fontWeight: 600 }}>{vm.lastErrorSummary}</div>
+      )}
+      {vm.lastErrorHint && <div style={{ marginTop: 2, color: '#7a2b2b' }}>{vm.lastErrorHint}</div>}
+      {vm.lastError && (
+        <details style={{ marginTop: 6 }}>
+          {/* 분류에 없는 실패는 원문으로만 알 수 있다. 지우지 않고 접어 둔다. */}
+          <summary style={{ cursor: 'pointer', color: '#7a2b2b' }}>
+            {vm.lastErrorSummary ? '원본 메시지' : '오류 내용'}
+          </summary>
+          <div style={{ marginTop: 4, color: '#7a2b2b', whiteSpace: 'pre-wrap' }}>{vm.lastError}</div>
+        </details>
+      )}
     </div>
   );
 };

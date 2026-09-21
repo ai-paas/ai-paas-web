@@ -42,6 +42,10 @@ export interface Vm {
   workerVmSpec?: string;
   osImage?: string;
   lastError?: string;
+  /** 실패 원인을 한 줄로 정리한 것. 아는 실패가 아니면 비어 있다. */
+  lastErrorSummary?: string;
+  /** 사용자가 할 일. lastErrorSummary 와 짝. */
+  lastErrorHint?: string;
   createdAt?: string;
   updatedAt?: string;
   // workflow step transition timestamps (anycloud VmClusterStatusResponse).

@@ -179,6 +179,40 @@ describe('VmFailureBanner', () => {
     expect(screen.getByText(/노드에 닿지 못함/)).toBeInTheDocument();
   });
 
+  it('아는 실패면 원인과 할 일을 먼저 보여준다', () => {
+    /*
+     * 원문은 Pulumi stdout 수백 줄이다. 그 안에서 "Out of host capacity" 한 조각을 찾아내는
+     * 것은 이 시스템을 만든 사람만 할 수 있다.
+     */
+    withRouter(
+      <VmFailureBanner
+        vm={vm({
+          status: 'FAILED',
+          lastFailedStep: 'PROVISION',
+          lastError: 'Pulumi automation up failed: ... Out of host capacity. ...',
+          lastErrorSummary: '선택한 리전에 지금 만들 수 있는 자리가 없습니다.',
+          lastErrorHint: '다른 인스턴스 타입이나 리전을 고르세요.',
+        })}
+      />
+    );
+
+    expect(screen.getByText('선택한 리전에 지금 만들 수 있는 자리가 없습니다.')).toBeInTheDocument();
+    expect(screen.getByText('다른 인스턴스 타입이나 리전을 고르세요.')).toBeInTheDocument();
+    // 원문은 지우지 않고 접어 둔다.
+    expect(screen.getByText('원본 메시지')).toBeInTheDocument();
+  });
+
+  it('모르는 실패는 원문을 그대로 펼쳐 볼 수 있다', () => {
+    withRouter(
+      <VmFailureBanner
+        vm={vm({ status: 'FAILED', lastFailedStep: 'BOOTSTRAP', lastError: '처음 보는 오류' })}
+      />
+    );
+
+    expect(screen.getByText('오류 내용')).toBeInTheDocument();
+    expect(screen.getByText('처음 보는 오류')).toBeInTheDocument();
+  });
+
   it('멀쩡할 때는 아무것도 차지하지 않는다', () => {
     const { container } = withRouter(<VmFailureBanner vm={vm()} />);
 
