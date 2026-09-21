@@ -191,7 +191,7 @@ export const InstallReleasePanel = ({
             </span>
             <Select
               options={withSelected(repoOptions, repoName)}
-              value={withSelected(repoOptions, repoName).find((o) => o.value === repoName)}
+              value={withSelected(repoOptions, repoName).find((o) => o.value === repoName) ?? null}
               placeholder="저장소를 선택하세요"
               isDisabled={isPending}
               onChange={(option: SelectSingleValue<PanelOption>) => setRepoName(option?.value ?? '')}
@@ -206,7 +206,7 @@ export const InstallReleasePanel = ({
           </span>
           <Select
             options={withSelected(clusterOptions, clusterName)}
-            value={withSelected(clusterOptions, clusterName).find((o) => o.value === clusterName)}
+            value={withSelected(clusterOptions, clusterName).find((o) => o.value === clusterName) ?? null}
             placeholder="클러스터를 선택하세요"
             isDisabled={isPending || isUpgrade}
             onChange={(option: SelectSingleValue<PanelOption>) => setClusterName(option?.value ?? '')}
@@ -220,7 +220,7 @@ export const InstallReleasePanel = ({
           </span>
           <Select
             options={withSelected(namespaceOptions, namespace)}
-            value={withSelected(namespaceOptions, namespace).find((o) => o.value === namespace)}
+            value={withSelected(namespaceOptions, namespace).find((o) => o.value === namespace) ?? null}
             placeholder={clusterName ? '네임스페이스를 선택하세요' : '클러스터를 먼저 고르세요'}
             isDisabled={isPending || isUpgrade || !clusterName}
             onChange={(option: SelectSingleValue<PanelOption>) => setNamespace(option?.value ?? '')}
