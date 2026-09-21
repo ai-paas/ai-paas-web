@@ -182,6 +182,8 @@ export const InstallReleasePanel = ({
             </span>
             <Select
               options={repoOptions}
+              getOptionLabel={(option: PanelOption) => option.text}
+              getOptionValue={(option: PanelOption) => option.value}
               value={repoOptions.find((o) => o.value === repoName)}
               placeholder="저장소를 선택하세요"
               isDisabled={isPending}
@@ -197,6 +199,8 @@ export const InstallReleasePanel = ({
           </span>
           <Select
             options={clusterOptions}
+            getOptionLabel={(option: PanelOption) => option.text}
+            getOptionValue={(option: PanelOption) => option.value}
             value={clusterOptions.find((o) => o.value === clusterName)}
             placeholder="클러스터를 선택하세요"
             isDisabled={isPending || isUpgrade}
@@ -211,6 +215,8 @@ export const InstallReleasePanel = ({
           </span>
           <Select
             options={namespaceOptions}
+            getOptionLabel={(option: PanelOption) => option.text}
+            getOptionValue={(option: PanelOption) => option.value}
             value={namespaceOptions.find((o) => o.value === namespace)}
             placeholder={clusterName ? '네임스페이스를 선택하세요' : '클러스터를 먼저 고르세요'}
             isDisabled={isPending || isUpgrade || !clusterName}
