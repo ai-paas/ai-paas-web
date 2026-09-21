@@ -65,6 +65,7 @@ export default function HelmReleaseCreatePage() {
   const [searchParams] = useSearchParams();
   const presetRepository = searchParams.get('repository') ?? '';
   const presetChart = searchParams.get('chart') ?? '';
+  const presetVersion = searchParams.get('version') ?? '';
 
   // 폼 상태
   const [cluster, setCluster] = useState<OptionType>();
@@ -236,6 +237,13 @@ export default function HelmReleaseCreatePage() {
     const preset = catalogNameOptions.find((option) => option.value === presetChart);
     if (preset) setCatalogName(preset);
   }, [catalogNameOptions, catalogName, presetChart]);
+
+  // 상세에서 보던 버전까지 이어 받는다.
+  useEffect(() => {
+    if (version || !presetVersion || versionOptions.length === 0) return;
+    const preset = versionOptions.find((option) => option.value === presetVersion);
+    if (preset) setVersion(preset);
+  }, [versionOptions, version, presetVersion]);
 
   // Validation 에러 제거 헬퍼 함수
   const clearValidationError = useCallback((field: keyof ValidationErrors) => {

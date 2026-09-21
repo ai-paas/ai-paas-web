@@ -270,8 +270,11 @@ export default function CatalogDetailPage() {
     }
   };
 
+  // 보고 있던 저장소, 차트, 버전을 그대로 들고 간다. 다시 고르게 하면 무엇을 보고 있었는지 잃는다.
   const handleDeploy = () => {
-    alert('배포 기능은 준비 중입니다.');
+    const params = new URLSearchParams({ repository: repoName, chart: chartName || '' });
+    if (version) params.set('version', version);
+    navigate(`/infra-management/application/helm-release/create?${params.toString()}`);
   };
 
   const breadcrumbItems = [
