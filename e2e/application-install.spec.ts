@@ -71,7 +71,7 @@ async function login(page: Page) {
 
 test('차트 상세에서 설치 — 고른 차트를 다시 묻지 않는다', async ({ page }) => {
   await login(page);
-  const requests = await mockAnyCloud(page);
+  await mockAnyCloud(page);
 
   await page.goto('/infra-management/application/catalog/alertmanager?repository=prometheus-community');
   await page.getByRole('button', { name: '배포' }).click();
