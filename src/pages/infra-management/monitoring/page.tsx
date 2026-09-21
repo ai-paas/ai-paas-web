@@ -1,6 +1,5 @@
 import { useGetClusters } from '@/hooks/service/clusters';
 import { metricsOutage } from '@/util/prom-results';
-import { toGpuDevices, toGpuPods, type DcgmLabels } from '@/util/gpu-metrics';
 import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import {
   useMultiPromQuery,
@@ -127,23 +126,11 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           'gpuRequest',
           'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'
         ),
-        // 장 단위 표를 만들려면 합계가 아니라 시리즈 그대로 필요하다.
-        instant('gpuDeviceUtil', 'DCGM_FI_DEV_GPU_UTIL'),
-        instant('gpuDeviceMemUsed', 'DCGM_FI_DEV_FB_USED'),
-        instant('gpuDeviceMemFree', 'DCGM_FI_DEV_FB_FREE'),
-        instant('gpuDeviceTemp', 'DCGM_FI_DEV_GPU_TEMP'),
-        instant('gpuDevicePower', 'DCGM_FI_DEV_POWER_USAGE'),
-        instant(
-          'gpuPodRequests',
-          'kube_pod_container_resource_requests{resource="nvidia_com_gpu"} > 0'
-        ),
         /*
-         * 하드웨어 오류. XID 는 마지막 오류 코드라 0 이 아니면 사고가 있었다는 뜻이고,
-         * ECC DBE 는 정정 불가라 그 장의 작업은 이미 틀어졌다고 봐야 한다.
+         * 할당률만 보면 8 장을 잡아 둔 채 아무것도 돌리지 않는 클러스터가 100% 로 읽힌다.
+         * 게이지에 실사용률을 같이 적으려면 장치 사용률의 평균이 필요하다.
          */
-        instant('gpuXid', 'count(DCGM_FI_DEV_XID_ERRORS > 0) or vector(0)'),
-        instant('gpuEcc', 'sum(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL) or vector(0)'),
-        instant('gpuThrottle', 'count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS > 0) or vector(0)'),
+        instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL)'),
         range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
         range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
         range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
@@ -190,14 +177,11 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const networkPacketValue = scalar('networkPacket');
   const gpuTotalValue = scalar('gpuTotal');
   const gpuRequestValue = scalar('gpuRequest');
-  const gpuDevices = toGpuDevices({
-    util: instantOf<DcgmLabels>('gpuDeviceUtil'),
-    memUsed: instantOf<DcgmLabels>('gpuDeviceMemUsed'),
-    memFree: instantOf<DcgmLabels>('gpuDeviceMemFree'),
-    temp: instantOf<DcgmLabels>('gpuDeviceTemp'),
-    power: instantOf<DcgmLabels>('gpuDevicePower'),
-  });
-  const gpuPods = toGpuPods(instantOf('gpuPodRequests'));
+  const gpuUtilAvgValue = scalar('gpuUtilAvg');
+  const gpuGaugeValue = Math.max(
+    0,
+    Math.min(gpuTotalValue ? (gpuRequestValue / gpuTotalValue) * 100 : 0, 100)
+  );
   const npuTotalValue = scalar('npuTotal');
   const npuRequestValue = scalar('npuRequest');
   const tpuTotalValue = scalar('tpuTotal');
@@ -320,6 +304,12 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 usage="RX + TX"
               />
               <ResourceGaugeCard
+                name="GPU"
+                gauge={gpuGaugeValue}
+                value={`${gpuGaugeValue.toFixed(2)}%`}
+                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU · 실사용 ${gpuUtilAvgValue.toFixed(0)}%`}
+              />
+              <ResourceGaugeCard
                 name="NPU"
                 gauge={npuGaugeValue}
                 value={`${npuGaugeValue.toFixed(2)}%`}
@@ -337,22 +327,15 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           {hasGpu && (
             <AcceleratorPanel
               isPending={isMetricsPending}
-              totalGpu={gpuTotalValue}
-              allocatedGpu={gpuRequestValue}
-              devices={gpuDevices}
-              pods={gpuPods}
-              xidCount={scalar('gpuXid')}
-              throttledCount={scalar('gpuThrottle')}
-              eccErrorCount={scalar('gpuEcc')}
               charts={{
-                util: rangeOf<DcgmLabels>('gpuUtilRange'),
-                memory: rangeOf<DcgmLabels>('gpuMemoryRange'),
-                temperature: rangeOf<DcgmLabels>('gpuTempRange'),
-                power: rangeOf<DcgmLabels>('gpuPowerRange'),
-                smActive: rangeOf<DcgmLabels>('gpuSmActiveRange'),
-                tensorActive: rangeOf<DcgmLabels>('gpuTensorActiveRange'),
-                dramActive: rangeOf<DcgmLabels>('gpuDramActiveRange'),
-                pcie: rangeOf<DcgmLabels>('gpuPcieRange'),
+                util: rangeOf('gpuUtilRange'),
+                memory: rangeOf('gpuMemoryRange'),
+                temperature: rangeOf('gpuTempRange'),
+                power: rangeOf('gpuPowerRange'),
+                smActive: rangeOf('gpuSmActiveRange'),
+                tensorActive: rangeOf('gpuTensorActiveRange'),
+                dramActive: rangeOf('gpuDramActiveRange'),
+                pcie: rangeOf('gpuPcieRange'),
               }}
             />
           )}
