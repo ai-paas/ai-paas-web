@@ -117,8 +117,15 @@ export const SecretsTab = ({ clusterName, namespace }: SecretsTabProps) => {
           data={secrets}
           isLoading={isPending}
           emptyMessage={
+            /*
+             * 시크릿은 자격증명이 그대로 담겨 있어 게이트웨이가 일부러 막는다(P0 정책).
+             * "없습니다" 로 두면 정책 때문인지 진짜 없는 건지 알 수 없다.
+             */
             isError ? (
-              '시크릿 정보를 불러오는 데 실패했습니다.'
+              <div className="flex flex-col items-center gap-4">
+                <div>시크릿은 포탈에서 조회할 수 없습니다.</div>
+                <div>자격증명이 담겨 있어 보안 정책으로 막혀 있습니다. kubectl 로 확인하세요.</div>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-4">
                 <div>시크릿이 없습니다.</div>
