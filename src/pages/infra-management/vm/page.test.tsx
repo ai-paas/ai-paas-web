@@ -22,9 +22,11 @@ const node = {
   infraStatus: 'PROVISIONING',
 };
 
-const setup = (vms: unknown[] = []) => {
+const setup = (vms: unknown[] = [], extraNodes: unknown[] = []) => {
   server.use(
-    http.get(`${BASE_URL}/any-cloud/nodes`, () => HttpResponse.json({ data: [node] })),
+    http.get(`${BASE_URL}/any-cloud/nodes`, () =>
+      HttpResponse.json({ data: [...extraNodes, node] })
+    ),
     http.get(`${BASE_URL}/any-cloud/vms`, () => HttpResponse.json({ data: vms })),
     // 진행 중인 클러스터에는 에이전트가 없다 — 목록이 이것 때문에 비면 안 된다.
     http.get(`${BASE_URL}/any-cloud/clusters/:name/kubernetes/*`, () =>
@@ -52,9 +54,23 @@ describe('VmPage', () => {
     expect(screen.queryByRole('link', { name: 'demo' })).not.toBeInTheDocument();
   });
 
-  it('프로비저닝 중인 클러스터도 행을 차지한다', async () => {
-    // 노드는 PROVISION 이 끝나야 생긴다. 노드만 보여주면 진행 중인 작업을 찾아갈 길이 없다.
-    setup([{ clusterName: 'pending-one', status: 'PROVISIONING', clusterProvider: 'AWS' }]);
+  it('노드가 아직 없는 클러스터도 행을 차지한다', async () => {
+    /*
+     * 노드는 PROVISION 이 끝나야 생긴다. 그 줄은 서버가 함께 내려준다 — 화면이 끼워 넣으면
+     * 자르는 곳과 세는 곳이 갈려 다음 페이지가 비어 버린다.
+     */
+    setup(
+      [],
+      [
+        {
+          nodeName: 'pending-one',
+          clusterName: 'pending-one',
+          clusterProvider: 'AWS',
+          infraStatus: 'PROVISIONING',
+          pending: true,
+        },
+      ]
+    );
     renderListPage(<VmPage />);
 
     expect(await screen.findByRole('link', { name: 'pending-one' })).toBeInTheDocument();

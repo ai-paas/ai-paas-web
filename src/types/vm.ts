@@ -152,6 +152,8 @@ export interface ClusterNode {
   environment?: string;
   /** 소속 클러스터의 프로비저닝 상태. 노드별 인스턴스 상태가 아니다. */
   infraStatus?: string;
+  /** 노드가 아직 없어 클러스터를 대신 세운 줄 */
+  pending?: boolean;
 }
 
 export interface VmNodeList {

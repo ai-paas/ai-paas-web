@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { clusterStatusTone } from '@/util/status-tone';
 import { kubernetesStatusOf, type StatusTone as NodeTone } from '@/util/node-status';
 import { regionLabel } from '@/util/region-labels';
-import { mergeVmRows, pendingVms, type VmRow } from '@/util/vm-rows';
+import type { VmRow } from '@/util/vm-rows';
 import { InfraProgressTooltip } from '@/components/features/infra-management/provisioning/infra-progress';
 import { BulkProvisionModal } from '@/components/features/infra-management/provisioning/bulk-provision-modal';
 import { syncDevToolsFromUrl } from '@/util/dev-tools';
@@ -58,16 +58,12 @@ export default function VmPage() {
   );
   // 노드는 PROVISION 이 끝나야 생긴다. 노드만 보여주면 프로비저닝 중이거나 실패한 클러스터가
   // 목록에서 통째로 사라진다 — 진행 중인 작업도 실패 원인도 찾아갈 길이 없다.
-  const isFirstPage = pagination.pageIndex === 0;
-  const rows = useMemo(
-    () => mergeVmRows(nodes, vms, isFirstPage),
-    [nodes, vms, isFirstPage]
-  );
   /*
-   * 전체 개수는 서버가 센 노드 수에 자리표시자 수를 더한 것이다. 이번 페이지에 실린 줄로
-   * 세면 페이지를 넘길 때마다 숫자가 달라진다.
+   * 노드가 없는 클러스터의 줄도 서버가 함께 내려준다. 화면이 끼워 넣으면 자르는 곳과 세는
+   * 곳이 갈려, 그 줄이 개수에는 잡히는데 다음 페이지는 비어 버린다.
    */
-  const totalCount = nodeTotal + pendingVms(vms).length;
+  const rows: VmRow[] = nodes;
+  const totalCount = nodeTotal;
   // 행은 노드지만 진행 상황은 클러스터 단위다. 행마다 되찾지 않도록 한 번 만들어 둔다.
   const vmByName = useMemo(() => new Map(vms.map((v) => [v.clusterName, v])), [vms]);
 
