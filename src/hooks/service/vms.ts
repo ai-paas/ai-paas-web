@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
+import { progressRefetchInterval } from '@/util/vm-progress';
 import type { Page } from '../../types/api';
 import type {
   ClusterNode,
@@ -26,30 +27,48 @@ export const useGetVms = (params: GetVmsParams = {}) => {
       .map(([k, v]) => [k, String(v)])
   );
 
-  const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: queryKeys.vms.list(searchParams),
-    queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
-  });
-
-  const vms: Vm[] = (() => {
-    const raw = data?.data;
+  const unwrap = (payload?: ListEnvelope<Vm>): Vm[] => {
+    const raw = payload?.data;
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
     return raw.items ?? [];
-  })();
+  };
+
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.vms.list(searchParams),
+    queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
+    /*
+     * 만들어지는 중인 클러스터가 있을 때만 다시 묻는다. 끄면 생성 후 PROVISIONING → READY
+     * 가 보이지 않아 새로고침을 하게 되고, 고정 주기로 켜 두면 아무것도 변하지 않는 화면에서도
+     * 왕복이 이어진다.
+     */
+    refetchInterval: (query) => progressRefetchInterval(unwrap(query.state.data)),
+  });
+
+  const vms: Vm[] = unwrap(data);
 
   return { vms, isPending, isError, error, refetch };
 };
 
 // ============= 단일 VM 상세 =============
 export const useGetVm = (vmName?: string, enabled: boolean = true) => {
+  const unwrapOne = (payload?: { data?: Vm } | Vm): Vm | undefined =>
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : (payload as Vm | undefined);
+
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: queryKeys.vms.detail(vmName),
     queryFn: () => api.get(`any-cloud/vms/${vmName}`).json<{ data?: Vm } | Vm>(),
     enabled: enabled && !!vmName,
+    // 상세에서 진행 상황을 보고 있는 동안 갱신된다. 끝나면 스스로 멈춘다.
+    refetchInterval: (query) => {
+      const current = unwrapOne(query.state.data);
+      return progressRefetchInterval(current ? [current] : []);
+    },
   });
 
-  const vm: Vm | undefined = data && typeof data === 'object' && 'data' in data ? data.data : (data as Vm | undefined);
+  const vm: Vm | undefined = unwrapOne(data);
   return { vm, isPending, isError, refetch };
 };
 
@@ -118,7 +137,14 @@ export const useScaleVm = (options?: {
 
 // ============= 노드 목록 (클러스터 경계를 넘어 한 행씩) =============
 // 백엔드가 /v1/vms 아래 두지 않은 이유: 클러스터 이름 path 변수와 겹친다.
-export const useGetClusterNodes = (params: { provider?: string; clusterName?: string } = {}) => {
+/**
+ * @param pollWhileInProgress 만들어지는 중인 클러스터가 있으면 켠다. 노드는 PROVISION 이 끝나야
+ *     생기므로, 끄면 클러스터가 READY 가 되어도 목록에 줄이 늘지 않는다
+ */
+export const useGetClusterNodes = (
+  params: { provider?: string; clusterName?: string } = {},
+  pollWhileInProgress: boolean = false
+) => {
   const searchParams = Object.fromEntries(
     Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== null && v !== '')
@@ -129,6 +155,7 @@ export const useGetClusterNodes = (params: { provider?: string; clusterName?: st
     queryKey: queryKeys.clusterNodes.list(searchParams),
     queryFn: () =>
       api.get('any-cloud/nodes', { searchParams }).json<ListEnvelope<ClusterNode>>(),
+    refetchInterval: pollWhileInProgress ? 5_000 : false,
   });
 
   const nodes: ClusterNode[] = (() => {

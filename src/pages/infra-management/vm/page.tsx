@@ -19,6 +19,7 @@ import { mergeVmRows, type VmRow } from '@/util/vm-rows';
 import { InfraProgressTooltip } from '@/components/features/infra-management/provisioning/infra-progress';
 import { BulkProvisionModal } from '@/components/features/infra-management/provisioning/bulk-provision-modal';
 import { syncDevToolsFromUrl } from '@/util/dev-tools';
+import { hasVmInProgress } from '@/util/vm-progress';
 
 // 인프라 상태와 쿠버네티스 상태는 출처가 다르다. 한 칸에 합치면 어느 쪽이 문제인지 알 수 없다.
 const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
@@ -41,10 +42,14 @@ export default function VmPage() {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
 
-  const { nodes, isPending, isError } = useGetClusterNodes();
+  const { vms } = useGetVms();
+  /*
+   * 만들어지는 중인 클러스터가 있으면 노드도 같이 따라간다. 노드는 PROVISION 이 끝나야
+   * 생겨서, 클러스터만 갱신하면 상태만 바뀌고 줄은 늘지 않는다.
+   */
+  const { nodes, isPending, isError } = useGetClusterNodes({}, hasVmInProgress(vms));
   // 노드는 PROVISION 이 끝나야 생긴다. 노드만 보여주면 프로비저닝 중이거나 실패한 클러스터가
   // 목록에서 통째로 사라진다 — 진행 중인 작업도 실패 원인도 찾아갈 길이 없다.
-  const { vms } = useGetVms();
   const rows = useMemo(() => mergeVmRows(nodes, vms), [nodes, vms]);
   // 행은 노드지만 진행 상황은 클러스터 단위다. 행마다 되찾지 않도록 한 번 만들어 둔다.
   const vmByName = useMemo(() => new Map(vms.map((v) => [v.clusterName, v])), [vms]);
