@@ -10,6 +10,8 @@ import { formatDateTime } from '@/util/date';
 import { DetailValue } from '@/components/ui/detail-value';
 import { InstallReleasePanel } from '@/components/features/infra-management/application/install-release-panel';
 import styles from '../../../inframonitor.module.scss';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
@@ -242,6 +244,11 @@ export default function CatalogDetailPage() {
 
           {message ? (
             <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{message}</div>
+          ) : language === 'markdown' ? (
+            /* README 는 문서다. 소스 하이라이팅으로 두면 표와 링크가 원문 기호로 보인다. */
+            <div className={styles.markdownBody}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyContent ?? ''}</ReactMarkdown>
+            </div>
           ) : (
             <SyntaxHighlighter
               language={language}
