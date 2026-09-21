@@ -34,7 +34,7 @@ type SelectOption = {
   value: string;
 };
 
-type RangeKey = '24h' | '7d' | '30d';
+type RangeKey = '1h' | '6h' | '24h' | '7d' | '30d';
 
 const rangeOptions: Array<{
   label: string;
@@ -43,6 +43,24 @@ const rangeOptions: Array<{
   step: number;
   bucketSeconds: number;
 }> = [
+  /*
+   * 짧은 구간이 없으면 갓 만든 클러스터는 24 칸 중 23 칸이 "데이터 없음" 줄무늬다. 히트맵이
+   * 고장 난 것처럼 보인다.
+   */
+  {
+    label: '1시간',
+    value: '1h',
+    durationSeconds: 60 * 60,
+    step: 5 * 60,
+    bucketSeconds: 5 * 60,
+  },
+  {
+    label: '6시간',
+    value: '6h',
+    durationSeconds: 6 * 60 * 60,
+    step: 30 * 60,
+    bucketSeconds: 30 * 60,
+  },
   {
     label: '24시간',
     value: '24h',
@@ -207,8 +225,10 @@ const UsagePage = ({ clusterName }: { clusterName?: string } = {}) => {
 
       return {
         label:
-          selectedRange === '24h'
-            ? `${String(date.getHours()).padStart(2, '0')}:00`
+          selectedRange === '1h' || selectedRange === '6h'
+            ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+            : selectedRange === '24h'
+              ? `${String(date.getHours()).padStart(2, '0')}:00`
             : `${month}/${day}`,
         start: bucketStart,
         end: index === bucketCount - 1 ? rangeWindow.end : bucketStart + rangeWindow.bucketSeconds,
