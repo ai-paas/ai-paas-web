@@ -57,4 +57,21 @@ describe('mergeVmRows', () => {
 
     expect(rows).toHaveLength(1);
   });
+
+  it('노드가 없는 클러스터는 맨 앞에 온다', () => {
+    /*
+     * 서버가 노드를 페이지로 자른다. 뒤에 두면 만들어지는 중이거나 실패한 클러스터가 다음
+     * 페이지로 밀려, 정작 봐야 할 줄을 1페이지에서 못 본다.
+     */
+    const rows = mergeVmRows(
+      [{ nodeName: 'n-1', clusterName: 'done', role: 'master' }],
+      [
+        { clusterName: 'done', status: 'READY' },
+        { clusterName: 'building', status: 'PROVISIONING' },
+      ]
+    );
+
+    expect(rows.map((r) => r.clusterName)).toEqual(['building', 'done']);
+    expect(rows[0].pending).toBe(true);
+  });
 });

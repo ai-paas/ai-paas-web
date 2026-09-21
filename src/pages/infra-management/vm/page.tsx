@@ -29,6 +29,9 @@ const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
   negative: 'negative',
 };
 
+/** 노드가 없는 클러스터는 진행 중이거나 실패한 것들이라 많지 않다. */
+const PENDING_FETCH_SIZE = 100;
+
 export default function VmPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,15 +45,22 @@ export default function VmPage() {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
 
-  const { vms } = useGetVms();
   /*
-   * 만들어지는 중인 클러스터가 있으면 노드도 같이 따라간다. 노드는 PROVISION 이 끝나야
-   * 생겨서, 클러스터만 갱신하면 상태만 바뀌고 줄은 늘지 않는다.
+   * 아직 노드가 없는 클러스터는 페이지와 무관하게 맨 앞에 둔다. 만들어지는 중이거나 실패한
+   * 것들이라 뒤 페이지로 밀리면 정작 봐야 할 줄을 못 본다. 개수가 적어 한 번에 받는다.
    */
-  const { nodes, isPending, isError } = useGetClusterNodes({}, hasVmInProgress(vms));
+  const { vms } = useGetVms({ size: PENDING_FETCH_SIZE });
+  const inProgress = hasVmInProgress(vms);
+  // 노드는 서버가 자른다. 전량을 받아 화면에서 자르면 목록이 커질수록 응답만 무거워진다.
+  const { nodes, total: nodeTotal, isPending, isError } = useGetClusterNodes(
+    { page: pagination.pageIndex + 1, size: pagination.pageSize },
+    inProgress
+  );
   // 노드는 PROVISION 이 끝나야 생긴다. 노드만 보여주면 프로비저닝 중이거나 실패한 클러스터가
   // 목록에서 통째로 사라진다 — 진행 중인 작업도 실패 원인도 찾아갈 길이 없다.
   const rows = useMemo(() => mergeVmRows(nodes, vms), [nodes, vms]);
+  // 전체 개수는 서버가 센 노드 수에 자리표시자를 더한 것이다.
+  const totalCount = nodeTotal + (rows.length - nodes.length);
   // 행은 노드지만 진행 상황은 클러스터 단위다. 행마다 되찾지 않도록 한 번 만들어 둔다.
   const vmByName = useMemo(() => new Map(vms.map((v) => [v.clusterName, v])), [vms]);
 
@@ -224,14 +234,13 @@ export default function VmPage() {
           <Table
             columns={columns}
             data={rows}
-            totalCount={rows.length}
+            totalCount={totalCount}
             isLoading={isPending}
             emptyMessage={
               isError ? '노드 목록을 불러오는 데 실패했습니다.' : '표시할 노드가 없습니다.'
             }
             pagination={pagination}
             setPagination={setPagination}
-            useClientPagination
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             useSelect

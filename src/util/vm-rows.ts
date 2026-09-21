@@ -28,5 +28,6 @@ export const mergeVmRows = (nodes: ClusterNode[], vms: Vm[]): VmRow[] => {
       pending: true,
     }));
 
-  return [...nodes, ...placeholders];
+  // 자리표시자를 앞에 둔다. 서버가 노드를 페이지로 자르므로 뒤에 두면 다음 페이지로 밀린다.
+  return [...placeholders, ...nodes];
 };

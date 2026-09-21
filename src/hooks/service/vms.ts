@@ -37,6 +37,7 @@ export const useGetVms = (params: GetVmsParams = {}) => {
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: queryKeys.vms.list(searchParams),
     queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
+    placeholderData: (previous) => previous,
     /*
      * 만들어지는 중인 클러스터가 있을 때만 다시 묻는다. 끄면 생성 후 PROVISIONING → READY
      * 가 보이지 않아 새로고침을 하게 되고, 고정 주기로 켜 두면 아무것도 변하지 않는 화면에서도
@@ -47,7 +48,7 @@ export const useGetVms = (params: GetVmsParams = {}) => {
 
   const vms: Vm[] = unwrap(data);
 
-  return { vms, isPending, isError, error, refetch };
+  return { vms, total: totalOf(data, vms.length), isPending, isError, error, refetch };
 };
 
 // ============= 단일 VM 상세 =============
@@ -141,8 +142,19 @@ export const useScaleVm = (options?: {
  * @param pollWhileInProgress 만들어지는 중인 클러스터가 있으면 켠다. 노드는 PROVISION 이 끝나야
  *     생기므로, 끄면 클러스터가 READY 가 되어도 목록에 줄이 늘지 않는다
  */
+/**
+ * 응답의 전체 개수.
+ *
+ * <p>화면이 페이지 수를 계산하려면 이번 페이지 길이가 아니라 전체가 필요하다. 게이트웨이가
+ * total 을 주고, 없으면 지금 받은 만큼밖에 모른다.
+ */
+const totalOf = (payload: unknown, fallback: number): number => {
+  const total = (payload as { total?: unknown } | undefined)?.total;
+  return typeof total === 'number' ? total : fallback;
+};
+
 export const useGetClusterNodes = (
-  params: { provider?: string; clusterName?: string } = {},
+  params: { provider?: string; clusterName?: string; page?: number; size?: number } = {},
   pollWhileInProgress: boolean = false
 ) => {
   const searchParams = Object.fromEntries(
@@ -156,6 +168,8 @@ export const useGetClusterNodes = (
     queryFn: () =>
       api.get('any-cloud/nodes', { searchParams }).json<ListEnvelope<ClusterNode>>(),
     refetchInterval: pollWhileInProgress ? 5_000 : false,
+    // 페이지를 넘길 때 목록이 비었다 다시 차면 깜빡인다. 새 페이지가 올 때까지 이전 것을 둔다.
+    placeholderData: (previous) => previous,
   });
 
   const nodes: ClusterNode[] = (() => {
@@ -165,7 +179,7 @@ export const useGetClusterNodes = (
     return raw.items ?? [];
   })();
 
-  return { nodes, isPending, isError, error, refetch };
+  return { nodes, total: totalOf(data, nodes.length), isPending, isError, error, refetch };
 };
 
 // ============= VM 삭제 (Pulumi destroy 트리거) =============

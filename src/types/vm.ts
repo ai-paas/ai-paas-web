@@ -117,6 +117,9 @@ export interface GetVmsParams {
   status?: string;
   /** 삭제된 항목도 "함께" 반환. status 를 명시하면 그 필터가 우선한다. */
   includeDeleted?: boolean;
+  /** 1-based 페이지. 비우면 게이트웨이 기본값(20건)으로 잘린다. */
+  page?: number;
+  size?: number;
 }
 
 export interface VmSshKey {
