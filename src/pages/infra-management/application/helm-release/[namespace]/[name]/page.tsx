@@ -532,7 +532,11 @@ export default function HelmReleaseDetailPage() {
         cancelButtonText="취소"
         onClickConfirm={() => {
           if (rollbackTarget !== null && name) {
-            rollbackHelmRelease({ releaseName: name, revision: rollbackTarget });
+            rollbackHelmRelease({
+              releaseName: name,
+              revision: rollbackTarget,
+              namespace: namespace ?? '',
+            });
           }
         }}
         onClickClose={() => !isRollingBack && setRollbackTarget(null)}

@@ -408,11 +408,20 @@ export const useRollbackHelmRelease = (
 
   const { mutate, isPending } = useMutation({
     mutationKey: ['rollbackHelmRelease', clusterName],
-    mutationFn: ({ releaseName, revision }: { releaseName: string; revision: number }) =>
+    // 네임스페이스를 빼면 agent 가 default 에서 찾다가 "release: not found" 로 끝난다.
+    mutationFn: ({
+      releaseName,
+      revision,
+      namespace,
+    }: {
+      releaseName: string;
+      revision: number;
+      namespace: string;
+    }) =>
       api
         .post(
           `any-cloud/clusters/${clusterName}/helm-releases/${encodeURIComponent(releaseName)}/operations`,
-          { json: { type: 'rollback', revision, wait: true } }
+          { json: { type: 'rollback', revision, wait: true }, searchParams: { namespace } }
         )
         .json<Operation>(),
     onSuccess: () => {
