@@ -251,14 +251,28 @@ export const useGetProviderCredentialSchema = (provider?: string, enabled: boole
  * <p>화면에 값을 박아 두면 스펙이나 이미지가 갈릴 때마다 어긋나고, 그 사실을 생성 실패로야
  * 알게 된다. 백엔드가 계정에서 조회해 조립한 것을 그대로 쓴다.
  */
-export const useGetProvisioningDefaults = (provider?: string, enabled: boolean = true) => {
+export interface SpecFilter {
+  minVcpu?: number;
+  minMemoryGb?: number;
+  gpu?: boolean;
+}
+
+export const useGetProvisioningDefaults = (
+  provider?: string,
+  filter: SpecFilter = {},
+  enabled: boolean = true
+) => {
+  const searchParams: Record<string, string> = {};
+  if (provider) searchParams.provider = provider;
+  if (filter.minVcpu) searchParams.minVcpu = String(filter.minVcpu);
+  if (filter.minMemoryGb) searchParams.minMemoryGb = String(filter.minMemoryGb);
+  if (filter.gpu) searchParams.gpu = 'true';
+
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: queryKeys.infraProviders.provisioningDefaults(provider),
+    queryKey: queryKeys.infraProviders.provisioningDefaults(searchParams),
     queryFn: () =>
       api
-        .get('any-cloud/providers/provisioning-defaults', {
-          searchParams: provider ? { provider } : undefined,
-        })
+        .get('any-cloud/providers/provisioning-defaults', { searchParams })
         .json<ListEnvelope<ProvisioningDefaults>>(),
     enabled,
     /*

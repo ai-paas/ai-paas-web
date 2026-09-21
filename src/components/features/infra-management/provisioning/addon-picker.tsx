@@ -67,10 +67,24 @@ export const AddonPicker = ({ value, onChange, hasGpuNodes }: Props) => {
                   onChange={(e) => set(row.key, e.target.checked)}
                 />
               </td>
-              <td style={{ width: 150 }}>{row.name}</td>
-              <td style={{ color: '#666' }}>{row.description}</td>
-              <td style={{ width: 190, color: note?.includes('꺼져') ? '#b45309' : '#15803d' }}>
-                {note}
+              <td style={{ width: 150, whiteSpace: 'nowrap' }}>{row.name}</td>
+              {/*
+               * 설명과 안내를 한 칸에 둔다. 칸을 나누면 좁은 화면에서 설명이 먼저 접혀
+               * 두 줄이 되고, 이름과 높이가 어긋난다.
+               */}
+              <td style={{ color: '#666' }}>
+                {row.description}
+                {note && (
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      whiteSpace: 'nowrap',
+                      color: note.includes('꺼져') ? '#b45309' : '#15803d',
+                    }}
+                  >
+                    {note}
+                  </span>
+                )}
               </td>
             </tr>
           );

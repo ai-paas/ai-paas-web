@@ -2,7 +2,7 @@ import { Button, Input, Modal, useToast } from '@innogrid/ui';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { CSP_OPTIONS } from '@/components/features/infra-management/credentials/csp-selector';
-import { type ProvisioningDefaults } from '@/hooks/service/providers';
+import { type ProvisioningDefaults, type SpecFilter } from '@/hooks/service/providers';
 import { useCreateVm } from '@/hooks/service/vms';
 import type { VmCreateRequest } from '@/types/vm';
 
@@ -46,6 +46,11 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
   const [confirmation, setConfirmation] = useState('');
   const [outcomes, setOutcomes] = useState<Record<string, RowOutcome>>({});
   const [submitting, setSubmitting] = useState(false);
+  /*
+   * 조건이 바뀌면 CSP 마다 다시 묻는다. 값을 화면에서 거르면 "조건에 맞는 것이 없다" 와
+   * "그 CSP 에 자리가 없다" 를 구분할 수 없다 — 용량 확인도 이 조건으로 돈다.
+   */
+  const [filter, setFilter] = useState<SpecFilter>({ minVcpu: 2, minMemoryGb: 4, gpu: false });
   const { createVm } = useCreateVm();
 
   useEffect(() => {
@@ -53,6 +58,12 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
     setOutcomes({});
     setConfirmation('');
   }, [isOpen]);
+
+  // 조건이 바뀌면 고른 값이 통째로 달라진다. 이전 선택을 들고 있으면 옛 값으로 만들게 된다.
+  useEffect(() => {
+    setLoaded({});
+    setSelected({});
+  }, [filter]);
 
   /* 줄이 값을 받아오면 만들 수 있는 것만 켠다. 차단된 CSP 를 켜 두면 눌러도 되는 것처럼 보인다. */
   const handleLoaded = useCallback((provider: string, item: ProvisioningDefaults | null) => {
@@ -119,6 +130,40 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
       <div style={{ display: 'grid', rowGap: 12 }}>
         <p style={{ fontSize: 13, color: '#b45309' }}>실제 자원이 생성되고 과금됩니다.</p>
 
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 13 }}>
+          <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+            최소 vCPU
+            <input
+              type="number"
+              min={1}
+              value={filter.minVcpu ?? 2}
+              disabled={submitting}
+              onChange={(e) => setFilter((prev) => ({ ...prev, minVcpu: Number(e.target.value) }))}
+              style={{ width: 64, padding: '4px 6px', border: '1px solid #ddd', borderRadius: 4 }}
+            />
+          </label>
+          <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+            최소 메모리(GB)
+            <input
+              type="number"
+              min={1}
+              value={filter.minMemoryGb ?? 4}
+              disabled={submitting}
+              onChange={(e) => setFilter((prev) => ({ ...prev, minMemoryGb: Number(e.target.value) }))}
+              style={{ width: 72, padding: '4px 6px', border: '1px solid #ddd', borderRadius: 4 }}
+            />
+          </label>
+          <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={!!filter.gpu}
+              disabled={submitting}
+              onChange={(e) => setFilter((prev) => ({ ...prev, gpu: e.target.checked }))}
+            />
+            GPU 인스턴스
+          </label>
+        </div>
+
         <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', color: '#666' }}>
@@ -142,6 +187,7 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
                   outcome={outcomes[csp.value]}
                   onChange={(on) => setSelected((prev) => ({ ...prev, [csp.value]: on }))}
                   onLoaded={(item) => handleLoaded(csp.value, item)}
+                  filter={filter}
                 />
               ))}
           </tbody>

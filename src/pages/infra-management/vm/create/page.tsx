@@ -29,6 +29,7 @@ import {
 import { ProxmoxSpecInput } from '@/components/features/infra-management/provisioning/proxmox-spec-input';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
+import { PREFERRED_OS, preferredImage } from '@/util/preferred-image';
 import { errorDetail, errorHint, errorMessage } from '@/util/api-error';
 import styles from '../../cluster-management/create/page.module.scss';
 
@@ -150,7 +151,7 @@ export default function ProvisioningCreatePage() {
             ? '이미지 조회 실패 — 권한/리전 확인'
             : imageOptions.length === 0
               ? '검색어로 이미지를 찾아보세요.'
-              : '이미지 선택 (미선택 시 CSP 기본)';
+              : `이미지 선택 (기본 ${PREFERRED_OS})`;
 
   const handleSuccess = useCallback(() => {
     open({ title: 'VM 프로비저닝 요청이 수락되었습니다.' });
@@ -245,14 +246,28 @@ export default function ProvisioningCreatePage() {
     [provider, masterSpecDetailFull, workerSpecDetailFull]
   );
   /*
-   * GPU 를 고르면 드라이버 스택도 켠다. 한 번 켠 뒤 사용자가 끄면 그대로 둔다 — 자동 판정이
-   * 사용자의 결정을 매번 되돌리면 끌 수가 없다.
+   * 목록이 오면 검증한 기본 이미지를 골라 둔다. 비워 두면 CSP 마다 다른 기본값이 쓰여 어떤
+   * 버전으로 떴는지 나중에 알 수 없다. 사용자가 고른 뒤에는 건드리지 않는다.
    */
-  const gpuAutoApplied = useRef(false);
+  const imageAutoApplied = useRef(false);
   useEffect(() => {
-    if (!hasGpuNodes || gpuAutoApplied.current) return;
-    gpuAutoApplied.current = true;
-    setAddons((prev) => ({ ...prev, gpuOperator: true }));
+    if (osImageId || imageOptions.length === 0 || imageAutoApplied.current) return;
+    const preferred = preferredImage(imageOptions);
+    if (!preferred) return;
+    imageAutoApplied.current = true;
+    setOsImageId(preferred.value);
+  }, [imageOptions, osImageId]);
+
+  /*
+   * GPU 를 고르면 드라이버 스택도 켠다. 없는데 켜져 있으면 다시 끈다 — 다른 인스턴스로 바꾼
+   * 뒤에도 남아 있으면 쓰지도 않을 것이 올라간다.
+   *
+   * 사용자가 직접 끈 뒤에는 되돌리지 않는다. 매번 되살리면 끌 수가 없다.
+   */
+  const gpuOperatorTouched = useRef(false);
+  useEffect(() => {
+    if (gpuOperatorTouched.current) return;
+    setAddons((prev) => (prev.gpuOperator === hasGpuNodes ? prev : { ...prev, gpuOperator: hasGpuNodes }));
   }, [hasGpuNodes]);
 
   /* 고급 옵션과 본문 어느 쪽에도 같은 UI 를 놓는다. 두 벌로 두면 한쪽만 고쳐진다. */
@@ -649,7 +664,14 @@ export default function ProvisioningCreatePage() {
           <div className="page-input_item-box">
             <div className="page-input_item-name">애드온</div>
             <div className="page-input_item-data">
-              <AddonPicker value={addons} onChange={setAddons} hasGpuNodes={hasGpuNodes} />
+              <AddonPicker
+                value={addons}
+                onChange={(next) => {
+                  if (next.gpuOperator !== addons.gpuOperator) gpuOperatorTouched.current = true;
+                  setAddons(next);
+                }}
+                hasGpuNodes={hasGpuNodes}
+              />
             </div>
           </div>
         </div>

@@ -8,7 +8,7 @@ const createVm = vi.fn();
 const byProvider = vi.fn();
 
 vi.mock('@/hooks/service/providers', () => ({
-  useGetProvisioningDefaults: (provider?: string) => byProvider(provider),
+  useGetProvisioningDefaults: (provider?: string, filter?: unknown) => byProvider(provider, filter),
 }));
 vi.mock('@/hooks/service/vms', () => ({
   useCreateVm: () => ({ createVm }),
@@ -109,6 +109,21 @@ describe('CSP 일괄 프로비저닝 모달', () => {
       credentialId: 'cred-aws',
       spec: { masterCount: 1, workerCount: 1, masterInstanceType: 't3.large' },
     });
+  });
+
+  it('조건을 바꾸면 그 조건으로 다시 묻는다', async () => {
+    /*
+     * 값을 화면에서 거르면 "조건에 맞는 것이 없다" 와 "그 CSP 에 자리가 없다" 를 구분할 수
+     * 없다. 용량 확인도 이 조건으로 돌아야 한다.
+     */
+    const user = userEvent.setup();
+    render(<BulkProvisionModal isOpen onClose={vi.fn()} />);
+    byProvider.mockClear();
+
+    await user.click(screen.getByLabelText('GPU 인스턴스'));
+
+    const calls = byProvider.mock.calls.filter(([, filter]) => (filter as { gpu?: boolean })?.gpu);
+    expect(calls.length, 'GPU 조건으로 다시 묻지 않았다').toBeGreaterThan(0);
   });
 
   it('실패한 CSP 가 어느 것인지 남는다', async () => {

@@ -138,9 +138,16 @@ export const SpecPicker = ({
             disabled={disabled}
             onClick={() => setGpuOnly(!gpuOnly)}
             style={{
+              // 검색 입력과 같은 높이로 맞춘다. 높이를 안 주면 flex 가 늘려 버린다.
+              height: 40,
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+              appearance: 'none',
+              margin: 0,
+              lineHeight: 1,
               fontSize: 12,
-              padding: '3px 10px',
-              borderRadius: 12,
+              padding: '0 12px',
+              borderRadius: 20,
               border: `1px solid ${gpuOnly ? '#15803d' : '#ddd'}`,
               background: gpuOnly ? '#ecfdf5' : '#fff',
               color: gpuOnly ? '#15803d' : '#666',

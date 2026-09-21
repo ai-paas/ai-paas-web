@@ -301,8 +301,8 @@ export const queryKeys = {
       [...queryKeys.infraProviders.all, 'config-schema', provider, params ?? {}] as const,
     credentialSchema: (provider?: string) =>
       [...queryKeys.infraProviders.all, 'credential-schema', provider] as const,
-    provisioningDefaults: (provider?: string) =>
-      [...queryKeys.infraProviders.all, 'provisioning-defaults', provider ?? 'all'] as const,
+    provisioningDefaults: (params: Record<string, string> = {}) =>
+      [...queryKeys.infraProviders.all, 'provisioning-defaults', params] as const,
   },
   addons: {
     catalog: ['addon-catalog'] as const,

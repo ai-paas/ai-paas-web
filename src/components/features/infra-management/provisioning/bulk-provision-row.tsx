@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 
-import { useGetProvisioningDefaults, type ProvisioningDefaults } from '@/hooks/service/providers';
+import {
+  useGetProvisioningDefaults,
+  type ProvisioningDefaults,
+  type SpecFilter,
+} from '@/hooks/service/providers';
 
 export type RowOutcome = 'pending' | 'running' | 'accepted' | 'failed';
 
@@ -12,6 +16,8 @@ interface Props {
   outcome?: RowOutcome;
   onChange: (checked: boolean) => void;
   onLoaded: (defaults: ProvisioningDefaults | null) => void;
+  /** 조건이 바뀌면 그 조건으로 다시 묻는다. */
+  filter: SpecFilter;
 }
 
 const skeleton = (width: number) => (
@@ -52,8 +58,9 @@ export const BulkProvisionRow = ({
   outcome,
   onChange,
   onLoaded,
+  filter,
 }: Props) => {
-  const { defaults, isPending, isError } = useGetProvisioningDefaults(provider);
+  const { defaults, isPending, isError } = useGetProvisioningDefaults(provider, filter);
   const item = defaults[0] ?? null;
 
   useEffect(() => {
