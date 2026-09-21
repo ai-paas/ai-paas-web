@@ -8,12 +8,14 @@ import {
   HeaderCheckbox,
   CellCheckbox,
   AlertDialog,
+  useToast,
   useSearchInputState,
   useTablePagination,
   useTableSelection,
 } from '@innogrid/ui';
 
-import { useGetHelmRepositories } from '@/hooks/service/helm';
+import { HelmRepositoryModal } from '@/components/features/infra-management/application/helm-repository-modal';
+import { useDeleteHelmRepository, useGetHelmRepositories } from '@/hooks/service/helm';
 import { formatDateTime } from '@/util/date';
 import type { HelmRepository } from '@/types/helm';
 
@@ -33,6 +35,20 @@ export default function ApplicationHelmRepositoryPage() {
   const { rowSelection, setRowSelection } = useTableSelection();
 
   const { repositories, isPending, isError, error } = useGetHelmRepositories();
+  const { open: openToast } = useToast();
+  const { deleteHelmRepository, isPending: isDeleting } = useDeleteHelmRepository({
+    onSuccess: (_data, name) => {
+      openToast({ title: `${name} 저장소를 삭제했습니다.` });
+      setIsDeleteDialogOpen(false);
+      setRowSelection({});
+    },
+    onError: (deleteError) => {
+      openToast({
+        title: deleteError instanceof Error ? deleteError.message : '저장소 삭제에 실패했습니다.',
+        status: 'error',
+      });
+    },
+  });
 
   const filteredRepositories = useMemo(() => {
     if (!searchValue) return repositories;
@@ -204,30 +220,29 @@ export default function ApplicationHelmRepositoryPage() {
         </div>
       </div>
 
-      <AlertDialog
+      <HelmRepositoryModal
         isOpen={isIntegrateDialogOpen}
-        confirmButtonText="확인"
-        cancelButtonText={undefined}
-        onClickConfirm={() => setIsIntegrateDialogOpen(false)}
-        onClickClose={() => setIsIntegrateDialogOpen(false)}
-      >
-        <div className="flex flex-col gap-2 text-center">
-          <strong>헬름 저장소 연동</strong>
-          <span>저장소 연동 기능은 API 연동이 완료되면 제공될 예정입니다.</span>
-        </div>
-      </AlertDialog>
+        onClose={() => setIsIntegrateDialogOpen(false)}
+      />
 
       <AlertDialog
         isOpen={isDeleteDialogOpen}
         confirmButtonText="확인"
         cancelButtonText="취소"
-        onClickConfirm={() => setIsDeleteDialogOpen(false)}
-        onClickClose={() => setIsDeleteDialogOpen(false)}
+        onClickConfirm={() => {
+          if (selectedRepository?.name) deleteHelmRepository(selectedRepository.name);
+          else setIsDeleteDialogOpen(false);
+        }}
+        onClickClose={() => !isDeleting && setIsDeleteDialogOpen(false)}
       >
         <div className="flex flex-col gap-2 text-center">
           <strong>헬름 저장소 삭제</strong>
           {selectedRepository ? (
-            <span>{selectedRepository.name ?? '-'} 저장소 삭제 기능은 API 연동 후 지원됩니다.</span>
+            /* 저장소를 지우면 그 차트로 만든 릴리스는 업그레이드할 곳을 잃는다. */
+            <span>
+              {selectedRepository.name ?? '-'} 저장소를 삭제합니다. 이 저장소의 차트는 더 이상
+              설치하거나 업그레이드할 수 없습니다.
+            </span>
           ) : (
             <span>삭제할 저장소를 선택해주세요.</span>
           )}
