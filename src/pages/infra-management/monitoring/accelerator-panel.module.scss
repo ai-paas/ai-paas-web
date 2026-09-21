@@ -1,0 +1,84 @@
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.summaryCard {
+  padding: 12px 14px;
+  border: 1px solid $color-gray-100;
+  border-radius: 6px;
+  background-color: $color-white;
+}
+
+.summaryLabel {
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+  font-weight: 600;
+}
+
+.summaryValue {
+  margin-top: 6px;
+  color: $page-font-color-900;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.summaryHint {
+  margin-top: 4px;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}
+
+.summaryWarn {
+  color: #b45309;
+}
+
+.summaryDanger {
+  color: #b42318;
+}
+
+.tableWrap {
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $page-font-13;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $color-gray-100;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $page-font-color-600;
+    font-weight: 600;
+  }
+}
+
+.tableTitle {
+  margin-top: 20px;
+  color: $page-font-color-900;
+  font-size: $page-font-13;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 12px 0;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}

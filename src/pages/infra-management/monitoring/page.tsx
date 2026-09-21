@@ -1,5 +1,6 @@
 import { useGetClusters } from '@/hooks/service/clusters';
 import { metricsOutage } from '@/util/prom-results';
+import { toGpuDevices, toGpuPods, type DcgmLabels } from '@/util/gpu-metrics';
 import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import {
   useMultiPromQuery,
@@ -11,18 +12,10 @@ import {
 import { BreadCrumb } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
+import { AcceleratorPanel } from './accelerator-panel';
 import { MetricLineChart } from './metric-line-chart';
 import styles from './monitoring.module.scss';
 import { ResourceGaugeCard } from './resource-gauge-card';
-
-type DCGMLabel = {
-  Hostname: string;
-  device: string;
-  exported_namespace: string;
-  exported_pod?: string;
-  gpu?: string;
-  modelName: string;
-};
 
 type FuriosaLabel = {
   device: string;
@@ -134,10 +127,35 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           'gpuRequest',
           'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'
         ),
+        // 장 단위 표를 만들려면 합계가 아니라 시리즈 그대로 필요하다.
+        instant('gpuDeviceUtil', 'DCGM_FI_DEV_GPU_UTIL'),
+        instant('gpuDeviceMemUsed', 'DCGM_FI_DEV_FB_USED'),
+        instant('gpuDeviceMemFree', 'DCGM_FI_DEV_FB_FREE'),
+        instant('gpuDeviceTemp', 'DCGM_FI_DEV_GPU_TEMP'),
+        instant('gpuDevicePower', 'DCGM_FI_DEV_POWER_USAGE'),
+        instant(
+          'gpuPodRequests',
+          'kube_pod_container_resource_requests{resource="nvidia_com_gpu"} > 0'
+        ),
+        /*
+         * 하드웨어 오류. XID 는 마지막 오류 코드라 0 이 아니면 사고가 있었다는 뜻이고,
+         * ECC DBE 는 정정 불가라 그 장의 작업은 이미 틀어졌다고 봐야 한다.
+         */
+        instant('gpuXid', 'count(DCGM_FI_DEV_XID_ERRORS > 0) or vector(0)'),
+        instant('gpuEcc', 'sum(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL) or vector(0)'),
+        instant('gpuThrottle', 'count(DCGM_FI_DEV_CLOCK_THROTTLE_REASONS > 0) or vector(0)'),
         range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
         range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
         range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
-        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE')
+        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE'),
+        range('gpuSmActiveRange', 'DCGM_FI_PROF_GR_ENGINE_ACTIVE'),
+        range('gpuTensorActiveRange', 'DCGM_FI_PROF_PIPE_TENSOR_ACTIVE'),
+        range('gpuDramActiveRange', 'DCGM_FI_PROF_DRAM_ACTIVE'),
+        range(
+          'gpuPcieRange',
+          'sum by (Hostname, gpu) (rate(DCGM_FI_PROF_PCIE_TX_BYTES[1m])) + ' +
+            'sum by (Hostname, gpu) (rate(DCGM_FI_PROF_PCIE_RX_BYTES[1m]))'
+        )
       );
     }
     return list;
@@ -172,6 +190,14 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const networkPacketValue = scalar('networkPacket');
   const gpuTotalValue = scalar('gpuTotal');
   const gpuRequestValue = scalar('gpuRequest');
+  const gpuDevices = toGpuDevices({
+    util: instantOf<DcgmLabels>('gpuDeviceUtil'),
+    memUsed: instantOf<DcgmLabels>('gpuDeviceMemUsed'),
+    memFree: instantOf<DcgmLabels>('gpuDeviceMemFree'),
+    temp: instantOf<DcgmLabels>('gpuDeviceTemp'),
+    power: instantOf<DcgmLabels>('gpuDevicePower'),
+  });
+  const gpuPods = toGpuPods(instantOf('gpuPodRequests'));
   const npuTotalValue = scalar('npuTotal');
   const npuRequestValue = scalar('npuRequest');
   const tpuTotalValue = scalar('tpuTotal');
@@ -188,10 +214,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const fileSystemGaugeValue = Math.max(
     0,
     Math.min(fileSystemTotalValue ? (fileSystemUsageValue / fileSystemTotalValue) * 100 : 0, 100)
-  );
-  const gpuGaugeValue = Math.max(
-    0,
-    Math.min(gpuTotalValue ? (gpuRequestValue / gpuTotalValue) * 100 : 0, 100)
   );
   const npuGaugeValue = Math.max(
     0,
@@ -298,12 +320,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 usage="RX + TX"
               />
               <ResourceGaugeCard
-                name="GPU"
-                gauge={gpuGaugeValue}
-                value={`${gpuGaugeValue.toFixed(2)}%`}
-                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU`}
-              />
-              <ResourceGaugeCard
                 name="NPU"
                 gauge={npuGaugeValue}
                 value={`${npuGaugeValue.toFixed(2)}%`}
@@ -317,6 +333,29 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
               />
             </div>
           </div>
+
+          {hasGpu && (
+            <AcceleratorPanel
+              isPending={isMetricsPending}
+              totalGpu={gpuTotalValue}
+              allocatedGpu={gpuRequestValue}
+              devices={gpuDevices}
+              pods={gpuPods}
+              xidCount={scalar('gpuXid')}
+              throttledCount={scalar('gpuThrottle')}
+              eccErrorCount={scalar('gpuEcc')}
+              charts={{
+                util: rangeOf<DcgmLabels>('gpuUtilRange'),
+                memory: rangeOf<DcgmLabels>('gpuMemoryRange'),
+                temperature: rangeOf<DcgmLabels>('gpuTempRange'),
+                power: rangeOf<DcgmLabels>('gpuPowerRange'),
+                smActive: rangeOf<DcgmLabels>('gpuSmActiveRange'),
+                tensorActive: rangeOf<DcgmLabels>('gpuTensorActiveRange'),
+                dramActive: rangeOf<DcgmLabels>('gpuDramActiveRange'),
+                pcie: rangeOf<DcgmLabels>('gpuPcieRange'),
+              }}
+            />
+          )}
 
           <div className="page-detail-round-box page-flex-1">
             <div className="page-detail-round-name">성능 지표</div>
@@ -356,37 +395,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 unit="pkt/s"
                 response={rangeOf('networkPacketRange')}
                 isPending={isMetricsPending}
-              />
-              <MetricLineChart
-                title="GPU UTILIZATION"
-                unit="%"
-                response={rangeOf<DCGMLabel>('gpuUtilRange')}
-                isPending={hasGpu && isMetricsPending}
-                domain={[0, 100]}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU MEMORY USAGE"
-                unit="GiB"
-                response={rangeOf<DCGMLabel>('gpuMemoryRange')}
-                isPending={hasGpu && isMetricsPending}
-                convertValue={(value) => value / 1024}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU TEMPERATURE"
-                unit="°C"
-                domain={[0, 100]}
-                response={rangeOf<DCGMLabel>('gpuTempRange')}
-                isPending={hasGpu && isMetricsPending}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU POWER USAGE"
-                unit="W"
-                response={rangeOf<DCGMLabel>('gpuPowerRange')}
-                isPending={hasGpu && isMetricsPending}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
               <MetricLineChart
                 title="NPU TEMPERATURE"

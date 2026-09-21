@@ -18,8 +18,8 @@ const toRequest = (item: ProvisioningDefaults, prefix: string): VmCreateRequest 
   vmGroupName: `${prefix}${item.provider.toLowerCase()}`,
   provider: item.provider.toLowerCase(),
   environment: 'dev',
-  region: item.region ?? undefined,
-  credentialId: item.credentialId ?? undefined,
+  region: item.region ?? '',
+  credentialId: item.credentialId ?? '',
   spec: {
     masterCount: 1,
     workerCount: 1,
