@@ -10,6 +10,13 @@ interface SpecPickerProps {
   onChange: (specId: string) => void;
   label?: string;
   showGpuToggle?: boolean;
+  /**
+   * GPU 만 보기를 켜고 끌 때.
+   *
+   * <p>필터를 켠다는 것은 GPU 로 만들겠다는 뜻이다 — 아직 고르지 않았어도 드라이버 스택을
+   * 미리 켜 두면 고르고 나서 다시 찾을 일이 없다.
+   */
+  onGpuOnlyChange?: (gpuOnly: boolean) => void;
   errorText?: string;
 }
 
@@ -59,6 +66,7 @@ export const SpecPicker = ({
   onChange,
   label,
   showGpuToggle = true,
+  onGpuOnlyChange,
   errorText,
 }: SpecPickerProps) => {
   const [keyword, setKeyword] = useState('');
@@ -136,7 +144,10 @@ export const SpecPicker = ({
             type="button"
             aria-pressed={gpuOnly}
             disabled={disabled}
-            onClick={() => setGpuOnly(!gpuOnly)}
+            onClick={() => {
+              setGpuOnly(!gpuOnly);
+              onGpuOnlyChange?.(!gpuOnly);
+            }}
             style={{
               // 검색 입력과 같은 높이로 맞춘다. 높이를 안 주면 flex 가 늘려 버린다.
               height: 40,

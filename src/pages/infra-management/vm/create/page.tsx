@@ -264,11 +264,17 @@ export default function ProvisioningCreatePage() {
    *
    * 사용자가 직접 끈 뒤에는 되돌리지 않는다. 매번 되살리면 끌 수가 없다.
    */
+  /*
+   * GPU 만 보기를 켜면 아직 고르지 않았어도 GPU 로 만들 뜻으로 본다. 고르고 나서 애드온을
+   * 다시 찾아 켤 일이 없다.
+   */
+  const [gpuFilterOn, setGpuFilterOn] = useState(false);
+  const gpuIntent = hasGpuNodes || gpuFilterOn;
   const gpuOperatorTouched = useRef(false);
   useEffect(() => {
     if (gpuOperatorTouched.current) return;
-    setAddons((prev) => (prev.gpuOperator === hasGpuNodes ? prev : { ...prev, gpuOperator: hasGpuNodes }));
-  }, [hasGpuNodes]);
+    setAddons((prev) => (prev.gpuOperator === gpuIntent ? prev : { ...prev, gpuOperator: gpuIntent }));
+  }, [gpuIntent]);
 
   /* 고급 옵션과 본문 어느 쪽에도 같은 UI 를 놓는다. 두 벌로 두면 한쪽만 고쳐진다. */
   const osImagePicker = (
@@ -587,7 +593,7 @@ export default function ProvisioningCreatePage() {
           </div>
 
           {/* GPU 는 고른 인스턴스에서 나온다. 원인 옆에 결과를 둔다 — 고급 옵션에 두면 왜 켜졌는지 모른다. */}
-          {hasGpuNodes && (
+          {gpuIntent && (
             <div className="page-input_item-box">
               <div className="page-input_item-name" />
               <div className="page-input_item-data">
@@ -601,7 +607,9 @@ export default function ProvisioningCreatePage() {
                     fontSize: 12,
                   }}
                 >
-                  GPU 노드 — 드라이버 스택(GPU Operator)이 함께 설치됩니다
+                  {hasGpuNodes
+                    ? 'GPU 노드 — 드라이버 스택(GPU Operator)이 함께 설치됩니다'
+                    : 'GPU 인스턴스를 고르면 드라이버 스택이 함께 설치됩니다'}
                 </span>
               </div>
             </div>
@@ -631,6 +639,7 @@ export default function ProvisioningCreatePage() {
                     setErrors((p) => ({ ...p, workerSpec: undefined }));
                   }}
                   showGpuToggle={true}
+                  onGpuOnlyChange={setGpuFilterOn}
                   errorText={errors.workerSpec}
                 />
               )}
@@ -670,7 +679,7 @@ export default function ProvisioningCreatePage() {
                   if (next.gpuOperator !== addons.gpuOperator) gpuOperatorTouched.current = true;
                   setAddons(next);
                 }}
-                hasGpuNodes={hasGpuNodes}
+                hasGpuNodes={gpuIntent}
               />
             </div>
           </div>
