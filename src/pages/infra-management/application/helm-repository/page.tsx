@@ -15,6 +15,7 @@ import {
 } from '@innogrid/ui';
 
 import { HelmRepositoryModal } from '@/components/features/infra-management/application/helm-repository-modal';
+import { useGetHelmRepositoryStatuses } from '@/hooks/service/catalog';
 import { useDeleteHelmRepository, useGetHelmRepositories } from '@/hooks/service/helm';
 import { formatDateTime } from '@/util/date';
 import type { HelmRepository } from '@/types/helm';
@@ -35,6 +36,11 @@ export default function ApplicationHelmRepositoryPage() {
   const { rowSelection, setRowSelection } = useTableSelection();
 
   const { repositories, isPending, isError, error } = useGetHelmRepositories();
+  const repoNames = useMemo(
+    () => repositories.map((repo) => repo.name ?? '').filter(Boolean),
+    [repositories]
+  );
+  const statuses = useGetHelmRepositoryStatuses(repoNames);
   const { open: openToast } = useToast();
   const { deleteHelmRepository, isPending: isDeleting } = useDeleteHelmRepository({
     onSuccess: (_data, name) => {
@@ -120,6 +126,29 @@ export default function ApplicationHelmRepositoryPage() {
         },
       },
       {
+        id: 'status',
+        header: '상태',
+        size: 150,
+        accessorFn: (row: HelmRepository) => statuses[row.name ?? '']?.chartCount ?? 0,
+        /*
+         * "등록했다" 와 "쓸 수 있다" 는 다르다. 인덱스는 읽히는데 차트가 0 개인 저장소가 실제로
+         * 있었고, 목록에서는 그 사실이 드러나지 않았다.
+         */
+        cell: ({ row }: { row: { original: HelmRepository } }) => {
+          const status = statuses[row.original.name ?? ''];
+          if (!status || status.isPending) return <span>확인 중...</span>;
+          if (!status.reachable) {
+            return <span className="table-td-state table-td-state-fail">연결 실패</span>;
+          }
+          if (status.chartCount === 0) {
+            return <span className="table-td-state table-td-state-wait">차트 없음</span>;
+          }
+          return (
+            <span className="table-td-state table-td-state-run">차트 {status.chartCount}개</span>
+          );
+        },
+      },
+      {
         id: 'url',
         header: '저장소 URL',
         accessorFn: (row: HelmRepository) => row.url ?? '-',
@@ -152,7 +181,7 @@ export default function ApplicationHelmRepositoryPage() {
         size: 180,
       },
     ],
-    []
+    [statuses]
   );
 
   return (

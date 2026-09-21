@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -363,4 +363,43 @@ export const useDeployCatalog = (options?: {
     isSuccess,
     error,
   };
+};
+
+export type HelmRepositoryStatus = {
+  /** 인덱스를 읽어 왔는지. 못 읽으면 URL, 인증, 네트워크 중 하나가 막힌 것이다. */
+  reachable: boolean;
+  chartCount: number;
+  isPending: boolean;
+};
+
+/**
+ * 저장소마다 차트 수를 센다.
+ *
+ * <p>"등록했다" 와 "쓸 수 있다" 는 다르다. 인덱스는 읽히는데 차트가 0 개인 저장소가 실제로
+ * 있었고, 목록에서는 그 사실이 전혀 드러나지 않았다.
+ */
+export const useGetHelmRepositoryStatuses = (repoNames: string[]) => {
+  const results = useQueries({
+    queries: repoNames.map((repoName) => ({
+      queryKey: queryKeys.catalog.list(repoName),
+      queryFn: () =>
+        api
+          .get<CatalogResponse>(`any-cloud/catalog/${repoName}`)
+          .json()
+          .then((response) => normalizeCatalogResponse(response)),
+      enabled: !!repoName,
+      retry: 0,
+    })),
+  });
+
+  const byName: Record<string, HelmRepositoryStatus> = {};
+  repoNames.forEach((repoName, index) => {
+    const result = results[index];
+    byName[repoName] = {
+      reachable: !result?.isError,
+      chartCount: result?.data?.charts?.length ?? 0,
+      isPending: !!result?.isPending,
+    };
+  });
+  return byName;
 };
