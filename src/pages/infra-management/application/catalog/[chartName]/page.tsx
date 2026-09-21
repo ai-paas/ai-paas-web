@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BreadCrumb, Button, Select, Tabs, type SelectSingleValue } from '@innogrid/ui';
 import {
   useGetCatalogDetail,
@@ -40,7 +40,12 @@ type OptionType = { text: string; value: string };
 export default function CatalogDetailPage() {
   const { chartName } = useParams<{ chartName: string }>();
   const navigate = useNavigate();
-  const repoName = 'chart-museum-external';
+  /*
+   * 목록에서 고른 저장소를 그대로 받는다. 예전에는 저장소 하나를 박아 두어, 다른 저장소의
+   * 차트를 눌러도 없는 저장소를 뒤지다 "Chart not found" 로 끝났다.
+   */
+  const [searchParams] = useSearchParams();
+  const repoName = searchParams.get('repository') ?? '';
   const [selectedVersionValue, setSelectedVersionValue] = useState<string>();
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
   const [copyStatus, setCopyStatus] = useState<{

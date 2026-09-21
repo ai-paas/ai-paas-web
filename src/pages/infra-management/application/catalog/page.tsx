@@ -23,7 +23,7 @@ const items = [{ label: '인프라 모니터' }, { label: '애플리케이션' }
 type OptionType = { text: string; value: string };
 
 // 키워드 토글 상태를 관리하는 컴포넌트
-const CatalogItem = ({ chart }: { chart: Chart }) => {
+const CatalogItem = ({ chart, repoName }: { chart: Chart; repoName: string }) => {
   const navigate = useNavigate();
   const [expandedKeywords, setExpandedKeywords] = useState<Set<number>>(new Set());
   const [imageError, setImageError] = useState(false);
@@ -132,12 +132,26 @@ const CatalogItem = ({ chart }: { chart: Chart }) => {
       </div>
       <div className={styles.catalogBtns}>
         <Button
-          onClick={() => navigate(`/infra-management/application/catalog/${chart.name}`)}
+          onClick={() =>
+            navigate(
+              `/infra-management/application/catalog/${chart.name}?repository=${encodeURIComponent(repoName)}`
+            )
+          }
           color="secondary"
         >
           상세 정보
         </Button>
-        <Button onClick={() => alert('Button clicked!')} color="focus">
+        {/* 저장소와 차트를 들고 생성 화면으로 넘긴다. 다시 고르게 하면 어느 차트를 눌렀는지 잃는다. */}
+        <Button
+          onClick={() =>
+            navigate(
+              `/infra-management/application/helm-release/create?repository=${encodeURIComponent(
+                repoName
+              )}&chart=${encodeURIComponent(chart.name)}`
+            )
+          }
+          color="focus"
+        >
           헬름 배포
         </Button>
       </div>
@@ -323,7 +337,11 @@ export default function ApplicationCatalogPage() {
         <div className="page-content-detail-row2 page-mt-24 flex-wrap">
           {paginatedCharts.length > 0 ? (
             paginatedCharts.map((chart, index) => (
-              <CatalogItem key={`${chart.name}-${index}`} chart={chart} />
+              <CatalogItem
+                key={`${chart.name}-${index}`}
+                chart={chart}
+                repoName={selectedRepoName}
+              />
             ))
           ) : (
             <div style={{ padding: '24px', textAlign: 'center', width: '100%', color: '#6b7280' }}>
