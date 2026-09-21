@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BreadCrumb, Tabs, Table, AlertDialog, useTablePagination, Button } from '@innogrid/ui';
+import { InstallReleasePanel } from '@/components/features/infra-management/application/install-release-panel';
 import {
   useGetHelmReleases,
   useGetHelmReleaseResources,
@@ -66,6 +67,7 @@ export default function HelmReleaseDetailPage() {
   const [selectedResource, setSelectedResource] = useState<HelmReleaseResource | null>(null);
   const [isYamlModalOpen, setIsYamlModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { pagination, setPagination } = useTablePagination();
 
   // URL 쿼리 파라미터에서 클러스터 ID 가져오기
@@ -223,6 +225,10 @@ export default function HelmReleaseDetailPage() {
         <h2 className="page-title">헬름 릴리즈 상세</h2>
         <div className="page-toolBox">
           <div className="page-toolBox-btns">
+            {/* 설치와 같은 폼을 쓴다. 업그레이드용 화면을 따로 만들면 규칙이 갈린다. */}
+            <Button onClick={() => setUpgradeOpen(true)} color="primary" size="medium">
+              업그레이드
+            </Button>
             <Button onClick={handleDeleteClick} color="negative" size="medium">
               삭제
             </Button>
@@ -423,6 +429,19 @@ export default function HelmReleaseDetailPage() {
       >
         <span>헬름 릴리즈를 삭제하시겠습니까?</span>
       </AlertDialog>
-    </main>
+          {release && (
+        <InstallReleasePanel
+          isOpen={upgradeOpen}
+          onClose={() => setUpgradeOpen(false)}
+          mode="upgrade"
+          target={{ repoName: '', chartName: release.chart ?? '' }}
+          fixed={{
+            clusterName: clusterId ?? '',
+            namespace: release.namespace ?? '',
+            releaseName: release.name ?? '',
+          }}
+        />
+      )}
+</main>
   );
 }

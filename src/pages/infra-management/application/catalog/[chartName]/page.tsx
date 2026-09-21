@@ -8,6 +8,7 @@ import {
 } from '@/hooks/service/catalog';
 import { formatDateTime } from '@/util/date';
 import { DetailValue } from '@/components/ui/detail-value';
+import { InstallReleasePanel } from '@/components/features/infra-management/application/install-release-panel';
 import styles from '../../../inframonitor.module.scss';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
@@ -270,12 +271,9 @@ export default function CatalogDetailPage() {
     }
   };
 
-  // 보고 있던 저장소, 차트, 버전을 그대로 들고 간다. 다시 고르게 하면 무엇을 보고 있었는지 잃는다.
-  const handleDeploy = () => {
-    const params = new URLSearchParams({ repository: repoName, chart: chartName || '' });
-    if (version) params.set('version', version);
-    navigate(`/infra-management/application/helm-release/create?${params.toString()}`);
-  };
+  // 보던 자리에서 바로 설치한다. 저장소, 차트, 버전은 이 화면이 이미 알고 있다.
+  const [installOpen, setInstallOpen] = useState(searchParams.get('install') === '1');
+  const handleDeploy = () => setInstallOpen(true);
 
   const breadcrumbItems = [
     { label: '인프라 모니터' },
@@ -645,6 +643,11 @@ export default function CatalogDetailPage() {
           />
         </div>
       </div>
-    </main>
+          <InstallReleasePanel
+        isOpen={installOpen}
+        onClose={() => setInstallOpen(false)}
+        target={{ repoName, chartName: chartName || '', version }}
+      />
+</main>
   );
 }

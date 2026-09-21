@@ -148,12 +148,12 @@ export const Menu = () => {
           >
             <ul>
               <MenuItem3
-                label="카탈로그"
+                label="차트"
                 href="/infra-management/application/catalog"
                 isActive={isPathActive(location.pathname, '/infra-management/application/catalog')}
               />
               <MenuItem3
-                label="헬름 릴리즈"
+                label="설치된 앱"
                 href="/infra-management/application/helm-release"
                 isActive={isPathActive(
                   location.pathname,
@@ -161,7 +161,7 @@ export const Menu = () => {
                 )}
               />
               <MenuItem3
-                label="헬름 저장소"
+                label="저장소"
                 href="/infra-management/application/helm-repository"
                 isActive={isPathActive(
                   location.pathname,

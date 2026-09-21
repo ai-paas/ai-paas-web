@@ -141,18 +141,18 @@ const CatalogItem = ({ chart, repoName }: { chart: Chart; repoName: string }) =>
         >
           상세 정보
         </Button>
-        {/* 저장소와 차트를 들고 생성 화면으로 넘긴다. 다시 고르게 하면 어느 차트를 눌렀는지 잃는다. */}
+        {/* 설치는 상세 화면이 맡는다 — 버전과 values 를 보고 고르는 자리가 거기다. */}
         <Button
           onClick={() =>
             navigate(
-              `/infra-management/application/helm-release/create?repository=${encodeURIComponent(
+              `/infra-management/application/catalog/${chart.name}?repository=${encodeURIComponent(
                 repoName
-              )}&chart=${encodeURIComponent(chart.name)}`
+              )}&install=1`
             )
           }
           color="focus"
         >
-          헬름 배포
+          설치
         </Button>
       </div>
     </div>
