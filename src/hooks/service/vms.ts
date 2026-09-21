@@ -72,6 +72,30 @@ export const useCreateVm = (options?: {
   return { createVm: mutate, isPending, isError, isSuccess, error };
 };
 
+// ============= VM 생성 사전 검증 (자원 생성 없음) =============
+export interface VmPreflightResult {
+  readyToProvision?: boolean;
+  existingClusterConflict?: boolean;
+  errors?: string[];
+  warnings?: string[];
+  [key: string]: unknown;
+}
+
+/**
+ * 생성과 같은 본문으로 서버에 물어본다.
+ *
+ * <p>화면은 CSP 가 지금 자리가 있는지, 자격증명이 아직 통하는지 알 수 없다. 만들어 보고
+ * 실패하면 인프라를 절반 만든 뒤 롤백한다.
+ */
+export const usePreflightVm = () => {
+  const { mutateAsync, isPending } = useMutation({
+    mutationKey: ['preflightVm'],
+    mutationFn: (data: VmCreateRequest) =>
+      api.post('any-cloud/vms/preflight', { json: data }).json<VmPreflightResult>(),
+  });
+  return { preflightVm: mutateAsync, isPreflighting: isPending };
+};
+
 // ============= VM scale (workerCount 변경) =============
 export const useScaleVm = (options?: {
   onSuccess?: (data: unknown) => void;

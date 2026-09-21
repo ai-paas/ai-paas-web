@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BreadCrumb, Button, Input, Select, type SelectSingleValue, useToast } from '@innogrid/ui';
-import { useCreateVm } from '@/hooks/service/vms';
+import { useCreateVm, usePreflightVm } from '@/hooks/service/vms';
 import type { ClusterSpecRequest } from '@/types/vm';
 import {
   useGetProviderImages,
@@ -83,6 +83,8 @@ export default function ProvisioningCreatePage() {
   // hasGpuNodes 는 master/worker spec 의 gpuCount + instance type prefix 로 자동 derive.
   // 사용자 manual toggle 제거 — UI 우회 방지를 위해 server 측도 같은 derive 적용 권장 (별 PR).
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  /** 서버가 돌려준 차단 사유. 화면이 알 수 없는 것(용량, 자격증명 만료)이 여기로 온다. */
+  const [preflightErrors, setPreflightErrors] = useState<string[]>([]);
   const [credentialModalOpen, setCredentialModalOpen] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [submitError, setSubmitError] = useState<{
@@ -169,6 +171,7 @@ export default function ProvisioningCreatePage() {
     [open]
   );
 
+  const { preflightVm, isPreflighting } = usePreflightVm();
   const { createVm, isPending } = useCreateVm({
     onSuccess: handleSuccess,
     onError: handleError,
@@ -287,7 +290,7 @@ export default function ProvisioningCreatePage() {
     </>
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
 
     const spec: ClusterSpecRequest = {
@@ -300,7 +303,7 @@ export default function ProvisioningCreatePage() {
     // 켜는 것이 기본이라 끌 때만 보낸다. 기본값 판단은 백엔드 한 곳에 둔다.
     if (!enableMonitoring) spec.enableMonitoring = false;
 
-    createVm({
+    const request = {
       vmGroupName,
       provider: provider.toLowerCase(),
       // 백엔드는 region 을 저장 키로 쓴다. Proxmox 에는 리전이 없어 배치 노드 이름을 넣는다.
@@ -311,7 +314,24 @@ export default function ProvisioningCreatePage() {
       spec,
       providerSpec: Object.keys(providerSpec).length > 0 ? providerSpec : undefined,
       hasGpuNodes,
-    });
+    };
+
+    /*
+     * 만들기 전에 서버에 물어본다. 화면은 CSP 에 지금 자리가 있는지, 자격증명이 아직 통하는지
+     * 알 수 없다 — 그냥 보내면 인프라를 절반 만든 뒤 롤백한다.
+     */
+    setPreflightErrors([]);
+    try {
+      const result = await preflightVm(request);
+      if (result?.readyToProvision === false) {
+        setPreflightErrors(result.errors?.length ? result.errors : ['생성할 수 없는 설정입니다.']);
+        return;
+      }
+    } catch {
+      // 검증 자체가 실패하면 막지 않는다. 검증이 안 된다고 생성을 못 하게 할 이유는 없다.
+      setPreflightErrors([]);
+    }
+    createVm(request);
   };
 
   const providerLabel = CSP_OPTIONS.find((o) => o.value === provider)?.label;
@@ -656,8 +676,34 @@ export default function ProvisioningCreatePage() {
             >
               취소
             </Button>
-            <Button size="large" color="primary" onClick={handleSubmit} disabled={isPending}>
-              {isPending ? '요청 중...' : 'VM 프로비저닝 시작'}
+            {preflightErrors.length > 0 && (
+              <div
+                role="alert"
+                style={{
+                  width: '100%',
+                  marginBottom: 12,
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  background: '#fef2f2',
+                  color: '#b91c1c',
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>이 설정으로는 만들 수 없습니다</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {preflightErrors.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <Button
+              size="large"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={isPending || isPreflighting}
+            >
+              {isPreflighting ? '설정 확인 중...' : isPending ? '요청 중...' : 'VM 프로비저닝 시작'}
             </Button>
           </div>
         </div>
