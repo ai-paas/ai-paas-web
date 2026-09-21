@@ -12,6 +12,9 @@ import { BreadCrumb } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { AcceleratorPanel } from './accelerator-panel';
+import { CollectorNotice } from './collector-notice';
+import { RefreshControl } from './refresh-control';
+import { stepFor, TIME_RANGES } from './refresh-options';
 import { MetricLineChart } from './metric-line-chart';
 import styles from './monitoring.module.scss';
 import { ResourceGaugeCard } from './resource-gauge-card';
@@ -41,23 +44,37 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
     : pickedCluster;
   const setSelectedCluster = setPickedCluster;
 
-  // 비-가속기 cluster 에서 GPU query 6개 skip.
   const selectedClusterEntity = useMemo(
     () => clusters.find((c) => c.clusterName === selectedCluster?.value),
     [clusters, selectedCluster]
   );
-  const hasGpu = selectedClusterEntity?.hasGpuNodes ?? false;
+
+  const [rangeSeconds, setRangeSeconds] = useState<number>(TIME_RANGES[0].seconds);
+  const [refreshSeconds, setRefreshSeconds] = useState(30);
 
   const [windowAnchor, setWindowAnchor] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => {
-    const id = window.setInterval(() => setWindowAnchor(Math.floor(Date.now() / 1000)), 30_000);
+    if (refreshSeconds <= 0) return;
+    const id = window.setInterval(
+      () => setWindowAnchor(Math.floor(Date.now() / 1000)),
+      refreshSeconds * 1000
+    );
     return () => window.clearInterval(id);
-  }, []);
+  }, [refreshSeconds]);
   const { start, end, step } = useMemo(() => {
     const e = windowAnchor;
-    const s = e - 180 * 60;
-    return { start: s, end: e, step: 300 };
-  }, [windowAnchor]);
+    return { start: e - rangeSeconds, end: e, step: stepFor(rangeSeconds) };
+  }, [windowAnchor, rangeSeconds]);
+
+  /*
+   * 쿼리 목록을 만들 때는 아직 capacity 를 모른다. 첫 응답에서 capacity 가 잡히면 그 다음
+   * 렌더에 무거운 range 쿼리가 따라붙는다 — 왕복 한 번을 더 쓰는 대신 플래그가 틀려도 복구된다.
+   */
+  const [gpuDetected, setGpuDetected] = useState(false);
+  useEffect(() => {
+    setGpuDetected(false);
+  }, [selectedCluster?.value]);
+  const hasGpu = (selectedClusterEntity?.hasGpuNodes ?? false) || gpuDetected;
 
   const queries = useMemo<MultiQuerySpec[]>(() => {
     const range = (name: string, query: string): MultiQuerySpec => ({
@@ -97,6 +114,16 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
         'networkPacket',
         'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
       ),
+      /*
+       * 가속기 capacity 와 수집기 유무는 플래그와 무관하게 항상 본다. hasGpuNodes 는 agent
+       * heartbeat 에서 오는데 드라이버가 올라오기 전에는 false 라, 그것만 믿으면 GPU 가 붙어
+       * 있는데도 영역이 통째로 사라진다.
+       */
+      instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
+      instant('gpuRequest', 'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'),
+      instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL)'),
+      instant('gpuCollector', 'count(DCGM_FI_DEV_GPU_UTIL) or vector(0)'),
+      instant('npuCollector', 'count(furiosa_npu_hw_temperature) or vector(0)'),
       instant('npuTotal', 'sum(kube_node_status_capacity{resource=~".*npu.*"})'),
       instant('npuRequest', 'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})'),
       instant('tpuTotal', 'sum(gke_tpu_node_allocatable{resource_type="tpu"})'),
@@ -121,16 +148,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
     ];
     if (hasGpu) {
       list.push(
-        instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
-        instant(
-          'gpuRequest',
-          'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'
-        ),
-        /*
-         * 할당률만 보면 8 장을 잡아 둔 채 아무것도 돌리지 않는 클러스터가 100% 로 읽힌다.
-         * 게이지에 실사용률을 같이 적으려면 장치 사용률의 평균이 필요하다.
-         */
-        instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL)'),
         range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
         range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
         range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
@@ -148,10 +165,15 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
     return list;
   }, [start, end, step, hasGpu]);
 
-  const { data: results, isPending: isMetricsPending } = useMultiPromQuery(
-    selectedCluster?.value,
-    queries
-  );
+  const {
+    data: results,
+    isPending: isMetricsPending,
+    isFetching: isMetricsFetching,
+    dataUpdatedAt,
+  } = useMultiPromQuery(selectedCluster?.value, queries, {
+    // 갱신 주기보다 오래 신선하다고 보면 주기를 줄여도 화면이 그대로다.
+    staleTime: refreshSeconds > 0 ? refreshSeconds * 1000 - 1_000 : Infinity,
+  });
 
   // 쿼리가 전부 실패하면 값이 0 인 그래프가 그려진다. 고장인지 미설치인지 알 수 없다.
   const outage = metricsOutage(results);
@@ -178,6 +200,8 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const gpuTotalValue = scalar('gpuTotal');
   const gpuRequestValue = scalar('gpuRequest');
   const gpuUtilAvgValue = scalar('gpuUtilAvg');
+  const gpuCollectorCount = scalar('gpuCollector');
+  const npuCollectorCount = scalar('npuCollector');
   const gpuGaugeValue = Math.max(
     0,
     Math.min(gpuTotalValue ? (gpuRequestValue / gpuTotalValue) * 100 : 0, 100)
@@ -186,6 +210,10 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const npuRequestValue = scalar('npuRequest');
   const tpuTotalValue = scalar('tpuTotal');
   const tpuAllocatedValue = scalar('tpuAllocated');
+
+  useEffect(() => {
+    if (gpuTotalValue > 0) setGpuDetected(true);
+  }, [gpuTotalValue]);
 
   const cpuGaugeValue = Math.max(
     0,
@@ -230,6 +258,15 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
             />
           </>
         )}
+
+        <RefreshControl
+          rangeSeconds={rangeSeconds}
+          onRangeChange={setRangeSeconds}
+          refreshSeconds={refreshSeconds}
+          onRefreshChange={setRefreshSeconds}
+          updatedAt={dataUpdatedAt}
+          isFetching={isMetricsFetching}
+        />
 
         {outage && (
           <div
@@ -323,6 +360,21 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
               />
             </div>
           </div>
+
+          {gpuTotalValue > 0 && gpuCollectorCount === 0 && (
+            <CollectorNotice
+              deviceName="GPU"
+              addonName="NVIDIA GPU Operator"
+              clusterName={selectedCluster?.value}
+            />
+          )}
+          {npuTotalValue > 0 && npuCollectorCount === 0 && (
+            <CollectorNotice
+              deviceName="NPU"
+              addonName="Furiosa NPU Exporter"
+              clusterName={selectedCluster?.value}
+            />
+          )}
 
           {hasGpu && (
             <AcceleratorPanel

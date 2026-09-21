@@ -1,0 +1,61 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label {
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+  font-weight: 600;
+}
+
+.chip {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid $color-gray-100;
+  border-radius: 999px;
+  background-color: $color-white;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+  font-weight: 600;
+
+  &:hover {
+    border-color: $color-point-blue;
+    color: $page-font-color-blue;
+  }
+}
+
+.chipActive {
+  border-color: $page-font-color-blue;
+  background-color: $page-font-color-blue;
+  color: $color-white;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: $color-gray-100;
+}
+
+.dotActive {
+  background-color: $color-point-blue;
+}
