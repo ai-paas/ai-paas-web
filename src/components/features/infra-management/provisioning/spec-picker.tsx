@@ -128,24 +128,27 @@ export const SpecPicker = ({
           />
         </div>
         {showGpuToggle && (
-          <label
+          /*
+           * 목록을 좁히는 필터다. 체크박스로 두면 설정값처럼 보여 "GPU 노드로 만들겠다" 는
+           * 뜻으로 읽힌다 — 실제로 고급 옵션의 GPU 표시와 헷갈렸다.
+           */
+          <button
+            type="button"
+            aria-pressed={gpuOnly}
+            disabled={disabled}
+            onClick={() => setGpuOnly(!gpuOnly)}
             style={{
               fontSize: 12,
-              color: '#666',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
+              padding: '3px 10px',
+              borderRadius: 12,
+              border: `1px solid ${gpuOnly ? '#15803d' : '#ddd'}`,
+              background: gpuOnly ? '#ecfdf5' : '#fff',
+              color: gpuOnly ? '#15803d' : '#666',
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
           >
-            <input
-              type="checkbox"
-              checked={gpuOnly}
-              onChange={(e) => setGpuOnly(e.target.checked)}
-              disabled={disabled}
-            />
-            GPU만
-          </label>
+            GPU만 보기
+          </button>
         )}
       </div>
 

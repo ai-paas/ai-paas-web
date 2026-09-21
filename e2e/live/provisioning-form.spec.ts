@@ -91,6 +91,11 @@ test.describe('VM 생성 화면이 CSP 별 선택지를 실제로 받아온다',
         ).toBeVisible();
       }
 
+      // 애드온은 고급 옵션에 숨지 않는다. 모니터링만 보이고 나머지는 화면에 없었다.
+      await expect(page.getByLabel('모니터링', { exact: true })).toBeChecked();
+      await expect(page.getByLabel('Ingress NGINX', { exact: true })).not.toBeChecked();
+      await expect(page.getByRole('button', { name: '펼치기' })).toHaveCount(0);
+
       for (const field of DROPDOWN_FIELDS[csp] ?? []) {
         const row = page.locator('.page-input_item-box').filter({ hasText: field }).first();
         await expect(row, `${csp} 의 ${field} 칸이 없다`).toBeVisible({ timeout: 60_000 });

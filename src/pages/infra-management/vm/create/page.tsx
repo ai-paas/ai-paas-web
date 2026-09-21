@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BreadCrumb, Button, Input, Select, type SelectSingleValue, useToast } from '@innogrid/ui';
 import { useCreateVm, usePreflightVm } from '@/hooks/service/vms';
@@ -22,6 +22,10 @@ import {
 import { RegionSelect } from '@/components/features/infra-management/provisioning/region-select';
 import { useGetProviderConfigSchema, useGetProviders } from '@/hooks/service/providers';
 import { SpecPicker } from '@/components/features/infra-management/provisioning/spec-picker';
+import {
+  AddonPicker,
+  type AddonSelection,
+} from '@/components/features/infra-management/provisioning/addon-picker';
 import { ProxmoxSpecInput } from '@/components/features/infra-management/provisioning/proxmox-spec-input';
 import { NodeComposition } from '@/components/features/infra-management/provisioning/node-composition';
 import { isGpuSpec } from '@/util/gpuInstance';
@@ -79,10 +83,11 @@ export default function ProvisioningCreatePage() {
   const [workerSpecId, setWorkerSpecId] = useState<string>('');
   const [osImageId, setOsImageId] = useState<string>('');
   // 만들자마자 모니터링 화면을 여는 것이 보통이라 켜둔다. 자원이 아까운 쪽이 끈다.
-  const [enableMonitoring, setEnableMonitoring] = useState(true);
-  // hasGpuNodes 는 master/worker spec 의 gpuCount + instance type prefix 로 자동 derive.
-  // 사용자 manual toggle 제거 — UI 우회 방지를 위해 server 측도 같은 derive 적용 권장 (별 PR).
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [addons, setAddons] = useState<AddonSelection>({
+    monitoring: true,
+    gpuOperator: false,
+    ingress: false,
+  });
   /** 서버가 돌려준 차단 사유. 화면이 알 수 없는 것(용량, 자격증명 만료)이 여기로 온다. */
   const [preflightErrors, setPreflightErrors] = useState<string[]>([]);
   const [credentialModalOpen, setCredentialModalOpen] = useState(false);
@@ -239,6 +244,16 @@ export default function ProvisioningCreatePage() {
     () => isGpuSpec(provider, masterSpecDetailFull) || isGpuSpec(provider, workerSpecDetailFull),
     [provider, masterSpecDetailFull, workerSpecDetailFull]
   );
+  /*
+   * GPU 를 고르면 드라이버 스택도 켠다. 한 번 켠 뒤 사용자가 끄면 그대로 둔다 — 자동 판정이
+   * 사용자의 결정을 매번 되돌리면 끌 수가 없다.
+   */
+  const gpuAutoApplied = useRef(false);
+  useEffect(() => {
+    if (!hasGpuNodes || gpuAutoApplied.current) return;
+    gpuAutoApplied.current = true;
+    setAddons((prev) => ({ ...prev, gpuOperator: true }));
+  }, [hasGpuNodes]);
 
   /* 고급 옵션과 본문 어느 쪽에도 같은 UI 를 놓는다. 두 벌로 두면 한쪽만 고쳐진다. */
   const osImagePicker = (
@@ -301,7 +316,14 @@ export default function ProvisioningCreatePage() {
     };
     if (osImageId) spec.osImage = osImageId;
     // 켜는 것이 기본이라 끌 때만 보낸다. 기본값 판단은 백엔드 한 곳에 둔다.
-    if (!enableMonitoring) spec.enableMonitoring = false;
+    if (!addons.monitoring) spec.enableMonitoring = false;
+    if (addons.ingress) spec.enableIngress = true;
+    /*
+     * GPU 는 백엔드도 스펙으로 판정해 자동으로 켠다. 끈 것만 명시해 보낸다 — 켜는 쪽을 화면이
+     * 보내면 UI 를 우회했을 때 판정이 갈린다.
+     */
+    if (hasGpuNodes && !addons.gpuOperator) spec.enableGpuOperator = false;
+    else if (!hasGpuNodes && addons.gpuOperator) spec.enableGpuOperator = true;
 
     const request = {
       vmGroupName,
@@ -549,6 +571,27 @@ export default function ProvisioningCreatePage() {
             </div>
           </div>
 
+          {/* GPU 는 고른 인스턴스에서 나온다. 원인 옆에 결과를 둔다 — 고급 옵션에 두면 왜 켜졌는지 모른다. */}
+          {hasGpuNodes && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name" />
+              <div className="page-input_item-data">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 10,
+                    background: '#ecfdf5',
+                    color: '#15803d',
+                    fontSize: 12,
+                  }}
+                >
+                  GPU 노드 — 드라이버 스택(GPU Operator)이 함께 설치됩니다
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* 9. Worker 인스턴스 */}
           <div className="page-input_item-box">
             <div className="page-input_item-name page-icon-requisite">Worker 인스턴스</div>
@@ -592,74 +635,21 @@ export default function ProvisioningCreatePage() {
             </div>
           )}
 
-          {/* 10. 고급 옵션 */}
+          {/* 10. OS 이미지 — 필수가 아닌 CSP 는 비워 두면 기본값을 쓴다 */}
+          {!osImageRequired && (
+            <div className="page-input_item-box">
+              <div className="page-input_item-name">
+                OS 이미지 {providerLabel && `(${providerLabel} 기준)`}
+              </div>
+              <div className="page-input_item-data">{osImagePicker}</div>
+            </div>
+          )}
+
+          {/* 11. 애드온 — 클러스터에 함께 올릴 것들 */}
           <div className="page-input_item-box">
-            <div className="page-input_item-name">고급 옵션</div>
+            <div className="page-input_item-name">애드온</div>
             <div className="page-input_item-data">
-              <button
-                type="button"
-                className="page-disclosure-btn"
-                aria-expanded={advancedOpen}
-                onClick={() => setAdvancedOpen((v) => !v)}
-              >
-                {/* 화살표를 글자로 쓰면 글꼴마다 크기와 정렬이 달라진다. 도형으로 그린다. */}
-                <svg
-                  className={`page-disclosure-caret${advancedOpen ? 'is-open' : ''}`}
-                  width="8"
-                  height="8"
-                  viewBox="0 0 8 8"
-                  aria-hidden="true"
-                >
-                  <path d="M2 0 L7 4 L2 8 Z" fill="currentColor" />
-                </svg>
-                {advancedOpen ? '접기' : '펼치기'}
-              </button>
-              {advancedOpen && (
-                <div style={{ marginTop: 12, display: 'grid', rowGap: 12 }}>
-                  {!osImageRequired && (
-                    <div>
-                      <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>
-                        OS 이미지 {providerLabel && `(${providerLabel} 기준)`}
-                      </div>
-                      {osImagePicker}
-                    </div>
-                  )}
-                  {!isProxmox && (
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: hasGpuNodes ? '#1a1a1a' : '#6b6b6b',
-                      display: 'inline-flex',
-                      gap: 6,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <input type="checkbox" checked={hasGpuNodes} disabled readOnly />
-                    GPU 노드 — {hasGpuNodes ? '자동 감지됨' : '없음'} (master/worker spec 의
-                    gpuCount + instance type 기반)
-                  </div>
-                  )}
-                  <div
-                    style={{
-                      fontSize: 12,
-                      display: 'inline-flex',
-                      gap: 6,
-                      alignItems: 'center',
-                      marginTop: 8,
-                    }}
-                  >
-                    <input
-                      id="enable-monitoring"
-                      type="checkbox"
-                      checked={enableMonitoring}
-                      onChange={(e) => setEnableMonitoring(e.target.checked)}
-                    />
-                    <label htmlFor="enable-monitoring">
-                      모니터링 설치 — Prometheus + Grafana. 끄면 모니터링 화면이 비어 있습니다.
-                    </label>
-                  </div>
-                </div>
-              )}
+              <AddonPicker value={addons} onChange={setAddons} hasGpuNodes={hasGpuNodes} />
             </div>
           </div>
         </div>
