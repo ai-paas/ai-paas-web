@@ -30,7 +30,7 @@ const AWS = {
   vcpu: 2,
   memoryGb: 8,
   gpuCount: 0,
-  providerSpec: {},
+  providerSpec: { zone: 'ap-northeast-2a' },
 };
 const OCI_BLOCKED = {
   provider: 'OCI',
@@ -75,6 +75,8 @@ describe('CSP 일괄 프로비저닝 모달', () => {
     // 어느 계정에 과금되는지가 여기서 갈린다.
     expect(aws.getByText('aws-e2e-02')).toBeInTheDocument();
     expect(aws.getByText('master 1 · worker 1')).toBeInTheDocument();
+    // 존마다 파는 인스턴스가 달라 어느 존으로 잡혔는지가 성공과 실패를 가른다.
+    expect(aws.getByText('ap-northeast-2a')).toBeInTheDocument();
   });
 
   it('만들 수 없는 CSP 는 고를 수 없고 이유를 보여준다', () => {

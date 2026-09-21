@@ -169,7 +169,7 @@ export const BulkProvisionModal = ({ isOpen, onClose }: Props) => {
             <tr style={{ textAlign: 'left', color: '#666' }}>
               <th style={{ width: 36 }} />
               <th>CSP / 자격증명</th>
-              <th>리전</th>
+              <th>리전 / 존</th>
               <th>인스턴스</th>
               <th>노드</th>
               <th>상태</th>

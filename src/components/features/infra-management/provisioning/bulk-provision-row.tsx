@@ -100,7 +100,13 @@ export const BulkProvisionRow = ({
           {isPending ? skeleton(70) : (item?.credentialName ?? '자격증명 없음')}
         </div>
       </td>
-      <td>{isPending ? skeleton(90) : (item?.region ?? '—')}</td>
+      <td>
+        <div>{isPending ? skeleton(90) : (item?.region ?? '—')}</div>
+        {/* 존마다 파는 인스턴스가 달라, 어느 존으로 잡혔는지가 성공과 실패를 가른다. */}
+        <div style={{ fontSize: 11, color: '#888' }}>
+          {isPending ? skeleton(76) : (item?.providerSpec?.zone ?? '')}
+        </div>
+      </td>
       <td>
         <div>{isPending ? skeleton(100) : (item?.masterInstanceType ?? '—')}</div>
         <div style={{ fontSize: 11, color: '#888' }}>
