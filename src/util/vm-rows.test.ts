@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeVmRows } from './vm-rows';
+import { mergeVmRows, pendingVms } from './vm-rows';
 import type { ClusterNode } from '@/types/vm';
 import type { Vm } from '@/types/vm';
 
@@ -73,5 +73,27 @@ describe('mergeVmRows', () => {
 
     expect(rows.map((r) => r.clusterName)).toEqual(['building', 'done']);
     expect(rows[0].pending).toBe(true);
+  });
+});
+
+describe('페이지를 넘겨도 개수와 줄이 흔들리지 않는다', () => {
+  const vms = [
+    { clusterName: 'a', status: 'READY' },
+    { clusterName: 'b', status: 'READY' },
+    { clusterName: 'c', status: 'PROVISIONING' },
+    { clusterName: 'd', status: 'FAILED' },
+  ] as Vm[];
+
+  it('노드가 있는 클러스터는 자리표시자로 다시 세지 않는다', () => {
+    // 1 페이지에 노드가 실린 클러스터가 2 페이지에서 자리표시자로 살아나면
+    // 같은 줄이 두 번 보이고 전체 개수도 페이지마다 달라진다.
+    expect(pendingVms(vms).map((v) => v.clusterName)).toEqual(['c', 'd']);
+  });
+
+  it('자리표시자는 첫 페이지에만 붙는다', () => {
+    const nodes = [{ clusterName: 'a', nodeName: 'a-1' }] as ClusterNode[];
+
+    expect(mergeVmRows(nodes, vms, true)).toHaveLength(3);
+    expect(mergeVmRows([], vms, false)).toHaveLength(0);
   });
 });
