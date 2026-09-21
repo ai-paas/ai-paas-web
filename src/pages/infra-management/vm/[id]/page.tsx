@@ -20,6 +20,7 @@ import { getServerErrorMessage } from '@/lib/api';
 import { DetailValue } from '@/components/ui/detail-value';
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { SshAccessModal } from '@/components/features/infra-management/vm/ssh-access-modal';
+import { clusterAccessNotice } from '@/util/cluster-access';
 import { NodeSshTerminal } from '@/components/features/infra-management/vm/node-ssh-terminal';
 import type { Vm } from '@/types/vm';
 
@@ -528,6 +529,7 @@ export default function VmDetailPage() {
         nodes={nodes}
         sshUser={sshUserDefault}
         sshJump={nodeList?.sshJump}
+        accessNotice={clusterAccessNotice(vm)}
         onClose={() => setIsSshOpen(false)}
       />
       <ConfirmDeleteDialog

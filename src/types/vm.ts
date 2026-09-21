@@ -31,6 +31,8 @@ export interface Vm {
   currentSubStep?: string;
   subStepStartedAt?: string;
   lastErrorCode?: string;
+  /** 내려받은 kubeconfig 로 바로 닿는지 — DIRECT / PRIVATE_NETWORK / VIA_BASTION */
+  apiServerReach?: string;
   environment?: string;
   region?: string;
   credentialName?: string;

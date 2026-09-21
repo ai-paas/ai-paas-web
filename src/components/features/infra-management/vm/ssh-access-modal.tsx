@@ -9,6 +9,8 @@ interface Props {
   sshUser?: string;
   /** 사설망이라 점프 호스트를 거쳐야 하면 user@host[:port]. 비밀번호는 담기지 않는다. */
   sshJump?: string;
+  /** 사설망이면 kubeconfig 가 그 자리에서 안 된다는 안내. */
+  accessNotice?: string | null;
   onClose: () => void;
 }
 
@@ -18,7 +20,15 @@ interface Props {
  * <p>웹 터미널은 콘솔 탭이 가진다. 같은 터미널이 두 군데 있으면 어느 쪽이 최신인지 헷갈리고,
  * 모달 안의 터미널은 세로가 좁아 잘린다.
  */
-export const SshAccessModal = ({ isOpen, vmName, nodes, sshUser, sshJump, onClose }: Props) => {
+export const SshAccessModal = ({
+  isOpen,
+  vmName,
+  nodes,
+  sshUser,
+  sshJump,
+  accessNotice,
+  onClose,
+}: Props) => {
   const { open } = useToast();
 
   if (!isOpen) return null;
@@ -47,6 +57,10 @@ export const SshAccessModal = ({ isOpen, vmName, nodes, sshUser, sshJump, onClos
       buttonTitle="닫기"
     >
       <div className="flex flex-col gap-4">
+        {accessNotice && (
+          <span style={{ fontSize: 12, color: '#b45309' }}>{accessNotice}</span>
+        )}
+
         {sshJump && (
           <span style={{ fontSize: 12, color: '#666' }}>
             점프 호스트를 거쳐 접속합니다: <code>{sshJump}</code>
