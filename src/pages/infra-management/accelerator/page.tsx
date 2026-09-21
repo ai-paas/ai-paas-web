@@ -80,7 +80,8 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
   const setSelectedCluster = setPickedCluster;
   const selectedClusterName = selectedCluster?.value;
 
-  const { nodes, isError: isNodesError } = useGetKubernetesNodes(selectedClusterName);
+  const { nodes, isPending: isNodesPending, isError: isNodesError } =
+    useGetKubernetesNodes(selectedClusterName);
 
   const { data: gpuTempQueryResult } = useInstantQuery<DCGMLabel>(
     'DCGM_FI_DEV_GPU_TEMP',
@@ -321,6 +322,8 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
             useSearch={false}
             columns={columns}
             data={rows}
+            // 다른 목록과 같게 둔다. 불러오는 중과 비어 있는 중이 같은 화면이면 구분되지 않는다.
+            isLoading={!!selectedClusterName && isNodesPending}
             initialState={{ expanded: true }}
             getRowCanExpand={(row: TableRow<AcceleratorTableRow>) =>
               row.original.devices.length > 0
@@ -402,6 +405,9 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
             emptyMessage={
               isNodesError ? (
                 '가속기 정보를 불러오는 데 실패했습니다.'
+              ) : !selectedClusterName ? (
+                // 고를 것이 있는데 "없습니다" 로 두면 기능이 비어 있는 줄 안다.
+                '클러스터를 선택해주세요.'
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <div>가속기가 없습니다.</div>
