@@ -61,6 +61,8 @@ export const InstallReleasePanel = ({
   const [namespace, setNamespace] = useState(fixed?.namespace ?? '');
   const [releaseName, setReleaseName] = useState(fixed?.releaseName ?? target.chartName);
   const [valuesYaml, setValuesYaml] = useState('');
+  // 업그레이드에서 값을 비우면 차트 기본값으로 되돌아간다. 그 사고를 막는 helm 의 옵션이다.
+  const [reuseValues, setReuseValues] = useState(true);
   const [touched, setTouched] = useState(false);
 
   const { clusterName: scopedCluster, setClusterName: setScopedCluster } = useScopedCluster();
@@ -110,13 +112,12 @@ export const InstallReleasePanel = ({
   );
   const repoError = repoName ? '' : '저장소를 선택해주세요.';
   const clusterError = clusterName ? '' : '클러스터를 선택해주세요.';
-  const namespaceError = namespace ? '' : '네임스페이스를 선택해주세요.';
   const nameError = !releaseName
     ? '릴리즈 이름을 입력해주세요.'
     : RELEASE_NAME_PATTERN.test(releaseName)
       ? ''
       : '소문자, 숫자, - 로 53자까지 쓸 수 있습니다.';
-  const canSubmit = !repoError && !clusterError && !namespaceError && !nameError;
+  const canSubmit = !repoError && !clusterError && !nameError;
 
   const mutationOptions = {
     onSuccess: () => {
@@ -151,8 +152,9 @@ export const InstallReleasePanel = ({
       releaseName,
       chart: `${repoName}/${target.chartName}`,
       ...(target.version ? { version: target.version } : {}),
-      namespace,
+      ...(namespace ? { namespace } : {}),
       ...(valuesYaml.trim() ? { valuesYaml } : {}),
+      ...(isUpgrade ? { reuseValues } : {}),
     };
     if (isUpgrade) upgradeHelmRelease(request);
     else installHelmRelease(request);
@@ -225,7 +227,11 @@ export const InstallReleasePanel = ({
             isDisabled={isPending || isUpgrade || !clusterName}
             onChange={(option: SelectSingleValue<PanelOption>) => setNamespace(option?.value ?? '')}
           />
-          {touched && namespaceError && <span className={styles.error}>{namespaceError}</span>}
+          {!namespace && (
+            <span className={styles.hint}>
+              고르지 않으면 <strong>default</strong> 네임스페이스에 설치됩니다.
+            </span>
+          )}
         </label>
 
         <label className={styles.field}>
@@ -242,6 +248,17 @@ export const InstallReleasePanel = ({
 
         <label className={styles.field}>
           <span className={styles.label}>값 (values.yaml)</span>
+          {isUpgrade && (
+            <label className={styles.checkbox}>
+              <input
+                type="checkbox"
+                checked={reuseValues}
+                disabled={isPending}
+                onChange={(e) => setReuseValues(e.target.checked)}
+              />
+              기존 값 유지 (helm --reuse-values) — 끄면 차트 기본값으로 되돌아갑니다
+            </label>
+          )}
           <textarea
             className={styles.textarea}
             value={valuesYaml}

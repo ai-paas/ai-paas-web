@@ -53,3 +53,17 @@
   font-size: $page-font-13;
   resize: vertical;
 }
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}
+
+/* 네임스페이스를 비우면 어디에 깔리는지 화면에서 알 수 없었다. */
+.hint {
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}

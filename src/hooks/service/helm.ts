@@ -24,6 +24,8 @@ export interface InstallHelmReleaseRequest {
   namespace?: string;
   values?: Record<string, unknown>;
   valuesYaml?: string;
+  /** 업그레이드 전용 — 기존 values 를 보존하고 새 값만 덮는다. */
+  reuseValues?: boolean;
 }
 
 export interface GetHelmReleasesParams {
