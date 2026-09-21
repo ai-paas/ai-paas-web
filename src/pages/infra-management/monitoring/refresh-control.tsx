@@ -21,34 +21,40 @@ export const RefreshControl = ({
   <div className={styles.bar}>
     <div className={styles.group}>
       <span className={styles.label}>구간</span>
-      {TIME_RANGES.map((range) => (
-        <button
-          key={range.seconds}
-          type="button"
-          className={`${styles.chip} ${rangeSeconds === range.seconds ? styles.chipActive : ''}`}
-          aria-pressed={rangeSeconds === range.seconds}
-          onClick={() => onRangeChange(range.seconds)}
-        >
-          {range.label}
-        </button>
-      ))}
+      <div className={styles.segment} role="group" aria-label="시간 구간">
+        {TIME_RANGES.map((range) => (
+          <button
+            key={range.seconds}
+            type="button"
+            className={`${styles.segmentButton} ${
+              rangeSeconds === range.seconds ? styles.segmentButtonActive : ''
+            }`}
+            aria-pressed={rangeSeconds === range.seconds}
+            onClick={() => onRangeChange(range.seconds)}
+          >
+            {range.label}
+          </button>
+        ))}
+      </div>
     </div>
 
     <div className={styles.group}>
       <span className={styles.label}>갱신</span>
-      {REFRESH_INTERVALS.map((interval) => (
-        <button
-          key={interval.seconds}
-          type="button"
-          className={`${styles.chip} ${
-            refreshSeconds === interval.seconds ? styles.chipActive : ''
-          }`}
-          aria-pressed={refreshSeconds === interval.seconds}
-          onClick={() => onRefreshChange(interval.seconds)}
-        >
-          {interval.label}
-        </button>
-      ))}
+      <div className={styles.segment} role="group" aria-label="갱신 주기">
+        {REFRESH_INTERVALS.map((interval) => (
+          <button
+            key={interval.seconds}
+            type="button"
+            className={`${styles.segmentButton} ${
+              refreshSeconds === interval.seconds ? styles.segmentButtonActive : ''
+            }`}
+            aria-pressed={refreshSeconds === interval.seconds}
+            onClick={() => onRefreshChange(interval.seconds)}
+          >
+            {interval.label}
+          </button>
+        ))}
+      </div>
     </div>
 
     <div className={styles.status} data-testid="refresh-status">

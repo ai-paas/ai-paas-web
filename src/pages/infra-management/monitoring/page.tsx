@@ -259,15 +259,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           </>
         )}
 
-        <RefreshControl
-          rangeSeconds={rangeSeconds}
-          onRangeChange={setRangeSeconds}
-          refreshSeconds={refreshSeconds}
-          onRefreshChange={setRefreshSeconds}
-          updatedAt={dataUpdatedAt}
-          isFetching={isMetricsFetching}
-        />
-
         {outage && (
           <div
             role="alert"
@@ -393,7 +384,18 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           )}
 
           <div className="page-detail-round-box page-flex-1">
-            <div className="page-detail-round-name">성능 지표</div>
+            {/* 구간과 갱신은 아래 가속기 차트에도 같이 적용된다 — 시간축이 여기서 시작한다. */}
+            <div className={styles.sectionHeader}>
+              <div className="page-detail-round-name">성능 지표</div>
+              <RefreshControl
+                rangeSeconds={rangeSeconds}
+                onRangeChange={setRangeSeconds}
+                refreshSeconds={refreshSeconds}
+                onRefreshChange={setRefreshSeconds}
+                updatedAt={dataUpdatedAt}
+                isFetching={isMetricsFetching}
+              />
+            </div>
             <div className={`page-detail-round-data ${styles.metricChartGrid}`}>
               <MetricLineChart
                 title="CPU"
