@@ -348,7 +348,15 @@ export default function HelmReleaseDetailPage() {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-4">
-                          <div>등록된 리소스가 없습니다.</div>
+                          {/*
+                            에이전트는 app.kubernetes.io/instance 라벨로 찾는다. 그 라벨을 붙이지
+                            않는 차트는 릴리즈가 멀쩡해도 여기가 빈다 — 설치 실패로 읽히지 않게 적는다.
+                          */}
+                          <div>이 네임스페이스에서 찾은 리소스가 없습니다.</div>
+                          <div>
+                            차트가 app.kubernetes.io/instance 라벨을 붙이지 않으면 목록에 잡히지
+                            않습니다. 릴리즈 상태가 deployed 면 배포 자체는 정상입니다.
+                          </div>
                         </div>
                       )
                     }
