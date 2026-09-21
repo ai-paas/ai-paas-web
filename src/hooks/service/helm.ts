@@ -340,6 +340,31 @@ export const useInstallHelmRelease = (
   return { installHelmRelease: mutate, isPending, isError, isSuccess, error };
 };
 
+export const useUpgradeHelmRelease = (
+  clusterName?: string,
+  options?: { onSuccess?: (op: Operation) => void; onError?: (error: unknown) => void }
+) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['upgradeHelmRelease', clusterName],
+    // 설치는 POST, 업그레이드는 PUT 이다. 같은 곳으로 보내면 "이미 있다" 로 거절된다.
+    mutationFn: ({ releaseName, ...body }: InstallHelmReleaseRequest) =>
+      api
+        .put(`any-cloud/clusters/${clusterName}/helm-releases/${encodeURIComponent(releaseName)}`, {
+          json: body,
+        })
+        .json<Operation>(),
+    onSuccess: (op) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
+      options?.onSuccess?.(op);
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { upgradeHelmRelease: mutate, isPending };
+};
+
 export const useGetHelmReleaseValues = (
   releaseName: string,
   clusterId?: string,

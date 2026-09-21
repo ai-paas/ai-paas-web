@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useGetClusters, useGetKubernetesNamespaces } from '@/hooks/service/clusters';
 import { useScopedCluster } from '@/hooks/use-scoped-cluster';
 import { useGetCatalogValues } from '@/hooks/service/catalog';
-import { useGetHelmRepositories, useInstallHelmRelease } from '@/hooks/service/helm';
+import {
+  useGetHelmRepositories,
+  useInstallHelmRelease,
+  useUpgradeHelmRelease,
+} from '@/hooks/service/helm';
 
 import styles from './install-release-panel.module.scss';
 
@@ -105,7 +109,7 @@ export const InstallReleasePanel = ({
       : '소문자, 숫자, - 로 53자까지 쓸 수 있습니다.';
   const canSubmit = !repoError && !clusterError && !namespaceError && !nameError;
 
-  const { installHelmRelease, isPending } = useInstallHelmRelease(clusterName, {
+  const mutationOptions = {
     onSuccess: () => {
       setScopedCluster(clusterName);
       openToast({
@@ -114,24 +118,35 @@ export const InstallReleasePanel = ({
       onDone?.();
       onClose();
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       openToast({
         title: error instanceof Error ? error.message : '요청에 실패했습니다.',
         status: 'error',
       });
     },
-  });
+  };
+  const { installHelmRelease, isPending: isInstalling } = useInstallHelmRelease(
+    clusterName,
+    mutationOptions
+  );
+  const { upgradeHelmRelease, isPending: isUpgrading } = useUpgradeHelmRelease(
+    clusterName,
+    mutationOptions
+  );
+  const isPending = isInstalling || isUpgrading;
 
   const handleSubmit = () => {
     setTouched(true);
     if (!canSubmit) return;
-    installHelmRelease({
+    const request = {
       releaseName,
       chart: `${repoName}/${target.chartName}`,
       ...(target.version ? { version: target.version } : {}),
       namespace,
       ...(valuesYaml.trim() ? { valuesYaml } : {}),
-    });
+    };
+    if (isUpgrade) upgradeHelmRelease(request);
+    else installHelmRelease(request);
   };
 
   return (
