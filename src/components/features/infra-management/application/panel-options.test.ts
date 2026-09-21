@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { withSelected } from './install-release-panel';
+import { withSelected } from './panel-options';
 
 describe('withSelected', () => {
   it('목록에 없는 값이면 한 줄을 끼워 넣는다', () => {
