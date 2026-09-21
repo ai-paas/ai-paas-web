@@ -16,6 +16,7 @@ import { clusterStatusTone } from '@/util/status-tone';
 import { kubernetesStatusOf, type StatusTone as NodeTone } from '@/util/node-status';
 import { regionLabel } from '@/util/region-labels';
 import type { VmRow } from '@/util/vm-rows';
+import styles from './vm-list.module.scss';
 import { InfraProgressTooltip } from '@/components/features/infra-management/provisioning/infra-progress';
 import { BulkProvisionModal } from '@/components/features/infra-management/provisioning/bulk-provision-modal';
 import { syncDevToolsFromUrl } from '@/util/dev-tools';
@@ -121,6 +122,13 @@ export default function VmPage() {
       id: 'role',
       header: '역할',
       accessorFn: (row: VmRow) => (row.pending ? '준비 중' : (row.role ?? '-')),
+      // 노드가 아직 없는 줄은 나머지 칸이 비어 "값이 빠진 행" 으로 읽힌다. 왜 비었는지 적는다.
+      cell: ({ row }: { row: { original: VmRow } }) =>
+        row.original.pending ? (
+          <span className={styles.pendingBadge}>준비 중</span>
+        ) : (
+          (row.original.role ?? '-')
+        ),
       size: 90,
     },
     {

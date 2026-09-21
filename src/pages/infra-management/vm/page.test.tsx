@@ -75,4 +75,24 @@ describe('VmPage', () => {
 
     expect(await screen.findByRole('link', { name: 'pending-one' })).toBeInTheDocument();
   });
+
+  it('노드가 없는 줄은 준비 중으로 표시한다', async () => {
+    // 나머지 칸이 비어 있어 표시가 없으면 값이 빠진 행으로 읽힌다.
+    setup(
+      [],
+      [
+        {
+          nodeName: 'pending-two',
+          clusterName: 'pending-two',
+          clusterProvider: 'AWS',
+          infraStatus: 'PROVISIONING',
+          pending: true,
+        },
+      ]
+    );
+    renderListPage(<VmPage />);
+
+    await screen.findByRole('link', { name: 'pending-two' });
+    expect(screen.getByText('준비 중')).toBeInTheDocument();
+  });
 });
