@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { AcceleratorPanel } from './accelerator-panel';
 import { CollectorNotice } from './collector-notice';
-import { RefreshControl } from './refresh-control';
+import { RefreshControl, RefreshStatusDot } from './refresh-control';
 import { stepFor, TIME_RANGES } from './refresh-options';
 import { MetricLineChart } from './metric-line-chart';
 import styles from './monitoring.module.scss';
@@ -244,20 +244,45 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
             <BreadCrumb items={[{ label: '인프라 관리' }, { label: '모니터링' }]} />
           </div>
           <div className="page-title-box">
-            <h2 className="page-title">모니터링</h2>
+            <h2 className="page-title">
+              모니터링
+              <RefreshStatusDot
+                refreshSeconds={refreshSeconds}
+                updatedAt={dataUpdatedAt}
+                isFetching={isMetricsFetching}
+              />
+            </h2>
           </div>
         </>
       )}
       <div className={`page-content`}>
-        {!embedded && (
-          <>
-            <div>클러스터 선택</div>
-            <ClusterPicker
-              value={selectedCluster?.value}
-              onChange={(name) => setSelectedCluster({ label: name, value: name })}
+        {/* 구간과 갱신은 성능 지표와 가속기 차트 양쪽에 걸린다 — 페이지 머리에 둔다. */}
+        <div className={styles.pageToolbar}>
+          {!embedded && (
+            <div className={styles.clusterField}>
+              <span>클러스터 선택</span>
+              <ClusterPicker
+                value={selectedCluster?.value}
+                onChange={(name) => setSelectedCluster({ label: name, value: name })}
+              />
+            </div>
+          )}
+          <div className={styles.toolbarRight}>
+            {embedded && (
+              <RefreshStatusDot
+                refreshSeconds={refreshSeconds}
+                updatedAt={dataUpdatedAt}
+                isFetching={isMetricsFetching}
+              />
+            )}
+            <RefreshControl
+              rangeSeconds={rangeSeconds}
+              onRangeChange={setRangeSeconds}
+              refreshSeconds={refreshSeconds}
+              onRefreshChange={setRefreshSeconds}
             />
-          </>
-        )}
+          </div>
+        </div>
 
         {outage && (
           <div
@@ -384,18 +409,7 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
           )}
 
           <div className="page-detail-round-box page-flex-1">
-            {/* 구간과 갱신은 아래 가속기 차트에도 같이 적용된다 — 시간축이 여기서 시작한다. */}
-            <div className={styles.sectionHeader}>
-              <div className="page-detail-round-name">성능 지표</div>
-              <RefreshControl
-                rangeSeconds={rangeSeconds}
-                onRangeChange={setRangeSeconds}
-                refreshSeconds={refreshSeconds}
-                onRefreshChange={setRefreshSeconds}
-                updatedAt={dataUpdatedAt}
-                isFetching={isMetricsFetching}
-              />
-            </div>
+            <div className="page-detail-round-name">성능 지표</div>
             <div className={`page-detail-round-data ${styles.metricChartGrid}`}>
               <MetricLineChart
                 title="CPU"

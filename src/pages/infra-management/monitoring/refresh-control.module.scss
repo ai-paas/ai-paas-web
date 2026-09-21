@@ -59,22 +59,34 @@
   }
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: $page-font-color-600;
-  font-size: $page-font-13;
-  white-space: nowrap;
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
 }
 
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+.dotLive {
+  background-color: #12b76a;
+}
+
+/* 멈춤과 고장은 다르다. 멈춰 둔 화면이 고장처럼 보이면 안 된다. */
+.dotPaused {
   background-color: $color-gray-100;
 }
 
-.dotActive {
-  background-color: $color-point-blue;
+.dotFetching {
+  animation: dotPulse 1s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }

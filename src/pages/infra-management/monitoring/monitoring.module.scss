@@ -68,10 +68,25 @@
   gap: 12px;
 }
 
-.sectionHeader {
+.pageToolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.clusterField {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: $page-font-13;
+  color: $page-font-color-600;
+}
+
+.toolbarRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
 }

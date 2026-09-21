@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-import { RefreshControl } from './refresh-control';
+import { RefreshControl, RefreshStatusDot } from './refresh-control';
 import { SCRAPE_INTERVAL_SECONDS, stepFor } from './refresh-options';
 
 describe('stepFor', () => {
@@ -17,6 +17,42 @@ describe('stepFor', () => {
   });
 });
 
+describe('RefreshStatusDot', () => {
+  const renderDot = (refreshSeconds = 30, isFetching = false) =>
+    render(
+      <RefreshStatusDot
+        refreshSeconds={refreshSeconds}
+        updatedAt={new Date('2026-09-21T05:04:03Z').getTime()}
+        isFetching={isFetching}
+      />
+    );
+
+  it('마지막으로 받은 시각과 주기를 툴팁으로 남긴다', () => {
+    // 본문에 적으면 자리를 차지하는데 평소에 읽을 일은 거의 없다.
+    renderDot();
+
+    const dot = screen.getByTestId('refresh-status');
+    expect(dot).toHaveAttribute('title', expect.stringContaining('마지막 갱신'));
+    expect(dot).toHaveAttribute('title', expect.stringContaining('30초마다'));
+  });
+
+  it('멈춤과 동작 중을 다른 색으로 가른다', () => {
+    // 멈춰 둔 화면이 고장처럼 보이면 안 된다.
+    const { unmount } = renderDot(30);
+    const live = screen.getByTestId('refresh-status').className;
+    unmount();
+
+    renderDot(0);
+    const paused = screen.getByTestId('refresh-status').className;
+
+    expect(live).not.toEqual(paused);
+    expect(screen.getByTestId('refresh-status')).toHaveAttribute(
+      'title',
+      expect.stringContaining('멈춤')
+    );
+  });
+});
+
 describe('RefreshControl', () => {
   const setup = (refreshSeconds = 30) => {
     const onRangeChange = vi.fn();
@@ -27,26 +63,10 @@ describe('RefreshControl', () => {
         onRangeChange={onRangeChange}
         refreshSeconds={refreshSeconds}
         onRefreshChange={onRefreshChange}
-        updatedAt={new Date('2026-09-21T05:04:03Z').getTime()}
-        isFetching={false}
       />
     );
     return { onRangeChange, onRefreshChange };
   };
-
-  it('마지막으로 받은 시각과 주기를 적는다', () => {
-    // 멈춘 화면과 값이 안 바뀌는 화면은 다르다.
-    setup();
-
-    expect(screen.getByTestId('refresh-status')).toHaveTextContent('마지막 갱신');
-    expect(screen.getByTestId('refresh-status')).toHaveTextContent('30초마다');
-  });
-
-  it('멈춤을 고르면 주기 대신 멈춤이라고 적는다', () => {
-    setup(0);
-
-    expect(screen.getByTestId('refresh-status')).toHaveTextContent('멈춤');
-  });
 
   it('구간과 주기를 바꿀 수 있다', () => {
     const { onRangeChange, onRefreshChange } = setup();

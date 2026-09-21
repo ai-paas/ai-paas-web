@@ -6,8 +6,42 @@ type RefreshControlProps = {
   onRangeChange: (seconds: number) => void;
   refreshSeconds: number;
   onRefreshChange: (seconds: number) => void;
+};
+
+type RefreshStatusDotProps = {
+  refreshSeconds: number;
   updatedAt?: number;
   isFetching: boolean;
+};
+
+/**
+ * 제목 옆 점 하나로 살아 있다는 것만 알린다.
+ *
+ * <p>시각과 주기를 본문에 적으면 자리를 차지하는데, 평소에 읽을 일은 거의 없다. 멈춤과
+ * 고장은 다르므로 색으로 가른다 — 멈춰 둔 화면이 고장처럼 보이면 안 된다.
+ */
+export const RefreshStatusDot = ({
+  refreshSeconds,
+  updatedAt,
+  isFetching,
+}: RefreshStatusDotProps) => {
+  const paused = refreshSeconds <= 0;
+  const title = [
+    updatedAt ? `마지막 갱신 ${formatClock(updatedAt / 1000)}` : '갱신 대기',
+    paused ? '멈춤' : `${refreshSeconds}초마다`,
+  ].join(' · ');
+
+  return (
+    <span
+      className={`${styles.dot} ${paused ? styles.dotPaused : styles.dotLive} ${
+        isFetching ? styles.dotFetching : ''
+      }`}
+      role="status"
+      aria-label={title}
+      title={title}
+      data-testid="refresh-status"
+    />
+  );
 };
 
 export const RefreshControl = ({
@@ -15,8 +49,6 @@ export const RefreshControl = ({
   onRangeChange,
   refreshSeconds,
   onRefreshChange,
-  updatedAt,
-  isFetching,
 }: RefreshControlProps) => (
   <div className={styles.bar}>
     <div className={styles.group}>
@@ -57,11 +89,5 @@ export const RefreshControl = ({
       </div>
     </div>
 
-    <div className={styles.status} data-testid="refresh-status">
-      {/* 멈춰 있는 화면과 값이 안 바뀌는 화면은 다르다. 마지막으로 받은 시각을 적어 구분한다. */}
-      <span className={`${styles.dot} ${isFetching ? styles.dotActive : ''}`} aria-hidden="true" />
-      {updatedAt ? `마지막 갱신 ${formatClock(updatedAt / 1000)}` : '갱신 대기'}
-      {refreshSeconds > 0 ? ` · ${refreshSeconds}초마다` : ' · 멈춤'}
-    </div>
   </div>
 );
