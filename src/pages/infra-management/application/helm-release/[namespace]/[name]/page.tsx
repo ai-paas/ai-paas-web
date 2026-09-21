@@ -1,11 +1,22 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { BreadCrumb, Tabs, Table, AlertDialog, useTablePagination, Button } from '@innogrid/ui';
+import {
+  BreadCrumb,
+  Tabs,
+  Table,
+  AlertDialog,
+  useTablePagination,
+  useToast,
+  Button,
+} from '@innogrid/ui';
 import { InstallReleasePanel } from '@/components/features/infra-management/application/install-release-panel';
+import styles from './revisions.module.scss';
 import {
   useGetHelmReleases,
   useGetHelmReleaseResources,
   useGetHelmReleaseValues,
+  useGetHelmReleaseRevisions,
+  useRollbackHelmRelease,
 } from '@/hooks/service/helm';
 import { formatDateTime } from '@/util/date';
 import type { HelmReleaseResource } from '@/types/helm';
@@ -68,6 +79,7 @@ export default function HelmReleaseDetailPage() {
   const [isYamlModalOpen, setIsYamlModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [rollbackTarget, setRollbackTarget] = useState<number | null>(null);
   const { pagination, setPagination } = useTablePagination();
 
   // URL 쿼리 파라미터에서 클러스터 ID 가져오기
@@ -100,6 +112,26 @@ export default function HelmReleaseDetailPage() {
     isPending: isValuesPending,
     isError: isValuesError,
   } = useGetHelmReleaseValues(name || '', clusterId, namespace);
+
+  const {
+    revisions,
+    isPending: isRevisionsPending,
+    isError: isRevisionsError,
+  } = useGetHelmReleaseRevisions(name || '', clusterId, namespace);
+
+  const { open: openToast } = useToast();
+  const { rollbackHelmRelease, isPending: isRollingBack } = useRollbackHelmRelease(clusterId, {
+    onSuccess: () => {
+      openToast({ title: '되돌리기 요청을 보냈습니다.' });
+      setRollbackTarget(null);
+    },
+    onError: (error) => {
+      openToast({
+        title: error instanceof Error ? error.message : '되돌리기에 실패했습니다.',
+        status: 'error',
+      });
+    },
+  });
 
   const handleResourceNameClick = useCallback((resource: HelmReleaseResource) => {
     setSelectedResource(resource);
@@ -331,7 +363,7 @@ export default function HelmReleaseDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['리소스 정보', 'Values Yaml']}
+            labels={['리소스 정보', 'Values Yaml', '이력']}
             value={String(activeTabIndex)}
             onValueChange={(index) => setActiveTabIndex(Number(index))}
             components={[
@@ -395,6 +427,62 @@ export default function HelmReleaseDetailPage() {
                   )}
                 </div>
               </div>,
+              <div key="revisions" className="tabs-Content">
+                {/*
+                  업그레이드가 잘못됐을 때 되돌릴 길이 화면에 없었다. 백엔드와 에이전트는
+                  이미 rollback 을 지원하고 있었다.
+                */}
+                <div className={styles.revisionWrap}>
+                  {isRevisionsError ? (
+                    <div className={styles.revisionEmpty}>이력을 불러오지 못했습니다.</div>
+                  ) : revisions.length === 0 ? (
+                    <div className={styles.revisionEmpty}>
+                      {isRevisionsPending ? '불러오는 중입니다.' : '이력이 없습니다.'}
+                    </div>
+                  ) : (
+                    <table className={styles.revisionTable}>
+                      <thead>
+                        <tr>
+                          <th>리비전</th>
+                          <th>상태</th>
+                          <th>차트</th>
+                          <th>갱신</th>
+                          <th>설명</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {revisions.map((item) => (
+                          <tr key={item.revision} data-testid={`revision-${item.revision}`}>
+                            <td>
+                              {item.revision}
+                              {String(item.revision) === String(release?.revision) && (
+                                <span className={styles.revisionCurrent}>현재</span>
+                              )}
+                            </td>
+                            <td>{item.status ?? '-'}</td>
+                            <td>{item.chart ?? '-'}</td>
+                            <td>{item.updated ? formatDateTime(item.updated) : '-'}</td>
+                            <td>{item.description ?? '-'}</td>
+                            <td>
+                              {String(item.revision) !== String(release?.revision) && (
+                                <button
+                                  type="button"
+                                  className="table-td-link"
+                                  disabled={isRollingBack}
+                                  onClick={() => setRollbackTarget(item.revision)}
+                                >
+                                  이 리비전으로 되돌리기
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>,
             ]}
           />
         </div>
@@ -438,7 +526,25 @@ export default function HelmReleaseDetailPage() {
       >
         <span>헬름 릴리즈를 삭제하시겠습니까?</span>
       </AlertDialog>
-          {release && (
+          <AlertDialog
+        isOpen={rollbackTarget !== null}
+        confirmButtonText={isRollingBack ? '되돌리는 중...' : '되돌리기'}
+        cancelButtonText="취소"
+        onClickConfirm={() => {
+          if (rollbackTarget !== null && name) {
+            rollbackHelmRelease({ releaseName: name, revision: rollbackTarget });
+          }
+        }}
+        onClickClose={() => !isRollingBack && setRollbackTarget(null)}
+      >
+        <div className="flex flex-col gap-2 text-center">
+          <strong>리비전 {rollbackTarget} 으로 되돌리기</strong>
+          {/* 되돌려도 새 리비전이 쌓인다 — 이력은 지워지지 않는다. */}
+          <span>그 시점의 차트와 값으로 다시 배포합니다. 새 리비전으로 기록됩니다.</span>
+        </div>
+      </AlertDialog>
+
+      {release && (
         <InstallReleasePanel
           isOpen={upgradeOpen}
           onClose={() => setUpgradeOpen(false)}

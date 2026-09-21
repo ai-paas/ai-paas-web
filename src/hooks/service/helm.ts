@@ -367,6 +367,64 @@ export const useUpgradeHelmRelease = (
   return { upgradeHelmRelease: mutate, isPending };
 };
 
+export interface HelmReleaseRevision {
+  revision: number;
+  updated?: string;
+  status?: string;
+  chart?: string;
+  appVersion?: string;
+  description?: string;
+}
+
+export const useGetHelmReleaseRevisions = (
+  releaseName: string,
+  clusterId?: string,
+  namespace?: string
+) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.helmReleases.revisions(releaseName, clusterId, namespace),
+    queryFn: () =>
+      api
+        .get(
+          `any-cloud/clusters/${clusterId}/helm-releases/${encodeURIComponent(releaseName)}/revisions`,
+          { searchParams: { namespace: namespace ?? '' } }
+        )
+        .json<{ revisions?: HelmReleaseRevision[]; data?: { revisions?: HelmReleaseRevision[] } }>(),
+    enabled: !!releaseName && !!clusterId && !!namespace,
+  });
+
+  return {
+    revisions: data?.revisions ?? data?.data?.revisions ?? [],
+    isPending,
+    isError,
+  };
+};
+
+export const useRollbackHelmRelease = (
+  clusterName?: string,
+  options?: { onSuccess?: () => void; onError?: (error: unknown) => void }
+) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['rollbackHelmRelease', clusterName],
+    mutationFn: ({ releaseName, revision }: { releaseName: string; revision: number }) =>
+      api
+        .post(
+          `any-cloud/clusters/${clusterName}/helm-releases/${encodeURIComponent(releaseName)}/operations`,
+          { json: { type: 'rollback', revision, wait: true } }
+        )
+        .json<Operation>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
+      options?.onSuccess?.();
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { rollbackHelmRelease: mutate, isPending };
+};
+
 export const useGetHelmReleaseValues = (
   releaseName: string,
   clusterId?: string,
