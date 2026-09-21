@@ -31,7 +31,10 @@ $heat-missing-stripe: $color-gray-50;
 }
 
 .clusterSelect {
-  width: 180px;
+  /* 클러스터 이름이 길면 잘린다. 고정 폭 대신 내용에 맞춰 늘어나되 상한을 둔다. */
+  min-width: 180px;
+  width: auto;
+  max-width: 420px;
 }
 
 // 틀(테두리·배경·안쪽 여백)은 page-detail-round-box 가 준다. 여기서는 칸만 나눈다.

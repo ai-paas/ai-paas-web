@@ -20,7 +20,10 @@
 }
 
 .clusterSelect {
-  width: 280px;
+  /* 클러스터 이름이 길면 잘린다. 고정 폭 대신 내용에 맞춰 늘어나되 상한을 둔다. */
+  min-width: 280px;
+  width: auto;
+  max-width: 420px;
 }
 
 .rangeFilterRow {

@@ -20,7 +20,10 @@
 }
 
 .clusterSelect {
-  width: 280px;
+  /* 클러스터 이름이 길면 잘린다. 고정 폭 대신 내용에 맞춰 늘어나되 상한을 둔다. */
+  min-width: 280px;
+  width: auto;
+  max-width: 420px;
 }
 
 .namespaceSelect {
@@ -140,28 +143,41 @@
   justify-content: flex-end;
   gap: 6px;
   width: 100%;
+
+  /* 저장소 이름이 길면 잘린다. 내용에 맞춰 늘어나되 상한을 둔다. */
+  & > div:first-child {
+    min-width: 220px;
+    max-width: 360px;
+  }
+}
+
+/* 가로로 긴 카드는 넓은 화면에서 한 줄에 둘밖에 못 들어간다. 세로형 격자로 채운다. */
+.catalogList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .catalogBox {
-  width: 536px;
-  height: 234px;
   border-radius: 8px;
   border: 1px solid $color-gray-75;
   display: flex;
   flex-direction: column;
+  min-height: 260px;
 }
 
 .catalogInfo {
   display: flex;
-  gap: 24px;
-  padding: 24px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .catalogImg {
-  width: 84px;
-  height: 84px;
+  width: 56px;
+  height: 56px;
   aspect-ratio: 1/1;
   overflow: hidden;
   border-radius: 6px;
@@ -172,8 +188,8 @@
   background-color: $color-white;
 
   img {
-    width: 84px;
-    height: 84px;
+    width: 56px;
+    height: 56px;
     object-fit: cover;
     object-position: center;
     border-radius: 6px;
@@ -202,7 +218,6 @@
   }
 
   & > p {
-    width: 200px;
     color: $page-font-color-900;
     font-size: $page-font-13;
     @include font-style;
@@ -218,7 +233,7 @@
 }
 
 .catalogTxt {
-  width: 380px;
+  width: 100%;
   color: $page-font-color-600;
   font-size: $page-font-root;
   @include font-style;
@@ -348,4 +363,43 @@
   font-size: $page-font-10;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.versionTableWrap {
+  overflow-x: auto;
+}
+
+.versionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $page-font-13;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $color-gray-100;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $page-font-color-600;
+    font-weight: 600;
+  }
+}
+
+.versionCurrent {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: #eff8ff;
+  color: #175cd3;
+  font-size: $page-font-10;
+  font-weight: 700;
+}
+
+.versionMore {
+  margin-top: 8px;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
 }

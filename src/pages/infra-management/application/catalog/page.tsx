@@ -75,8 +75,8 @@ const CatalogItem = ({
               src={chart.icon}
               alt={chart.name}
               style={{
-                width: '84px',
-                height: '84px',
+                width: '56px',
+                height: '56px',
                 objectFit: 'cover',
                 objectPosition: 'center',
                 display: 'block',
@@ -87,8 +87,8 @@ const CatalogItem = ({
           ) : (
             <div
               style={{
-                width: '84px',
-                height: '84px',
+                width: '56px',
+                height: '56px',
                 backgroundColor: '#f5f5f5',
                 display: 'flex',
                 alignItems: 'center',
@@ -361,7 +361,7 @@ export default function ApplicationCatalogPage() {
           />
           <SearchInput size="medium" placeholder="검색어를 입력해주세요" {...restProps} />
         </div>
-        <div className="page-content-detail-row2 page-mt-24 flex-wrap">
+        <div className={`${styles.catalogList} page-mt-24`}>
           {paginatedCharts.length > 0 ? (
             paginatedCharts.map((chart, index) => (
               <CatalogItem

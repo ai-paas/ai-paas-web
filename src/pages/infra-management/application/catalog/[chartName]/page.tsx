@@ -273,6 +273,12 @@ export default function CatalogDetailPage() {
 
   // 보던 자리에서 바로 설치한다. 저장소, 차트, 버전은 이 화면이 이미 알고 있다.
   const [installOpen, setInstallOpen] = useState(searchParams.get('install') === '1');
+
+  // Chart.yaml 은 sources 인데 응답이 source 로 오는 배포가 있다. 둘 다 본다.
+  const sourceLinks = useMemo<string[]>(() => {
+    const raw = catalogDetail?.sources ?? catalogDetail?.source ?? [];
+    return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [];
+  }, [catalogDetail?.sources, catalogDetail?.source]);
   const handleDeploy = () => setInstallOpen(true);
 
   const breadcrumbItems = [
@@ -571,13 +577,51 @@ export default function CatalogDetailPage() {
                     <div className="page-detail_item-data">{catalogDetail.keywords.join(', ')}</div>
                   </li>
                 )}
-                {catalogDetail.source &&
-                  Array.isArray(catalogDetail.source) &&
-                  catalogDetail.source.length > 0 && (
+                {/* 차트를 고를 때 "누가 만들었고 어디서 왔나" 가 판단 근거다. API 는 주는데 화면에 없었다. */}
+                {catalogDetail.home && (
+                  <li>
+                    <div className="page-detail_item-name">홈페이지</div>
+                    <div className="page-detail_item-data">
+                      <a
+                        href={catalogDetail.home}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="page-detail_item-data-link"
+                      >
+                        {catalogDetail.home}
+                      </a>
+                    </div>
+                  </li>
+                )}
+                {catalogDetail.maintainers && catalogDetail.maintainers.length > 0 && (
+                  <li>
+                    <div className="page-detail_item-name">관리자</div>
+                    <div className="page-detail_item-data">
+                      {catalogDetail.maintainers.map((m, idx) => (
+                        <div key={`${m.name}-${idx}`}>
+                          {m.url ? (
+                            <a
+                              href={m.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="page-detail_item-data-link"
+                            >
+                              {m.name}
+                            </a>
+                          ) : (
+                            m.name
+                          )}
+                          {m.email ? ` (${m.email})` : ''}
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                )}
+                {sourceLinks.length > 0 && (
                     <li>
                       <div className="page-detail_item-name">소스 정보</div>
                       <div className="page-detail_item-data">
-                        {catalogDetail.source.map((source, idx) => (
+                        {sourceLinks.map((source, idx) => (
                           <div key={idx}>
                             <a
                               href={source}
@@ -601,7 +645,7 @@ export default function CatalogDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['README', 'Values']}
+            labels={['README', 'Values', '버전 이력']}
             value={String(activeTabIndex)}
             onValueChange={(index) => handleTabChange(index)}
             components={[
@@ -638,6 +682,54 @@ export default function CatalogDetailPage() {
                   language: 'yaml',
                   copyKey: 'values',
                 })}
+              </div>,
+              <div key="versions" className="tabs-Content">
+                {/*
+                  버전을 고르면 README 와 Values 만 바뀌어, 그 버전이 언제 나온 무엇인지는
+                  알 수 없었다. 앱 버전과 날짜를 같이 둔다.
+                */}
+                <div className={styles.versionTableWrap}>
+                  <table className={styles.versionTable}>
+                    <thead>
+                      <tr>
+                        <th>차트 버전</th>
+                        <th>앱 버전</th>
+                        <th>배포일</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(catalogDetail.versionHistory ?? []).slice(0, 50).map((item) => (
+                        <tr key={item.version} data-testid={`version-row-${item.version}`}>
+                          <td>
+                            {item.version}
+                            {item.version === version && (
+                              <span className={styles.versionCurrent}>보는 중</span>
+                            )}
+                          </td>
+                          <td>{item.appVersion || '-'}</td>
+                          <td>{item.created ? formatDateTime(item.created) : '-'}</td>
+                          <td>
+                            {item.version !== version && (
+                              <button
+                                type="button"
+                                className="table-td-link"
+                                onClick={() => handleVersionChange({ value: item.version } as never)}
+                              >
+                                이 버전 보기
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {(catalogDetail.versionHistory ?? []).length > 50 && (
+                    <p className={styles.versionMore}>
+                      최근 50개만 보여 줍니다 (전체 {catalogDetail.versionHistory?.length}개).
+                    </p>
+                  )}
+                </div>
               </div>,
             ]}
           />
