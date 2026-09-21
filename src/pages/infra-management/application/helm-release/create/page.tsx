@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { BreadCrumb, Button, Input, Select, type SelectSingleValue, useToast } from '@innogrid/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { configureMonacoYaml } from 'monaco-yaml';
 import { useGetClusters } from '@/hooks/service/clusters';
@@ -61,6 +61,10 @@ const MONACO_EDITOR_OPTIONS = {
 
 export default function HelmReleaseCreatePage() {
   const navigate = useNavigate();
+  // 카탈로그에서 "헬름 배포" 로 넘어오면 저장소와 차트를 들고 온다.
+  const [searchParams] = useSearchParams();
+  const presetRepository = searchParams.get('repository') ?? '';
+  const presetChart = searchParams.get('chart') ?? '';
 
   // 폼 상태
   const [cluster, setCluster] = useState<OptionType>();
@@ -217,12 +221,21 @@ export default function HelmReleaseCreatePage() {
     }
   }, [clusterOptions, clusters, cluster]);
 
-  // 기본 저장소 선택
+  // 기본 저장소 선택 — 넘어온 값이 있으면 그것이 먼저다.
   useEffect(() => {
-    if (!repository && repositoryOptions.length > 0) {
-      setRepository(repositoryOptions[0]);
-    }
-  }, [repositoryOptions, repository]);
+    if (repository || repositoryOptions.length === 0) return;
+    const preset = presetRepository
+      ? repositoryOptions.find((option) => option.value === presetRepository)
+      : undefined;
+    setRepository(preset ?? repositoryOptions[0]);
+  }, [repositoryOptions, repository, presetRepository]);
+
+  // 넘어온 차트를 고른다. 목록에 없으면 사용자가 직접 고르게 둔다.
+  useEffect(() => {
+    if (catalogName || !presetChart || catalogNameOptions.length === 0) return;
+    const preset = catalogNameOptions.find((option) => option.value === presetChart);
+    if (preset) setCatalogName(preset);
+  }, [catalogNameOptions, catalogName, presetChart]);
 
   // Validation 에러 제거 헬퍼 함수
   const clearValidationError = useCallback((field: keyof ValidationErrors) => {
