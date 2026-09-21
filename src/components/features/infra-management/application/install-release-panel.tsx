@@ -12,7 +12,19 @@ import {
 
 import styles from './install-release-panel.module.scss';
 
-type PanelOption = { text: string; value: string };
+/** Select 는 label, value 키로 옵션을 읽는다. */
+export type PanelOption = { label: string; value: string };
+
+/**
+ * 고른 값이 목록에 없으면 한 줄을 끼워 넣는다.
+ *
+ * <p>목록을 아직 못 받았거나 값이 목록 밖이면 Select 가 "(삭제된 옵션)" 으로 그린다. 멀쩡한
+ * 클러스터가 지워진 것처럼 보였다.
+ */
+export const withSelected = (options: PanelOption[], selected: string): PanelOption[] =>
+  !selected || options.some((option) => option.value === selected)
+    ? options
+    : [{ label: selected, value: selected }, ...options];
 
 export type InstallTarget = {
   repoName: string;
@@ -86,17 +98,27 @@ export const InstallReleasePanel = ({
     if (valuesData?.content) setValuesYaml(valuesData.content);
   }, [valuesData?.content]);
 
-  const clusterOptions = useMemo(
-    () => clusters.map((c) => ({ text: c.clusterName ?? c.id ?? '', value: c.id ?? '' })),
+  /*
+   * 클러스터 응답에는 id 가 없다 — API 경로도 이름을 쓴다. id 로 값을 만들면 모든 옵션이 빈
+   * 값이 되어, 고른 값이 목록에 없다고 "(삭제된 옵션)" 으로 그려졌다.
+   */
+  const clusterOptions = useMemo<PanelOption[]>(
+    () =>
+      clusters
+        .map((c) => c.clusterName ?? '')
+        .filter(Boolean)
+        .map((name) => ({ label: name, value: name })),
     [clusters]
   );
-  const namespaceOptions = useMemo(
-    () => namespaces.map((ns) => ({ text: ns.metadata.name, value: ns.metadata.name })),
+  const namespaceOptions = useMemo<PanelOption[]>(
+    () => namespaces.map((ns) => ({ label: ns.metadata.name, value: ns.metadata.name })),
     [namespaces]
   );
 
-  const repoOptions = useMemo(
-    () => repositories.map((r) => ({ text: r.name ?? '', value: r.name ?? '' })),
+
+
+  const repoOptions = useMemo<PanelOption[]>(
+    () => repositories.map((r) => ({ label: r.name ?? '', value: r.name ?? '' })),
     [repositories]
   );
   const repoError = repoName ? '' : '저장소를 선택해주세요.';
@@ -181,10 +203,8 @@ export const InstallReleasePanel = ({
               저장소 <em>*</em>
             </span>
             <Select
-              options={repoOptions}
-              getOptionLabel={(option: PanelOption) => option.text}
-              getOptionValue={(option: PanelOption) => option.value}
-              value={repoOptions.find((o) => o.value === repoName)}
+              options={withSelected(repoOptions, repoName)}
+              value={withSelected(repoOptions, repoName).find((o) => o.value === repoName)}
               placeholder="저장소를 선택하세요"
               isDisabled={isPending}
               onChange={(option: SelectSingleValue<PanelOption>) => setRepoName(option?.value ?? '')}
@@ -198,10 +218,8 @@ export const InstallReleasePanel = ({
             클러스터 <em>*</em>
           </span>
           <Select
-            options={clusterOptions}
-            getOptionLabel={(option: PanelOption) => option.text}
-            getOptionValue={(option: PanelOption) => option.value}
-            value={clusterOptions.find((o) => o.value === clusterName)}
+            options={withSelected(clusterOptions, clusterName)}
+            value={withSelected(clusterOptions, clusterName).find((o) => o.value === clusterName)}
             placeholder="클러스터를 선택하세요"
             isDisabled={isPending || isUpgrade}
             onChange={(option: SelectSingleValue<PanelOption>) => setClusterName(option?.value ?? '')}
@@ -214,10 +232,8 @@ export const InstallReleasePanel = ({
             네임스페이스 <em>*</em>
           </span>
           <Select
-            options={namespaceOptions}
-            getOptionLabel={(option: PanelOption) => option.text}
-            getOptionValue={(option: PanelOption) => option.value}
-            value={namespaceOptions.find((o) => o.value === namespace)}
+            options={withSelected(namespaceOptions, namespace)}
+            value={withSelected(namespaceOptions, namespace).find((o) => o.value === namespace)}
             placeholder={clusterName ? '네임스페이스를 선택하세요' : '클러스터를 먼저 고르세요'}
             isDisabled={isPending || isUpgrade || !clusterName}
             onChange={(option: SelectSingleValue<PanelOption>) => setNamespace(option?.value ?? '')}

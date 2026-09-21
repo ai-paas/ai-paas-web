@@ -156,6 +156,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
+  /* 검색줄과 붙어 있으면 툴바와 목록이 한 덩어리로 읽힌다. */
+  margin-top: 32px;
 }
 
 .catalogBox {

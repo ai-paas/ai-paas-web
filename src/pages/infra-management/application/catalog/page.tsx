@@ -361,7 +361,7 @@ export default function ApplicationCatalogPage() {
           />
           <SearchInput size="medium" placeholder="검색어를 입력해주세요" {...restProps} />
         </div>
-        <div className={`${styles.catalogList} page-mt-24`}>
+        <div className={styles.catalogList}>
           {paginatedCharts.length > 0 ? (
             paginatedCharts.map((chart, index) => (
               <CatalogItem
