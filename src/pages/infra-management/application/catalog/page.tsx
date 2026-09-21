@@ -11,6 +11,8 @@ import {
 import { useNavigate, useSearchParams } from 'react-router';
 
 import styles from '../../inframonitor.module.scss';
+import { useScopedCluster } from '@/hooks/use-scoped-cluster';
+import { useGetHelmReleases } from '@/hooks/service/helm';
 import { useGetCatalog } from '@/hooks/service/catalog';
 import { catalogEmptyReason } from '@/util/catalog-empty';
 import { useGetHelmRepositories } from '@/hooks/service/helm';
@@ -23,7 +25,15 @@ const items = [{ label: '인프라 모니터' }, { label: '애플리케이션' }
 type OptionType = { text: string; value: string };
 
 // 키워드 토글 상태를 관리하는 컴포넌트
-const CatalogItem = ({ chart, repoName }: { chart: Chart; repoName: string }) => {
+const CatalogItem = ({
+  chart,
+  repoName,
+  installed,
+}: {
+  chart: Chart;
+  repoName: string;
+  installed?: boolean;
+}) => {
   const navigate = useNavigate();
   const [expandedKeywords, setExpandedKeywords] = useState<Set<number>>(new Set());
   const [imageError, setImageError] = useState(false);
@@ -98,6 +108,13 @@ const CatalogItem = ({ chart, repoName }: { chart: Chart; repoName: string }) =>
             <div className={styles.catalogTit}>
               <p>{chart.name}</p>
               <span>{chart.version}</span>
+              {/* 차트 버전과 앱 버전은 다르다 — 무엇이 깔리는지는 앱 버전이 말한다. */}
+              {chart.appVersion && <span className={styles.appVersion}>앱 {chart.appVersion}</span>}
+              {installed && (
+                <span className={styles.installedBadge} data-testid="installed-badge">
+                  설치됨
+                </span>
+              )}
             </div>
             <div className={styles.catalogTxt}>{chart.description}</div>
           </div>
@@ -209,6 +226,16 @@ export default function ApplicationCatalogPage() {
   const { searchValue, ...restProps } = useSearchInputState();
 
   const selectedRepoName = selectedValue?.value || '';
+  /*
+   * 같은 차트를 두 번 깔기 전에는 이미 깔려 있다는 것을 알 수 없었다. 카탈로그와 설치된 앱을
+   * 오가지 않게 목록에서 바로 보여 준다.
+   */
+  const { clusterName: scopedCluster } = useScopedCluster();
+  const { releases } = useGetHelmReleases({ clusterId: scopedCluster });
+  const installedCharts = useMemo(
+    () => new Set((releases ?? []).map((r) => r.chart).filter((c): c is string => !!c)),
+    [releases]
+  );
   const { charts, isPending, isError } = useGetCatalog(selectedRepoName);
 
   // 검색 및 필터링
@@ -341,6 +368,7 @@ export default function ApplicationCatalogPage() {
                 key={`${chart.name}-${index}`}
                 chart={chart}
                 repoName={selectedRepoName}
+                installed={installedCharts.has(chart.name)}
               />
             ))
           ) : (

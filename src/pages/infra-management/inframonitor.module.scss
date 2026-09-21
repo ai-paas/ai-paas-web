@@ -191,9 +191,15 @@
 
 .catalogTit {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
+
+  & > p {
+    margin-right: auto;
+  }
 
   & > p {
     width: 200px;
@@ -321,4 +327,25 @@
     @include font-style;
     line-height: 1.6;
   }
+}
+
+/* 차트 버전과 앱 버전은 다르다 — 무엇이 깔리는지는 앱 버전이 말한다. */
+.appVersion {
+  padding: 1px 6px;
+  border: 1px solid $color-gray-100;
+  border-radius: 999px;
+  color: $page-font-color-600;
+  font-size: $page-font-10;
+  white-space: nowrap;
+}
+
+/* 같은 차트를 두 번 깔기 전에는 이미 깔려 있다는 것을 알 수 없었다. */
+.installedBadge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: #ecfdf3;
+  color: #027a48;
+  font-size: $page-font-10;
+  font-weight: 700;
+  white-space: nowrap;
 }
