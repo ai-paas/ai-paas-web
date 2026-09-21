@@ -108,7 +108,14 @@ export const BulkProvisionRow = ({
         </div>
       </td>
       <td>
-        <div>{isPending ? skeleton(100) : (item?.masterInstanceType ?? '—')}</div>
+        {/* GPU 를 고르면 worker 만 GPU 다. 하나만 보여주면 어디에 GPU 가 붙는지 알 수 없다. */}
+        <div>
+          {isPending
+            ? skeleton(100)
+            : item?.masterInstanceType === item?.workerInstanceType
+              ? (item?.masterInstanceType ?? '—')
+              : `${item?.masterInstanceType ?? '—'} / ${item?.workerInstanceType ?? '—'}`}
+        </div>
         <div style={{ fontSize: 11, color: '#888' }}>
           {isPending ? skeleton(80) : specSummary(item ?? ({} as ProvisioningDefaults))}
         </div>
