@@ -4,6 +4,7 @@ import {
   formatDurationSince,
   formatElapsed,
   formatRelativeTime,
+  parseServerDate,
 } from './date';
 
 // vitest 설정에서 TZ='Asia/Seoul' 고정 — 모든 기대값은 KST 기준이다.
@@ -152,38 +153,29 @@ describe('date 유틸', () => {
       expect(formatRelativeTime(secondsAgo(seconds))).toBe(expected);
     });
 
-    // ============================================
-    // 특성화 테스트 (현재 동작 고정)
-    // ============================================
-    describe('특성화: naive 문자열의 타임존 해석이 formatDateTime과 다르다', () => {
-      // 버그 의심 — 팀 확인 필요:
-      // formatDateTime은 타임존 표기가 없는 naive 문자열에 'Z'를 붙여 UTC로 간주하지만,
-      // formatRelativeTime은 'Z'를 부여하지 않고 new Date()에 그대로 넘겨 로컬(KST)로 해석한다.
-      // 같은 naive 문자열이 두 함수에서 9시간 차이로 다르게 해석된다.
-      it('naive 문자열을 로컬(KST)로 해석한다 — UTC로 해석하는 formatDateTime과 불일치', () => {
+    describe('오프셋 없는 문자열은 UTC 로 읽는다', () => {
+      /*
+       * 백엔드는 UTC 로 돌면서 오프셋 없는 문자열을 내보낸다. 예전에는 formatDateTime 만 'Z' 를
+       * 붙이고 formatRelativeTime 은 붙이지 않아, 같은 문자열이 두 함수에서 9시간 차이로 읽혔다.
+       */
+      it('두 함수가 같은 순간으로 해석한다', () => {
         withFrozenNow();
-        // 현재 시각: KST 2026-08-11 12:00:00
-        // naive '2026-08-11T11:00:00' → 로컬(KST) 11:00으로 해석 → 1시간 전
-        expect(formatRelativeTime('2026-08-11T11:00:00')).toBe('1시간 전');
-
-        // 같은 문자열을 formatDateTime은 UTC로 간주 → KST 20:00 (현재보다 8시간 미래)
-        expect(formatDateTime('2026-08-11T11:00:00')).toBe('2026-08-11 20:00');
+        // 현재 시각: KST 2026-08-11 12:00:00 = UTC 03:00:00
+        // naive '2026-08-11T02:00:00' → UTC 02:00 = KST 11:00 → 1시간 전
+        expect(formatRelativeTime('2026-08-11T02:00:00')).toBe('1시간 전');
+        expect(formatDateTime('2026-08-11T02:00:00')).toBe('2026-08-11 11:00');
       });
 
-      it('같은 시각이라도 Z 접미사 유무에 따라 결과가 달라진다', () => {
+      it('Z 를 붙이든 안 붙이든 같은 결과다', () => {
         withFrozenNow();
-        // 'Z'가 붙으면 UTC 11:00 = KST 20:00 → 미래 → '방금 전'
-        expect(formatRelativeTime('2026-08-11T11:00:00Z')).toBe('방금 전');
-        // naive면 KST 11:00 → '1시간 전' (위 테스트와 대비)
-        expect(formatRelativeTime('2026-08-11T11:00:00')).toBe('1시간 전');
+        expect(formatRelativeTime('2026-08-11T02:00:00Z')).toBe('1시간 전');
+        expect(formatRelativeTime('2026-08-11T02:00:00')).toBe('1시간 전');
       });
 
-      // 버그 의심 — 팀 확인 필요:
-      // 파싱 불가 문자열이면 formatDateTime은 ''를 반환하지만,
-      // formatRelativeTime은 NaN 비교가 모두 false가 되어 '방금 전'으로 떨어진다.
-      it('파싱할 수 없는 문자열이면 "방금 전"을 반환한다 (formatDateTime의 ""와 불일치)', () => {
+      it('파싱할 수 없는 문자열은 빈 문자열이다', () => {
+        // 예전에는 NaN 비교가 모두 false 라 "방금 전" 으로 떨어져 오래된 값처럼 보이지 않았다.
         withFrozenNow();
-        expect(formatRelativeTime('not-a-date')).toBe('방금 전');
+        expect(formatRelativeTime('not-a-date')).toBe('');
       });
     });
   });
@@ -212,5 +204,43 @@ describe('formatDurationSince', () => {
 
   it('시계가 앞서 있어도 음수를 보여주지 않는다', () => {
     expect(formatDurationSince('2026-09-16T12:00:30Z', now)).toBe('0초');
+  });
+});
+
+describe('오프셋 없는 서버 시각', () => {
+  /*
+   * 백엔드는 UTC 로 돌면서 오프셋 없는 문자열을 내보낸다. 보정하지 않으면 브라우저가 로컬
+   * 시각으로 읽어 KST 기준 9시간이 어긋난다. 프로비저닝 경과 시간이 "9시간" 으로 보였다.
+   */
+  const NAIVE_UTC = '2026-09-18T02:20:18';
+  const SAME_MOMENT = Date.UTC(2026, 8, 18, 2, 20, 18);
+
+  it('parseServerDate 는 오프셋이 없으면 UTC 로 읽는다', () => {
+    expect(parseServerDate(NAIVE_UTC)?.getTime()).toBe(SAME_MOMENT);
+  });
+
+  it('오프셋이 있으면 그대로 존중한다', () => {
+    expect(parseServerDate('2026-09-18T11:20:18+09:00')?.getTime()).toBe(SAME_MOMENT);
+    expect(parseServerDate('2026-09-18T02:20:18Z')?.getTime()).toBe(SAME_MOMENT);
+  });
+
+  it('빈 값과 깨진 값은 null', () => {
+    expect(parseServerDate(undefined)).toBeNull();
+    expect(parseServerDate('')).toBeNull();
+    expect(parseServerDate('not-a-date')).toBeNull();
+  });
+
+  it('formatDurationSince 가 9시간을 더하지 않는다', () => {
+    const tenMinutesLater = SAME_MOMENT + 10 * 60 * 1000;
+
+    expect(formatDurationSince(NAIVE_UTC, tenMinutesLater)).toBe('10분 0초');
+  });
+
+  it('formatRelativeTime 도 같은 기준으로 읽는다', () => {
+    vi.setSystemTime(new Date(SAME_MOMENT + 5 * 60 * 1000));
+
+    expect(formatRelativeTime(NAIVE_UTC)).toBe('5분 전');
+
+    vi.useRealTimers();
   });
 });

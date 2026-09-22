@@ -82,9 +82,13 @@ export interface CatalogDetail {
   chartName: string;
   maintainers?: Array<{
     name: string;
-    email: string;
+    email?: string;
+    url?: string;
   }>;
+  /** 프로젝트 홈페이지. Chart.yaml 의 home. */
+  home?: string;
   source?: string[];
+  sources?: string[];
   versions?: string[];
   versionHistory?: Array<{
     version: string;

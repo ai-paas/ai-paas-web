@@ -59,13 +59,41 @@ export interface CredentialFieldSchema {
   group?: string;
 }
 
+/** CSP 하나에 대해 "지금 통과하는" 생성 요청 한 벌. 값은 백엔드가 계정에서 조회해 조립한다. */
+export interface ProvisioningDefaults {
+  provider: string;
+  displayName: string;
+  ready: boolean;
+  blockedReason?: string | null;
+  credentialId?: string | null;
+  credentialName?: string | null;
+  region?: string | null;
+  masterInstanceType?: string | null;
+  workerInstanceType?: string | null;
+  vcpu?: number | null;
+  memoryGb?: number | null;
+  gpuCount?: number | null;
+  osImage?: string | null;
+  providerSpec?: Record<string, string> | null;
+}
+
+/** 값 하나. 식별자가 곧 이름이면 label 은 value 와 같다. */
+export interface ConfigOption {
+  value: string;
+  label: string;
+}
+
 export interface ProviderConfigSchemaField {
   key: string;
   type: string;
   required?: boolean;
   defaultValue?: string;
+  /** 화면에 띄울 이름. 비면 키 뒷부분을 그대로 쓴다. */
+  label?: string;
   description?: string;
   allowedValues?: string[];
+  /** allowedValues 에 사람이 읽을 이름을 붙인 것. */
+  allowedOptions?: ConfigOption[];
   [key: string]: unknown;
 }
 
@@ -182,12 +210,22 @@ export const useGetProviderImages = (
 };
 
 // CSP 별 클러스터 설정 스키마
-export const useGetProviderConfigSchema = (provider?: string, enabled: boolean = true) => {
+export const useGetProviderConfigSchema = (
+  provider?: string,
+  enabled: boolean = true,
+  // 주면 계정에서 실제로 고를 수 있는 값이 allowedValues 에 채워진다.
+  params?: { credentialId?: string; region?: string }
+) => {
+  const searchParams = Object.fromEntries(
+    Object.entries({ credentialId: params?.credentialId, region: params?.region }).filter(
+      ([, v]) => !!v
+    )
+  ) as Record<string, string>;
   const { data, isPending, isError, error } = useQuery({
-    queryKey: queryKeys.infraProviders.configSchema(provider),
+    queryKey: queryKeys.infraProviders.configSchema(provider, searchParams),
     queryFn: () =>
       api
-        .get(`any-cloud/providers/${provider}/config-schema`)
+        .get(`any-cloud/providers/${provider}/config-schema`, { searchParams })
         .json<ListEnvelope<ProviderConfigSchemaField>>(),
     enabled: enabled && !!provider,
   });
@@ -205,4 +243,43 @@ export const useGetProviderCredentialSchema = (provider?: string, enabled: boole
     enabled: enabled && !!provider,
   });
   return { fields: unwrapList(data), isPending, isError, error };
+};
+
+/**
+ * CSP 마다 지금 통과하는 생성 기본값.
+ *
+ * <p>화면에 값을 박아 두면 스펙이나 이미지가 갈릴 때마다 어긋나고, 그 사실을 생성 실패로야
+ * 알게 된다. 백엔드가 계정에서 조회해 조립한 것을 그대로 쓴다.
+ */
+export interface SpecFilter {
+  minVcpu?: number;
+  minMemoryGb?: number;
+  gpu?: boolean;
+}
+
+export const useGetProvisioningDefaults = (
+  provider?: string,
+  filter: SpecFilter = {},
+  enabled: boolean = true
+) => {
+  const searchParams: Record<string, string> = {};
+  if (provider) searchParams.provider = provider;
+  if (filter.minVcpu) searchParams.minVcpu = String(filter.minVcpu);
+  if (filter.minMemoryGb) searchParams.minMemoryGb = String(filter.minMemoryGb);
+  if (filter.gpu) searchParams.gpu = 'true';
+
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.infraProviders.provisioningDefaults(searchParams),
+    queryFn: () =>
+      api
+        .get('any-cloud/providers/provisioning-defaults', { searchParams })
+        .json<ListEnvelope<ProvisioningDefaults>>(),
+    enabled,
+    /*
+     * CSP API 를 실제로 두드려 조립한다. 백엔드도 캐시하지만 모달을 여닫을 때마다 왕복할
+     * 이유가 없다. 용량처럼 바뀌는 값이 있어 오래 들고 있지는 않는다.
+     */
+    staleTime: 60_000,
+  });
+  return { defaults: unwrapList(data), isPending, isError, error, refetch };
 };

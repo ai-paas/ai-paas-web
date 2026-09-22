@@ -26,14 +26,11 @@ const REGION_CITY: Record<string, string> = {
   'asia-southeast1': '싱가포르',
   'us-central1': '아이오와',
   'europe-west1': '벨기에',
-  // Azure
-  koreacentral: '서울',
-  koreasouth: '부산',
-  japaneast: '도쿄',
-  japanwest: '오사카',
-  southeastasia: '싱가포르',
-  eastus: '버지니아',
-  westeurope: '네덜란드',
+  // Alibaba — AWS 와 이름이 겹치는 리전(ap-northeast-2 등)은 위에서 이미 같은 값으로 잡힌다.
+  'cn-hangzhou': '항저우',
+  'cn-beijing': '베이징',
+  'cn-shanghai': '상하이',
+  'ap-southeast-5': '자카르타',
   // OCI
   'ap-seoul-1': '서울',
   'ap-chuncheon-1': '춘천',

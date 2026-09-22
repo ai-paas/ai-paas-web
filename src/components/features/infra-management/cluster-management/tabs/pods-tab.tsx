@@ -177,6 +177,7 @@ export const PodsTab = ({ clusterName, namespace }: PodsTabProps) => {
           totalCount={pods.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

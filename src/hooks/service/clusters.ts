@@ -890,7 +890,7 @@ export const useGetKubernetesServiceAccounts = (
     queryKey: queryKeys.kubernetes.serviceAccounts.list(clusterName, namespace),
     queryFn: () =>
       fetchKubernetesResource<KubernetesServiceAccount>(
-        'service-accounts',
+        'serviceaccounts',
         clusterName!,
         namespace
       ),
@@ -912,7 +912,7 @@ export const useGetKubernetesConfigMaps = (
   const { data, isPending, isError, error } = useQuery({
     queryKey: queryKeys.kubernetes.configMaps.list(clusterName, namespace),
     queryFn: () =>
-      fetchKubernetesResource<KubernetesConfigMap>('config-maps', clusterName!, namespace),
+      fetchKubernetesResource<KubernetesConfigMap>('configmaps', clusterName!, namespace),
     enabled: enabled && !!clusterName,
     retry: 1,
     refetchOnWindowFocus: true,

@@ -15,6 +15,7 @@ import {
   type SelectSingleValue,
 } from '@innogrid/ui';
 
+import { useScopedCluster } from '@/hooks/use-scoped-cluster';
 import { useGetClusters } from '@/hooks/service/clusters';
 import { useGetHelmReleases } from '@/hooks/service/helm';
 import { formatDateTime } from '@/util/date';
@@ -105,8 +106,22 @@ export default function ApplicationHelmReleasePage() {
     return result;
   }, [clusters]);
 
+  /*
+   * 섹션이 같은 클러스터를 공유한다. 화면마다 따로 고르게 두면 설치된 앱에서 고른 것을
+   * 설치 폼에서 다시 고르게 된다.
+   */
+  const { clusterName: scopedCluster, setClusterName: setScopedCluster } = useScopedCluster();
+
   useEffect(() => {
     if (!clusterOptions.length) return;
+
+    if (scopedCluster && scopedCluster !== selectedCluster?.value) {
+      const scoped = clusterOptions.find((option) => option.value === scopedCluster);
+      if (scoped) {
+        setSelectedCluster({ text: scoped.text, value: scoped.value });
+        return;
+      }
+    }
 
     // 현재 선택된 클러스터가 옵션 목록에 존재하면 유지
     if (
@@ -130,8 +145,9 @@ export default function ApplicationHelmReleasePage() {
 
     if (latestCluster) {
       setSelectedCluster({ text: latestCluster.text, value: latestCluster.value });
+      setScopedCluster(latestCluster.value);
     }
-  }, [clusterOptions, selectedCluster]);
+  }, [clusterOptions, selectedCluster, scopedCluster, setScopedCluster]);
 
   const { releases, isPending, isError, error } = useGetHelmReleases({
     clusterId: selectedCluster?.value,
@@ -149,6 +165,7 @@ export default function ApplicationHelmReleasePage() {
   const handleClusterChange = (option: SelectSingleValue<OptionType>) => {
     if (!option) return;
     setSelectedCluster(option as OptionType);
+    setScopedCluster((option as OptionType)?.value ?? '');
     setRowSelection({});
     initializePagination();
   };
@@ -359,6 +376,7 @@ export default function ApplicationHelmReleasePage() {
             totalCount={filteredReleases.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             useMultiSelect
             rowSelection={rowSelection}

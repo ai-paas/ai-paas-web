@@ -1,0 +1,12 @@
+/* 노드가 아직 없는 줄. 나머지 칸이 비어 "값이 빠진 행" 으로 읽히지 않게 이유를 붙인다. */
+.pendingBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid #f0d8a8;
+  border-radius: 999px;
+  background-color: #fdf8ed;
+  color: #8a5a00;
+  font-size: $page-font-13;
+  font-weight: 600;
+  white-space: nowrap;
+}

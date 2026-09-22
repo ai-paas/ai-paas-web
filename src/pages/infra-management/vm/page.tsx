@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import {
   BreadCrumb,
   Button,
@@ -15,8 +15,12 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { clusterStatusTone } from '@/util/status-tone';
 import { kubernetesStatusOf, type StatusTone as NodeTone } from '@/util/node-status';
 import { regionLabel } from '@/util/region-labels';
-import { mergeVmRows, type VmRow } from '@/util/vm-rows';
+import type { VmRow } from '@/util/vm-rows';
+import styles from './vm-list.module.scss';
 import { InfraProgressTooltip } from '@/components/features/infra-management/provisioning/infra-progress';
+import { BulkProvisionModal } from '@/components/features/infra-management/provisioning/bulk-provision-modal';
+import { syncDevToolsFromUrl } from '@/util/dev-tools';
+import { hasVmInProgress } from '@/util/vm-progress';
 
 // 인프라 상태와 쿠버네티스 상태는 출처가 다르다. 한 칸에 합치면 어느 쪽이 문제인지 알 수 없다.
 const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
@@ -26,16 +30,41 @@ const BADGE_TONE: Record<NodeTone, 'run' | 'ing' | 'temp' | 'negative'> = {
   negative: 'negative',
 };
 
+/** 노드가 없는 클러스터는 진행 중이거나 실패한 것들이라 많지 않다. */
+const PENDING_FETCH_SIZE = 100;
+
 export default function VmPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  /*
+   * 검증용 일괄 생성은 평소에 보이지 않는다. 주소에 스위치를 달았을 때만 노출한다 —
+   * 토큰은 번들에 들어가므로 접근 통제가 아니라 숨김이다.
+   */
+  const [devTools, setDevTools] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  useEffect(() => setDevTools(syncDevToolsFromUrl(location.search)), [location.search]);
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
 
-  const { nodes, isPending, isError } = useGetClusterNodes();
+  /*
+   * 아직 노드가 없는 클러스터는 페이지와 무관하게 맨 앞에 둔다. 만들어지는 중이거나 실패한
+   * 것들이라 뒤 페이지로 밀리면 정작 봐야 할 줄을 못 본다. 개수가 적어 한 번에 받는다.
+   */
+  const { vms } = useGetVms({ size: PENDING_FETCH_SIZE });
+  const inProgress = hasVmInProgress(vms);
+  // 노드는 서버가 자른다. 전량을 받아 화면에서 자르면 목록이 커질수록 응답만 무거워진다.
+  const { nodes, total: nodeTotal, isPending, isError } = useGetClusterNodes(
+    { page: pagination.pageIndex + 1, size: pagination.pageSize },
+    inProgress
+  );
   // 노드는 PROVISION 이 끝나야 생긴다. 노드만 보여주면 프로비저닝 중이거나 실패한 클러스터가
   // 목록에서 통째로 사라진다 — 진행 중인 작업도 실패 원인도 찾아갈 길이 없다.
-  const { vms } = useGetVms();
-  const rows = useMemo(() => mergeVmRows(nodes, vms), [nodes, vms]);
+  /*
+   * 노드가 없는 클러스터의 줄도 서버가 함께 내려준다. 화면이 끼워 넣으면 자르는 곳과 세는
+   * 곳이 갈려, 그 줄이 개수에는 잡히는데 다음 페이지는 비어 버린다.
+   */
+  const rows: VmRow[] = nodes;
+  const totalCount = nodeTotal;
   // 행은 노드지만 진행 상황은 클러스터 단위다. 행마다 되찾지 않도록 한 번 만들어 둔다.
   const vmByName = useMemo(() => new Map(vms.map((v) => [v.clusterName, v])), [vms]);
 
@@ -93,6 +122,13 @@ export default function VmPage() {
       id: 'role',
       header: '역할',
       accessorFn: (row: VmRow) => (row.pending ? '준비 중' : (row.role ?? '-')),
+      // 노드가 아직 없는 줄은 나머지 칸이 비어 "값이 빠진 행" 으로 읽힌다. 왜 비었는지 적는다.
+      cell: ({ row }: { row: { original: VmRow } }) =>
+        row.original.pending ? (
+          <span className={styles.pendingBadge}>준비 중</span>
+        ) : (
+          (row.original.role ?? '-')
+        ),
       size: 90,
     },
     {
@@ -176,6 +212,11 @@ export default function VmPage() {
             <Button color="primary" onClick={() => navigate('/infra-management/vm/create')}>
               VM 만들기
             </Button>
+            {devTools && (
+              <Button color="secondary" onClick={() => setBulkOpen(true)}>
+                일괄 생성 (검증용)
+              </Button>
+            )}
             {/*
               노드는 Pulumi 스택 단위로 관리한다. worker 하나만 지우는 경로가 없어서,
               삭제 버튼을 두면 할 수 없는 일을 할 수 있다고 오해하게 된다.
@@ -204,7 +245,7 @@ export default function VmPage() {
           <Table
             columns={columns}
             data={rows}
-            totalCount={rows.length}
+            totalCount={totalCount}
             isLoading={isPending}
             emptyMessage={
               isError ? '노드 목록을 불러오는 데 실패했습니다.' : '표시할 노드가 없습니다.'
@@ -217,6 +258,7 @@ export default function VmPage() {
           />
         </div>
       </div>
+      {devTools && <BulkProvisionModal isOpen={bulkOpen} onClose={() => setBulkOpen(false)} />}
     </main>
   );
 }

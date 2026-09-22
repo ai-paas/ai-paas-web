@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
+import { progressRefetchInterval } from '@/util/vm-progress';
 import type { Page } from '../../types/api';
 import type {
   ClusterNode,
@@ -26,30 +27,49 @@ export const useGetVms = (params: GetVmsParams = {}) => {
       .map(([k, v]) => [k, String(v)])
   );
 
-  const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: queryKeys.vms.list(searchParams),
-    queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
-  });
-
-  const vms: Vm[] = (() => {
-    const raw = data?.data;
+  const unwrap = (payload?: ListEnvelope<Vm>): Vm[] => {
+    const raw = payload?.data;
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
     return raw.items ?? [];
-  })();
+  };
 
-  return { vms, isPending, isError, error, refetch };
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: queryKeys.vms.list(searchParams),
+    queryFn: () => api.get('any-cloud/vms', { searchParams }).json<ListEnvelope<Vm>>(),
+    placeholderData: (previous) => previous,
+    /*
+     * 만들어지는 중인 클러스터가 있을 때만 다시 묻는다. 끄면 생성 후 PROVISIONING → READY
+     * 가 보이지 않아 새로고침을 하게 되고, 고정 주기로 켜 두면 아무것도 변하지 않는 화면에서도
+     * 왕복이 이어진다.
+     */
+    refetchInterval: (query) => progressRefetchInterval(unwrap(query.state.data)),
+  });
+
+  const vms: Vm[] = unwrap(data);
+
+  return { vms, total: totalOf(data, vms.length), isPending, isError, error, refetch };
 };
 
 // ============= 단일 VM 상세 =============
 export const useGetVm = (vmName?: string, enabled: boolean = true) => {
+  const unwrapOne = (payload?: { data?: Vm } | Vm): Vm | undefined =>
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : (payload as Vm | undefined);
+
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: queryKeys.vms.detail(vmName),
     queryFn: () => api.get(`any-cloud/vms/${vmName}`).json<{ data?: Vm } | Vm>(),
     enabled: enabled && !!vmName,
+    // 상세에서 진행 상황을 보고 있는 동안 갱신된다. 끝나면 스스로 멈춘다.
+    refetchInterval: (query) => {
+      const current = unwrapOne(query.state.data);
+      return progressRefetchInterval(current ? [current] : []);
+    },
   });
 
-  const vm: Vm | undefined = data && typeof data === 'object' && 'data' in data ? data.data : (data as Vm | undefined);
+  const vm: Vm | undefined = unwrapOne(data);
   return { vm, isPending, isError, refetch };
 };
 
@@ -70,6 +90,30 @@ export const useCreateVm = (options?: {
     onError: (error) => options?.onError?.(error),
   });
   return { createVm: mutate, isPending, isError, isSuccess, error };
+};
+
+// ============= VM 생성 사전 검증 (자원 생성 없음) =============
+export interface VmPreflightResult {
+  readyToProvision?: boolean;
+  existingClusterConflict?: boolean;
+  errors?: string[];
+  warnings?: string[];
+  [key: string]: unknown;
+}
+
+/**
+ * 생성과 같은 본문으로 서버에 물어본다.
+ *
+ * <p>화면은 CSP 가 지금 자리가 있는지, 자격증명이 아직 통하는지 알 수 없다. 만들어 보고
+ * 실패하면 인프라를 절반 만든 뒤 롤백한다.
+ */
+export const usePreflightVm = () => {
+  const { mutateAsync, isPending } = useMutation({
+    mutationKey: ['preflightVm'],
+    mutationFn: (data: VmCreateRequest) =>
+      api.post('any-cloud/vms/preflight', { json: data }).json<VmPreflightResult>(),
+  });
+  return { preflightVm: mutateAsync, isPreflighting: isPending };
 };
 
 // ============= VM scale (workerCount 변경) =============
@@ -94,7 +138,25 @@ export const useScaleVm = (options?: {
 
 // ============= 노드 목록 (클러스터 경계를 넘어 한 행씩) =============
 // 백엔드가 /v1/vms 아래 두지 않은 이유: 클러스터 이름 path 변수와 겹친다.
-export const useGetClusterNodes = (params: { provider?: string; clusterName?: string } = {}) => {
+/**
+ * @param pollWhileInProgress 만들어지는 중인 클러스터가 있으면 켠다. 노드는 PROVISION 이 끝나야
+ *     생기므로, 끄면 클러스터가 READY 가 되어도 목록에 줄이 늘지 않는다
+ */
+/**
+ * 응답의 전체 개수.
+ *
+ * <p>화면이 페이지 수를 계산하려면 이번 페이지 길이가 아니라 전체가 필요하다. 게이트웨이가
+ * total 을 주고, 없으면 지금 받은 만큼밖에 모른다.
+ */
+const totalOf = (payload: unknown, fallback: number): number => {
+  const total = (payload as { total?: unknown } | undefined)?.total;
+  return typeof total === 'number' ? total : fallback;
+};
+
+export const useGetClusterNodes = (
+  params: { provider?: string; clusterName?: string; page?: number; size?: number } = {},
+  pollWhileInProgress: boolean = false
+) => {
   const searchParams = Object.fromEntries(
     Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== null && v !== '')
@@ -105,6 +167,9 @@ export const useGetClusterNodes = (params: { provider?: string; clusterName?: st
     queryKey: queryKeys.clusterNodes.list(searchParams),
     queryFn: () =>
       api.get('any-cloud/nodes', { searchParams }).json<ListEnvelope<ClusterNode>>(),
+    refetchInterval: pollWhileInProgress ? 5_000 : false,
+    // 페이지를 넘길 때 목록이 비었다 다시 차면 깜빡인다. 새 페이지가 올 때까지 이전 것을 둔다.
+    placeholderData: (previous) => previous,
   });
 
   const nodes: ClusterNode[] = (() => {
@@ -114,7 +179,7 @@ export const useGetClusterNodes = (params: { provider?: string; clusterName?: st
     return raw.items ?? [];
   })();
 
-  return { nodes, isPending, isError, error, refetch };
+  return { nodes, total: totalOf(data, nodes.length), isPending, isError, error, refetch };
 };
 
 // ============= VM 삭제 (Pulumi destroy 트리거) =============

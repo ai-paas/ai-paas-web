@@ -84,9 +84,6 @@ const CatalogDetailPage = lazy(
 const ApplicationHelmReleasePage = lazy(
   () => import('@/pages/infra-management/application/helm-release/page')
 );
-const HelmReleaseCreatePage = lazy(
-  () => import('@/pages/infra-management/application/helm-release/create/page')
-);
 const HelmReleaseDetailPage = lazy(
   () => import('@/pages/infra-management/application/helm-release/[namespace]/[name]/page')
 );
@@ -383,8 +380,9 @@ export const routes: RouteObject[] = [
                 element: page(ApplicationHelmReleasePage),
               },
               {
+                // 설치는 차트 상세가 맡는다. 예전 링크가 죽지 않게 목록으로 보낸다.
                 path: 'helm-release/create',
-                element: page(HelmReleaseCreatePage),
+                element: <Navigate to="/infra-management/application/catalog" replace />,
               },
               {
                 path: 'helm-release/:namespace/:name',

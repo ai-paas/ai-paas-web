@@ -1,0 +1,41 @@
+.revisionWrap {
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.revisionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $page-font-13;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $color-gray-100;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $page-font-color-600;
+    font-weight: 600;
+  }
+}
+
+/* 지금 배포된 리비전. 되돌릴 대상과 헷갈리면 안 된다. */
+.revisionCurrent {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: #eff8ff;
+  color: #175cd3;
+  font-size: $page-font-10;
+  font-weight: 700;
+}
+
+.revisionEmpty {
+  padding: 24px 0;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+  text-align: center;
+}

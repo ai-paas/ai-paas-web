@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BreadCrumb, Button, Select, Tabs, type SelectSingleValue } from '@innogrid/ui';
 import {
   useGetCatalogDetail,
@@ -8,7 +8,10 @@ import {
 } from '@/hooks/service/catalog';
 import { formatDateTime } from '@/util/date';
 import { DetailValue } from '@/components/ui/detail-value';
+import { InstallReleasePanel } from '@/components/features/infra-management/application/install-release-panel';
 import styles from '../../../inframonitor.module.scss';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
@@ -40,7 +43,12 @@ type OptionType = { text: string; value: string };
 export default function CatalogDetailPage() {
   const { chartName } = useParams<{ chartName: string }>();
   const navigate = useNavigate();
-  const repoName = 'chart-museum-external';
+  /*
+   * 목록에서 고른 저장소를 그대로 받는다. 예전에는 저장소 하나를 박아 두어, 다른 저장소의
+   * 차트를 눌러도 없는 저장소를 뒤지다 "Chart not found" 로 끝났다.
+   */
+  const [searchParams] = useSearchParams();
+  const repoName = searchParams.get('repository') ?? '';
   const [selectedVersionValue, setSelectedVersionValue] = useState<string>();
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
   const [copyStatus, setCopyStatus] = useState<{
@@ -236,6 +244,11 @@ export default function CatalogDetailPage() {
 
           {message ? (
             <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{message}</div>
+          ) : language === 'markdown' ? (
+            /* README 는 문서다. 소스 하이라이팅으로 두면 표와 링크가 원문 기호로 보인다. */
+            <div className={styles.markdownBody}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyContent ?? ''}</ReactMarkdown>
+            </div>
           ) : (
             <SyntaxHighlighter
               language={language}
@@ -265,9 +278,15 @@ export default function CatalogDetailPage() {
     }
   };
 
-  const handleDeploy = () => {
-    alert('배포 기능은 준비 중입니다.');
-  };
+  // 보던 자리에서 바로 설치한다. 저장소, 차트, 버전은 이 화면이 이미 알고 있다.
+  const [installOpen, setInstallOpen] = useState(searchParams.get('install') === '1');
+
+  // Chart.yaml 은 sources 인데 응답이 source 로 오는 배포가 있다. 둘 다 본다.
+  const sourceLinks = useMemo<string[]>(() => {
+    const raw = catalogDetail?.sources ?? catalogDetail?.source ?? [];
+    return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [];
+  }, [catalogDetail?.sources, catalogDetail?.source]);
+  const handleDeploy = () => setInstallOpen(true);
 
   const breadcrumbItems = [
     { label: '인프라 모니터' },
@@ -565,13 +584,51 @@ export default function CatalogDetailPage() {
                     <div className="page-detail_item-data">{catalogDetail.keywords.join(', ')}</div>
                   </li>
                 )}
-                {catalogDetail.source &&
-                  Array.isArray(catalogDetail.source) &&
-                  catalogDetail.source.length > 0 && (
+                {/* 차트를 고를 때 "누가 만들었고 어디서 왔나" 가 판단 근거다. API 는 주는데 화면에 없었다. */}
+                {catalogDetail.home && (
+                  <li>
+                    <div className="page-detail_item-name">홈페이지</div>
+                    <div className="page-detail_item-data">
+                      <a
+                        href={catalogDetail.home}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="page-detail_item-data-link"
+                      >
+                        {catalogDetail.home}
+                      </a>
+                    </div>
+                  </li>
+                )}
+                {catalogDetail.maintainers && catalogDetail.maintainers.length > 0 && (
+                  <li>
+                    <div className="page-detail_item-name">관리자</div>
+                    <div className="page-detail_item-data">
+                      {catalogDetail.maintainers.map((m, idx) => (
+                        <div key={`${m.name}-${idx}`}>
+                          {m.url ? (
+                            <a
+                              href={m.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="page-detail_item-data-link"
+                            >
+                              {m.name}
+                            </a>
+                          ) : (
+                            m.name
+                          )}
+                          {m.email ? ` (${m.email})` : ''}
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                )}
+                {sourceLinks.length > 0 && (
                     <li>
                       <div className="page-detail_item-name">소스 정보</div>
                       <div className="page-detail_item-data">
-                        {catalogDetail.source.map((source, idx) => (
+                        {sourceLinks.map((source, idx) => (
                           <div key={idx}>
                             <a
                               href={source}
@@ -595,7 +652,7 @@ export default function CatalogDetailPage() {
       <div className="page-content page-content-detail">
         <div className="page-tabsBox">
           <Tabs
-            labels={['README', 'Values']}
+            labels={['README', 'Values', '버전 이력']}
             value={String(activeTabIndex)}
             onValueChange={(index) => handleTabChange(index)}
             components={[
@@ -633,10 +690,63 @@ export default function CatalogDetailPage() {
                   copyKey: 'values',
                 })}
               </div>,
+              <div key="versions" className="tabs-Content">
+                {/*
+                  버전을 고르면 README 와 Values 만 바뀌어, 그 버전이 언제 나온 무엇인지는
+                  알 수 없었다. 앱 버전과 날짜를 같이 둔다.
+                */}
+                <div className={styles.versionTableWrap}>
+                  <table className={styles.versionTable}>
+                    <thead>
+                      <tr>
+                        <th>차트 버전</th>
+                        <th>앱 버전</th>
+                        <th>배포일</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(catalogDetail.versionHistory ?? []).slice(0, 50).map((item) => (
+                        <tr key={item.version} data-testid={`version-row-${item.version}`}>
+                          <td>
+                            {item.version}
+                            {item.version === version && (
+                              <span className={styles.versionCurrent}>보는 중</span>
+                            )}
+                          </td>
+                          <td>{item.appVersion || '-'}</td>
+                          <td>{item.created ? formatDateTime(item.created) : '-'}</td>
+                          <td>
+                            {item.version !== version && (
+                              <button
+                                type="button"
+                                className="table-td-link"
+                                onClick={() => handleVersionChange({ value: item.version } as never)}
+                              >
+                                이 버전 보기
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {(catalogDetail.versionHistory ?? []).length > 50 && (
+                    <p className={styles.versionMore}>
+                      최근 50개만 보여 줍니다 (전체 {catalogDetail.versionHistory?.length}개).
+                    </p>
+                  )}
+                </div>
+              </div>,
             ]}
           />
         </div>
       </div>
-    </main>
+          <InstallReleasePanel
+        isOpen={installOpen}
+        onClose={() => setInstallOpen(false)}
+        target={{ repoName, chartName: chartName || '', version }}
+      />
+</main>
   );
 }

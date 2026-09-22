@@ -297,10 +297,12 @@ export const queryKeys = {
       [...queryKeys.infraProviders.all, 'specs', params] as const,
     images: (params: ProviderImagesKeyParams = {}) =>
       [...queryKeys.infraProviders.all, 'images', params] as const,
-    configSchema: (provider?: string) =>
-      [...queryKeys.infraProviders.all, 'config-schema', provider] as const,
+    configSchema: (provider?: string, params?: Record<string, string>) =>
+      [...queryKeys.infraProviders.all, 'config-schema', provider, params ?? {}] as const,
     credentialSchema: (provider?: string) =>
       [...queryKeys.infraProviders.all, 'credential-schema', provider] as const,
+    provisioningDefaults: (params: Record<string, string> = {}) =>
+      [...queryKeys.infraProviders.all, 'provisioning-defaults', params] as const,
   },
   addons: {
     catalog: ['addon-catalog'] as const,
@@ -326,8 +328,10 @@ export const queryKeys = {
       [...queryKeys.helmReleases.all, params] as const,
     resources: (releaseName?: string, clusterId?: string, namespace?: string) =>
       [...queryKeys.helmReleases.all, 'resources', releaseName, clusterId, namespace] as const,
-    values: (releaseName?: string) =>
-      [...queryKeys.helmReleases.all, 'values', releaseName] as const,
+    revisions: (releaseName?: string, clusterId?: string, namespace?: string) =>
+      [...queryKeys.helmReleases.all, 'revisions', releaseName, clusterId, namespace] as const,
+    values: (releaseName?: string, clusterId?: string, namespace?: string) =>
+      [...queryKeys.helmReleases.all, 'values', releaseName, clusterId, namespace] as const,
   },
   helmRepositories: {
     all: ['helm-repositories'] as const,

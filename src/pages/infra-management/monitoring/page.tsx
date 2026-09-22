@@ -11,18 +11,13 @@ import {
 import { BreadCrumb } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
+import { AcceleratorPanel } from './accelerator-panel';
+import { CollectorNotice } from './collector-notice';
+import { RefreshControl, RefreshStatusDot } from './refresh-control';
+import { stepFor, TIME_RANGES } from './refresh-options';
 import { MetricLineChart } from './metric-line-chart';
 import styles from './monitoring.module.scss';
 import { ResourceGaugeCard } from './resource-gauge-card';
-
-type DCGMLabel = {
-  Hostname: string;
-  device: string;
-  exported_namespace: string;
-  exported_pod?: string;
-  gpu?: string;
-  modelName: string;
-};
 
 type FuriosaLabel = {
   device: string;
@@ -49,23 +44,37 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
     : pickedCluster;
   const setSelectedCluster = setPickedCluster;
 
-  // 비-가속기 cluster 에서 GPU query 6개 skip.
   const selectedClusterEntity = useMemo(
     () => clusters.find((c) => c.clusterName === selectedCluster?.value),
     [clusters, selectedCluster]
   );
-  const hasGpu = selectedClusterEntity?.hasGpuNodes ?? false;
+
+  const [rangeSeconds, setRangeSeconds] = useState<number>(TIME_RANGES[0].seconds);
+  const [refreshSeconds, setRefreshSeconds] = useState(30);
 
   const [windowAnchor, setWindowAnchor] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => {
-    const id = window.setInterval(() => setWindowAnchor(Math.floor(Date.now() / 1000)), 30_000);
+    if (refreshSeconds <= 0) return;
+    const id = window.setInterval(
+      () => setWindowAnchor(Math.floor(Date.now() / 1000)),
+      refreshSeconds * 1000
+    );
     return () => window.clearInterval(id);
-  }, []);
+  }, [refreshSeconds]);
   const { start, end, step } = useMemo(() => {
     const e = windowAnchor;
-    const s = e - 180 * 60;
-    return { start: s, end: e, step: 300 };
-  }, [windowAnchor]);
+    return { start: e - rangeSeconds, end: e, step: stepFor(rangeSeconds) };
+  }, [windowAnchor, rangeSeconds]);
+
+  /*
+   * 쿼리 목록을 만들 때는 아직 capacity 를 모른다. 첫 응답에서 capacity 가 잡히면 그 다음
+   * 렌더에 무거운 range 쿼리가 따라붙는다 — 왕복 한 번을 더 쓰는 대신 플래그가 틀려도 복구된다.
+   */
+  const [gpuDetected, setGpuDetected] = useState(false);
+  useEffect(() => {
+    setGpuDetected(false);
+  }, [selectedCluster?.value]);
+  const hasGpu = (selectedClusterEntity?.hasGpuNodes ?? false) || gpuDetected;
 
   const queries = useMemo<MultiQuerySpec[]>(() => {
     const range = (name: string, query: string): MultiQuerySpec => ({
@@ -105,6 +114,16 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
         'networkPacket',
         'sum(rate(node_network_receive_packets_total{device=~"eth.*|ens.*|bond.*"}[1m])) + sum(rate(node_network_transmit_packets_total{device=~"eth.*|ens.*|bond.*"}[1m]))'
       ),
+      /*
+       * 가속기 capacity 와 수집기 유무는 플래그와 무관하게 항상 본다. hasGpuNodes 는 agent
+       * heartbeat 에서 오는데 드라이버가 올라오기 전에는 false 라, 그것만 믿으면 GPU 가 붙어
+       * 있는데도 영역이 통째로 사라진다.
+       */
+      instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
+      instant('gpuRequest', 'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'),
+      instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL)'),
+      instant('gpuCollector', 'count(DCGM_FI_DEV_GPU_UTIL) or vector(0)'),
+      instant('npuCollector', 'count(furiosa_npu_hw_temperature) or vector(0)'),
       instant('npuTotal', 'sum(kube_node_status_capacity{resource=~".*npu.*"})'),
       instant('npuRequest', 'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})'),
       instant('tpuTotal', 'sum(gke_tpu_node_allocatable{resource_type="tpu"})'),
@@ -129,24 +148,32 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
     ];
     if (hasGpu) {
       list.push(
-        instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
-        instant(
-          'gpuRequest',
-          'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'
-        ),
         range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
         range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
         range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
-        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE')
+        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE'),
+        range('gpuSmActiveRange', 'DCGM_FI_PROF_GR_ENGINE_ACTIVE'),
+        range('gpuTensorActiveRange', 'DCGM_FI_PROF_PIPE_TENSOR_ACTIVE'),
+        range('gpuDramActiveRange', 'DCGM_FI_PROF_DRAM_ACTIVE'),
+        range(
+          'gpuPcieRange',
+          'sum by (Hostname, gpu) (rate(DCGM_FI_PROF_PCIE_TX_BYTES[1m])) + ' +
+            'sum by (Hostname, gpu) (rate(DCGM_FI_PROF_PCIE_RX_BYTES[1m]))'
+        )
       );
     }
     return list;
   }, [start, end, step, hasGpu]);
 
-  const { data: results, isPending: isMetricsPending } = useMultiPromQuery(
-    selectedCluster?.value,
-    queries
-  );
+  const {
+    data: results,
+    isPending: isMetricsPending,
+    isFetching: isMetricsFetching,
+    dataUpdatedAt,
+  } = useMultiPromQuery(selectedCluster?.value, queries, {
+    // 갱신 주기보다 오래 신선하다고 보면 주기를 줄여도 화면이 그대로다.
+    staleTime: refreshSeconds > 0 ? refreshSeconds * 1000 - 1_000 : Infinity,
+  });
 
   // 쿼리가 전부 실패하면 값이 0 인 그래프가 그려진다. 고장인지 미설치인지 알 수 없다.
   const outage = metricsOutage(results);
@@ -172,10 +199,21 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const networkPacketValue = scalar('networkPacket');
   const gpuTotalValue = scalar('gpuTotal');
   const gpuRequestValue = scalar('gpuRequest');
+  const gpuUtilAvgValue = scalar('gpuUtilAvg');
+  const gpuCollectorCount = scalar('gpuCollector');
+  const npuCollectorCount = scalar('npuCollector');
+  const gpuGaugeValue = Math.max(
+    0,
+    Math.min(gpuTotalValue ? (gpuRequestValue / gpuTotalValue) * 100 : 0, 100)
+  );
   const npuTotalValue = scalar('npuTotal');
   const npuRequestValue = scalar('npuRequest');
   const tpuTotalValue = scalar('tpuTotal');
   const tpuAllocatedValue = scalar('tpuAllocated');
+
+  useEffect(() => {
+    if (gpuTotalValue > 0) setGpuDetected(true);
+  }, [gpuTotalValue]);
 
   const cpuGaugeValue = Math.max(
     0,
@@ -188,10 +226,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const fileSystemGaugeValue = Math.max(
     0,
     Math.min(fileSystemTotalValue ? (fileSystemUsageValue / fileSystemTotalValue) * 100 : 0, 100)
-  );
-  const gpuGaugeValue = Math.max(
-    0,
-    Math.min(gpuTotalValue ? (gpuRequestValue / gpuTotalValue) * 100 : 0, 100)
   );
   const npuGaugeValue = Math.max(
     0,
@@ -210,20 +244,45 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
             <BreadCrumb items={[{ label: '인프라 관리' }, { label: '모니터링' }]} />
           </div>
           <div className="page-title-box">
-            <h2 className="page-title">모니터링</h2>
+            <h2 className="page-title">
+              모니터링
+              <RefreshStatusDot
+                refreshSeconds={refreshSeconds}
+                updatedAt={dataUpdatedAt}
+                isFetching={isMetricsFetching}
+              />
+            </h2>
           </div>
         </>
       )}
       <div className={`page-content`}>
-        {!embedded && (
-          <>
-            <div>클러스터 선택</div>
-            <ClusterPicker
-              value={selectedCluster?.value}
-              onChange={(name) => setSelectedCluster({ label: name, value: name })}
+        {/* 구간과 갱신은 성능 지표와 가속기 차트 양쪽에 걸린다 — 페이지 머리에 둔다. */}
+        <div className={styles.pageToolbar}>
+          {!embedded && (
+            <div className={styles.clusterField}>
+              <span>클러스터 선택</span>
+              <ClusterPicker
+                value={selectedCluster?.value}
+                onChange={(name) => setSelectedCluster({ label: name, value: name })}
+              />
+            </div>
+          )}
+          <div className={styles.toolbarRight}>
+            {embedded && (
+              <RefreshStatusDot
+                refreshSeconds={refreshSeconds}
+                updatedAt={dataUpdatedAt}
+                isFetching={isMetricsFetching}
+              />
+            )}
+            <RefreshControl
+              rangeSeconds={rangeSeconds}
+              onRangeChange={setRangeSeconds}
+              refreshSeconds={refreshSeconds}
+              onRefreshChange={setRefreshSeconds}
             />
-          </>
-        )}
+          </div>
+        </div>
 
         {outage && (
           <div
@@ -301,7 +360,7 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 name="GPU"
                 gauge={gpuGaugeValue}
                 value={`${gpuGaugeValue.toFixed(2)}%`}
-                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU`}
+                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU · 실사용 ${gpuUtilAvgValue.toFixed(0)}%`}
               />
               <ResourceGaugeCard
                 name="NPU"
@@ -317,6 +376,37 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
               />
             </div>
           </div>
+
+          {gpuTotalValue > 0 && gpuCollectorCount === 0 && (
+            <CollectorNotice
+              deviceName="GPU"
+              addonName="NVIDIA GPU Operator"
+              clusterName={selectedCluster?.value}
+            />
+          )}
+          {npuTotalValue > 0 && npuCollectorCount === 0 && (
+            <CollectorNotice
+              deviceName="NPU"
+              addonName="Furiosa NPU Exporter"
+              clusterName={selectedCluster?.value}
+            />
+          )}
+
+          {hasGpu && (
+            <AcceleratorPanel
+              isPending={isMetricsPending}
+              charts={{
+                util: rangeOf('gpuUtilRange'),
+                memory: rangeOf('gpuMemoryRange'),
+                temperature: rangeOf('gpuTempRange'),
+                power: rangeOf('gpuPowerRange'),
+                smActive: rangeOf('gpuSmActiveRange'),
+                tensorActive: rangeOf('gpuTensorActiveRange'),
+                dramActive: rangeOf('gpuDramActiveRange'),
+                pcie: rangeOf('gpuPcieRange'),
+              }}
+            />
+          )}
 
           <div className="page-detail-round-box page-flex-1">
             <div className="page-detail-round-name">성능 지표</div>
@@ -356,37 +446,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 unit="pkt/s"
                 response={rangeOf('networkPacketRange')}
                 isPending={isMetricsPending}
-              />
-              <MetricLineChart
-                title="GPU UTILIZATION"
-                unit="%"
-                response={rangeOf<DCGMLabel>('gpuUtilRange')}
-                isPending={hasGpu && isMetricsPending}
-                domain={[0, 100]}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU MEMORY USAGE"
-                unit="GiB"
-                response={rangeOf<DCGMLabel>('gpuMemoryRange')}
-                isPending={hasGpu && isMetricsPending}
-                convertValue={(value) => value / 1024}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU TEMPERATURE"
-                unit="°C"
-                domain={[0, 100]}
-                response={rangeOf<DCGMLabel>('gpuTempRange')}
-                isPending={hasGpu && isMetricsPending}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
-              />
-              <MetricLineChart
-                title="GPU POWER USAGE"
-                unit="W"
-                response={rangeOf<DCGMLabel>('gpuPowerRange')}
-                isPending={hasGpu && isMetricsPending}
-                makeLabel={(value) => `${value.Hostname} ${value.device}`}
               />
               <MetricLineChart
                 title="NPU TEMPERATURE"

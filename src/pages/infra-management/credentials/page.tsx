@@ -365,6 +365,7 @@ export default function CredentialsPage() {
             totalCount={filtered.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             useMultiSelect
             rowSelection={rowSelection}

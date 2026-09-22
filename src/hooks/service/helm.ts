@@ -24,6 +24,8 @@ export interface InstallHelmReleaseRequest {
   namespace?: string;
   values?: Record<string, unknown>;
   valuesYaml?: string;
+  /** 업그레이드 전용 — 기존 values 를 보존하고 새 값만 덮는다. */
+  reuseValues?: boolean;
 }
 
 export interface GetHelmReleasesParams {
@@ -340,17 +342,117 @@ export const useInstallHelmRelease = (
   return { installHelmRelease: mutate, isPending, isError, isSuccess, error };
 };
 
-export const useGetHelmReleaseValues = (releaseName: string) => {
+export const useUpgradeHelmRelease = (
+  clusterName?: string,
+  options?: { onSuccess?: (op: Operation) => void; onError?: (error: unknown) => void }
+) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['upgradeHelmRelease', clusterName],
+    // 설치는 POST, 업그레이드는 PUT 이다. 같은 곳으로 보내면 "이미 있다" 로 거절된다.
+    mutationFn: ({ releaseName, ...body }: InstallHelmReleaseRequest) =>
+      api
+        .put(`any-cloud/clusters/${clusterName}/helm-releases/${encodeURIComponent(releaseName)}`, {
+          json: body,
+        })
+        .json<Operation>(),
+    onSuccess: (op) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
+      options?.onSuccess?.(op);
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { upgradeHelmRelease: mutate, isPending };
+};
+
+export interface HelmReleaseRevision {
+  revision: number;
+  updated?: string;
+  status?: string;
+  chart?: string;
+  appVersion?: string;
+  description?: string;
+}
+
+export const useGetHelmReleaseRevisions = (
+  releaseName: string,
+  clusterId?: string,
+  namespace?: string
+) => {
+  const { data, isPending, isError } = useQuery({
+    queryKey: queryKeys.helmReleases.revisions(releaseName, clusterId, namespace),
+    queryFn: () =>
+      api
+        .get(
+          `any-cloud/clusters/${clusterId}/helm-releases/${encodeURIComponent(releaseName)}/revisions`,
+          { searchParams: { namespace: namespace ?? '' } }
+        )
+        .json<{ revisions?: HelmReleaseRevision[]; data?: { revisions?: HelmReleaseRevision[] } }>(),
+    enabled: !!releaseName && !!clusterId && !!namespace,
+  });
+
+  return {
+    revisions: data?.revisions ?? data?.data?.revisions ?? [],
+    isPending,
+    isError,
+  };
+};
+
+export const useRollbackHelmRelease = (
+  clusterName?: string,
+  options?: { onSuccess?: () => void; onError?: (error: unknown) => void }
+) => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['rollbackHelmRelease', clusterName],
+    // 네임스페이스를 빼면 agent 가 default 에서 찾다가 "release: not found" 로 끝난다.
+    mutationFn: ({
+      releaseName,
+      revision,
+      namespace,
+    }: {
+      releaseName: string;
+      revision: number;
+      namespace: string;
+    }) =>
+      api
+        .post(
+          `any-cloud/clusters/${clusterName}/helm-releases/${encodeURIComponent(releaseName)}/operations`,
+          { json: { type: 'rollback', revision, wait: true }, searchParams: { namespace } }
+        )
+        .json<Operation>(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.helmReleases.all });
+      options?.onSuccess?.();
+    },
+    onError: (err) => options?.onError?.(err),
+  });
+
+  return { rollbackHelmRelease: mutate, isPending };
+};
+
+export const useGetHelmReleaseValues = (
+  releaseName: string,
+  clusterId?: string,
+  namespace?: string
+) => {
   const { data, isPending, isError, error } = useQuery({
-    queryKey: queryKeys.helmReleases.values(releaseName),
+    queryKey: queryKeys.helmReleases.values(releaseName, clusterId, namespace),
     queryFn: async () => {
+      // 클러스터와 네임스페이스가 없으면 어느 릴리즈인지 정할 수 없다.
       const response = await api
-        .get<{ data: string }>(`any-cloud/catalog/releases/${releaseName}/values`)
+        .get<{ data: string }>(
+          `any-cloud/catalog/releases/${encodeURIComponent(releaseName)}/values`,
+          { searchParams: { clusterId: clusterId ?? '', namespace: namespace ?? '' } }
+        )
         .json();
 
       return response.data || '';
     },
-    enabled: !!releaseName,
+    enabled: !!releaseName && !!clusterId && !!namespace,
   });
 
   return {

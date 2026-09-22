@@ -3,7 +3,7 @@ import { Table, useTablePagination, useTableSelection } from '@innogrid/ui';
 import { useGetOperations } from '@/hooks/service/operations';
 import { formatDateTime } from '@/util/date';
 import { workflowStepLabel } from '@/util/provisioning-labels';
-import { operationStateColor } from '@/util/operation-state';
+import { operationStateTone } from '@/util/status-tone';
 import type { Operation, OperationState } from '@/types/cluster';
 
 // 작업 이력을 한 곳에서 그린다.
@@ -63,7 +63,7 @@ export const OperationTable = ({ resourceId, state, height = 480 }: Props) => {
         cell: ({ row }: { row: { original: Operation } }) => {
           const s = row.original.state;
           return (
-            <span className={`table-td-state table-td-state-${operationStateColor(s)}`}>
+            <span className={`table-td-state table-td-state-${operationStateTone(s)}`}>
               {s ?? '-'}
             </span>
           );
@@ -131,6 +131,7 @@ export const OperationTable = ({ resourceId, state, height = 480 }: Props) => {
           totalCount={operations.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           rowSelection={rowSelection}
           setRowSelection={setRowSelection}

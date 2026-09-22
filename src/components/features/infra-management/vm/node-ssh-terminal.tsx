@@ -4,6 +4,8 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
+import { wsAuthProtocols } from '@/lib/ws-auth';
+
 interface Props {
   vmName?: string;
   /** 붙을 노드의 주소. 백엔드가 이 클러스터의 노드인지 확인한다. */
@@ -75,7 +77,7 @@ export const NodeSshTerminal = ({ vmName, host }: Props) => {
       `${scheme}://${window.location.host}/api/v1/any-cloud/vms/` +
       `${encodeURIComponent(vmName)}/nodes/${encodeURIComponent(host)}/ssh`;
 
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(url, wsAuthProtocols());
     ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 

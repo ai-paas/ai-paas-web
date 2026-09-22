@@ -200,7 +200,7 @@ export interface MultiQuerySpec {
 export const useMultiPromQuery = (
   clusterName: string | undefined,
   queries: MultiQuerySpec[],
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean; staleTime?: number }
 ) => {
   const queryKey = useMemoizedQueryKey(clusterName, queries);
   return useQuery({
@@ -224,6 +224,8 @@ export const useMultiPromQuery = (
     },
     enabled: (options?.enabled ?? true) && !!clusterName && queries.length > 0,
     ...MONITOR_QUERY_DEFAULTS,
+    // 갱신 주기를 화면이 정한다. 기본값에 묶어 두면 주기를 10s 로 줄여도 25s 동안 같은 값이 온다.
+    ...(options?.staleTime !== undefined ? { staleTime: options.staleTime } : {}),
   });
 };
 

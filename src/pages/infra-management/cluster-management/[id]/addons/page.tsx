@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { addonStateTone } from '@/util/status-tone';
 import { errorMessage } from '@/util/api-error';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import {
   HeaderCheckbox,
   CellCheckbox,
@@ -84,7 +84,7 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
 
   const handleInstall = () => {
     if (!selectedCatalogItem) {
-      open({ title: '카탈로그 항목을 선택해주세요.', status: 'negative' });
+      open({ title: '구성 요소를 선택해주세요.', status: 'negative' });
       return;
     }
     installAddon({
@@ -191,10 +191,10 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
       )}
 
       <div className="page-content">
-        <h3 className="page-detail-title">새 애드온 설치</h3>
+        <h3 className="page-detail-title">구성 요소 설치</h3>
         <div className="page-input-box">
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">카탈로그</div>
+            <div className="page-input_item-name page-icon-requisite">구성 요소</div>
             <div className="page-input_item-data" style={{ maxWidth: 480 }}>
               <Select
                 options={catalogOptions}
@@ -204,12 +204,40 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
                 onChange={(opt: SelectSingleValue<OptionType>) =>
                   setSelectedCatalog(opt ?? undefined)
                 }
-                placeholder={isCatalogLoading ? '로딩 중...' : '카탈로그 항목을 선택해주세요.'}
+                placeholder={isCatalogLoading ? '로딩 중...' : '구성 요소를 선택해주세요.'}
                 isDisabled={isCatalogLoading}
               />
               {selectedCatalogItem?.description && (
                 <p style={{ marginTop: 4, fontSize: 12, color: '#666' }}>
                   {selectedCatalogItem.description}
+                </p>
+              )}
+              {/*
+                같은 차트라도 "검증된 구성" 과 "날것" 은 다른 물건이다. 어떤 차트를 어떤 버전으로
+                올리는지 보여 주지 않으면 헬름 차트 목록과 무엇이 다른지 알 수 없다.
+              */}
+              {selectedCatalogItem?.chartName && (
+                <p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+                  <strong>
+                    {selectedCatalogItem.chartRepo
+                      ? `${selectedCatalogItem.chartRepo}/${selectedCatalogItem.chartName}`
+                      : selectedCatalogItem.chartName}
+                    {selectedCatalogItem.chartVersion ? ` ${selectedCatalogItem.chartVersion}` : ''}
+                  </strong>
+                  {' 을 권장 설정으로 설치합니다.'}
+                  {selectedCatalogItem.chartRepo && selectedCatalogItem.chartName && (
+                    <>
+                      {' '}
+                      <Link
+                        to={`/infra-management/application/catalog/${encodeURIComponent(
+                          selectedCatalogItem.chartName
+                        )}?repository=${encodeURIComponent(selectedCatalogItem.chartRepo)}`}
+                        className="table-td-link"
+                      >
+                        차트 보기 →
+                      </Link>
+                    </>
+                  )}
                 </p>
               )}
             </div>
@@ -244,7 +272,7 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
 
       <div className="page-content page-pb-40">
         <div className="page-toolBox">
-          <h3 className="page-detail-title">설치된 애드온</h3>
+          <h3 className="page-detail-title">설치된 구성 요소</h3>
           <div className="page-toolBox-btns" style={{ display: 'flex', gap: 8 }}>
             <Button
               color="secondary"
@@ -273,6 +301,7 @@ export default function ClusterAddonsPage({ embedded = false }: { embedded?: boo
             totalCount={addons.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
             useSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}

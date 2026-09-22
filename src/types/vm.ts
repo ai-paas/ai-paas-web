@@ -31,6 +31,8 @@ export interface Vm {
   currentSubStep?: string;
   subStepStartedAt?: string;
   lastErrorCode?: string;
+  /** 내려받은 kubeconfig 로 바로 닿는지 — DIRECT / PRIVATE_NETWORK / VIA_BASTION */
+  apiServerReach?: string;
   environment?: string;
   region?: string;
   credentialName?: string;
@@ -42,6 +44,10 @@ export interface Vm {
   workerVmSpec?: string;
   osImage?: string;
   lastError?: string;
+  /** 실패 원인을 한 줄로 정리한 것. 아는 실패가 아니면 비어 있다. */
+  lastErrorSummary?: string;
+  /** 사용자가 할 일. lastErrorSummary 와 짝. */
+  lastErrorHint?: string;
   createdAt?: string;
   updatedAt?: string;
   // workflow step transition timestamps (anycloud VmClusterStatusResponse).
@@ -66,7 +72,7 @@ export interface ClusterSpecRequest {
   masterInstanceType?: string;
   workerInstanceType?: string;
   rootDiskSizeGb?: number;
-  // 표현이 CSP 마다 다르다 — OCI 는 image OCID, Azure 는 publisher:offer:sku:version.
+  // 표현이 CSP 마다 다르다 — OCI 는 image OCID, Alibaba 는 ECS 이미지 ID.
   osImage?: string;
   sshUser?: string;
   network?: NetworkSpecRequest;
@@ -113,6 +119,9 @@ export interface GetVmsParams {
   status?: string;
   /** 삭제된 항목도 "함께" 반환. status 를 명시하면 그 필터가 우선한다. */
   includeDeleted?: boolean;
+  /** 1-based 페이지. 비우면 게이트웨이 기본값(20건)으로 잘린다. */
+  page?: number;
+  size?: number;
 }
 
 export interface VmSshKey {
@@ -143,6 +152,8 @@ export interface ClusterNode {
   environment?: string;
   /** 소속 클러스터의 프로비저닝 상태. 노드별 인스턴스 상태가 아니다. */
   infraStatus?: string;
+  /** 노드가 아직 없어 클러스터를 대신 세운 줄 */
+  pending?: boolean;
 }
 
 export interface VmNodeList {
