@@ -111,6 +111,7 @@ export default function HelmReleaseDetailPage() {
     values,
     isPending: isValuesPending,
     isError: isValuesError,
+    isForbidden: isValuesForbidden,
   } = useGetHelmReleaseValues(name || '', clusterId, namespace);
 
   const {
@@ -404,6 +405,14 @@ export default function HelmReleaseDetailPage() {
                   {isValuesPending ? (
                     <div className="flex h-full items-center justify-center">
                       <div>Values YAML을 불러오는 중입니다...</div>
+                    </div>
+                  ) : isValuesForbidden ? (
+                    <div className="flex h-full items-center justify-center px-6 text-center">
+                      <div>
+                        설치할 때 전달한 values 는 관리자만 볼 수 있습니다.
+                        <br />
+                        비밀번호나 토큰이 그대로 담겨 있을 수 있어 제한합니다.
+                      </div>
                     </div>
                   ) : isValuesError ? (
                     <div className="flex h-full items-center justify-center">

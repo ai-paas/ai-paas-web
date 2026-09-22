@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { HTTPError } from 'ky';
 
 import { api } from '../../lib/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -455,10 +456,15 @@ export const useGetHelmReleaseValues = (
     enabled: !!releaseName && !!clusterId && !!namespace,
   });
 
+  // 설치 당시 values 는 비밀번호, 토큰이 들어 있을 수 있어 게이트웨이가 admin 에게만 준다.
+  // 일반 오류와 섞으면 화면이 "불러오지 못했다" 로만 말해 권한 문제인 줄 모른다.
+  const isForbidden = error instanceof HTTPError && error.response.status === 403;
+
   return {
     values: data ?? '',
     isPending,
     isError,
+    isForbidden,
     error,
   };
 };
