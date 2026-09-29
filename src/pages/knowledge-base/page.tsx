@@ -1,111 +1,40 @@
-import {
-  BreadCrumb,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-  type ColDef,
-  type TableRow,
-  type SortValue,
-} from '@innogrid/ui';
+import { CellCheckbox, HeaderCheckbox, type ColDef, type TableRow } from '@innogrid/ui';
 import type { KnowledgeBaseBrief } from '@/types/knowledgebase';
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { CreateKnowledgeBaseButton } from '../../components/features/knowledge-base/create-knowledge-base-button';
 import { EditKnowledgeBaseButton } from '../../components/features/knowledge-base/edit-knowledge-base-button';
 import { DeleteKnowledgeBaseButton } from '../../components/features/knowledge-base/delete-knowledge-base-button';
 import { useGetKnowledgeBases } from '@/hooks/service/knowledgebase';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 import { formatDateTime } from '@/util/date';
 
 export default function KnowledgeBasePage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { knowledgeBases, page, isPending, isError } = useGetKnowledgeBases({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return knowledgeBases[parseInt(selectedRowKeys[0])]?.surro_knowledge_id;
-  }, [rowSelection, knowledgeBases]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [] });
+  const { knowledgeBases, page, isPending, isError, error } = useGetKnowledgeBases(list.queryParams);
+  const selectedId = list.getSelectedRow(knowledgeBases)?.surro_knowledge_id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '지식 베이스' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">지식 베이스</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreateKnowledgeBaseButton />
-            <EditKnowledgeBaseButton knowledgeBaseId={selectedId} />
-            <DeleteKnowledgeBaseButton knowledgeBaseId={selectedId} />
-          </div>
-          <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
-          </div>
-        </div>
-        <div className="h-120.25">
-          <Table
-            columns={columns}
-            data={knowledgeBases}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '지식 베이스 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>지식 베이스가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 지식 베이스를 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="지식 베이스"
+      breadcrumbItems={[{ label: '지식 베이스' }]}
+      actions={
+        <>
+          <CreateKnowledgeBaseButton />
+          <EditKnowledgeBaseButton knowledgeBaseId={selectedId} />
+          <DeleteKnowledgeBaseButton knowledgeBaseId={selectedId} />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={knowledgeBases}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="지식 베이스 목록을 불러오는 데 실패했습니다."
+      emptyTitle="지식 베이스가 없습니다."
+      emptyDescription="생성 버튼을 클릭해 지식 베이스를 생성해 보세요."
+    />
   );
 }
 

@@ -139,6 +139,7 @@ export const GpuSchedulingTab = ({ clusterName, namespace }: GpuSchedulingTabPro
           totalCount={gpuSchedulings.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

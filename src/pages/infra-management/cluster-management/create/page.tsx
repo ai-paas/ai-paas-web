@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { errorMessage } from '@/util/api-error';
 import { BreadCrumb, Button, Input, useToast } from '@innogrid/ui';
 import { useNavigate } from 'react-router';
 import { useCreateCluster } from '@/hooks/service/clusters';
@@ -13,14 +14,6 @@ const CLUSTER_TYPE_REGISTERED = 'Self-managed';
 
 type ValidationErrors = {
   clusterName?: string;
-};
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
 };
 
 export default function ClusterCreatePage() {
@@ -53,7 +46,7 @@ export default function ClusterCreatePage() {
 
   const handleError = useCallback(
     (error: unknown) => {
-      const message = extractErrorMessage(error, '클러스터 등록 중 오류가 발생했습니다.');
+      const message = errorMessage(error, '클러스터 등록 중 오류가 발생했습니다.');
       open({ title: message, status: 'negative' });
     },
     [open]
@@ -149,8 +142,8 @@ export default function ClusterCreatePage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
               <p className="page-input_item-input-desc">
-                부가 메타데이터 — 자유 기술. addon (모니터링 / GPU exporter 등) 은 cluster 등록
-                후 <strong>애드온 관리</strong> 메뉴에서 설치합니다.
+                부가 메타데이터 — 자유 기술. addon (모니터링 / GPU exporter 등) 은 cluster 등록 후{' '}
+                <strong>애드온 관리</strong> 메뉴에서 설치합니다.
               </p>
             </div>
           </div>

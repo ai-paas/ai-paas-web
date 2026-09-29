@@ -132,6 +132,7 @@ export const ConfigMapsTab = ({ clusterName, namespace }: ConfigMapsTabProps) =>
           totalCount={configMaps.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

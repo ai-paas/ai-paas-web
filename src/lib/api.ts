@@ -99,10 +99,32 @@ export const getOrCreateRefreshPromise = () => {
   return refreshPromise;
 };
 
+/** 백엔드 오류 본문 (ErrorResponse). */
+interface ApiErrorBody {
+  code?: string;
+  message?: string;
+  hint?: string;
+  detail?: string;
+  errors?: Array<{ field?: string; value?: string; reason?: string }>;
+}
+
+export interface ApiErrorInfo {
+  code?: string;
+  message?: string;
+  /** 사용자가 할 일. 원인 분류 결과를 담는다. */
+  hint?: string;
+  /** CSP 원문 등 장문. 화면에서는 접어둔다. */
+  detail?: string;
+  fieldErrors: Array<{ field?: string; value?: string; reason?: string }>;
+}
+
+export interface ApiError extends Error {
+  apiError?: ApiErrorInfo;
+}
+
 // 요청 기본 타임아웃 — 서버 hang 시 무한 로딩을 막는다(nginx proxy_read_timeout이 900s라 게이트웨이가 끊어주지 않는다).
 // 대용량 업로드처럼 오래 걸리는 요청만 호출부에서 개별 확대(timeout: false)한다.
 export const DEFAULT_TIMEOUT_MS = 30_000;
-
 export const api = ky.create({
   prefixUrl: '/api/v1',
   timeout: DEFAULT_TIMEOUT_MS,
@@ -123,11 +145,23 @@ export const api = ky.create({
     beforeError: [
       async (error) => {
         try {
-          const body = (await error.response.clone().json()) as { detail?: unknown };
+          // 백엔드 오류 본문. message 는 요약, hint 는 사용자가 할 일, detail 은 원본이다.
+          // 화면이 셋을 구분해 보여줄 수 있게 error 에 실어 둔다 — 여기서 못 읽으면
+          // ky 의 "Request failed with status code 400" 만 남는다.
+          const body = (await error.response.clone().json()) as ApiErrorBody;
+          // error.message 는 detail 만 덮어쓴다 — 기존 계약이다. 백엔드 message 는 ErrorCode
+          // 기본 문구라 ky 의 상태 코드 메시지보다 나을 게 없다. 판단은 소비자에게 넘긴다.
           if (typeof body.detail === 'string' && body.detail.trim()) {
             error.message = body.detail;
             serverDetails.set(error, body.detail);
           }
+          (error as ApiError).apiError = {
+            code: body.code,
+            message: body.message,
+            hint: body.hint,
+            detail: body.detail,
+            fieldErrors: body.errors ?? [],
+          };
         } catch {
           // keep original error
         }

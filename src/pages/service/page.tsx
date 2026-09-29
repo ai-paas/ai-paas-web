@@ -1,16 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import {
-  BreadCrumb,
-  SearchInput,
-  Table,
-  HeaderCheckbox,
-  CellCheckbox,
-  useTableSelection,
-  useTablePagination,
-  useSearchInputState,
-  type SortValue,
-} from '@innogrid/ui';
+import { HeaderCheckbox, CellCheckbox } from '@innogrid/ui';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 import { EditServiceButton } from '@/components/features/service/edit-service-button';
 import { CreateServiceButton } from '@/components/features/service/create-service-button';
 import { DeleteServiceButton } from '@/components/features/service/delete-service-button';
@@ -68,91 +58,30 @@ const columns = [
 ];
 
 export default function ServicePage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { services, page, isPending, isError } = useGetServices({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  // 선택된 행의 ID를 추출
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    // 단일 선택만 허용
-    if (selectedRowKeys.length !== 1) return;
-
-    return services[parseInt(selectedRowKeys[0])]?.surro_service_id;
-  }, [rowSelection, services]);
-
-  // 검색어가 변경되면 페이지네이션 초기화
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [] });
+  const { services, page, isPending, isError, error } = useGetServices(list.queryParams);
+  const selectedId = list.getSelectedRow(services)?.surro_service_id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '서비스' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">서비스</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreateServiceButton />
-            <EditServiceButton serviceId={selectedId} />
-            <DeleteServiceButton serviceId={selectedId} />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-[481px]">
-          <Table
-            columns={columns}
-            data={services}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '서비스 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>서비스가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 서비스를 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            setSorting={setSorting}
-            sorting={sorting}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="서비스"
+      listState={list}
+      actions={
+        <>
+          <CreateServiceButton />
+          <EditServiceButton serviceId={selectedId} />
+          <DeleteServiceButton serviceId={selectedId} />
+        </>
+      }
+      columns={columns}
+      data={services}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="서비스 목록을 불러오는 데 실패했습니다."
+      emptyTitle="서비스가 없습니다."
+      emptyDescription="생성 버튼을 클릭해 서비스를 생성해 보세요."
+    />
   );
 }

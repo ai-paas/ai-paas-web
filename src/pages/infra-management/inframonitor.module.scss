@@ -20,7 +20,10 @@
 }
 
 .clusterSelect {
-  width: 280px;
+  /* 클러스터 이름이 길면 잘린다. 고정 폭 대신 내용에 맞춰 늘어나되 상한을 둔다. */
+  min-width: 280px;
+  width: auto;
+  max-width: 420px;
 }
 
 .namespaceSelect {
@@ -140,28 +143,43 @@
   justify-content: flex-end;
   gap: 6px;
   width: 100%;
+
+  /* 저장소 이름이 길면 잘린다. 내용에 맞춰 늘어나되 상한을 둔다. */
+  & > div:first-child {
+    min-width: 220px;
+    max-width: 360px;
+  }
+}
+
+/* 가로로 긴 카드는 넓은 화면에서 한 줄에 둘밖에 못 들어간다. 세로형 격자로 채운다. */
+.catalogList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  /* 검색줄과 붙어 있으면 툴바와 목록이 한 덩어리로 읽힌다. */
+  margin-top: 32px;
 }
 
 .catalogBox {
-  width: 536px;
-  height: 234px;
   border-radius: 8px;
   border: 1px solid $color-gray-75;
   display: flex;
   flex-direction: column;
+  min-height: 260px;
 }
 
 .catalogInfo {
   display: flex;
-  gap: 24px;
-  padding: 24px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .catalogImg {
-  width: 84px;
-  height: 84px;
+  width: 56px;
+  height: 56px;
   aspect-ratio: 1/1;
   overflow: hidden;
   border-radius: 6px;
@@ -172,8 +190,8 @@
   background-color: $color-white;
 
   img {
-    width: 84px;
-    height: 84px;
+    width: 56px;
+    height: 56px;
     object-fit: cover;
     object-position: center;
     border-radius: 6px;
@@ -191,12 +209,17 @@
 
 .catalogTit {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
 
   & > p {
-    width: 200px;
+    margin-right: auto;
+  }
+
+  & > p {
     color: $page-font-color-900;
     font-size: $page-font-13;
     @include font-style;
@@ -212,7 +235,7 @@
 }
 
 .catalogTxt {
-  width: 380px;
+  width: 100%;
   color: $page-font-color-600;
   font-size: $page-font-root;
   @include font-style;
@@ -321,4 +344,141 @@
     @include font-style;
     line-height: 1.6;
   }
+}
+
+/* 차트 버전과 앱 버전은 다르다 — 무엇이 깔리는지는 앱 버전이 말한다. */
+.appVersion {
+  padding: 1px 6px;
+  border: 1px solid $color-gray-100;
+  border-radius: 999px;
+  color: $page-font-color-600;
+  font-size: $page-font-10;
+  white-space: nowrap;
+}
+
+/* 같은 차트를 두 번 깔기 전에는 이미 깔려 있다는 것을 알 수 없었다. */
+.installedBadge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: #ecfdf3;
+  color: #027a48;
+  font-size: $page-font-10;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.versionTableWrap {
+  overflow-x: auto;
+}
+
+.versionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $page-font-13;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $color-gray-100;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $page-font-color-600;
+    font-weight: 600;
+  }
+}
+
+.versionCurrent {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: #eff8ff;
+  color: #175cd3;
+  font-size: $page-font-10;
+  font-weight: 700;
+}
+
+.versionMore {
+  margin-top: 8px;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}
+
+/* README 본문 — 문서로 읽히게 최소한의 서식만 준다. */
+.markdownBody {
+  font-family: inherit;
+  color: $page-font-color-900;
+  font-size: $page-font-13;
+  line-height: 1.7;
+
+  h1,
+  h2,
+  h3 {
+    margin: 18px 0 8px;
+    font-weight: 700;
+  }
+
+  h1 { font-size: 20px; }
+  h2 { font-size: 17px; }
+  h3 { font-size: 15px; }
+
+  p { margin: 8px 0; }
+
+  ul,
+  ol {
+    margin: 8px 0;
+    padding-left: 20px;
+    list-style: revert;
+  }
+
+  a {
+    color: $page-font-color-blue;
+    text-decoration: underline;
+  }
+
+  code {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: #f1f3f5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  pre {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    overflow-x: auto;
+
+    code {
+      padding: 0;
+      background: none;
+    }
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    border-collapse: collapse;
+    overflow-x: auto;
+
+    th,
+    td {
+      padding: 6px 10px;
+      border: 1px solid $color-gray-100;
+      text-align: left;
+    }
+  }
+
+  blockquote {
+    margin: 10px 0;
+    padding-left: 12px;
+    border-left: 3px solid $color-gray-100;
+    color: $page-font-color-600;
+  }
+
+  img { max-width: 100%; }
 }

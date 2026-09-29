@@ -10,6 +10,13 @@ interface SpecPickerProps {
   onChange: (specId: string) => void;
   label?: string;
   showGpuToggle?: boolean;
+  /**
+   * GPU 만 보기를 켜고 끌 때.
+   *
+   * <p>필터를 켠다는 것은 GPU 로 만들겠다는 뜻이다 — 아직 고르지 않았어도 드라이버 스택을
+   * 미리 켜 두면 고르고 나서 다시 찾을 일이 없다.
+   */
+  onGpuOnlyChange?: (gpuOnly: boolean) => void;
   errorText?: string;
 }
 
@@ -22,7 +29,7 @@ const formatMemory = (gb?: number): string => {
 
 type SpecCategory = 'gpu' | 'compute' | 'memory' | 'storage' | 'general' | 'other';
 
-// family prefix(첫 글자) 기반 휴리스틱. AWS/GCP/Azure family naming 의 합집합.
+// family prefix(첫 글자) 기반 휴리스틱. AWS/GCP/Alibaba family naming 의 합집합.
 // gpuCount > 0 은 family 와 무관하게 GPU 로 우선 분류.
 const categorize = (spec: ProviderSpec): SpecCategory => {
   if ((spec.gpuCount ?? 0) > 0) return 'gpu';
@@ -59,10 +66,15 @@ export const SpecPicker = ({
   onChange,
   label,
   showGpuToggle = true,
+  onGpuOnlyChange,
   errorText,
 }: SpecPickerProps) => {
   const [keyword, setKeyword] = useState('');
   const [gpuOnly, setGpuOnly] = useState(false);
+
+  // 인스턴스 타입은 CSP API 로 실시간 조회한다. 자격증명과 리전이 없으면 빈 목록이 오고,
+  // 사용자는 뭘 고르는지 모른 채 고른 뒤 PROVISION 에서 실패한다.
+  const ready = !!provider && !!credentialId && !!region;
 
   const { specs, isPending, isError } = useGetProviderSpecs(
     {
@@ -73,7 +85,7 @@ export const SpecPicker = ({
       gpuOnly: gpuOnly || undefined,
       limit: 50,
     },
-    !!provider
+    ready
   );
 
   const grouped = useMemo(() => {
@@ -93,8 +105,15 @@ export const SpecPicker = ({
     }));
   }, [specs]);
 
-  const disabled = !provider;
-  const isEmpty = !isPending && grouped.length === 0;
+  const disabled = !ready;
+  const isEmpty = ready && !isPending && grouped.length === 0;
+  const gatePlaceholder = !provider
+    ? '프로바이더 선택 필요'
+    : !credentialId
+      ? '자격증명 선택 필요'
+      : !region
+        ? '리전 선택 필요'
+        : '인스턴스 타입 검색...';
 
   return (
     <div>
@@ -107,38 +126,47 @@ export const SpecPicker = ({
           flexWrap: 'wrap',
         }}
       >
-        {label && (
-          <span style={{ fontSize: 12, color: '#666', minWidth: 100 }}>
-            {label}
-          </span>
-        )}
+        {label && <span style={{ fontSize: 12, color: '#666', minWidth: 100 }}>{label}</span>}
         <div style={{ flex: 1, minWidth: 160 }}>
           <Input
-            placeholder={disabled ? '프로바이더 선택 필요' : '인스턴스 타입 검색...'}
+            placeholder={gatePlaceholder}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             disabled={disabled}
           />
         </div>
         {showGpuToggle && (
-          <label
+          /*
+           * 목록을 좁히는 필터다. 체크박스로 두면 설정값처럼 보여 "GPU 노드로 만들겠다" 는
+           * 뜻으로 읽힌다 — 실제로 고급 옵션의 GPU 표시와 헷갈렸다.
+           */
+          <button
+            type="button"
+            aria-pressed={gpuOnly}
+            disabled={disabled}
+            onClick={() => {
+              setGpuOnly(!gpuOnly);
+              onGpuOnlyChange?.(!gpuOnly);
+            }}
             style={{
+              // 검색 입력과 같은 높이로 맞춘다. 높이를 안 주면 flex 가 늘려 버린다.
+              height: 40,
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+              appearance: 'none',
+              margin: 0,
+              lineHeight: 1,
               fontSize: 12,
-              color: '#666',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
+              padding: '0 12px',
+              borderRadius: 20,
+              border: `1px solid ${gpuOnly ? '#15803d' : '#ddd'}`,
+              background: gpuOnly ? '#ecfdf5' : '#fff',
+              color: gpuOnly ? '#15803d' : '#666',
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
           >
-            <input
-              type="checkbox"
-              checked={gpuOnly}
-              onChange={(e) => setGpuOnly(e.target.checked)}
-              disabled={disabled}
-            />
-            GPU만
-          </label>
+            GPU만 보기
+          </button>
         )}
       </div>
 
@@ -174,11 +202,7 @@ export const SpecPicker = ({
         {!disabled && !isPending && !isEmpty && (
           <div>
             {grouped.map(({ category, items }) => (
-              <details
-                key={category}
-                open
-                style={{ borderBottom: '1px solid #e5e7eb' }}
-              >
+              <details key={category} open style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <summary
                   style={{
                     cursor: 'pointer',
@@ -259,14 +283,10 @@ export const SpecPicker = ({
                             {spec.family}
                           </span>
                         )}
-                        <span
-                          style={{ fontFamily: 'monospace', minWidth: 70, textAlign: 'right' }}
-                        >
+                        <span style={{ fontFamily: 'monospace', minWidth: 70, textAlign: 'right' }}>
                           vCPU {spec.vcpu ?? '-'}
                         </span>
-                        <span
-                          style={{ fontFamily: 'monospace', minWidth: 80, textAlign: 'right' }}
-                        >
+                        <span style={{ fontFamily: 'monospace', minWidth: 80, textAlign: 'right' }}>
                           {formatMemory(spec.memoryGb)}
                         </span>
                         {(spec.gpuCount ?? 0) > 0 ? (

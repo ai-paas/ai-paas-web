@@ -135,6 +135,7 @@ export const DaemonSetsTab = ({ clusterName, namespace }: DaemonSetsTabProps) =>
           totalCount={daemonSets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

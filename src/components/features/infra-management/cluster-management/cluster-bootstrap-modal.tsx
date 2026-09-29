@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Modal, useToast } from '@innogrid/ui';
 import type { BootstrapInfo } from '@/types/cluster';
+import { parseServerDate } from '@/util/date';
 
 interface ClusterBootstrapModalProps {
   isOpen: boolean;
@@ -17,10 +18,9 @@ interface ClusterBootstrapModalProps {
 type InstallMode = 'helm' | 'kubectl';
 
 const formatRemaining = (expiresAt?: string): string => {
-  if (!expiresAt) return '';
-  const expiresMs = new Date(expiresAt).getTime();
-  if (Number.isNaN(expiresMs)) return '';
-  const remaining = expiresMs - Date.now();
+  const expires = parseServerDate(expiresAt);
+  if (!expires) return '';
+  const remaining = expires.getTime() - Date.now();
   if (remaining <= 0) return '만료됨';
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);

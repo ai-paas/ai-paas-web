@@ -123,6 +123,7 @@ export const ServiceAccountsTab = ({ clusterName, namespace }: ServiceAccountsTa
           totalCount={serviceAccounts.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

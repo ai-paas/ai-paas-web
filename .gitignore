@@ -15,6 +15,12 @@ coverage
 *.local
 .npmrc
 
+# 환경 변수 — .env.local 은 *.local 로 우연히 걸릴 뿐이고, 그냥 .env 는 걸리지 않았다.
+# 예시 파일은 공유해야 하므로 남긴다.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { BreadCrumb, Button, Select, type SelectSingleValue } from '@innogrid/ui';
+import { BreadCrumb, Button, Tabs, Select, type SelectSingleValue } from '@innogrid/ui';
 import { EditClusterButton } from '@/components/features/infra-management/cluster-management/edit-cluster-button';
 import { DeleteClusterButton } from '@/components/features/infra-management/cluster-management/delete-cluster-button';
 import {
@@ -29,6 +29,13 @@ import { ServiceAccountsTab } from '@/components/features/infra-management/clust
 import { ConfigMapsTab } from '@/components/features/infra-management/cluster-management/tabs/config-maps-tab';
 import { SecretsTab } from '@/components/features/infra-management/cluster-management/tabs/secrets-tab';
 import { OperationsTab } from '@/components/features/infra-management/cluster-management/tabs/operations-tab';
+import { TerminalTab } from '@/components/features/infra-management/cluster-management/tabs/terminal-tab';
+// GPU·모니터링·애드온은 최상위 메뉴와 같은 화면이다. 스코프만 이 클러스터로 고정해 재사용한다.
+import MonitoringPage from '@/pages/infra-management/monitoring/page';
+import AcceleratorPage from '@/pages/infra-management/accelerator/page';
+import UsagePage from '@/pages/infra-management/usage/page';
+import WorkloadPage from '@/pages/infra-management/workload/page';
+import ClusterAddonsPage from '@/pages/infra-management/cluster-management/[id]/addons/page';
 import { ClusterHealthPill } from '@/components/features/infra-management/cluster-health-pill';
 import { LiveProgress } from '@/components/features/infra-management/provisioning/live-progress';
 import { YamlResourceEditor } from '@/components/features/infra-management/yaml-resource-editor';
@@ -117,7 +124,7 @@ export default function ClusterDetailPage() {
                 color="secondary"
                 onClick={() =>
                   navigate(
-                    `/infra-management/provisioning/${encodeURIComponent(cluster.linkedVmName!)}`
+                    `/infra-management/vm/${encodeURIComponent(cluster.linkedVmName!)}`
                   )
                 }
                 title="이 cluster 를 만든 VM 인프라 상세로 이동"
@@ -143,6 +150,10 @@ export default function ClusterDetailPage() {
         </div>
       </div>
       <div className="page-content page-pb-40">
+        <Tabs
+          labels={['개요', '리소스', '모니터링', '애드온', '콘솔', '작업 이력']}
+          components={[
+            <div className="tabs-Content">
         {cluster?.source === 'vm' && (
           <LiveProgress
             clusterName={clusterName}
@@ -179,7 +190,7 @@ export default function ClusterDetailPage() {
                     <div className="page-detail_item-name">연결된 VM</div>
                     <div className="page-detail_item-data">
                       <Link
-                        to={`/infra-management/provisioning/${encodeURIComponent(cluster.linkedVmName)}`}
+                        to={`/infra-management/vm/${encodeURIComponent(cluster.linkedVmName)}`}
                         className="table-td-link"
                       >
                         {cluster.linkedVmName}
@@ -326,9 +337,8 @@ export default function ClusterDetailPage() {
             </div>
           </div>
         </div>
-
-      </div>
-      <div className="page-content page-content-detail">
+            </div>,
+            <div className="tabs-Content">
         <div className="flex min-h-[480px] items-stretch border-t border-[#e5e7eb]">
           <ResourceNavigationRail
             value={selectedResource}
@@ -417,10 +427,27 @@ export default function ClusterDetailPage() {
               {selectedResource === 'gpu-scheduling' && (
                 <GpuSchedulingTab clusterName={clusterName} namespace={namespace} />
               )}
-              {selectedResource === 'operations' && <OperationsTab clusterName={clusterName} />}
+              {selectedResource === 'gpu-workload' && <WorkloadPage clusterName={clusterName} />}
+              {selectedResource === 'accelerator' && <AcceleratorPage clusterName={clusterName} />}
+              {selectedResource === 'usage' && <UsagePage clusterName={clusterName} />}
             </div>
           </div>
         </div>
+            </div>,
+            <div className="tabs-Content">
+              <MonitoringPage clusterName={clusterName} />
+            </div>,
+            <div className="tabs-Content">
+              <ClusterAddonsPage embedded />
+            </div>,
+            <div className="tabs-Content">
+              <TerminalTab clusterName={clusterName} />
+            </div>,
+            <div className="tabs-Content">
+              <OperationsTab clusterName={clusterName} />
+            </div>,
+          ]}
+        />
       </div>
 
       <ClusterBootstrapModal

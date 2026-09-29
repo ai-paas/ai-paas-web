@@ -1,15 +1,15 @@
-import { useGetClusters, useGetKubernetesNodes } from '@/hooks/service/clusters';
+import { useGetKubernetesNodes } from '@/hooks/service/clusters';
+import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
 import { useInstantQuery } from '@/hooks/service/monitoring';
 import {
   BreadCrumb,
   ExpandCellButton,
-  Select,
   Table,
   useTablePagination,
   type ColDef,
   type TableRow,
 } from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import styles from '../inframonitor.module.scss';
 
 type DCGMLabel = {
@@ -65,38 +65,23 @@ type AcceleratorTableRow = {
   devices: AcceleratorDeviceRow[];
 };
 
-function AcceleratorPage() {
-  const { clusters, isPending: isClustersPending } = useGetClusters();
+/**
+ * @param clusterName 주어지면 그 클러스터로 고정한다. 클러스터 상세가 같은 화면을
+ *   스코프만 좁혀 재사용하려고 쓴다 — 복제하면 한쪽만 고치게 된다.
+ */
+function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
   const { pagination, setPagination } = useTablePagination();
 
-  const clusterOptions = useMemo<SelectOption[]>(
-    () =>
-      clusters
-        .filter((cluster) => !!cluster.clusterName)
-        .map((cluster) => ({
-          text: cluster.clusterName ?? '',
-          value: cluster.clusterName ?? '',
-        })),
-    [clusters]
-  );
-  const [selectedCluster, setSelectedCluster] = useState<SelectOption>();
+  const [pickedCluster, setPickedCluster] = useState<SelectOption>();
+  const embedded = !!clusterName;
+  const selectedCluster: SelectOption | undefined = embedded
+    ? { text: clusterName, value: clusterName }
+    : pickedCluster;
+  const setSelectedCluster = setPickedCluster;
   const selectedClusterName = selectedCluster?.value;
 
-  useEffect(() => {
-    if (!clusterOptions.length) {
-      if (selectedCluster) {
-        setSelectedCluster(undefined);
-      }
-
-      return;
-    }
-
-    if (selectedCluster && clusterOptions.some((option) => option.value === selectedCluster.value))
-      return;
-    setSelectedCluster(clusterOptions[0]);
-  }, [clusterOptions, selectedCluster]);
-
-  const { nodes, isError: isNodesError } = useGetKubernetesNodes(selectedClusterName);
+  const { nodes, isPending: isNodesPending, isError: isNodesError } =
+    useGetKubernetesNodes(selectedClusterName);
 
   const { data: gpuTempQueryResult } = useInstantQuery<DCGMLabel>(
     'DCGM_FI_DEV_GPU_TEMP',
@@ -150,7 +135,7 @@ function AcceleratorPage() {
       });
     });
 
-    gpuTempQueryResult?.data.result.forEach(({ metric, value }) => {
+    gpuTempQueryResult?.data?.result.forEach(({ metric, value }) => {
       nodeMap.get(metric.Hostname)?.devices.push({
         acceleratorType: 'GPU',
         modelName: metric.modelName,
@@ -160,7 +145,7 @@ function AcceleratorPage() {
       });
     });
 
-    gpuPowerQueryResult?.data.result.forEach(({ metric, value }) => {
+    gpuPowerQueryResult?.data?.result.forEach(({ metric, value }) => {
       const node = nodeMap.get(metric.Hostname);
       const device = node?.devices.find(
         (device) => device.acceleratorType === 'GPU' && device.deviceName === metric.device
@@ -181,7 +166,7 @@ function AcceleratorPage() {
       });
     });
 
-    npuUtilMetrics?.data.result.forEach(({ metric, value }) => {
+    npuUtilMetrics?.data?.result.forEach(({ metric, value }) => {
       nodeMap.get(metric.node)?.devices.push({
         acceleratorType: 'NPU',
         modelName: 'Furiosa Warboy',
@@ -190,7 +175,7 @@ function AcceleratorPage() {
       });
     });
 
-    npuPowerMetrics?.data.result.forEach(({ metric, value }) => {
+    npuPowerMetrics?.data?.result.forEach(({ metric, value }) => {
       const node = nodeMap.get(metric.node);
       const device = node?.devices.find(
         (device) => device.acceleratorType === 'NPU' && device.deviceName === metric.device
@@ -210,7 +195,7 @@ function AcceleratorPage() {
       });
     });
 
-    tpuNodeAllocatableMetrics?.data.result.forEach(({ metric, value }) => {
+    tpuNodeAllocatableMetrics?.data?.result.forEach(({ metric, value }) => {
       for (let i = 0; i < Number(value[1]); i++) {
         nodeMap.get(metric.node)?.devices.push({
           acceleratorType: 'TPU',
@@ -308,25 +293,25 @@ function AcceleratorPage() {
       <div className="breadcrumbBox">
         <BreadCrumb items={[{ label: '인프라 관리' }, { label: 'GPU' }, { label: '가속기' }]} />
       </div>
-      <div className="page-title-box">
-        <h2 className="page-title">가속기</h2>
-      </div>
+      {!embedded && (
+        <div className="page-title-box">
+          <h2 className="page-title">가속기</h2>
+        </div>
+      )}
       <div className="page-content">
         <div className={styles.workloadFilters}>
-          <div className={styles.selectorField}>
-            <div className={styles.selectorLabel}>클러스터 선택</div>
-            <div className={styles.clusterSelect}>
-              <Select
-                options={clusterOptions}
-                getOptionLabel={(option) => option.text}
-                getOptionValue={(option) => option.value}
-                value={selectedCluster ?? null}
-                onChange={(newValue) => setSelectedCluster(newValue ?? undefined)}
-                placeholder="클러스터를 선택해 주세요."
-                isLoading={isClustersPending}
-              />
+          {!embedded && (
+            <div className={styles.selectorField}>
+              <div className={styles.selectorLabel}>클러스터 선택</div>
+              <div className={styles.clusterSelect}>
+                <ClusterPicker
+                  value={selectedCluster?.value}
+                  onChange={(name) => setSelectedCluster({ text: name, value: name })}
+                  requireReady={false}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="h-[481px]">
@@ -337,6 +322,8 @@ function AcceleratorPage() {
             useSearch={false}
             columns={columns}
             data={rows}
+            // 다른 목록과 같게 둔다. 불러오는 중과 비어 있는 중이 같은 화면이면 구분되지 않는다.
+            isLoading={!!selectedClusterName && isNodesPending}
             initialState={{ expanded: true }}
             getRowCanExpand={(row: TableRow<AcceleratorTableRow>) =>
               row.original.devices.length > 0
@@ -418,6 +405,9 @@ function AcceleratorPage() {
             emptyMessage={
               isNodesError ? (
                 '가속기 정보를 불러오는 데 실패했습니다.'
+              ) : !selectedClusterName ? (
+                // 고를 것이 있는데 "없습니다" 로 두면 기능이 비어 있는 줄 안다.
+                '클러스터를 선택해주세요.'
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <div>가속기가 없습니다.</div>

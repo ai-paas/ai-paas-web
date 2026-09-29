@@ -17,18 +17,12 @@ export function isGpuInstanceType(
     case 'gcp':
       // a2-highgpu-*, a3-*, g2-standard-* + 1세대 n1 + tesla attach.
       return /^(a2-|a3-|g2-)/.test(type) || /-with-gpu/.test(type);
-    case 'azure':
-      // Standard_NC*, Standard_ND*, Standard_NV* (NV[A-Z][0-9]).
-      return /^Standard_N[CDV]/i.test(type);
     case 'oci':
       // BM.GPU*, VM.GPU*.
       return /\.GPU/i.test(type);
     case 'alibaba':
       // ecs.gn6i.*, ecs.gn7.*, ecs.ebmgn7.*.
       return /^ecs\.(gn|ebmgn)/.test(type);
-    case 'digitalocean':
-      // gpu-* (H100 droplets) — droplet size prefix.
-      return /^gpu-/.test(type);
     default:
       return false;
   }

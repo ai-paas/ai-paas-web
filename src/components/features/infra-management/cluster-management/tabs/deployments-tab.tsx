@@ -135,6 +135,7 @@ export const DeploymentsTab = ({ clusterName, namespace }: DeploymentsTabProps) 
           totalCount={deployments.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

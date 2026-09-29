@@ -133,6 +133,7 @@ export const ServicesTab = ({ clusterName, namespace }: ServicesTabProps) => {
           totalCount={services.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

@@ -19,6 +19,7 @@ import type {
   GetHubModelsParams,
   GetImprovementTaskTypesParams,
   GetModelCatalogsParams,
+  GetModelFilesParams,
   GetModelFormatsParams,
   GetModelProvidersParams,
   GetModelsParams,
@@ -127,6 +128,9 @@ export const queryKeys = {
     all: ['models'] as const,
     list: (params: GetModelsParams = {}) => [...queryKeys.models.all, params] as const,
     detail: (modelId: number) => [...queryKeys.models.all, 'detail', modelId] as const,
+    // detail 하위 계층 — 모델 삭제 시 detail 제거·무효화가 파일 캐시까지 함께 덮는다
+    files: (modelId: number, params: GetModelFilesParams = {}) =>
+      [...queryKeys.models.detail(modelId), 'files', params] as const,
   },
   customModels: {
     all: ['custom-models'] as const,
@@ -269,6 +273,10 @@ export const queryKeys = {
       [...queryKeys.vms.detail(vmName), 'state-history', pageSize] as const,
     nodes: (vmName?: string) => [...queryKeys.vms.detail(vmName), 'nodes'] as const,
   },
+  clusterNodes: {
+    all: ['cluster-nodes'] as const,
+    list: (params: Record<string, string> = {}) => [...queryKeys.clusterNodes.all, params] as const,
+  },
   credentials: {
     all: ['credentials'] as const,
     list: (params?: { provider?: string }) => [...queryKeys.credentials.all, params] as const,
@@ -289,8 +297,12 @@ export const queryKeys = {
       [...queryKeys.infraProviders.all, 'specs', params] as const,
     images: (params: ProviderImagesKeyParams = {}) =>
       [...queryKeys.infraProviders.all, 'images', params] as const,
-    configSchema: (provider?: string) =>
-      [...queryKeys.infraProviders.all, 'config-schema', provider] as const,
+    configSchema: (provider?: string, params?: Record<string, string>) =>
+      [...queryKeys.infraProviders.all, 'config-schema', provider, params ?? {}] as const,
+    credentialSchema: (provider?: string) =>
+      [...queryKeys.infraProviders.all, 'credential-schema', provider] as const,
+    provisioningDefaults: (params: Record<string, string> = {}) =>
+      [...queryKeys.infraProviders.all, 'provisioning-defaults', params] as const,
   },
   addons: {
     catalog: ['addon-catalog'] as const,
@@ -316,8 +328,10 @@ export const queryKeys = {
       [...queryKeys.helmReleases.all, params] as const,
     resources: (releaseName?: string, clusterId?: string, namespace?: string) =>
       [...queryKeys.helmReleases.all, 'resources', releaseName, clusterId, namespace] as const,
-    values: (releaseName?: string) =>
-      [...queryKeys.helmReleases.all, 'values', releaseName] as const,
+    revisions: (releaseName?: string, clusterId?: string, namespace?: string) =>
+      [...queryKeys.helmReleases.all, 'revisions', releaseName, clusterId, namespace] as const,
+    values: (releaseName?: string, clusterId?: string, namespace?: string) =>
+      [...queryKeys.helmReleases.all, 'values', releaseName, clusterId, namespace] as const,
   },
   helmRepositories: {
     all: ['helm-repositories'] as const,

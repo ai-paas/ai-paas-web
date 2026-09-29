@@ -148,6 +148,7 @@ export const ReplicaSetsTab = ({ clusterName, namespace }: ReplicaSetsTabProps) 
           totalCount={replicaSets.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

@@ -16,7 +16,20 @@ export default defineConfig({
     // vitest(TZ=Asia/Seoul)와 동일하게 날짜 표기를 KST로 고정
     timezoneId: 'Asia/Seoul',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', testIgnore: /live\//, use: { ...devices['Desktop Chrome'] } },
+    /*
+     * 실 백엔드, 게이트웨이를 그대로 통과하는 검증. 목킹 스모크는 주소 체계가 갈린 것을
+     * 잡지 못한다 — 백엔드는 /v1/..., 게이트웨이는 /api/v1/any-cloud/... 다.
+     * 자격증명이 필요해 spec 안에서 E2E_LIVE=1 일 때만 돈다.
+     */
+    {
+      name: 'live',
+      testDir: './e2e/live',
+      use: { ...devices['Desktop Chrome'], baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5174' },
+    },
+  ],
+  // 라이브 프로젝트는 이미 떠 있는 dev 서버(5174)를 쓴다 — 여기 webServer 는 목킹용이다.
   webServer: {
     // 일상 dev 서버(5173)와 충돌하지 않도록 전용 포트 사용
     command: 'pnpm dev --port 4173 --strictPort',

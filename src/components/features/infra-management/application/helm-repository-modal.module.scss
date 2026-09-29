@@ -1,0 +1,42 @@
+.form {
+  display: grid;
+  row-gap: 14px;
+}
+
+.field {
+  display: grid;
+  row-gap: 6px;
+}
+
+.label {
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+  font-weight: 600;
+
+  em {
+    color: #d92d20;
+    font-style: normal;
+  }
+}
+
+.error {
+  color: #d92d20;
+  font-size: $page-font-13;
+}
+
+.textarea {
+  padding: 8px 10px;
+  border: 1px solid $color-gray-100;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: $page-font-13;
+  resize: vertical;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $page-font-color-600;
+  font-size: $page-font-13;
+}

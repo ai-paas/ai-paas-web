@@ -3,6 +3,7 @@ import { Header } from '../components/layout/header';
 import { Sidebar, SidebarInset, SidebarPin, SidebarProvider } from '../components/layout/sidebar';
 import { Menu } from '@/components/layout/menu';
 import { useAuth } from '@/hooks/useAuth';
+import { ResourceEventsBridge } from '@/hooks/service/resource-events';
 
 export default function DefaultLayout() {
   const { isAuthenticated, accessToken, isLoading } = useAuth();
@@ -17,6 +18,7 @@ export default function DefaultLayout() {
 
   return (
     <>
+      <ResourceEventsBridge />
       <Header />
       <SidebarProvider defaultWidth={232}>
         <Sidebar>

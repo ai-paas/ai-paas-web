@@ -111,7 +111,7 @@ export default function WorkflowDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<Sorting>([]);
 
   const { workflow, isPending, isError } = useGetWorkflow(id, !!id);
   const workflowId = workflow?.surro_workflow_id || id;

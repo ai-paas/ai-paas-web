@@ -124,6 +124,7 @@ export const CreateWorkflowButton = () => {
                 totalCount={workflowTemplates.length}
                 pagination={pagination}
                 setPagination={setPagination}
+                useClientPagination
                 rowSelection={rowSelection}
                 setRowSelection={setRowSelection}
               />

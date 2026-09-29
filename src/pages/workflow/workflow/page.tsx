@@ -1,25 +1,15 @@
-import {
-  BreadCrumb,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-  type SortValue,
-} from '@innogrid/ui';
+import { CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
 import { CreateWorkflowButton } from '../../../components/features/workflow/create-workflow-button';
 import { EditWorkflowButton } from '../../../components/features/workflow/edit-workflow-button';
 import { ExecuteWorkflowButton } from '../../../components/features/workflow/execute-workflow-button';
 import { DeleteWorkflowButton } from '../../../components/features/workflow/delete-workflow-button';
 import { StopWorkflowDeploymentButton } from '../../../components/features/workflow/stop-workflow-deployment-button';
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useGetWorkflows } from '@/hooks/service/workflows';
 import { formatDateTime } from '@/util/date';
 import { getWorkflowStatus } from '@/util/workflow';
 import type { Workflow } from '@/types/workflow';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 
 const columns = [
   {
@@ -93,89 +83,33 @@ const columns = [
 ];
 
 export default function WorkflowPage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { workflows, page, isPending, isError } = useGetWorkflows({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-    if (selectedRowKeys.length !== 1) return;
-
-    return workflows[parseInt(selectedRowKeys[0])]?.surro_workflow_id;
-  }, [rowSelection, workflows]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [] });
+  const { workflows, page, isPending, isError, error } = useGetWorkflows(list.queryParams);
+  const selectedId = list.getSelectedRow(workflows)?.surro_workflow_id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '워크플로우' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">워크플로우</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreateWorkflowButton />
-            <EditWorkflowButton workflowId={selectedId} />
-            <DeleteWorkflowButton workflowId={selectedId} />
-            <ExecuteWorkflowButton workflowId={selectedId} />
-            <StopWorkflowDeploymentButton workflowId={selectedId} />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-120.25">
-          <Table
-            columns={columns}
-            data={workflows}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '워크플로우 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>워크플로우가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 워크플로우를 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="워크플로우"
+      breadcrumbItems={[{ label: '워크플로우' }]}
+      actions={
+        <>
+          <CreateWorkflowButton />
+          <EditWorkflowButton workflowId={selectedId} />
+          <DeleteWorkflowButton workflowId={selectedId} />
+          <ExecuteWorkflowButton workflowId={selectedId} />
+          <StopWorkflowDeploymentButton workflowId={selectedId} />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={workflows}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="워크플로우 목록을 불러오는 데 실패했습니다."
+      emptyTitle="워크플로우가 없습니다."
+      emptyDescription="생성 버튼을 클릭해 워크플로우를 생성해 보세요."
+    />
   );
 }

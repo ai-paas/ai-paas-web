@@ -1,109 +1,40 @@
-import {
-  BreadCrumb,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-  type SortValue,
-} from '@innogrid/ui';
+import { CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
 import { Link } from 'react-router';
 import { CreatePromptButton } from '../../components/features/prompt/create-prompt-button';
 import { EditPromptButton } from '../../components/features/prompt/edit-prompt-button';
 import { DeletePromptButton } from '../../components/features/prompt/delete-prompt-button';
 import { useGetPrompts } from '@/hooks/service/prompts';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 import { formatDateTime } from '@/util/date';
 import type { Prompt } from '@/types/prompt';
-import { useEffect, useMemo, useState } from 'react';
 
 export default function PromptPage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { setRowSelection, rowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'created_at', desc: true }]);
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { prompts, page, isPending, isError } = useGetPrompts({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return prompts[parseInt(selectedRowKeys[0])]?.surro_prompt_id;
-  }, [rowSelection, prompts]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [{ id: 'created_at', desc: true }] });
+  const { prompts, page, isPending, isError, error } = useGetPrompts(list.queryParams);
+  const selectedId = list.getSelectedRow(prompts)?.surro_prompt_id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '프롬프트' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">프롬프트</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreatePromptButton />
-            <EditPromptButton promptId={selectedId} />
-            <DeletePromptButton promptId={selectedId} />
-          </div>
-          <div>
-            <div>
-              <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-            </div>
-          </div>
-        </div>
-        <div>
-          <Table
-            columns={columns}
-            data={prompts}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '프롬프트 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>프롬프트가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 프롬프트를 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="프롬프트"
+      breadcrumbItems={[{ label: '프롬프트' }]}
+      actions={
+        <>
+          <CreatePromptButton />
+          <EditPromptButton promptId={selectedId} />
+          <DeletePromptButton promptId={selectedId} />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={prompts}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="프롬프트 목록을 불러오는 데 실패했습니다."
+      emptyTitle="프롬프트가 없습니다."
+      emptyDescription="생성 버튼을 클릭해 프롬프트를 생성해 보세요."
+    />
   );
 }
 

@@ -67,24 +67,6 @@ describe('gpuInstance 유틸', () => {
   // ============================================
   // isGpuInstanceType — Azure
   // ============================================
-  describe('isGpuInstanceType > Azure', () => {
-    it.each([
-      ['Standard_NC6', true],
-      ['Standard_NC24ads_A100_v4', true],
-      ['Standard_ND96asr_v4', true],
-      ['Standard_NV12', true],
-      // 정규식에 i 플래그가 있어 대소문자를 무시한다.
-      ['standard_nc6', true],
-      ['STANDARD_NV12S_V3', true],
-      ['Standard_D2s_v3', false],
-      ['Standard_E4s_v5', false],
-      // NP-series(FPGA)는 N[CDV]에 해당하지 않으므로 GPU가 아니다.
-      ['Standard_NP20s', false],
-    ])('azure + %s → %s', (instanceType, expected) => {
-      expect(isGpuInstanceType('azure', instanceType)).toBe(expected);
-    });
-  });
-
   // ============================================
   // isGpuInstanceType — OCI
   // ============================================
@@ -123,17 +105,6 @@ describe('gpuInstance 유틸', () => {
   // ============================================
   // isGpuInstanceType — DigitalOcean
   // ============================================
-  describe('isGpuInstanceType > DigitalOcean', () => {
-    it.each([
-      ['gpu-h100x1-80gb', true],
-      ['gpu-h100x8-640gb', true],
-      ['s-1vcpu-1gb', false],
-      ['c-4', false],
-    ])('digitalocean + %s → %s', (instanceType, expected) => {
-      expect(isGpuInstanceType('digitalocean', instanceType)).toBe(expected);
-    });
-  });
-
   // ============================================
   // isGpuInstanceType — provider 처리
   // ============================================
@@ -142,10 +113,8 @@ describe('gpuInstance 유틸', () => {
       ['AWS', 'p3.2xlarge'],
       ['Aws', 'p3.2xlarge'],
       ['GCP', 'a2-highgpu-1g'],
-      ['Azure', 'Standard_NC6'],
       ['OCI', 'BM.GPU4.8'],
       ['Alibaba', 'ecs.gn6i-c4g1.xlarge'],
-      ['DigitalOcean', 'gpu-h100x1-80gb'],
     ])('provider 대소문자를 무시한다 (%s + %s)', (provider, instanceType) => {
       expect(isGpuInstanceType(provider, instanceType)).toBe(true);
     });

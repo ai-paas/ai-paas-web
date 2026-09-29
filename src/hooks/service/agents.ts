@@ -13,7 +13,8 @@ export const useGetAdminAgents = () => {
     queryKey: queryKeys.adminAgents.all,
     queryFn: async () => {
       return api
-        .get('any-cloud/admin/agents', { searchParams: { page: '0', size: '200' } })
+        // 게이트웨이 페이지는 1 부터다. 0 을 보내면 422 로 거절돼 목록이 통째로 비었다.
+        .get('any-cloud/admin/agents', { searchParams: { page: '1', size: '200' } })
         .json<AdminAgentsResponse>();
     },
     refetchInterval: 30_000,

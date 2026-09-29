@@ -138,6 +138,7 @@ export const NamespacesTab = ({ clusterName }: NamespacesTabProps) => {
           totalCount={namespaces.length}
           pagination={pagination}
           setPagination={setPagination}
+          useClientPagination
           useSelect
           useMultiSelect
           rowSelection={rowSelection}

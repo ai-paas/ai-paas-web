@@ -46,7 +46,7 @@ const setupPagedServices = () => {
 describe('서비스 목록 페이지', () => {
   installDomMeasurementStubs();
 
-  it('목록을 렌더하고 이름을 상세 링크로 연결하며, 기본 정렬(name 오름차순)로 요청한다', async () => {
+  it('목록을 렌더하고 이름을 상세 링크로 연결하며, sort 없이 요청한다', async () => {
     const { lastParams } = setupPagedServices();
     renderListPage(<ServicePage />);
 
@@ -58,13 +58,18 @@ describe('서비스 목록 페이지', () => {
     const params = lastParams();
     expect(params?.get('page')).toBe('1');
     expect(params?.get('size')).toBe('10');
-    expect(params?.get('sort')).toBe('name');
+    expect(params?.has('sort')).toBe(false);
   });
 
-  it('이름 헤더를 클릭하면 내림차순(-name)으로 재요청하고 첫 행이 바뀐다', async () => {
+  it('이름 헤더를 클릭하면 오름차순·내림차순으로 요청하고 정렬 해제 시 서버 기본 순서로 돌아간다', async () => {
     const { lastParams } = setupPagedServices();
     const { user } = renderListPage(<ServicePage />);
     await screen.findByRole('link', { name: '서비스 01' });
+
+    await user.click(screen.getByText('이름'));
+
+    await waitFor(() => expect(lastParams()?.get('sort')).toBe('name'));
+    expect(screen.getByRole('link', { name: '서비스 01' })).toBeInTheDocument();
 
     await user.click(screen.getByText('이름'));
 
@@ -72,6 +77,11 @@ describe('서비스 목록 페이지', () => {
     expect(lastParams()?.get('sort')).toBe('-name');
     // 내림차순 1페이지는 12~03 — 01은 2페이지로 밀려난다
     expect(screen.queryByRole('link', { name: '서비스 01' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('이름'));
+
+    expect(await screen.findByRole('link', { name: '서비스 01' })).toBeInTheDocument();
+    expect(lastParams()?.has('sort')).toBe(false);
   });
 
   it('2페이지에서 검색하면 1페이지로 초기화되고 search 파라미터가 실린다', async () => {
@@ -104,6 +114,45 @@ describe('서비스 목록 페이지', () => {
 
     expect(await screen.findByText('검색 결과가 없습니다.')).toBeInTheDocument();
     expect(screen.getByText('검색 필터 또는 검색 조건을 변경해 보세요.')).toBeInTheDocument();
+  });
+
+  it('검색 결과의 2페이지에서 입력값을 초기화하면 검색과 선택을 지우고 첫 페이지로 돌아간다', async () => {
+    const { lastParams } = setupPagedServices();
+    const { user } = renderListPage(<ServicePage />);
+    await screen.findByRole('link', { name: '서비스 01' });
+
+    await searchListFor(user, '서비스');
+    await waitFor(() => expect(lastParams()?.get('search')).toBe('서비스'));
+    await goToNextPage(user);
+    await screen.findByRole('link', { name: '서비스 11' });
+    await toggleRowSelection(user, 0);
+    await waitFor(() => expect(screen.getByRole('button', { name: '편집' })).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: '입력값 초기화' }));
+
+    expect(await screen.findByRole('link', { name: '서비스 01' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(lastParams()?.get('page')).toBe('1');
+      expect(lastParams()?.get('search') || '').toBe('');
+    });
+    expect(getPageIndexInput()).toHaveValue('1');
+    expect(screen.getByPlaceholderText('검색어를 입력해주세요')).toHaveValue('');
+    expect(screen.getByRole('button', { name: '편집' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled();
+  });
+
+  it('페이지를 이동하면 이전 행 선택을 해제해 다른 서비스의 편집과 삭제를 막는다', async () => {
+    setupPagedServices();
+    const { user } = renderListPage(<ServicePage />);
+    await screen.findByRole('link', { name: '서비스 01' });
+    await toggleRowSelection(user, 0);
+    await waitFor(() => expect(screen.getByRole('button', { name: '편집' })).toBeEnabled());
+
+    await goToNextPage(user);
+
+    expect(await screen.findByRole('link', { name: '서비스 11' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '편집' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled();
   });
 
   it('행을 하나 선택하면 편집/삭제가 활성화되고, 전체 선택하면 다시 비활성화된다(단일 선택 규칙)', async () => {
@@ -173,15 +222,38 @@ describe('서비스 목록 페이지', () => {
   });
 
   it('목록 조회가 실패하면 에러 문구를 보여준다', async () => {
+    server.use(http.get(`${BASE_URL}/services`, () => HttpResponse.json({}, { status: 500 })));
+    renderListPage(<ServicePage />);
+
+    expect(await screen.findByText('서비스 목록을 불러오는 데 실패했습니다.')).toBeInTheDocument();
+  });
+
+  it('목록 조회가 실패하면 서버의 detail을 보여준다', async () => {
     server.use(
       http.get(`${BASE_URL}/services`, () =>
-        HttpResponse.json({ message: 'error' }, { status: 500 })
+        HttpResponse.json({ detail: '서비스 조회 권한이 없습니다.' }, { status: 403 })
       )
     );
     renderListPage(<ServicePage />);
 
-    expect(
-      await screen.findByText('서비스 목록을 불러오는 데 실패했습니다.')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('서비스 조회 권한이 없습니다.')).toBeInTheDocument();
+    expect(screen.queryByText('서비스가 없습니다.')).not.toBeInTheDocument();
+  });
+
+  it('검색 중 조회가 실패하면 검색 결과 없음 대신 서버의 detail을 보여준다', async () => {
+    setupPagedServices();
+    const { user } = renderListPage(<ServicePage />);
+    await screen.findByRole('link', { name: '서비스 01' });
+    server.use(
+      http.get(`${BASE_URL}/services`, () =>
+        HttpResponse.json({ detail: '서비스 검색을 처리할 수 없습니다.' }, { status: 500 })
+      )
+    );
+
+    await searchListFor(user, '서비스 03');
+
+    expect(await screen.findByText('서비스 검색을 처리할 수 없습니다.')).toBeInTheDocument();
+    expect(screen.queryByText('검색 결과가 없습니다.')).not.toBeInTheDocument();
+    expect(screen.queryByText('검색 필터 또는 검색 조건을 변경해 보세요.')).not.toBeInTheDocument();
   });
 });

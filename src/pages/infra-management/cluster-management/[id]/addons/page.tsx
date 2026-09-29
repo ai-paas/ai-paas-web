@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { addonStateTone } from '@/util/status-tone';
+import { errorMessage } from '@/util/api-error';
+import { Link, useNavigate, useParams } from 'react-router';
 import {
+  HeaderCheckbox,
+  CellCheckbox,
   BreadCrumb,
   Button,
   Input,
@@ -24,23 +28,10 @@ import {
 
 type OptionType = { text: string; value: string };
 
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string' && msg) return msg;
-  }
-  return fallback;
-};
-
-const stateColor = (state?: string): 'run' | 'negative' | 'wait' => {
-  if (!state) return 'wait';
-  const up = state.toUpperCase();
-  if (up === 'INSTALLED' || up === 'READY' || up === 'SUCCEEDED') return 'run';
-  if (up === 'FAILED' || up === 'DELETED') return 'negative';
-  return 'wait';
-};
-
-export default function ClusterAddonsPage() {
+/**
+ * @param embedded 클러스터 상세 안에서 쓸 때. 머리글을 겹쳐 그리지 않는다.
+ */
+export default function ClusterAddonsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { id: clusterName } = useParams<{ id: string }>();
   const { open } = useToast();
@@ -75,25 +66,25 @@ export default function ClusterAddonsPage() {
       setNamespace('');
       setValuesYaml('');
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '설치 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '설치 실패'), status: 'negative' }),
   });
   const { uninstallAddon, isPending: isUninstalling } = useUninstallAddon(clusterName, {
     onSuccess: () => {
       open({ title: '애드온 제거 요청이 접수되었습니다.' });
       setRowSelection({});
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '제거 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '제거 실패'), status: 'negative' }),
   });
   const { retryAddon, isPending: isRetrying } = useRetryAddon(clusterName, {
     onSuccess: () => {
       open({ title: '재시도 요청이 접수되었습니다.' });
     },
-    onError: (e) => open({ title: extractErrorMessage(e, '재시도 실패'), status: 'negative' }),
+    onError: (e) => open({ title: errorMessage(e, '재시도 실패'), status: 'negative' }),
   });
 
   const handleInstall = () => {
     if (!selectedCatalogItem) {
-      open({ title: '카탈로그 항목을 선택해주세요.', status: 'negative' });
+      open({ title: '구성 요소를 선택해주세요.', status: 'negative' });
       return;
     }
     installAddon({
@@ -128,6 +119,13 @@ export default function ClusterAddonsPage() {
 
   const columns = [
     {
+      id: 'select',
+      size: 50,
+      header: ({ table }: { table: ClusterAddon }) => <HeaderCheckbox table={table} />,
+      cell: ({ row }: { row: ClusterAddon }) => <CellCheckbox row={row} />,
+      enableSorting: false,
+    },
+    {
       id: 'type',
       header: '타입',
       accessorFn: (row: ClusterAddon) => row.type ?? '-',
@@ -161,36 +159,42 @@ export default function ClusterAddonsPage() {
       size: 130,
       cell: ({ row }: { row: { original: ClusterAddon } }) => {
         const s = row.original.state;
-        return <span className={`table-td-state table-td-state-${stateColor(s)}`}>{s ?? '-'}</span>;
+        return (
+          <span className={`table-td-state table-td-state-${addonStateTone(s)}`}>{s ?? '-'}</span>
+        );
       },
     },
   ];
 
   return (
     <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb
-          items={[
-            { label: '인프라 관리' },
-            { label: '클러스터 관리', path: '/infra-management/cluster-management' },
-            {
-              label: clusterName ?? '-',
-              path: `/infra-management/cluster-management/${clusterName}`,
-            },
-            { label: '애드온' },
-          ]}
-          onNavigate={navigate}
-        />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">애드온 — {clusterName}</h2>
-      </div>
+      {!embedded && (
+        <>
+        <div className="breadcrumbBox">
+          <BreadCrumb
+            items={[
+              { label: '인프라 관리' },
+              { label: '클러스터 관리', path: '/infra-management/cluster-management' },
+              {
+                label: clusterName ?? '-',
+                path: `/infra-management/cluster-management/${clusterName}`,
+              },
+              { label: '애드온' },
+            ]}
+            onNavigate={navigate}
+          />
+        </div>
+        <div className="page-title-box">
+          <h2 className="page-title">애드온 — {clusterName}</h2>
+        </div>
+        </>
+      )}
 
       <div className="page-content">
-        <h3 className="page-detail-title">새 애드온 설치</h3>
+        <h3 className="page-detail-title">구성 요소 설치</h3>
         <div className="page-input-box">
           <div className="page-input_item-box">
-            <div className="page-input_item-name page-icon-requisite">카탈로그</div>
+            <div className="page-input_item-name page-icon-requisite">구성 요소</div>
             <div className="page-input_item-data" style={{ maxWidth: 480 }}>
               <Select
                 options={catalogOptions}
@@ -200,12 +204,40 @@ export default function ClusterAddonsPage() {
                 onChange={(opt: SelectSingleValue<OptionType>) =>
                   setSelectedCatalog(opt ?? undefined)
                 }
-                placeholder={isCatalogLoading ? '로딩 중...' : '카탈로그 항목을 선택해주세요.'}
+                placeholder={isCatalogLoading ? '로딩 중...' : '구성 요소를 선택해주세요.'}
                 isDisabled={isCatalogLoading}
               />
               {selectedCatalogItem?.description && (
                 <p style={{ marginTop: 4, fontSize: 12, color: '#666' }}>
                   {selectedCatalogItem.description}
+                </p>
+              )}
+              {/*
+                같은 차트라도 "검증된 구성" 과 "날것" 은 다른 물건이다. 어떤 차트를 어떤 버전으로
+                올리는지 보여 주지 않으면 헬름 차트 목록과 무엇이 다른지 알 수 없다.
+              */}
+              {selectedCatalogItem?.chartName && (
+                <p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+                  <strong>
+                    {selectedCatalogItem.chartRepo
+                      ? `${selectedCatalogItem.chartRepo}/${selectedCatalogItem.chartName}`
+                      : selectedCatalogItem.chartName}
+                    {selectedCatalogItem.chartVersion ? ` ${selectedCatalogItem.chartVersion}` : ''}
+                  </strong>
+                  {' 을 권장 설정으로 설치합니다.'}
+                  {selectedCatalogItem.chartRepo && selectedCatalogItem.chartName && (
+                    <>
+                      {' '}
+                      <Link
+                        to={`/infra-management/application/catalog/${encodeURIComponent(
+                          selectedCatalogItem.chartName
+                        )}?repository=${encodeURIComponent(selectedCatalogItem.chartRepo)}`}
+                        className="table-td-link"
+                      >
+                        차트 보기 →
+                      </Link>
+                    </>
+                  )}
                 </p>
               )}
             </div>
@@ -240,7 +272,7 @@ export default function ClusterAddonsPage() {
 
       <div className="page-content page-pb-40">
         <div className="page-toolBox">
-          <h3 className="page-detail-title">설치된 애드온</h3>
+          <h3 className="page-detail-title">설치된 구성 요소</h3>
           <div className="page-toolBox-btns" style={{ display: 'flex', gap: 8 }}>
             <Button
               color="secondary"
@@ -269,6 +301,8 @@ export default function ClusterAddonsPage() {
             totalCount={addons.length}
             pagination={pagination}
             setPagination={setPagination}
+            useClientPagination
+            useSelect
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
           />

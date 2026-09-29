@@ -78,7 +78,7 @@ export default function KnowledgeBaseDetailPage() {
   const navigate = useNavigate();
   const { setRowSelection, rowSelection } = useTableSelection();
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<Sorting>([]);
 
   const files = knowledgeBase?.files ?? [];
 

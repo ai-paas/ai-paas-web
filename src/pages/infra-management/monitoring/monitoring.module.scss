@@ -20,7 +20,10 @@
 }
 
 .clusterSelect {
-  width: 280px;
+  /* 클러스터 이름이 길면 잘린다. 고정 폭 대신 내용에 맞춰 늘어나되 상한을 둔다. */
+  min-width: 280px;
+  width: auto;
+  max-width: 420px;
 }
 
 .rangeFilterRow {
@@ -66,4 +69,27 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 12px;
+}
+
+.pageToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.clusterField {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: $page-font-13;
+  color: $page-font-color-600;
+}
+
+.toolbarRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
 }

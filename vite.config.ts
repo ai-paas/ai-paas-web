@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
+      allowedHosts: ['anycloud.npaas.kr'],
       proxy: {
         '/api': {
           target: env.VITE_SERVER_URL,
