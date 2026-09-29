@@ -132,6 +132,15 @@ export async function mockApi(page: PlaywrightPage): Promise<MockApi> {
     if (match('GET', '/models/model-catalog')) return json(route, emptyPage);
     if (match('GET', '/knowledge-bases')) return json(route, emptyPage);
 
+    // --- 리소스 변경 SSE(useResourceEvents) ---
+    // 인증된 레이아웃이 마운트되는 즉시 열리는 장기 연결이다. 실제 백엔드처럼 응답을
+    // 끝내지 않고 테스트가 끝날 때까지 열어 둔다 — fulfill 해버리면 subscribeSse가
+    // 딜레이 없이 즉시 재연결을 반복해(성공 종료 → 바로 재시도) 노이즈만 쌓인다.
+    if (match('GET', '/any-cloud/events')) {
+      await new Promise<void>(() => undefined);
+      return;
+    }
+
     unmockedRequests.push(`${method} ${path}`);
     return json(route, { detail: `[e2e] 목킹되지 않은 요청: ${method} ${path}` }, 500);
   });
