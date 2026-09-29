@@ -63,7 +63,7 @@ describe('워크플로우 목록 페이지', () => {
 
     const params = lastParams();
     expect(params?.get('page')).toBe('1');
-    expect(params?.get('sort')).toBe('name');
+    expect(params?.has('sort')).toBe(false);
   });
 
   it('행을 선택하면 편집/삭제/실행/배포 중지가 활성화되고, 편집 클릭 시 편집 페이지로 이동한다', async () => {

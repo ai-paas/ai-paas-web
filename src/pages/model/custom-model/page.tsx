@@ -1,21 +1,12 @@
-import {
-  BreadCrumb,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-} from '@innogrid/ui';
+import { CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
 import { CreateCustomModelButton } from '../../../components/features/model/create-custom-model-button';
 import { Link } from 'react-router';
 import { DeleteCustomModelButton } from '../../../components/features/model/delete-custom-model-button';
 import { ModelImprovementButton } from '../../../components/features/model/model-improvement-button';
 import { useGetCustomModels } from '@/hooks/service/models';
-import { useEffect, useMemo } from 'react';
 import type { CustomModel } from '@/types/model';
 import { formatDateTime } from '@/util/date';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 
 const columns = [
   {
@@ -82,90 +73,43 @@ const columns = [
 ];
 
 export default function CustomModelPage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const { customModels, page, isPending, isError } = useGetCustomModels({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-  });
-
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return customModels[parseInt(selectedRowKeys[0])]?.id;
-  }, [rowSelection, customModels]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState();
+  const { customModels, page, isPending, isError, error } = useGetCustomModels(list.queryParams);
+  const selectedId = list.getSelectedRow(customModels)?.id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '모델' }, { label: '커스텀 모델' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">커스텀 모델</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreateCustomModelButton />
-            <DeleteCustomModelButton customModelId={selectedId} />
-            <ModelImprovementButton
-              customModelId={selectedId}
-              category="optimization"
-              title="하드웨어 최적화"
-              selectLabel="최적화 방식"
-              wrapperStyle={{ marginLeft: '20px' }}
-            />
-            <ModelImprovementButton
-              customModelId={selectedId}
-              category="lightweight"
-              title="모델 경량화"
-              selectLabel="경량화 방식"
-            />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-120.25">
-          <Table
-            columns={columns}
-            data={customModels}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '커스텀 모델 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>커스텀 모델이 없습니다.</div>
-                  <div>생성 버튼을 클릭해 커스텀 모델을 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
+    <ListPage
+      title="커스텀 모델"
+      breadcrumbItems={[{ label: '모델' }, { label: '커스텀 모델' }]}
+      actions={
+        <>
+          <CreateCustomModelButton />
+          <DeleteCustomModelButton customModelId={selectedId} />
+          <ModelImprovementButton
+            customModelId={selectedId}
+            category="optimization"
+            title="하드웨어 최적화"
+            selectLabel="최적화 방식"
+            wrapperStyle={{ marginLeft: '20px' }}
           />
-        </div>
-      </div>
-    </main>
+          <ModelImprovementButton
+            customModelId={selectedId}
+            category="lightweight"
+            title="모델 경량화"
+            selectLabel="경량화 방식"
+          />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={customModels}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="커스텀 모델 목록을 불러오는 데 실패했습니다."
+      emptyTitle="커스텀 모델이 없습니다."
+      emptyDescription="생성 버튼을 클릭해 커스텀 모델을 생성해 보세요."
+    />
   );
 }

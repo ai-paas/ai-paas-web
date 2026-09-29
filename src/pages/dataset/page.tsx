@@ -1,20 +1,9 @@
-import {
-  BreadCrumb,
-  Button,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-  type SortValue,
-} from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { Button, CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
 import { Link, useNavigate } from 'react-router';
 import { EditDatasetButton } from '../../components/features/dataset/edit-dataset-button';
 import { DeleteDatasetButton } from '../../components/features/dataset/delete-dataset-button';
 import { useGetDatasets } from '@/hooks/service/datasets';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 import { formatDateTime } from '@/util/date';
 import type { Dataset } from '@/types/dataset';
 
@@ -73,91 +62,34 @@ const columns = [
 
 export default function DatasetPage() {
   const navigate = useNavigate();
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { datasets, page, isPending, isError } = useGetDatasets({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  const selectedId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return datasets[parseInt(selectedRowKeys[0])]?.id;
-  }, [rowSelection, datasets]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [] });
+  const { datasets, page, isPending, isError, error } = useGetDatasets(list.queryParams);
+  const selectedId = list.getSelectedRow(datasets)?.id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '데이터 셋' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">데이터 셋</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <Button size="medium" color="primary" onClick={() => navigate('/dataset/create')}>
-              생성
-            </Button>
-            <EditDatasetButton datasetId={selectedId} />
-            <DeleteDatasetButton datasetId={selectedId} />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-[481px]">
-          <Table
-            columns={columns}
-            data={datasets}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '데이터셋 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>데이터셋이 없습니다.</div>
-                  <div>생성 버튼을 클릭해 데이터셋을 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            pageSizeOptions={[10, 15, 20, 30, 50, 100]}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="데이터 셋"
+      breadcrumbItems={[{ label: '데이터 셋' }]}
+      actions={
+        <>
+          <Button size="medium" color="primary" onClick={() => navigate('/dataset/create')}>
+            생성
+          </Button>
+          <EditDatasetButton datasetId={selectedId} />
+          <DeleteDatasetButton datasetId={selectedId} />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={datasets}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="데이터셋 목록을 불러오는 데 실패했습니다."
+      emptyTitle="데이터셋이 없습니다."
+      emptyDescription="생성 버튼을 클릭해 데이터셋을 생성해 보세요."
+      pageSizeOptions={[10, 15, 20, 30, 50, 100]}
+    />
   );
 }

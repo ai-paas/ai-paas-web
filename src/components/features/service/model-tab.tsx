@@ -57,7 +57,7 @@ const columns = [
 
 export const ModelTab = ({ models = [], isLoading, isError }: ModelTabProps) => {
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<Sorting>([]);
 
   return (
     <div className="tabs-Content h-65.5">

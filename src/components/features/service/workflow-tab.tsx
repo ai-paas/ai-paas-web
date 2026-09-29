@@ -71,7 +71,7 @@ const columns = [
 export const WorkflowTab = ({ serviceId }: { serviceId?: string }) => {
   const { pagination, setPagination } = useTablePagination();
   const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([]);
 
   const sort = useMemo(
     () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,

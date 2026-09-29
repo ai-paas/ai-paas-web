@@ -1,21 +1,10 @@
-import {
-  BreadCrumb,
-  Button,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-  type SortValue,
-} from '@innogrid/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { Button, CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
 import { Link, useNavigate } from 'react-router';
 import { EditLearningButton } from '../../components/features/learning/edit-learning-button';
 import { DeleteLearningButton } from '../../components/features/learning/delete-learning-button';
 import { ModelRegisterButton } from '@/components/features/learning/model-register-button';
 import { useGetLearnings } from '@/hooks/service/learning';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
 import { formatDateTime, formatElapsed } from '@/util/date';
 import type { Learning } from '@/types/learning';
 
@@ -124,91 +113,34 @@ const columns = [
 
 export default function LearningPage() {
   const navigate = useNavigate();
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
-
-  const sort = useMemo(
-    () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,
-    [sorting]
-  );
-
-  const { learnings, page, isPending, isError } = useGetLearnings({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-    sort,
-  });
-
-  const selectedExperimentId = useMemo(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-
-    if (selectedRowKeys.length !== 1) return;
-
-    return learnings[parseInt(selectedRowKeys[0])]?.id;
-  }, [rowSelection, learnings]);
-
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState({ initialSorting: [] });
+  const { learnings, page, isPending, isError, error } = useGetLearnings(list.queryParams);
+  const selectedExperimentId = list.getSelectedRow(learnings)?.id;
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '학습' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">학습</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
-              생성
-            </Button>
-            <EditLearningButton experimentId={selectedExperimentId} />
-            <DeleteLearningButton experimentId={selectedExperimentId} />
-            <ModelRegisterButton experimentId={selectedExperimentId} />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-[481px]">
-          <Table
-            columns={columns}
-            data={learnings}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '학습 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>학습이 없습니다.</div>
-                  <div>생성 버튼을 클릭해 학습을 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
-            sorting={sorting}
-            setSorting={setSorting}
-          />
-        </div>
-      </div>
-    </main>
+    <ListPage
+      title="학습"
+      breadcrumbItems={[{ label: '학습' }]}
+      actions={
+        <>
+          <Button size="medium" color="primary" onClick={() => navigate('/learning/create')}>
+            생성
+          </Button>
+          <EditLearningButton experimentId={selectedExperimentId} />
+          <DeleteLearningButton experimentId={selectedExperimentId} />
+          <ModelRegisterButton experimentId={selectedExperimentId} />
+        </>
+      }
+      listState={list}
+      columns={columns}
+      data={learnings}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="학습 목록을 불러오는 데 실패했습니다."
+      emptyTitle="학습이 없습니다."
+      emptyDescription="생성 버튼을 클릭해 학습을 생성해 보세요."
+    />
   );
 }

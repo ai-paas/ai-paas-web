@@ -1,14 +1,6 @@
-import {
-  BreadCrumb,
-  CellCheckbox,
-  HeaderCheckbox,
-  SearchInput,
-  Table,
-  useSearchInputState,
-  useTablePagination,
-  useTableSelection,
-} from '@innogrid/ui';
-import { useEffect, useMemo } from 'react';
+import { CellCheckbox, HeaderCheckbox } from '@innogrid/ui';
+import { ListPage, useListPageState } from '@/components/ui/list-page';
+import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { useGetMembers } from '@/hooks/service/member';
 import { formatDateTime } from '@/util/date';
@@ -102,116 +94,44 @@ const columns = [
 ];
 
 export default function MemberManagementPage() {
-  const { searchValue, ...restProps } = useSearchInputState();
-  const { pagination, setPagination, initializePagination } = useTablePagination();
-  const { rowSelection, setRowSelection } = useTableSelection();
-  const { members, page, isPending, isError } = useGetMembers({
-    page: pagination.pageIndex + 1,
-    size: pagination.pageSize,
-    search: searchValue,
-  });
-
-  // 정확히 한 줄만 선택됐을 때 인덱스 계산
-  const selectedIndex = useMemo(() => {
-    if (!members?.length) return null;
-    const keys = Object.keys(rowSelection);
-    if (keys.length !== 1) return null;
-    const idx = Number(keys[0]);
-    return Number.isFinite(idx) && idx >= 0 && idx < members.length ? idx : null;
-  }, [rowSelection, members]);
-
-  // 선택된 멤버 및 멤버 아이디
-  const selectedMember = useMemo(() => {
-    if (selectedIndex === null || !members?.length) return null;
-    return members[selectedIndex] as MemberRow;
-  }, [selectedIndex, members]);
-
-  const selectedMemberId = useMemo(() => selectedMember?.member_id ?? null, [selectedMember]);
-
-  // const selectedMemberId = useMemo(() => {
-  //   if (!members?.length) return null;
-
-  //   const keys = Object.keys(rowSelection);
-  //   if (keys.length !== 1) return null;
-
-  //   const idx = Number(keys[0]);
-  //   if (!Number.isFinite(idx) || idx < 0 || idx >= members.length) return null;
-
-  //   return members[idx].member_id; // 문자열 그대로 반환
-  // }, [rowSelection, members]);
-
-  // 검색어가 변경되면 페이지네이션 초기화
-  useEffect(() => {
-    if (searchValue) {
-      initializePagination();
-    }
-  }, [searchValue, initializePagination]);
+  const list = useListPageState();
+  const { members, page, isPending, isError, error } = useGetMembers(list.queryParams);
+  const selectedMember = list.getSelectedRow(members);
+  const selectedMemberId = selectedMember?.member_id ?? null;
+  const { setRowSelection } = list;
 
   useEffect(() => {
     setRowSelection({}); // 데이터 갱신 시 체크 해제
   }, [members, setRowSelection]);
 
   return (
-    <main>
-      <div className="breadcrumbBox">
-        <BreadCrumb items={[{ label: '멤버 관리' }]} />
-      </div>
-      <div className="page-title-box">
-        <h2 className="page-title">멤버 관리</h2>
-      </div>
-      <div className="page-content">
-        <div className="page-toolBox">
-          <div className="page-toolBox-btns">
-            <CreateMemberButton />
-            <EditMemberButton selectedMemberId={selectedMemberId} />
-            <DeleteMemberButton selectedMemberId={selectedMemberId} />
-
-            {/* 상태 기반 토글: 정확히 한 줄 선택됐을 때만, 현재 상태에 따라 버튼 활성화 */}
-            <ActivateMemberButton
-              selectedMemberId={selectedMemberId}
-              selectedIsActive={selectedMember?.is_active ?? null}
-            />
-            <DeactivateMemberButton
-              selectedMemberId={selectedMemberId}
-              selectedIsActive={selectedMember?.is_active ?? null}
-            />
-          </div>
-          <div>
-            <SearchInput variant="default" placeholder="검색어를 입력해주세요" {...restProps} />
-          </div>
-        </div>
-        <div className="h-[481px]">
-          <Table
-            columns={columns}
-            data={members}
-            isLoading={isPending}
-            globalFilter={searchValue}
-            emptySearchMessage={
-              <div className="flex flex-col items-center gap-4">
-                <div>검색 결과가 없습니다.</div>
-                <div>검색 필터 또는 검색 조건을 변경해 보세요.</div>
-              </div>
-            }
-            emptyMessage={
-              isError ? (
-                '멤버 목록을 불러오는 데 실패했습니다.'
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div>멤버가 없습니다.</div>
-                  <div>생성 버튼을 클릭해 멤버를 생성해 보세요.</div>
-                </div>
-              )
-            }
-            totalCount={page.total}
-            pagination={pagination}
-            setPagination={setPagination}
-            rowSelection={rowSelection}
-            setRowSelection={setRowSelection}
+    <ListPage
+      title="멤버 관리"
+      listState={list}
+      actions={
+        <>
+          <CreateMemberButton />
+          <EditMemberButton selectedMemberId={selectedMemberId} />
+          <DeleteMemberButton selectedMemberId={selectedMemberId} />
+          <ActivateMemberButton
+            selectedMemberId={selectedMemberId}
+            selectedIsActive={selectedMember?.is_active ?? null}
           />
-        </div>
-
-        {isError && <div className="mt-4 text-red-500">멤버 목록을 불러오지 못했습니다.</div>}
-      </div>
-    </main>
+          <DeactivateMemberButton
+            selectedMemberId={selectedMemberId}
+            selectedIsActive={selectedMember?.is_active ?? null}
+          />
+        </>
+      }
+      columns={columns}
+      data={members}
+      totalCount={page.total}
+      isLoading={isPending}
+      isError={isError}
+      error={error}
+      errorMessage="멤버 목록을 불러오는 데 실패했습니다."
+      emptyTitle="멤버가 없습니다."
+      emptyDescription="생성 버튼을 클릭해 멤버를 생성해 보세요."
+    />
   );
 }

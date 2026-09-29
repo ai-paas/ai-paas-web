@@ -54,13 +54,13 @@ describe('ModelFileTable', () => {
     expect(screen.getByText('2026-09-14 12:31')).toBeInTheDocument();
   });
 
-  it('기본 정렬(name 오름차순)을 sort 파라미터로 보낸다', async () => {
+  it('기본 조회는 sort 파라미터를 생략하고 서버 기본 정렬을 사용한다', async () => {
     const { lastParams } = setupFiles();
     renderListPage(<ModelFileTable modelId={11} />);
 
     await screen.findByText('config.json');
 
-    expect(lastParams()?.get('sort')).toBe('name');
+    expect(lastParams()?.has('sort')).toBe(false);
     expect(lastParams()?.get('page')).toBe('1');
   });
 

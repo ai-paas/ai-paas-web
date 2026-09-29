@@ -76,7 +76,7 @@ const columns: ColDef<ModelFile>[] = [
 /** 모델 상세의 파일 탭. 커스텀 모델·모델 카탈로그 상세가 함께 쓴다. */
 export const ModelFileTable = ({ modelId }: { modelId?: number }) => {
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<SortValue[]>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<SortValue[]>([]);
 
   const sort = useMemo(
     () => sorting.map((s) => `${s.desc ? '-' : ''}${s.id}`).join(',') || undefined,

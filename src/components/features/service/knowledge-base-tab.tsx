@@ -62,7 +62,7 @@ export const KnowledgeBaseTab = ({
   isError,
 }: KnowledgeBaseTabProps) => {
   const { pagination, setPagination } = useTablePagination();
-  const [sorting, setSorting] = useState<Sorting>([{ id: 'name', desc: false }]);
+  const [sorting, setSorting] = useState<Sorting>([]);
 
   return (
     <div className="tabs-Content h-65.5">
