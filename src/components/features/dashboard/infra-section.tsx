@@ -68,7 +68,7 @@ export const InfraSection = () => {
               <button
                 type="button"
                 className="btn-more"
-                onClick={() => navigate('/infra-management/monitoring-dashboard')}
+                onClick={() => navigate('/infra-management/monitoring')}
               >
                 <IconMore />
                 <span>바로가기</span>
@@ -115,7 +115,7 @@ export const InfraSection = () => {
               <button
                 type="button"
                 className="btn-more"
-                onClick={() => navigate('/infra-management/monitoring-dashboard')}
+                onClick={() => navigate('/infra-management/monitoring')}
               >
                 <IconMore />
                 <span>바로가기</span>
