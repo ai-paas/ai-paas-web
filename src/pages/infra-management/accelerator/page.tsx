@@ -1,6 +1,6 @@
 import { useGetKubernetesNodes } from '@/hooks/service/clusters';
 import { ClusterPicker } from '@/components/features/infra-management/cluster-picker';
-import { useInstantQuery } from '@/hooks/service/monitoring';
+import { useGetKubernetesPodsResource, useInstantQuery } from '@/hooks/service/monitoring';
 import {
   BreadCrumb,
   ExpandCellButton,
@@ -14,10 +14,11 @@ import styles from '../inframonitor.module.scss';
 
 type DCGMLabel = {
   Hostname: string;
-  device: string;
   exported_namespace: string;
   exported_pod?: string;
   gpu?: string;
+  GPU_I_ID?: string;
+  UUID: string;
   modelName: string;
 };
 
@@ -28,9 +29,9 @@ type FuriosaLabel = {
 
 type TPULabel = {
   node: string;
-  resource_type: string;
-  tpu_type: string;
-  zone: string;
+  accelerator_id: string;
+  model: string;
+  exported_pod?: string;
 };
 
 type SelectOption = {
@@ -53,6 +54,7 @@ type AcceleratorDeviceRow = {
   usedBy?: string;
   temperature?: number;
   power?: number;
+  isMigInstance?: boolean;
 };
 
 type AcceleratorTableRow = {
@@ -99,10 +101,15 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
     'furiosa_npu_hw_power{label="PCI Total RMS PWR"}',
     selectedClusterName
   );
-  const { data: tpuNodeAllocatableMetrics } = useInstantQuery<TPULabel>(
-    'gke_tpu_node_allocatable{resource_type="tpu"}',
+  const { data: tpuChipMetrics } = useInstantQuery<TPULabel>(
+    'tensorcore_utilization_node',
     selectedClusterName
   );
+  const { data: tpuPodMetrics } = useInstantQuery<TPULabel>(
+    'tensorcore_utilization',
+    selectedClusterName
+  );
+  const { pods } = useGetKubernetesPodsResource(selectedClusterName);
 
   const acceleratorNodes = useMemo(() => {
     if (!selectedClusterName) return [];
@@ -139,16 +146,18 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
       nodeMap.get(metric.Hostname)?.devices.push({
         acceleratorType: 'GPU',
         modelName: metric.modelName,
-        deviceName: metric.device,
+        deviceName: metric.GPU_I_ID ? `${metric.UUID} MIG ${metric.GPU_I_ID}` : metric.UUID,
         usedBy: metric.exported_pod,
         temperature: Number(value[1]),
+        isMigInstance: !!metric.GPU_I_ID,
       });
     });
 
     gpuPowerQueryResult?.data?.result.forEach(({ metric, value }) => {
       const node = nodeMap.get(metric.Hostname);
+      const deviceName = metric.GPU_I_ID ? `${metric.UUID} MIG ${metric.GPU_I_ID}` : metric.UUID;
       const device = node?.devices.find(
-        (device) => device.acceleratorType === 'GPU' && device.deviceName === metric.device
+        (device) => device.acceleratorType === 'GPU' && device.deviceName === deviceName
       );
       const power = Number(value[1]);
 
@@ -160,9 +169,10 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
       node?.devices.push({
         acceleratorType: 'GPU',
         modelName: metric.modelName,
-        deviceName: metric.device,
+        deviceName,
         usedBy: metric.exported_pod,
         power,
+        isMigInstance: !!metric.GPU_I_ID,
       });
     });
 
@@ -171,6 +181,20 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
         acceleratorType: 'NPU',
         modelName: 'Furiosa Warboy',
         deviceName: metric.device,
+        usedBy:
+          pods
+            .filter(
+              (pod) =>
+                pod.spec?.nodeName === metric.node &&
+                pod.status?.phase === 'Running' &&
+                pod.spec.containers?.some((c) =>
+                  Object.keys({ ...c.resources?.requests, ...c.resources?.limits }).some((key) =>
+                    /npu/i.test(key)
+                  )
+                )
+            )
+            .map((pod) => pod.metadata.name)
+            .join(', ') || undefined,
         temperature: Number(value[1]) / 1000,
       });
     });
@@ -195,14 +219,17 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
       });
     });
 
-    tpuNodeAllocatableMetrics?.data?.result.forEach(({ metric, value }) => {
-      for (let i = 0; i < Number(value[1]); i++) {
-        nodeMap.get(metric.node)?.devices.push({
-          acceleratorType: 'TPU',
-          modelName: metric.tpu_type,
-          deviceName: metric.node,
-        });
-      }
+    tpuChipMetrics?.data?.result.forEach(({ metric }) => {
+      nodeMap.get(metric.node)?.devices.push({
+        acceleratorType: 'TPU',
+        modelName: metric.model,
+        deviceName: metric.accelerator_id,
+        usedBy: tpuPodMetrics?.data?.result.find(
+          (series) =>
+            series.metric.node === metric.node &&
+            series.metric.accelerator_id === metric.accelerator_id
+        )?.metric.exported_pod,
+      });
     });
 
     return Array.from(nodeMap.entries());
@@ -212,7 +239,9 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
     nodes,
     npuPowerMetrics,
     npuUtilMetrics,
-    tpuNodeAllocatableMetrics,
+    tpuChipMetrics,
+    tpuPodMetrics,
+    pods,
     selectedClusterName,
   ]);
 
@@ -314,7 +343,7 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
           )}
         </div>
 
-        <div className="h-[481px]">
+        <div>
           <Table<AcceleratorTableRow>
             useClientPagination
             useExpand
@@ -339,6 +368,7 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
                   <div>전력</div>
                 </div>
                 {row.original.devices.map((device: AcceleratorDeviceRow, index: number) => {
+                  const sharedSuffix = device.isMigInstance ? ' (GPU 전체)' : '';
                   const temperatureWidth = Number.isFinite(device.temperature)
                     ? Math.min(Math.max(device.temperature ?? 0, 0), 100)
                     : 0;
@@ -364,7 +394,7 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
                             title={
                               device.temperature === undefined
                                 ? undefined
-                                : `${device.temperature.toFixed(0)}°C`
+                                : `${device.temperature.toFixed(0)}°C${sharedSuffix}`
                             }
                           >
                             <div
@@ -374,7 +404,7 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
                             <span className={styles.utilBarLabel}>
                               {device.temperature === undefined
                                 ? '-'
-                                : `${device.temperature.toFixed(0)}°C`}
+                                : `${device.temperature.toFixed(0)}°C${sharedSuffix}`}
                             </span>
                           </div>
                         </div>
@@ -384,7 +414,9 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
                           <div
                             className={styles.utilBar}
                             title={
-                              device.power === undefined ? undefined : `${device.power.toFixed(1)}W`
+                              device.power === undefined
+                                ? undefined
+                                : `${device.power.toFixed(1)}W${sharedSuffix}`
                             }
                           >
                             <div
@@ -392,7 +424,9 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
                               style={{ width: `${powerWidth}%` }}
                             />
                             <span className={styles.utilBarLabel}>
-                              {device.power === undefined ? '-' : `${device.power.toFixed(1)}W`}
+                              {device.power === undefined
+                                ? '-'
+                                : `${device.power.toFixed(1)}W${sharedSuffix}`}
                             </span>
                           </div>
                         </div>

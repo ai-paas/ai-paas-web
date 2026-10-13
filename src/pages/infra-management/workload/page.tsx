@@ -134,14 +134,13 @@ const WorkloadPage = ({ clusterName }: { clusterName?: string } = {}) => {
     isError,
   } = useGetKubernetesPodsResource(selectedCluster?.value, selectedNamespace.value);
 
-  // GPU 자원을 요청한 파드만 필터 (nvidia.com/gpu / amd.com/gpu / 일반 gpu 요청)
-  const gpuPods = useMemo(() => {
+  const acceleratorPods = useMemo(() => {
     return allPods.filter((pod) => {
       const containers = pod.spec?.containers ?? [];
       return containers.some((c) => {
         const req = c.resources?.requests ?? {};
         const lim = c.resources?.limits ?? {};
-        return Object.keys({ ...req, ...lim }).some((key) => /gpu/i.test(key));
+        return Object.keys({ ...req, ...lim }).some((key) => /gpu|npu|tpu/i.test(key));
       });
     });
   }, [allPods]);
@@ -231,7 +230,7 @@ const WorkloadPage = ({ clusterName }: { clusterName?: string } = {}) => {
           <Table
             useClientPagination
             columns={columns}
-            data={gpuPods}
+            data={acceleratorPods}
             isLoading={isPodsLoading}
             globalFilter={searchValue}
             emptyMessage={
@@ -243,12 +242,12 @@ const WorkloadPage = ({ clusterName }: { clusterName?: string } = {}) => {
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <div>GPU 워크로드가 없습니다.</div>
-                  <div>이 클러스터에서 GPU 자원을 요청한 파드가 없습니다.</div>
+                  <div>이 클러스터에서 가속기 자원을 요청한 파드가 없습니다.</div>
                 </div>
               )
             }
             emptySearchMessage="파드 이름과 일치하는 검색 결과가 없습니다."
-            totalCount={gpuPods.length}
+            totalCount={acceleratorPods.length}
             pagination={pagination}
             setPagination={setPagination}
           />
