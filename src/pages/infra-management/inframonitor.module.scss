@@ -45,6 +45,7 @@
 }
 
 .deviceList {
+  contain: inline-size;
   padding: 8px 16px 16px;
   background-color: #fbfcff;
 }
@@ -52,7 +53,9 @@
 .deviceListHeader,
 .deviceListRow {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns:
+    88px minmax(0, 2fr) minmax(0, 2fr) minmax(0, 2fr) minmax(140px, 1fr)
+    minmax(140px, 1fr);
   gap: 12px;
   align-items: center;
 }

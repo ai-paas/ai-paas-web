@@ -15,6 +15,8 @@ type DCGMLabel = {
   exported_namespace: string;
   exported_pod?: string;
   gpu?: string;
+  GPU_I_ID?: string;
+  UUID: string;
   modelName: string;
 };
 
@@ -23,10 +25,8 @@ type KubernetesNpuLabel = {
 };
 
 type TpuLabel = {
-  node?: string;
-  instance?: string;
-  device?: string;
-  resource_type?: string;
+  node: string;
+  accelerator_id: string;
 };
 
 type SelectOption = {
@@ -198,18 +198,19 @@ const UsagePage = ({ clusterName }: { clusterName?: string } = {}) => {
 
   const gpuUtilRange = useRangeQuery<DCGMLabel>({
     clusterName: selectedCluster?.value,
-    query: 'avg by (Hostname,device,gpu,modelName) (DCGM_FI_DEV_GPU_UTIL)',
+    query:
+      'avg by (Hostname, UUID, GPU_I_ID, modelName) (DCGM_FI_DEV_GPU_UTIL or DCGM_FI_PROF_GR_ENGINE_ACTIVE * 100)',
     ...rangeWindow,
   });
   const npuCoreRange = useRangeQuery<KubernetesNpuLabel>({
     clusterName: selectedCluster?.value,
     query:
-      '((sum by (node) (kube_pod_container_resource_requests{resource=~".*npu.*"}) > bool 0) * 100) or on (node) (0 * sum by (node) (kube_node_status_capacity{resource=~".*npu.*"}))',
+      '((sum by (node) (kube_pod_container_resource_requests{resource=~".*npu.*"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1)) > bool 0) * 100) or on (node) (0 * sum by (node) (kube_node_status_capacity{resource=~".*npu.*"}))',
     ...rangeWindow,
   });
   const tpuUsageRange = useRangeQuery<TpuLabel>({
     clusterName: selectedCluster?.value,
-    query: 'gke_tpu_node_usage{resource_type="tpu"}',
+    query: 'tensorcore_utilization_node',
     ...rangeWindow,
   });
 
@@ -242,7 +243,8 @@ const UsagePage = ({ clusterName }: { clusterName?: string } = {}) => {
       buckets: timeBuckets,
       accelerator: 'GPU',
       getNodeName: (metric) => metric.Hostname || 'unknown-node',
-      getDeviceName: (metric, index) => metric.device || metric.gpu || `GPU${index}`,
+      getDeviceName: (metric) =>
+        metric.GPU_I_ID ? `${metric.UUID} MIG ${metric.GPU_I_ID}` : metric.UUID,
     });
     const npuUsage = buildAcceleratorUsage<KubernetesNpuLabel>({
       response: npuCoreRange.data,
@@ -255,8 +257,8 @@ const UsagePage = ({ clusterName }: { clusterName?: string } = {}) => {
       response: tpuUsageRange.data,
       buckets: timeBuckets,
       accelerator: 'TPU',
-      getNodeName: (metric) => metric.node || metric.instance || 'unknown-node',
-      getDeviceName: (metric, index) => metric.device || metric.resource_type || `TPU${index}`,
+      getNodeName: (metric) => metric.node,
+      getDeviceName: (metric) => metric.accelerator_id,
     });
 
     return {
