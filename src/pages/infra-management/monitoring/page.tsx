@@ -100,11 +100,11 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
       ),
       instant(
         'fileSystemTotal',
-        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+        'sum(max by (instance, device) (node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs"}))'
       ),
       instant(
         'fileSystemUsage',
-        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+        'sum(max by (instance, device) (node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs"}))'
       ),
       instant(
         'networkIo',
@@ -120,19 +120,28 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
        * 있는데도 영역이 통째로 사라진다.
        */
       instant('gpuTotal', 'sum(kube_node_status_capacity{resource="nvidia_com_gpu"})'),
-      instant('gpuRequest', 'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"})'),
-      instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL)'),
-      instant('gpuCollector', 'count(DCGM_FI_DEV_GPU_UTIL) or vector(0)'),
+      instant(
+        'gpuRequest',
+        'sum(kube_pod_container_resource_requests{resource="nvidia_com_gpu"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1))'
+      ),
+      instant('gpuUtilAvg', 'avg(DCGM_FI_DEV_GPU_UTIL or DCGM_FI_PROF_GR_ENGINE_ACTIVE * 100)'),
+      instant('gpuCollector', 'count(DCGM_FI_DEV_GPU_TEMP) or vector(0)'),
       instant('npuCollector', 'count(furiosa_npu_hw_temperature) or vector(0)'),
       instant('npuTotal', 'sum(kube_node_status_capacity{resource=~".*npu.*"})'),
-      instant('npuRequest', 'sum(kube_pod_container_resource_requests{resource=~".*npu.*"})'),
-      instant('tpuTotal', 'sum(gke_tpu_node_allocatable{resource_type="tpu"})'),
-      instant('tpuAllocated', 'sum(gke_cluster_tpu_allocated)'),
+      instant(
+        'npuRequest',
+        'sum(kube_pod_container_resource_requests{resource=~".*npu.*"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1))'
+      ),
+      instant('tpuTotal', 'sum(kube_node_status_capacity{resource="google_com_tpu"})'),
+      instant(
+        'tpuAllocated',
+        'sum(kube_pod_container_resource_requests{resource="google_com_tpu"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1))'
+      ),
       range('cpuRange', 'sum(rate(node_cpu_seconds_total{mode!="idle"}[1m]))'),
       range('memoryRange', 'sum(node_memory_MemTotal_bytes{} - node_memory_MemAvailable_bytes{})'),
       range(
         'filesystemRange',
-        'sum(node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs", mountpoint="/"})'
+        'sum(max by (instance, device) (node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs"} - node_filesystem_free_bytes{fstype=~"ext4|xfs|btrfs"}))'
       ),
       range(
         'networkIoRange',
@@ -144,14 +153,14 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
       ),
       range('npuTempRange', 'furiosa_npu_hw_temperature{label="Average"}'),
       range('npuPowerRange', 'furiosa_npu_hw_power{label="PCI Total RMS PWR"}'),
-      range('tpuTensorRange', 'gke_tpu_node_usage{resource_type="tpu"}'),
+      range('tpuTensorRange', 'tensorcore_utilization_node'),
     ];
     if (hasGpu) {
       list.push(
-        range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL'),
+        range('gpuUtilRange', 'DCGM_FI_DEV_GPU_UTIL or DCGM_FI_PROF_GR_ENGINE_ACTIVE * 100'),
         range('gpuMemoryRange', 'DCGM_FI_DEV_FB_USED'),
-        range('gpuTempRange', 'DCGM_FI_DEV_GPU_TEMP'),
-        range('gpuPowerRange', 'DCGM_FI_DEV_POWER_USAGE'),
+        range('gpuTempRange', 'max by (Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_GPU_TEMP)'),
+        range('gpuPowerRange', 'max by (Hostname, UUID, gpu, modelName) (DCGM_FI_DEV_POWER_USAGE)'),
         range('gpuSmActiveRange', 'DCGM_FI_PROF_GR_ENGINE_ACTIVE'),
         range('gpuTensorActiveRange', 'DCGM_FI_PROF_PIPE_TENSOR_ACTIVE'),
         range('gpuDramActiveRange', 'DCGM_FI_PROF_DRAM_ACTIVE'),
@@ -199,7 +208,6 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
   const networkPacketValue = scalar('networkPacket');
   const gpuTotalValue = scalar('gpuTotal');
   const gpuRequestValue = scalar('gpuRequest');
-  const gpuUtilAvgValue = scalar('gpuUtilAvg');
   const gpuCollectorCount = scalar('gpuCollector');
   const npuCollectorCount = scalar('npuCollector');
   const gpuGaugeValue = Math.max(
@@ -360,7 +368,7 @@ const MonitoringPage = ({ clusterName }: { clusterName?: string } = {}) => {
                 name="GPU"
                 gauge={gpuGaugeValue}
                 value={`${gpuGaugeValue.toFixed(2)}%`}
-                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU · 실사용 ${gpuUtilAvgValue.toFixed(0)}%`}
+                usage={`${gpuRequestValue.toFixed(0)} / ${gpuTotalValue.toFixed(0)} GPU`}
               />
               <ResourceGaugeCard
                 name="NPU"

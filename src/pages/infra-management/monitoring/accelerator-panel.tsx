@@ -8,9 +8,10 @@ import { MetricLineChart } from './metric-line-chart';
 
 /** DCGM 이 붙이는 라벨. gpu 는 장 번호, device 는 nvidia0 같은 장치명이다. */
 type DcgmLabels = {
-  Hostname?: string;
-  device?: string;
+  Hostname: string;
   gpu?: string;
+  GPU_I_ID?: string;
+  UUID: string;
   modelName?: string;
 };
 
@@ -31,7 +32,7 @@ export type AcceleratorPanelProps = {
 };
 
 const deviceLabel = (metric: DcgmLabels): string =>
-  `${metric.Hostname ?? '-'} ${metric.gpu ?? metric.device ?? ''}`.trim();
+  `${metric.Hostname} ${metric.UUID} ${metric.GPU_I_ID ? `MIG ${metric.GPU_I_ID}` : ''}`.trim();
 
 /**
  * 장치 목록과 점유 파드는 가속기 페이지가 맡는다 — 여기는 시간에 따른 변화만 본다.
