@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Modal, useToast } from '@innogrid/ui';
 import type { BootstrapInfo } from '@/types/cluster';
+import { copyTextToClipboard } from '@/util/clipboard';
 import { parseServerDate } from '@/util/date';
 
 interface ClusterBootstrapModalProps {
@@ -53,22 +54,24 @@ export const ClusterBootstrapModal = ({
       : (bootstrap.kubectlApplyCommand ?? '');
   }, [bootstrap, mode]);
 
+  // navigator.clipboard 는 secure context 에만 존재. http 로 띄운 포탈에서는 util 의
+  // textarea 폴백이 받는다.
   const handleCopy = async () => {
     if (!command) return;
-    try {
-      await navigator.clipboard.writeText(command);
-      toast.open({
-        status: 'positive',
-        title: '복사 완료',
-        children: '명령이 클립보드에 복사되었습니다.',
-      });
-    } catch {
-      toast.open({
-        status: 'negative',
-        title: '복사 실패',
-        children: '코드 영역을 직접 선택해 복사해주세요.',
-      });
-    }
+    const copied = await copyTextToClipboard(command);
+    toast.open(
+      copied
+        ? {
+            status: 'positive',
+            title: '복사 완료',
+            children: '명령이 클립보드에 복사되었습니다.',
+          }
+        : {
+            status: 'negative',
+            title: '복사 실패',
+            children: '코드 영역을 직접 선택해 복사해주세요.',
+          },
+    );
   };
 
   const expired = remaining === '만료됨';
