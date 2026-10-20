@@ -13,7 +13,7 @@ import {
 import { useGetCredentials } from '@/hooks/service/credentials';
 import { formatDateTime } from '@/util/date';
 import { stateReasonLabel, workflowStepLabel } from '@/util/provisioning-labels';
-import type { VmNode } from '@/types/vm';
+import type { VmNode, VmSshKey } from '@/types/vm';
 import { WorkflowStepper } from '@/components/features/infra-management/provisioning/workflow-stepper';
 import { LiveProgress } from '@/components/features/infra-management/provisioning/live-progress';
 import { getServerErrorMessage } from '@/lib/api';
@@ -25,6 +25,20 @@ import { NodeSshTerminal } from '@/components/features/infra-management/vm/node-
 import type { Vm } from '@/types/vm';
 
 type HistoryRow = Record<string, unknown>;
+
+/**
+ * SSH 키 응답을 내려받을 파일로 바꾼다. 키가 없으면 null.
+ *
+ * 파일명은 응답 sshCommand 의 `-i <clusterName>-ssh.pem` 과 같아야 한다. 어긋나면 사용자가
+ * 복사한 접속 명령이 그대로 동작하지 않는다.
+ */
+export const toSshKeyDownload = (data: VmSshKey, fallbackName?: string) =>
+  data.privateKeyPem
+    ? {
+        fileName: `${data.clusterName ?? fallbackName ?? 'ssh-key'}-ssh.pem`,
+        content: data.privateKeyPem,
+      }
+    : null;
 
 const roleTone = (role?: string): 'run' | 'wait' => (/master|control/i.test(role ?? '') ? 'run' : 'wait');
 
@@ -436,17 +450,24 @@ export default function VmDetailPage() {
 
   const { issueSshKey, isPending: isIssuingKey } = useIssueVmSshKey({
     onSuccess: (data) => {
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const file = toSshKeyDownload(data, vmName);
+      if (!file) {
+        open({ title: 'SSH 키 발급 실패', children: '응답에 키가 없습니다.', status: 'negative' });
+        return;
+      }
+      const blob = new Blob([file.content], { type: 'application/x-pem-file' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${vmName ?? 'ssh-key'}.json`;
+      a.download = file.fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      open({ title: 'SSH 키가 다운로드되었습니다.' });
+      open({
+        title: 'SSH 키가 다운로드되었습니다.',
+        children: `${file.fileName} 파일입니다. 접속 전 chmod 400 이 필요합니다.`,
+      });
     },
     onError: (error) =>
       open({

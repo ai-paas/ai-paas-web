@@ -124,10 +124,18 @@ export interface GetVmsParams {
   size?: number;
 }
 
+/** GET /vms/{name}/ssh-key 응답. 백엔드 SshKeyResult 와 1:1. */
 export interface VmSshKey {
+  clusterName?: string;
+  sshUser?: string;
   privateKeyPem?: string;
-  publicKey?: string;
-  nodeCommands?: Array<{ role: string; ip: string; user: string; command: string }>;
+  nodes?: Array<{
+    role: string;
+    publicIp?: string;
+    privateIp?: string;
+    /** `ssh -i <clusterName>-ssh.pem <user>@<ip>` — 다운로드 파일명이 이 문자열과 같아야 한다. */
+    sshCommand?: string;
+  }>;
 }
 
 export interface VmNode {

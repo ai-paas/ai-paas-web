@@ -9,6 +9,7 @@ import {
   VmConsoleTab,
   VmHistoryTab,
   VmFailureBanner,
+  toSshKeyDownload,
 } from './page';
 
 vi.mock('@/components/features/infra-management/provisioning/workflow-stepper', () => ({
@@ -245,5 +246,33 @@ describe('VmWorkflowProgress', () => {
     withRouter(<VmWorkflowProgress vm={vm({ status: 'FAILED' })} />);
 
     expect(screen.getByTestId('stepper')).toBeInTheDocument();
+  });
+});
+
+// 회귀: 발급 응답 전체를 JSON 으로 내려받아, 사용자가 받은 파일이 ssh -i 에 쓸 수 없는
+// e2e-proxmox.json 이었다. 응답 sshCommand 는 e2e-proxmox-ssh.pem 을 가리킨다.
+describe('toSshKeyDownload', () => {
+  const PEM = '-----BEGIN RSA PRIVATE KEY-----\nFAKE\n-----END RSA PRIVATE KEY-----\n';
+
+  it('sshCommand 가 가리키는 파일명으로 PEM 본문만 내려준다', () => {
+    const file = toSshKeyDownload({
+      clusterName: 'e2e-proxmox',
+      sshUser: 'ubuntu',
+      privateKeyPem: PEM,
+      nodes: [{ role: 'master', publicIp: '10.0.0.1', sshCommand: 'ssh -i e2e-proxmox-ssh.pem ubuntu@10.0.0.1' }],
+    });
+
+    expect(file).not.toBeNull();
+    expect(file?.fileName).toBe('e2e-proxmox-ssh.pem');
+    expect(file?.content).toBe(PEM);
+    expect(file?.content).not.toContain('"privateKeyPem"');
+  });
+
+  it('clusterName 이 없으면 VM 이름으로 떨어진다', () => {
+    expect(toSshKeyDownload({ privateKeyPem: PEM }, 'fallback-vm')?.fileName).toBe('fallback-vm-ssh.pem');
+  });
+
+  it('키가 없으면 null 이라 호출부가 실패 토스트로 간다', () => {
+    expect(toSshKeyDownload({ clusterName: 'e2e-proxmox' }, 'vm')).toBeNull();
   });
 });
