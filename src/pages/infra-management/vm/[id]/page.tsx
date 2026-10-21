@@ -13,7 +13,7 @@ import {
 import { useGetCredentials } from '@/hooks/service/credentials';
 import { formatDateTime } from '@/util/date';
 import { stateReasonLabel, workflowStepLabel } from '@/util/provisioning-labels';
-import type { VmNode } from '@/types/vm';
+import type { VmNode, VmSshKey } from '@/types/vm';
 import { WorkflowStepper } from '@/components/features/infra-management/provisioning/workflow-stepper';
 import { LiveProgress } from '@/components/features/infra-management/provisioning/live-progress';
 import { getServerErrorMessage } from '@/lib/api';
@@ -25,6 +25,20 @@ import { NodeSshTerminal } from '@/components/features/infra-management/vm/node-
 import type { Vm } from '@/types/vm';
 
 type HistoryRow = Record<string, unknown>;
+
+/**
+ * SSH 키 응답을 내려받을 파일로 바꾼다. 키가 없으면 null.
+ *
+ * 파일명은 응답 sshCommand 의 `-i <clusterName>-ssh.pem` 과 같아야 한다. 어긋나면 사용자가
+ * 복사한 접속 명령이 그대로 동작하지 않는다.
+ */
+export const toSshKeyDownload = (data: VmSshKey, fallbackName?: string) =>
+  data.privateKeyPem
+    ? {
+        fileName: `${data.clusterName ?? fallbackName ?? 'ssh-key'}-ssh.pem`,
+        content: data.privateKeyPem,
+      }
+    : null;
 
 const roleTone = (role?: string): 'run' | 'wait' => (/master|control/i.test(role ?? '') ? 'run' : 'wait');
 
@@ -331,15 +345,29 @@ export const VmInstancesTab = ({
 );
 
 /**
+ * 콘솔 드롭다운에 세울 노드.
+ *
+ * NAT 뒤 클러스터는 전체 노드가 같은 공인 IP 를 쓰고 포트로만 갈린다. 공인 IP 로 지목하면
+ * 백엔드가 첫 노드를 골라 worker 를 고른 사용자도 master 에 붙는다. 노드마다 다른 사설 IP 를
+ * 식별자로 보내고, 접속 주소는 백엔드가 그 행에서 뽑는다.
+ */
+export const consoleTargets = (nodes: VmNode[]) =>
+  nodes
+    .map((n) => ({
+      host: n.privateIp ?? n.publicIp,
+      label: n.hostname ?? n.role,
+      port: n.sshPort ?? 22,
+    }))
+    .filter((t): t is { host: string; label: string; port: number } => !!t.host);
+
+/**
  * 노드에 붙는 웹 SSH 콘솔.
  *
  * <p>이 화면의 대상은 인스턴스다. kubectl, k9s 셸은 클러스터 상세가 가진다 — 같은 자리에 두면
  * 무엇에 붙는 터미널인지 헷갈린다.
  */
 export const VmConsoleTab = ({ vmName, nodes }: { vmName?: string; nodes: VmNode[] }) => {
-  const targets = nodes
-    .map((n) => ({ host: n.publicIp ?? n.privateIp, label: n.hostname ?? n.role }))
-    .filter((t): t is { host: string; label: string } => !!t.host);
+  const targets = consoleTargets(nodes);
   const [host, setHost] = useState('');
 
   // 노드는 나중에 온다. 사용자가 이미 고른 값은 덮어쓰지 않는다.
@@ -380,7 +408,7 @@ export const VmConsoleTab = ({ vmName, nodes }: { vmName?: string; nodes: VmNode
         >
           {targets.map((t) => (
             <option key={t.host} value={t.host}>
-              {t.label} ({t.host})
+              {t.label} ({t.host}:{t.port})
             </option>
           ))}
         </select>
@@ -436,17 +464,24 @@ export default function VmDetailPage() {
 
   const { issueSshKey, isPending: isIssuingKey } = useIssueVmSshKey({
     onSuccess: (data) => {
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const file = toSshKeyDownload(data, vmName);
+      if (!file) {
+        open({ title: 'SSH 키 발급 실패', children: '응답에 키가 없습니다.', status: 'negative' });
+        return;
+      }
+      const blob = new Blob([file.content], { type: 'application/x-pem-file' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${vmName ?? 'ssh-key'}.json`;
+      a.download = file.fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      open({ title: 'SSH 키가 다운로드되었습니다.' });
+      open({
+        title: 'SSH 키가 다운로드되었습니다.',
+        children: `${file.fileName} 파일입니다. 접속 전 chmod 400 이 필요합니다.`,
+      });
     },
     onError: (error) =>
       open({

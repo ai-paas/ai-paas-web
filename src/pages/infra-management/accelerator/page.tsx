@@ -343,7 +343,12 @@ function AcceleratorPage({ clusterName }: { clusterName?: string } = {}) {
           )}
         </div>
 
-        <div>
+        {/*
+          Table 은 height:100% 라 부모가 높이를 주지 않으면 헤더와 페이지네이션 높이로 줄어든다.
+          비어 있을 때 띄우는 안내는 컨테이너 기준 absolute 라 그 높이의 중앙, 즉 헤더 위로
+          올라붙고 overflow:hidden 에 잘린다. 다른 목록과 같은 고정 높이를 준다.
+        */}
+        <div className="h-[600px]" data-testid="accelerator-table-box">
           <Table<AcceleratorTableRow>
             useClientPagination
             useExpand
