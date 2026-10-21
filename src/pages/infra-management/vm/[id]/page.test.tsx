@@ -9,6 +9,8 @@ import {
   VmConsoleTab,
   VmHistoryTab,
   VmFailureBanner,
+  toSshKeyDownload,
+  consoleTargets,
 } from './page';
 
 vi.mock('@/components/features/infra-management/provisioning/workflow-stepper', () => ({
@@ -122,9 +124,10 @@ describe('VmConsoleTab', () => {
 
   it('VM 콘솔은 노드에 붙는 SSH 다', () => {
     // 이 화면의 대상은 인스턴스다. 쿠버네티스 셸은 클러스터 상세가 가진다.
+    // 보내는 값은 노드 식별자(사설 IP)다. 접속 주소는 백엔드가 그 행에서 뽑는다.
     withRouter(<VmConsoleTab vmName="demo" nodes={nodes} />);
 
-    expect(screen.getByTestId('terminal')).toHaveTextContent('demo@1.1.1.1');
+    expect(screen.getByTestId('terminal')).toHaveTextContent('demo@10.0.0.1');
   });
 
   it('어느 노드에 붙을지 고를 수 있다', () => {
@@ -245,5 +248,58 @@ describe('VmWorkflowProgress', () => {
     withRouter(<VmWorkflowProgress vm={vm({ status: 'FAILED' })} />);
 
     expect(screen.getByTestId('stepper')).toBeInTheDocument();
+  });
+});
+
+// 회귀: 발급 응답 전체를 JSON 으로 내려받아, 사용자가 받은 파일이 ssh -i 에 쓸 수 없는
+// e2e-proxmox.json 이었다. 응답 sshCommand 는 e2e-proxmox-ssh.pem 을 가리킨다.
+describe('toSshKeyDownload', () => {
+  const PEM = '-----BEGIN RSA PRIVATE KEY-----\nFAKE\n-----END RSA PRIVATE KEY-----\n';
+
+  it('sshCommand 가 가리키는 파일명으로 PEM 본문만 내려준다', () => {
+    const file = toSshKeyDownload({
+      clusterName: 'e2e-proxmox',
+      sshUser: 'ubuntu',
+      privateKeyPem: PEM,
+      nodes: [{ role: 'master', publicIp: '10.0.0.1', sshCommand: 'ssh -i e2e-proxmox-ssh.pem ubuntu@10.0.0.1' }],
+    });
+
+    expect(file).not.toBeNull();
+    expect(file?.fileName).toBe('e2e-proxmox-ssh.pem');
+    expect(file?.content).toBe(PEM);
+    expect(file?.content).not.toContain('"privateKeyPem"');
+  });
+
+  it('clusterName 이 없으면 VM 이름으로 떨어진다', () => {
+    expect(toSshKeyDownload({ privateKeyPem: PEM }, 'fallback-vm')?.fileName).toBe('fallback-vm-ssh.pem');
+  });
+
+  it('키가 없으면 null 이라 호출부가 실패 토스트로 간다', () => {
+    expect(toSshKeyDownload({ clusterName: 'e2e-proxmox' }, 'vm')).toBeNull();
+  });
+});
+
+// 회귀: NAT 뒤 클러스터(Proxmox)는 두 노드가 같은 공인 IP 를 쓴다. 공인 IP 로 지목하면
+// 백엔드가 첫 노드를 골라 worker 를 선택해도 master 에 붙었다.
+describe('consoleTargets', () => {
+  it('공인 IP 가 겹쳐도 노드마다 다른 식별자를 보낸다', () => {
+    const targets = consoleTargets([
+      { role: 'master', privateIp: '10.10.0.11', publicIp: '203.0.113.10', sshPort: 2200 },
+      { role: 'worker', privateIp: '10.10.0.12', publicIp: '203.0.113.10', sshPort: 2201 },
+    ]);
+
+    expect(targets.map((t) => t.host)).toEqual(['10.10.0.11', '10.10.0.12']);
+    expect(new Set(targets.map((t) => t.host)).size).toBe(2);
+    expect(targets.map((t) => t.port)).toEqual([2200, 2201]);
+  });
+
+  it('사설 IP 가 없으면 공인 IP 로 떨어지고 포트는 22 가 기본이다', () => {
+    expect(consoleTargets([{ role: 'master', publicIp: '203.0.113.20' }])).toEqual([
+      { host: '203.0.113.20', label: 'master', port: 22 },
+    ]);
+  });
+
+  it('주소가 없는 노드는 제외한다', () => {
+    expect(consoleTargets([{ role: 'master' }])).toEqual([]);
   });
 });
