@@ -345,15 +345,29 @@ export const VmInstancesTab = ({
 );
 
 /**
+ * 콘솔 드롭다운에 세울 노드.
+ *
+ * NAT 뒤 클러스터는 전체 노드가 같은 공인 IP 를 쓰고 포트로만 갈린다. 공인 IP 로 지목하면
+ * 백엔드가 첫 노드를 골라 worker 를 고른 사용자도 master 에 붙는다. 노드마다 다른 사설 IP 를
+ * 식별자로 보내고, 접속 주소는 백엔드가 그 행에서 뽑는다.
+ */
+export const consoleTargets = (nodes: VmNode[]) =>
+  nodes
+    .map((n) => ({
+      host: n.privateIp ?? n.publicIp,
+      label: n.hostname ?? n.role,
+      port: n.sshPort ?? 22,
+    }))
+    .filter((t): t is { host: string; label: string; port: number } => !!t.host);
+
+/**
  * 노드에 붙는 웹 SSH 콘솔.
  *
  * <p>이 화면의 대상은 인스턴스다. kubectl, k9s 셸은 클러스터 상세가 가진다 — 같은 자리에 두면
  * 무엇에 붙는 터미널인지 헷갈린다.
  */
 export const VmConsoleTab = ({ vmName, nodes }: { vmName?: string; nodes: VmNode[] }) => {
-  const targets = nodes
-    .map((n) => ({ host: n.publicIp ?? n.privateIp, label: n.hostname ?? n.role }))
-    .filter((t): t is { host: string; label: string } => !!t.host);
+  const targets = consoleTargets(nodes);
   const [host, setHost] = useState('');
 
   // 노드는 나중에 온다. 사용자가 이미 고른 값은 덮어쓰지 않는다.
@@ -394,7 +408,7 @@ export const VmConsoleTab = ({ vmName, nodes }: { vmName?: string; nodes: VmNode
         >
           {targets.map((t) => (
             <option key={t.host} value={t.host}>
-              {t.label} ({t.host})
+              {t.label} ({t.host}:{t.port})
             </option>
           ))}
         </select>

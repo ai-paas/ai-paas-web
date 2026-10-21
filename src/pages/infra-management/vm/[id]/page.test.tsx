@@ -10,6 +10,7 @@ import {
   VmHistoryTab,
   VmFailureBanner,
   toSshKeyDownload,
+  consoleTargets,
 } from './page';
 
 vi.mock('@/components/features/infra-management/provisioning/workflow-stepper', () => ({
@@ -123,9 +124,10 @@ describe('VmConsoleTab', () => {
 
   it('VM 콘솔은 노드에 붙는 SSH 다', () => {
     // 이 화면의 대상은 인스턴스다. 쿠버네티스 셸은 클러스터 상세가 가진다.
+    // 보내는 값은 노드 식별자(사설 IP)다. 접속 주소는 백엔드가 그 행에서 뽑는다.
     withRouter(<VmConsoleTab vmName="demo" nodes={nodes} />);
 
-    expect(screen.getByTestId('terminal')).toHaveTextContent('demo@1.1.1.1');
+    expect(screen.getByTestId('terminal')).toHaveTextContent('demo@10.0.0.1');
   });
 
   it('어느 노드에 붙을지 고를 수 있다', () => {
@@ -274,5 +276,30 @@ describe('toSshKeyDownload', () => {
 
   it('키가 없으면 null 이라 호출부가 실패 토스트로 간다', () => {
     expect(toSshKeyDownload({ clusterName: 'e2e-proxmox' }, 'vm')).toBeNull();
+  });
+});
+
+// 회귀: NAT 뒤 클러스터(Proxmox)는 두 노드가 같은 공인 IP 를 쓴다. 공인 IP 로 지목하면
+// 백엔드가 첫 노드를 골라 worker 를 선택해도 master 에 붙었다.
+describe('consoleTargets', () => {
+  it('공인 IP 가 겹쳐도 노드마다 다른 식별자를 보낸다', () => {
+    const targets = consoleTargets([
+      { role: 'master', privateIp: '10.10.0.11', publicIp: '203.0.113.10', sshPort: 2200 },
+      { role: 'worker', privateIp: '10.10.0.12', publicIp: '203.0.113.10', sshPort: 2201 },
+    ]);
+
+    expect(targets.map((t) => t.host)).toEqual(['10.10.0.11', '10.10.0.12']);
+    expect(new Set(targets.map((t) => t.host)).size).toBe(2);
+    expect(targets.map((t) => t.port)).toEqual([2200, 2201]);
+  });
+
+  it('사설 IP 가 없으면 공인 IP 로 떨어지고 포트는 22 가 기본이다', () => {
+    expect(consoleTargets([{ role: 'master', publicIp: '203.0.113.20' }])).toEqual([
+      { host: '203.0.113.20', label: 'master', port: 22 },
+    ]);
+  });
+
+  it('주소가 없는 노드는 제외한다', () => {
+    expect(consoleTargets([{ role: 'master' }])).toEqual([]);
   });
 });

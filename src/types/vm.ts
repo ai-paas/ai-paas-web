@@ -144,6 +144,8 @@ export interface VmNode {
   privateIp?: string;
   sshUser?: string;
   hostname?: string;
+  /** NAT 뒤 클러스터는 노드마다 다른 포트로 갈린다. 없으면 22. */
+  sshPort?: number;
 }
 
 /** VM 목록의 한 행 — 클러스터가 아니라 노드 하나. 백엔드 VmNodeListItemResponse. */
