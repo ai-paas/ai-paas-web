@@ -470,23 +470,6 @@ export const useFetchClusterBootstrap = (options?: {
   return { fetchBootstrap: mutate, isPending, isError, error };
 };
 
-// SSH 키 발급 (VM 클러스터)
-export const useIssueClusterSshKey = (options?: {
-  onSuccess?: (data: Record<string, unknown>) => void;
-  onError?: (error: unknown) => void;
-}) => {
-  const { mutate, isPending, isError, isSuccess, error } = useMutation({
-    mutationKey: ['issueSshKey'],
-    mutationFn: (clusterName: string) =>
-      api
-        .post(`any-cloud/system/cluster/${clusterName}/ssh-key`, { json: {} })
-        .json<Record<string, unknown>>(),
-    onSuccess: (data) => options?.onSuccess?.(data),
-    onError: (err) => options?.onError?.(err),
-  });
-  return { issueSshKey: mutate, isPending, isError, isSuccess, error };
-};
-
 // 쿠버네티스 리소스 list 공통 query — namespace 옵션 포함
 const fetchKubernetesResource = async <T>(
   resourceType: string,
