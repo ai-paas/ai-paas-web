@@ -10,7 +10,7 @@
 
 노드 기반 워크플로우 빌더 · 데이터셋/모델/학습 관리 · VM·Kubernetes·GPU 인프라 관리 · 실시간 모니터링
 
-[Features](#key-features) · [메뉴 구성](#메뉴-구성) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Releases](#releases) · [Contributing](#contributing)
+[Features](#key-features) · [메뉴 구성](#메뉴-구성) · [Demo](#demo) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Releases](#releases) · [Contributing](#contributing)
 
 ![release](https://img.shields.io/github/v/release/ai-paas/ai-paas-web?include_prereleases&label=release)
 ![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)
@@ -115,11 +115,25 @@ Helm 차트 카탈로그에서 앱을 설치하고, 설치된 앱의 리비전 �
 
 ## Demo
 
-> 스크린샷과 라이브 데모는 준비 중입니다.
+> 화면의 워크플로우 · 지식 베이스 · 데이터셋 이름 등 일부 데이터는 가려져 있습니다.
 
-| Workflow Builder | Monitoring Dashboard | Dataset Management |
-| :--: | :--: | :--: |
-| _coming soon_ | _coming soon_ | _coming soon_ |
+### Workflow Builder
+
+노드를 캔버스에 배치하고 연결해 AI 파이프라인을 조립합니다.
+
+<img width="1457" alt="Workflow Builder" src="https://github.com/user-attachments/assets/d891ede4-d03a-415a-8a7b-a865df061d5e" />
+
+### Infrastructure Monitoring
+
+클러스터의 CPU · 메모리 · 파일 시스템 · 네트워크 · GPU/NPU/TPU 현황과 성능 지표를 구간과 갱신 주기를 골라 조회합니다.
+
+<img width="1440" alt="Infrastructure Monitoring" src="https://github.com/user-attachments/assets/5198d356-407a-4b1f-93cb-4be853d238f3" />
+
+### Dataset Management
+
+데이터셋을 분류별로 등록하고 목록에서 검색 · 편집 · 삭제합니다.
+
+<img width="1457" alt="Dataset Management" src="https://github.com/user-attachments/assets/90aa4df4-de54-4c8b-b995-dec2df9656d8" />
 
 ## Tech Stack
 
