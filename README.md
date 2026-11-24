@@ -12,7 +12,6 @@
 
 [Features](#key-features) · [메뉴 구성](#메뉴-구성) · [Demo](#demo) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Releases](#releases) · [Contributing](#contributing)
 
-![release](https://img.shields.io/github/v/release/ai-paas/ai-paas-web?include_prereleases&label=release)
 ![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)
 ![react](https://img.shields.io/badge/React-18-61dafb.svg?logo=react&logoColor=white)
 ![typescript](https://img.shields.io/badge/TypeScript-5.8-3178c6.svg?logo=typescript&logoColor=white)
