@@ -189,20 +189,11 @@ e2e/                ─ Playwright E2E 테스트
 
 ## Contributing
 
-기여는 언제나 환영합니다. 크고 작은 PR 모두 좋습니다.
-
-1. `develop` 브랜치에서 피처 브랜치를 만들고, PR은 `develop`으로 올립니다. `main`에는 `develop`을 PR로 반영합니다.
-2. 로컬에서 `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage`를 통과시킵니다.
-3. 변경 범위는 좁게 유지합니다. 큰 PR 하나보다 작은 PR 여러 개가 리뷰에 유리합니다.
-4. PR 설명에는 _무엇_보다 _왜_에 초점을 맞춰 주세요.
-
-영향 범위가 큰 변경(새 도메인 추가, 캔버스 내부 구조, 데이터 페칭 패턴 개편 등)은 먼저 이슈를 열어 방향을 맞춘 뒤 진행해 주시면 좋습니다.
-
-코드 컨벤션과 테스트 규칙은 [`CLAUDE.md`](CLAUDE.md)와 [`src/test/README.md`](src/test/README.md)를 참고해 주세요.
+기여는 언제나 환영합니다. 크고 작은 PR 모두 좋습니다. 브랜치 전략, 커밋 메시지 규칙, PR 절차는 [기여 가이드](CONTRIBUTING.md)에 정리되어 있습니다. 프로젝트에 참여하는 모든 분은 [행동 강령](CODE_OF_CONDUCT.md)을 따릅니다.
 
 ## Support
 
-버그 제보와 기능 제안은 [GitHub Issues](https://github.com/ai-paas/ai-paas-web/issues)에 남겨 주세요.
+버그 제보와 기능 제안은 [GitHub Issues](https://github.com/ai-paas/ai-paas-web/issues)에 남겨 주세요. 보안 취약점은 공개 이슈로 올리지 말고 [보안 정책](SECURITY.md)에 따라 비공개로 제보해 주세요.
 
 ## License
 
